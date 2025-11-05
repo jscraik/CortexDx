@@ -1,0 +1,10 @@
+{
+  "brand": "brAInwav",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "file": "packages/utils/src/index.ts",
+      "exports": ["LogContext", "__private__", "error", "info", "log", "warn", "withContext"]
+    }
+  ]
+}

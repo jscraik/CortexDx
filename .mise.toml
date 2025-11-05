@@ -1,0 +1,15 @@
+[tools]
+node = "20.11.1"
+pnpm = "9.12.2"
+
+[tasks.build]
+description = "Build Insula MCP via Nx"
+run = "pnpm build"
+
+[tasks.test]
+description = "Run Vitest suite via Nx"
+run = "pnpm test"
+
+[tasks.lint]
+description = "Run Biome lint via Nx"
+run = "pnpm lint"

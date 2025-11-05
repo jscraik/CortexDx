@@ -1,0 +1,40 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "insula-mcp",
+  "projectType": "library",
+  "sourceRoot": "packages/insula-mcp/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp run build"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp run test"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp exec biome lint src"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp exec biome format src"
+      }
+    },
+    "doctor": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp run doctor"
+      }
+    }
+  },
+  "tags": ["diagnostics", "mcp", "stateless"]
+}

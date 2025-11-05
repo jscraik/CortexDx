@@ -1,0 +1,16 @@
+{
+  "name": "insula-mcp-workspace",
+  "private": true,
+  "packageManager": "pnpm@9.12.2",
+  "scripts": {
+    "build": "NX_CLOUD=false nx run insula-mcp:build",
+    "test": "NX_CLOUD=false nx run insula-mcp:test",
+    "lint": "NX_CLOUD=false nx run insula-mcp:lint",
+    "doctor": "NX_CLOUD=false nx run insula-mcp:doctor"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@nx/js": "19.8.4",
+    "nx": "19.8.4"
+  }
+}
