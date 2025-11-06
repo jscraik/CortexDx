@@ -7,6 +7,8 @@ export function hasOllama(): boolean {
 
 export function hasMlx(): boolean {
   if (process.platform !== "darwin") return false;
-  const result = spawnSync("python3", ["-c", "import mlx.core"], { stdio: "ignore" });
+  const result = spawnSync("python3", ["-c", "import mlx.core"], {
+    stdio: "ignore",
+  });
   return result.status === 0;
 }

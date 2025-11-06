@@ -1,9 +1,9 @@
 import { Worker } from "node:worker_threads";
-import type { DiagnosticPlugin, Finding } from "./types.js";
-import { BUILTIN_PLUGINS, getPluginById } from "./plugins/index.js";
 import { httpAdapter } from "./adapters/http.js";
 import { jsonRpcClient } from "./adapters/jsonrpc.js";
 import { sseProbe } from "./adapters/sse.js";
+import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
+import type { ConversationalPlugin, DevelopmentContext, DevelopmentPlugin, DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding } from "./types.js";
 
 export interface SandboxBudgets {
   timeMs: number;
@@ -45,6 +45,42 @@ export async function runPlugins({
   return { findings };
 }
 
+export async function runDevelopmentPlugins({
+  endpoint,
+  suites,
+  full,
+  deterministic,
+  budgets,
+  developmentContext
+}: {
+  endpoint: string;
+  suites: string[];
+  full: boolean;
+  deterministic: boolean;
+  budgets: SandboxBudgets;
+  developmentContext: DevelopmentContext;
+}): Promise<{ findings: Finding[] }> {
+  const plugins = pickDevelopmentPlugins(suites, full);
+  const findings: Finding[] = [];
+
+  for (const plugin of plugins) {
+    try {
+      const results = await runDevelopmentPlugin(plugin, developmentContext, budgets);
+      findings.push(...results);
+    } catch (error) {
+      findings.push({
+        id: `dev-plugin.${plugin.id}.error`,
+        area: "development",
+        severity: "major",
+        title: `Development plugin failed: ${plugin.title}`,
+        description: String(error),
+        evidence: [{ type: "log", ref: `dev-plugin:${plugin.id}` }]
+      });
+    }
+  }
+  return { findings };
+}
+
 function pickPlugins(suites: string[], full: boolean): DiagnosticPlugin[] {
   if (full) return [...BUILTIN_PLUGINS];
   if (suites.length === 0) {
@@ -54,14 +90,23 @@ function pickPlugins(suites: string[], full: boolean): DiagnosticPlugin[] {
   return BUILTIN_PLUGINS.filter((p) => wanted.has(p.id));
 }
 
-function createFallbackCtx(endpoint: string, deterministic: boolean) {
+function pickDevelopmentPlugins(suites: string[], full: boolean): DevelopmentPlugin[] {
+  if (full) return [...DEVELOPMENT_PLUGINS];
+  if (suites.length === 0) {
+    return DEVELOPMENT_PLUGINS.filter((p) => ["conversational", "code-generation", "license-validation"].includes(p.id));
+  }
+  const wanted = new Set(suites);
+  return DEVELOPMENT_PLUGINS.filter((p) => wanted.has(p.id));
+}
+
+function createFallbackCtx(endpoint: string, deterministic: boolean): DiagnosticContext {
   return {
     endpoint,
     logger: (...args: unknown[]) => console.log("[brAInwav]", ...args),
     request: httpAdapter,
     jsonrpc: jsonRpcClient(endpoint),
-    sseProbe,
-    evidence: (ev: unknown) => console.log("[evidence]", ev),
+    sseProbe: (url: string, opts?: unknown) => sseProbe(url, opts as { timeoutMs?: number }),
+    evidence: (ev: EvidencePointer) => console.log("[evidence]", ev),
     deterministic
   };
 }
@@ -93,7 +138,6 @@ function launchWorker(
 ): Promise<Finding[]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(workerUrl, {
-      type: "module",
       workerData: { pluginId, ctxInit: { endpoint, deterministic } },
       resourceLimits: { maxOldGenerationSizeMb: Math.max(32, Math.floor(budgets.memMb)) }
     });
@@ -166,4 +210,29 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
     candidate.type === "result" ||
     candidate.type === "error"
   );
+}
+async function runDevelopmentPlugin(
+  plugin: DevelopmentPlugin,
+  ctx: DevelopmentContext,
+  budgets: SandboxBudgets
+): Promise<Finding[]> {
+  // For development plugins, we run them directly without sandbox for now
+  // In production, we'd want to sandbox these as well
+  try {
+    return await plugin.run(ctx);
+  } catch (error) {
+    throw new Error(`Development plugin ${plugin.id} failed: ${error}`);
+  }
+}
+
+export function getAllDevelopmentPlugins(): DevelopmentPlugin[] {
+  return [...DEVELOPMENT_PLUGINS];
+}
+
+export function getDevelopmentPluginsByCategory(category: "diagnostic" | "development" | "conversational"): DevelopmentPlugin[] {
+  return DEVELOPMENT_PLUGINS.filter(p => p.category === category);
+}
+
+export function getConversationalPlugins(): ConversationalPlugin[] {
+  return DEVELOPMENT_PLUGINS.filter(p => p.category === "conversational") as ConversationalPlugin[];
 }

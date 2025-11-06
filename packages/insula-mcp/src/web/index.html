@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insula MCP - Development Interface</title>
+    <link rel="stylesheet" href="/web/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Insula MCP Development Interface</h1>
+            <div class="status-bar">
+                <span class="status-indicator" id="connection-status">●</span>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="diagnose">Diagnose</button>
+            <button class="tab" data-tab="plugins">Plugins</button>
+            <button class="tab" data-tab="conversation">Assistant</button>
+            <button class="tab" data-tab="config">Configuration</button>
+        </nav>
+
+        <main>
+            <!-- Diagnose Tab -->
+            <section id="diagnose-tab" class="tab-content active">
+                <h2>MCP Server Diagnostics</h2>
+                <form id="diagnose-form">
+                    <div class="form-group">
+                        <label for="endpoint">Server Endpoint:</label>
+                        <input type="url" id="endpoint" placeholder="http://localhost:3000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suites">Diagnostic Suites:</label>
+                        <select id="suites" multiple>
+                            <option value="protocol">Protocol Compliance</option>
+                            <option value="security">Security Scan</option>
+                            <option value="performance">Performance Analysis</option>
+                            <option value="compatibility">Compatibility Check</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="full-scan">
+                            Full Diagnostic Scan
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-primary">Run Diagnostics</button>
+                </form>
+                <div id="diagnose-results" class="results-panel"></div>
+            </section>
+
+            <!-- Plugins Tab -->
+            <section id="plugins-tab" class="tab-content">
+                <h2>Plugin Management</h2>
+                <div class="plugin-controls">
+                    <button id="refresh-plugins" class="btn-secondary">Refresh</button>
+                    <input type="search" id="plugin-search" placeholder="Search plugins...">
+                </div>
+                <div id="plugins-list" class="plugins-grid"></div>
+            </section>
+
+            <!-- Conversation Tab -->
+            <section id="conversation-tab" class="tab-content">
+                <h2>AI Development Assistant</h2>
+                <div class="conversation-container">
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <form id="chat-form" class="chat-input">
+                        <input type="text" id="chat-input" placeholder="Ask for help with MCP development..." required>
+                        <button type="submit" class="btn-primary">Send</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Configuration Tab -->
+            <section id="config-tab" class="tab-content">
+                <h2>Configuration</h2>
+                <div class="config-section">
+                    <h3>LLM Backend</h3>
+                    <select id="llm-backend">
+                        <option value="ollama">Ollama</option>
+                        <option value="mlx">MLX (Apple Silicon)</option>
+                        <option value="llamacpp">llama.cpp</option>
+                    </select>
+                </div>
+                <div class="config-section">
+                    <h3>Model Selection</h3>
+                    <select id="llm-model">
+                        <option value="llama3">Llama 3 Instruct</option>
+                        <option value="codellama">CodeLlama</option>
+                        <option value="mistral">Mistral 7B</option>
+                    </select>
+                </div>
+                <div class="config-section">
+                    <h3>Expertise Level</h3>
+                    <select id="expertise-level">
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+                <button id="save-config" class="btn-primary">Save Configuration</button>
+            </section>
+        </main>
+    </div>
+
+    <script src="/web/app.js"></script>
+</body>
+</html>

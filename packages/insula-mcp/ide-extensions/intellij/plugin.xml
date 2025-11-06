@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>io.brainwav.insula-mcp</id>
+    <name>Insula MCP</name>
+    <vendor email="support@brainwav.io" url="https://brainwav.io">brAInwav</vendor>
+
+    <description><![CDATA[
+        Real-time MCP (Model Context Protocol) validation and assistance for IntelliJ-based IDEs.
+        
+        Features:
+        - Real-time diagnostics and validation
+        - Context-aware code completions
+        - Quick fixes and automated refactoring
+        - Project-wide analysis
+        - Test generation
+        - Interactive debugging assistance
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <h3>1.0.0</h3>
+        <ul>
+            <li>Initial release</li>
+            <li>Real-time MCP validation</li>
+            <li>Code completions and suggestions</li>
+            <li>Quick fixes for common issues</li>
+            <li>Project analysis tools</li>
+        </ul>
+    ]]></change-notes>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- External Annotator for real-time diagnostics -->
+        <externalAnnotator
+                language="TypeScript"
+                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+        <externalAnnotator
+                language="JavaScript"
+                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+        <externalAnnotator
+                language="Python"
+                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+
+        <!-- Completion Contributor -->
+        <completion.contributor
+                language="TypeScript"
+                implementationClass="io.brainwav.insula.InsulaCompletionContributor"/>
+        <completion.contributor
+                language="JavaScript"
+                implementationClass="io.brainwav.insula.InsulaCompletionContributor"/>
+
+        <!-- Intention Actions (Quick Fixes) -->
+        <intentionAction>
+            <className>io.brainwav.insula.intentions.AddInputSchemaIntention</className>
+            <category>Insula MCP</category>
+        </intentionAction>
+        <intentionAction>
+            <className>io.brainwav.insula.intentions.FixJsonRpcVersionIntention</className>
+            <category>Insula MCP</category>
+        </intentionAction>
+        <intentionAction>
+            <className>io.brainwav.insula.intentions.AddErrorHandlingIntention</className>
+            <category>Insula MCP</category>
+        </intentionAction>
+
+        <!-- Code Formatter -->
+        <formattingService
+                implementation="io.brainwav.insula.InsulaFormattingService"/>
+
+        <!-- Project Service -->
+        <projectService
+                serviceImplementation="io.brainwav.insula.InsulaProjectService"/>
+
+        <!-- Application Service -->
+        <applicationService
+                serviceImplementation="io.brainwav.insula.InsulaApplicationService"/>
+
+        <!-- Settings -->
+        <projectConfigurable
+                instance="io.brainwav.insula.settings.InsulaSettingsConfigurable"
+                displayName="Insula MCP"
+                id="insula.mcp.settings"/>
+
+        <!-- Tool Window -->
+        <toolWindow
+                id="Insula MCP"
+                anchor="bottom"
+                icon="/icons/insula.svg"
+                factoryClass="io.brainwav.insula.toolwindow.InsulaToolWindowFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Main Menu Actions -->
+        <group id="InsulaMenu" text="Insula MCP" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+
+            <action
+                    id="Insula.ValidateFile"
+                    class="io.brainwav.insula.actions.ValidateFileAction"
+                    text="Validate Current File"
+                    description="Validate MCP code in current file">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift V"/>
+            </action>
+
+            <action
+                    id="Insula.AnalyzeProject"
+                    class="io.brainwav.insula.actions.AnalyzeProjectAction"
+                    text="Analyze Project"
+                    description="Analyze entire project for MCP issues"/>
+
+            <action
+                    id="Insula.GenerateTests"
+                    class="io.brainwav.insula.actions.GenerateTestsAction"
+                    text="Generate Tests"
+                    description="Generate test cases for MCP code"/>
+
+            <action
+                    id="Insula.FormatCode"
+                    class="io.brainwav.insula.actions.FormatCodeAction"
+                    text="Format MCP Code"
+                    description="Format code according to MCP best practices">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift F"/>
+            </action>
+
+            <separator/>
+
+            <action
+                    id="Insula.StartServer"
+                    class="io.brainwav.insula.actions.StartServerAction"
+                    text="Start MCP Server"
+                    description="Start Insula MCP server"/>
+
+            <action
+                    id="Insula.StopServer"
+                    class="io.brainwav.insula.actions.StopServerAction"
+                    text="Stop MCP Server"
+                    description="Stop Insula MCP server"/>
+        </group>
+
+        <!-- Editor Context Menu -->
+        <group id="InsulaEditorPopup">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <separator/>
+            <reference ref="Insula.ValidateFile"/>
+            <reference ref="Insula.GenerateTests"/>
+            <reference ref="Insula.FormatCode"/>
+        </group>
+    </actions>
+
+    <applicationListeners>
+        <listener
+                class="io.brainwav.insula.listeners.InsulaProjectListener"
+                topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+</idea-plugin>

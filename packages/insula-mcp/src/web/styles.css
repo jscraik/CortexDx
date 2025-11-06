@@ -1,0 +1,366 @@
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #cbd5e1;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: var(--bg-primary);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    font-size: 12px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.status-indicator.connected {
+    color: var(--success-color);
+    animation: none;
+}
+
+.status-indicator.disconnected {
+    color: var(--error-color);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--bg-primary);
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    background: var(--bg-tertiary);
+}
+
+.tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+main {
+    background: var(--bg-primary);
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    min-height: 600px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+input[type="url"],
+input[type="text"],
+input[type="search"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+select[multiple] {
+    height: 120px;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.results-panel {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    min-height: 200px;
+}
+
+.results-panel:empty::before {
+    content: 'No results yet. Run diagnostics to see results here.';
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.plugin-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.plugin-controls input {
+    flex: 1;
+}
+
+.plugins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.plugin-card {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.plugin-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.plugin-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.plugin-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.plugin-status.enabled {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.plugin-status.disabled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.conversation-container {
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    margin-bottom: 16px;
+}
+
+.chat-message {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.chat-message.user {
+    background: var(--primary-color);
+    color: white;
+    margin-left: 20%;
+}
+
+.chat-message.assistant {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    margin-right: 20%;
+}
+
+.chat-input {
+    display: flex;
+    gap: 12px;
+}
+
+.chat-input input {
+    flex: 1;
+}
+
+.config-section {
+    margin-bottom: 24px;
+}
+
+.config-section select {
+    max-width: 400px;
+}
+
+.finding {
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.finding.blocker {
+    background: #fef2f2;
+    border-color: var(--error-color);
+}
+
+.finding.major {
+    background: #fef3c7;
+    border-color: var(--warning-color);
+}
+
+.finding.minor {
+    background: #dbeafe;
+    border-color: var(--primary-color);
+}
+
+.finding.info {
+    background: #f0fdf4;
+    border-color: var(--success-color);
+}
+
+.finding-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.finding-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

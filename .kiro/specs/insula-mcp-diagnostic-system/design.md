@@ -2,113 +2,161 @@
 
 ## Overview
 
-Insula MCP implements a plugin-based diagnostic meta-inspector architecture specifically designed to proactively identify security, performance, and compliance issues in MCP (Model Context Protocol) servers before they reach production. The system safely executes comprehensive checks against MCP servers, focusing on protocol conformance, security vulnerabilities, operational readiness, and governance compliance. It uses worker thread sandboxing for isolation, provides multiple output formats with accessibility support, and integrates with CI/CD pipelines through structured exit codes and artifact generation.
+Insula MCP is designed as an intelligent, agentic MCP server that extends the existing brAInwav diagnostic infrastructure to serve as a meta-diagnostic and development assistant for the Model Context Protocol ecosystem. The system provides AI-powered assistance for both developers and non-developers to build, debug, and resolve problems with MCP servers and connectors through natural language interactions and automated problem resolution.
 
-The diagnostic system validates MCP protocol compliance and security including:
+The system leverages the current plugin architecture, academic providers, and worker sandbox system while adding local LLM capabilities and enhanced diagnostic tools. This approach ensures code reuse, maintains compatibility with existing infrastructure, and follows established brAInwav patterns while providing conversational, step-by-step guidance for MCP development and troubleshooting.
 
-- JSON-RPC 2.0 transport layer conformance and MCP-specific extensions
-- MCP tool, resource, and prompt discovery mechanisms with security analysis
-- Server-Sent Events (SSE) streaming capabilities for MCP progress notifications
-- Authentication and authorization implementations with vulnerability detection
-- Tool permissioning analysis against least-privilege principles
-- STRIDE-based threat modeling for MCP-specific attack vectors
-- Academic research provider integration with FASTMCP v3.22 compliance
-- Governance policy compliance and drift detection
-- Performance baseline measurements and SLA validation
-- Accessibility compliance (WCAG 2.2 AA) for inclusive tooling
+**Key Design Principles:**
+
+- **Local-First AI**: All LLM processing occurs locally without external dependencies, ensuring privacy and offline functionality
+- **Academic License Compliance**: Automated validation of research licenses before implementation suggestions to ensure legal compliance
+- **Conversational Interface**: Natural language interactions for both technical and non-technical users
+- **Automated Problem Resolution**: AI-powered diagnosis and fix generation for common MCP issues
+- **Performance-Focused**: Sub-second response times for most operations with millisecond-precision monitoring
 
 ## Architecture
 
-### High-Level Architecture
+### Core Components
 
 ```mermaid
 graph TB
-    CLI[CLI Interface] --> Orchestrator[Diagnostic Orchestrator]
-    Orchestrator --> PluginHost[Plugin Host]
-    PluginHost --> Sandbox1[Worker Sandbox 1]
-    PluginHost --> Sandbox2[Worker Sandbox 2]
-    PluginHost --> SandboxN[Worker Sandbox N]
-    
-    Sandbox1 --> AuthPlugin[MCP Auth Plugin]
-    Sandbox2 --> StreamingPlugin[MCP SSE Plugin]
-    SandboxN --> ThreatPlugin[MCP Threat Model Plugin]
-    
-    Orchestrator --> ReportGen[Report Generator]
-    ReportGen --> MarkdownReport[Markdown Report]
-    ReportGen --> JSONReport[JSON Report]
-    ReportGen --> ArcTDDPlan[ArcTDD Plan]
-    ReportGen --> FilePlan[File Plan Patches]
-    
-    subgraph "MCP Protocol Adapters"
-        HTTPAdapter[HTTP Transport]
-        JSONRPCAdapter[MCP JSON-RPC Client]
-        SSEAdapter[MCP SSE Probe]
-        WSAdapter[WebSocket Transport]
+    subgraph "Existing brAInwav Infrastructure"
+        PLUGIN_HOST[Plugin Host]
+        WORKER_SANDBOX[Worker Sandbox]
+        ADAPTERS[HTTP/SSE/WS/JSONRPC Adapters]
+        EXISTING_PLUGINS[Existing Diagnostic Plugins]
     end
     
-    subgraph "Target MCP Server"
-        MCPServer[MCP Server Under Test]
-        MCPTools[Tools Endpoint]
-        MCPResources[Resources Endpoint] 
-        MCPPrompts[Prompts Endpoint]
-        MCPEvents[SSE Events Endpoint]
+    subgraph "MCP Server Layer"
+        MCP_SERVER[MCP Server]
+        MCP_TOOLS[MCP Tool Definitions]
     end
     
-    AuthPlugin --> JSONRPCAdapter
-    StreamingPlugin --> SSEAdapter
-    ThreatPlugin --> JSONRPCAdapter
-    JSONRPCAdapter --> MCPServer
-    SSEAdapter --> MCPEvents
+    subgraph "Enhanced LLM Integration"
+        LLM_ADAPTER[LLM Adapter Interface]
+        OLLAMA_ADAPTER[Ollama Adapter]
+        MLX_ADAPTER[MLX Adapter]
+        LLAMACPP_ADAPTER[llama.cpp Adapter]
+        ORCHESTRATOR[LLM Orchestrator]
+        CONVERSATION_MANAGER[Conversation Manager]
+        MODEL_MANAGER[Model Manager]
+    end
+    
+    subgraph "Extended Diagnostic Plugins"
+        ENHANCED_INSPECTOR[Enhanced MCP Inspector]
+        ENHANCED_PROTOCOL[Enhanced Protocol Validator]
+        ENHANCED_SECURITY[Enhanced Security Scanner]
+        ENHANCED_PERFORMANCE[Enhanced Performance Profiler]
+        COMPATIBILITY_CHECKER[Compatibility Checker]
+    end
+    
+    subgraph "Existing Academic Providers"
+        CONTEXT7_PROVIDER[Context7 MCP Provider]
+        VIBE_CHECK_PROVIDER[Vibe Check MCP Provider]
+        SEMANTIC_PROVIDER[Semantic Scholar Provider]
+        OPENALEX_PROVIDER[OpenAlex Provider]
+        WIKIDATA_PROVIDER[Wikidata Provider]
+        ARXIV_PROVIDER[arXiv Provider]
+    end
+    
+    subgraph "New Development Assistance Plugins"
+        CODE_GENERATOR[Code Generator Plugin]
+        TEMPLATE_GENERATOR[Template Generator Plugin]
+        PROBLEM_RESOLVER[Problem Resolver Plugin]
+        INTERACTIVE_DEBUGGER[Interactive Debugger Plugin]
+        ERROR_INTERPRETER[Error Interpreter Plugin]
+        DEVELOPMENT_ASSISTANT[Development Assistant Plugin]
+        BEST_PRACTICES_ADVISOR[Best Practices Advisor Plugin]
+        INTEGRATION_HELPER[Integration Helper Plugin]
+    end
+    
+    subgraph "Commercial & Licensing Extensions"
+        AUTH_PLUGIN[Auth Plugin Extension]
+        LICENSE_VALIDATOR[License Validator Plugin]
+        COMPLIANCE_MONITOR[Compliance Monitor Plugin]
+    end
+    
+    CLIENT[MCP Client] --> MCP_SERVER
+    MCP_SERVER --> MCP_TOOLS
+    MCP_TOOLS --> PLUGIN_HOST
+    
+    PLUGIN_HOST --> WORKER_SANDBOX
+    PLUGIN_HOST --> EXISTING_PLUGINS
+    PLUGIN_HOST --> ENHANCED_INSPECTOR
+    PLUGIN_HOST --> ENHANCED_PROTOCOL
+    PLUGIN_HOST --> ENHANCED_SECURITY
+    PLUGIN_HOST --> ENHANCED_PERFORMANCE
+    PLUGIN_HOST --> COMPATIBILITY_CHECKER
+    PLUGIN_HOST --> CODE_GENERATOR
+    PLUGIN_HOST --> TEMPLATE_GENERATOR
+    PLUGIN_HOST --> PROBLEM_RESOLVER
+    PLUGIN_HOST --> INTERACTIVE_DEBUGGER
+    PLUGIN_HOST --> ERROR_INTERPRETER
+    PLUGIN_HOST --> DEVELOPMENT_ASSISTANT
+    PLUGIN_HOST --> BEST_PRACTICES_ADVISOR
+    PLUGIN_HOST --> INTEGRATION_HELPER
+    PLUGIN_HOST --> LICENSE_VALIDATOR
+    PLUGIN_HOST --> COMPLIANCE_MONITOR
+    
+    WORKER_SANDBOX --> ADAPTERS
+    
+    ORCHESTRATOR --> LLM_ADAPTER
+    ORCHESTRATOR --> CONVERSATION_MANAGER
+    ORCHESTRATOR --> MODEL_MANAGER
+    LLM_ADAPTER --> OLLAMA_ADAPTER
+    LLM_ADAPTER --> MLX_ADAPTER
+    LLM_ADAPTER --> LLAMACPP_ADAPTER
+    
+    PLUGIN_HOST --> CONTEXT7_PROVIDER
+    PLUGIN_HOST --> VIBE_CHECK_PROVIDER
+    PLUGIN_HOST --> SEMANTIC_PROVIDER
+    PLUGIN_HOST --> OPENALEX_PROVIDER
+    PLUGIN_HOST --> WIKIDATA_PROVIDER
+    PLUGIN_HOST --> ARXIV_PROVIDER
+    
+    LICENSE_VALIDATOR --> CONTEXT7_PROVIDER
+    LICENSE_VALIDATOR --> SEMANTIC_PROVIDER
+    LICENSE_VALIDATOR --> ARXIV_PROVIDER
 ```
 
-### Plugin Architecture
+### System Architecture Layers
 
-The system follows a plugin-based architecture where each diagnostic capability is implemented as an isolated plugin:
+1. **Existing brAInwav Infrastructure**: Leverages current plugin host, worker sandbox, and adapter systems
+2. **MCP Server Layer**: Standard MCP server interface built on existing server.ts foundation
+3. **Enhanced Plugin Layer**: Extends existing DiagnosticPlugin interface for new capabilities
+4. **LLM Integration Layer**: New LLM adapter system following existing adapter patterns
+5. **Academic Provider Layer**: Utilizes existing academic MCP providers with license validation
+6. **Development Assistance Layer**: New plugins following existing plugin architecture
+7. **Commercial Extension Layer**: Authentication and licensing extensions to existing systems
 
-- **Stateless Design**: Plugins receive a diagnostic context and return findings without maintaining state
-- **Sandboxed Execution**: Each plugin runs in a Node.js worker thread with resource limits
-- **Adapter Pattern**: Common network operations are abstracted through adapters
-- **Evidence Collection**: Plugins collect evidence pointers that link findings to specific sources
+### Existing Infrastructure Reuse
 
-## Components and Interfaces
+The system builds upon established brAInwav patterns:
 
-### Core Components
+- **Plugin Host**: Extends existing plugin-host.ts with new plugin types
+- **Worker Sandbox**: Reuses existing sandbox.ts for plugin isolation and budgets
+- **Adapters**: Leverages existing HTTP, SSE, WebSocket, and JSON-RPC adapters
+- **Academic Providers**: Utilizes existing academic/* providers with license validation
+- **Types System**: Extends existing types.ts with new interfaces
+- **Observability**: Builds on existing OTEL integration and brAInwav logging
 
-#### 1. CLI Interface (`cli.ts`)
+## Plugin Interfaces and Contracts
 
-- **Purpose**: Command-line interface using Commander.js
-- **Key Methods**:
-  - `diagnose <endpoint>`: Main diagnostic command
-  - `doctor`: Environment health checks
-  - `compare <old> <new>`: Diff findings between runs
-- **Configuration**: Supports extensive CLI flags for customization
+### Existing DiagnosticPlugin Interface
 
-#### 2. Diagnostic Orchestrator (`orchestrator.ts`)
-
-- **Purpose**: Coordinates plugin execution and report generation
-- **Responsibilities**:
-  - Plugin selection based on suites and full mode
-  - Result aggregation and severity assessment
-  - Exit code determination for CI/CD integration
-  - Output directory management
-
-#### 3. Plugin Host (`plugin-host.ts`)
-
-- **Purpose**: Manages plugin lifecycle and sandboxing
-- **Key Features**:
-  - Worker thread creation with resource limits
-  - Fallback to in-process execution
-  - Evidence relay from workers to host
-  - Timeout and memory budget enforcement
-
-#### 4. Diagnostic Context
-
-- **Purpose**: Runtime environment provided to plugins with security and accessibility considerations
-- **Design Rationale**: Centralized context ensures consistent plugin behavior while maintaining security boundaries
-- **Interface**:
+All diagnostic plugins extend the existing `DiagnosticPlugin` interface:
 
 ```typescript
-interface DiagnosticContext {
+// Existing interface from types.ts
+export interface DiagnosticPlugin {
+  id: string;
+  title: string;
+  order?: number;
+  run: (ctx: DiagnosticContext) => Promise<Finding[]>;
+}
+
+// Existing DiagnosticContext from types.ts
+export interface DiagnosticContext {
   endpoint: string;
   headers?: Record<string, string>;
   logger: (...args: unknown[]) => void;
@@ -119,449 +167,888 @@ interface DiagnosticContext {
   llm?: LlmAdapter | null;
   evidence: (ev: EvidencePointer) => void;
   deterministic?: boolean;
-  // Accessibility support
-  a11yMode?: boolean;
-  // Security constraints
-  timeoutMs?: number;
-  memoryLimitMB?: number;
 }
 ```
 
-### Plugin System
+### Enhanced LLM Adapter Interface
 
-#### Built-in Plugins
-
-1. **DevTool Environment Plugin** (`devtool-env.ts`)
-   - Checks for known CVEs in development tools and MCP Inspector versions
-   - Validates development environment security posture
-   - **Design Rationale**: Early detection of compromised development tools prevents supply chain attacks
-   - Order: 10 (runs first)
-
-2. **MCP Authentication Plugin** (`auth.ts`)
-   - Tests unauthenticated access to discovery endpoints with BLOCKER severity for exposed tools
-   - Validates multiple authentication schemes (Bearer tokens, Basic auth, custom headers)
-   - Detects authentication bypass vulnerabilities and header case sensitivity issues
-   - **Design Rationale**: Authentication failures represent critical security risks requiring immediate attention
-   - Order: 90
-
-3. **MCP Discovery Plugin** (`discovery.ts`)
-   - Enumerates MCP tools, prompts, and resources via JSON-RPC discovery methods
-   - Tests discovery endpoint response schemas and capability negotiation
-   - Validates MCP protocol version handshake and metadata consistency
-   - **Design Rationale**: Discovery validation ensures proper MCP protocol implementation and prevents capability confusion
-   - Order: 100
-
-4. **MCP Protocol Plugin** (`protocol.ts`)
-   - Validates MCP JSON-RPC 2.0 conformance and initialization handshake
-   - Tests method signatures, parameter schemas, and error handling
-   - Verifies MCP-specific error codes and response formats
-   - **Design Rationale**: Protocol conformance ensures interoperability and prevents client-server communication failures
-   - Order: 110
-
-5. **MCP JSON-RPC Batch Plugin** (`jsonrpc-batch.ts`)
-   - Tests batch request handling for multiple tool calls and notification processing
-   - Validates mixed string/number ID handling and progress update mechanisms
-   - **Design Rationale**: Batch processing is critical for performance and must handle edge cases correctly
-   - Order: 115
-
-6. **MCP Tool Permissioning Plugin** (`permissioning.ts`)
-   - Analyzes tool capabilities for over-privileging using heuristic risk classification
-   - Generates MAJOR findings for high-risk capabilities (filesystem, shell, network access)
-   - Provides confidence scores and recommends confirmation prompts and scoping restrictions
-   - **Design Rationale**: Least-privilege enforcement prevents privilege escalation and reduces attack surface
-   - Order: 135
-
-7. **MCP Streaming SSE Plugin** (`streaming-sse.ts`)
-   - Tests Server-Sent Events endpoints for proper content-type headers and streaming behavior
-   - Validates MCP-specific SSE message formats, event types, and streaming tool execution progress
-   - **Design Rationale**: SSE reliability is crucial for real-time progress updates and user experience
-   - Order: 200
-
-8. **SSE Reconnect Plugin** (`sse-reconnect.ts`)
-   - Tests retry directives, Last-Event-ID support, and reconnection mechanisms
-   - Validates heartbeat mechanisms and connection persistence for production readiness
-   - **Design Rationale**: Robust reconnection handling ensures reliability behind proxies and CDNs
-   - Order: 205
-
-9. **CORS Plugin** (`cors.ts`)
-   - Tests preflight requests across MCP routes and validates CORS header configurations
-   - **Design Rationale**: Proper CORS configuration prevents cross-origin security issues in web deployments
-   - Order: 210
-
-10. **Rate Limit Plugin** (`ratelimit.ts`)
-    - Tests 429 responses, Retry-After headers, and validates backoff mechanisms
-    - Measures baseline latency and provides SLA baseline recommendations
-    - **Design Rationale**: Rate limiting validation ensures production stability and prevents DoS vulnerabilities
-    - Order: 220
-
-11. **MCP Tool Drift Plugin** (`tool-drift.ts`)
-    - Detects mutable tool surfaces that change without version updates
-    - Compares capability snapshots for consistency and identifies potential tool poisoning
-    - **Design Rationale**: Tool drift detection prevents security bypasses through dynamic capability injection
-    - Order: 300
-
-12. **Governance Plugin** (`governance.ts`)
-    - Checks for .cortex governance packs and validates policy compliance
-    - Generates MAJOR findings when governance packs are missing
-    - Validates policy version consistency and provides remediation steps
-    - **Design Rationale**: Governance compliance ensures organizational standards are maintained over time
-    - Order: 400
-
-13. **MCP Threat Model Plugin** (`threat-model.ts`)
-    - Applies STRIDE threat modeling to MCP-specific attack vectors
-    - Performs spoofing checks, tampering risk detection, and information disclosure assessment
-    - Identifies prompt injection risks and privilege escalation through tool chaining
-    - **Design Rationale**: Systematic threat modeling provides comprehensive security coverage beyond individual vulnerabilities
-    - Order: 410
-
-14. **Performance Plugin** (`performance.ts`)
-    - Measures response times for JSON-RPC calls and tests timeout handling
-    - Validates circuit breaker behavior and generates performance findings with latency measurements
-    - **Design Rationale**: Performance baselines enable SLA establishment and regression detection
-    - Order: 500
-
-15. **Academic Research Providers** (`academic/`)
-    - **Semantic Scholar Provider** (`semantic-scholar.mcp.ts`)
-      - Paper search and citation analysis with FASTMCP v3.22 compliant tool definitions
-    - **OpenAlex Provider** (`openalex.mcp.ts`)
-      - Scholarly work and author search with research metrics and institutional data access
-    - **Wikidata Provider** (`wikidata.mcp.ts`)
-      - SPARQL query capabilities for knowledge graphs and entity lookup
-    - **arXiv Provider** (`arxiv.mcp.ts`)
-      - Preprint search and metadata extraction with category filtering
-    - **Vibe Check Provider** (`Vibe_Check.mcp.ts`)
-      - Research quality and methodology assessment with academic integrity validation
-    - **Context7 Provider** (`context7.mcp.ts`)
-      - Contextual research analysis and cross-referencing with citation context mapping
-    - **Design Rationale**: Academic providers demonstrate MCP extensibility while providing real research value
-    - Order: 600-650
-
-#### Plugin Interface
+Extends existing `LlmAdapter` interface from types.ts to support conversational AI and local model management:
 
 ```typescript
-interface DiagnosticPlugin {
-  id: string;
-  title: string;
-  order?: number;
-  run: (ctx: DiagnosticContext) => Promise<Finding[]>;
-}
-```
-
-### Academic Provider Registry
-
-The system includes a comprehensive academic research provider registry under `registry.providers.academic`:
-
-```typescript
-interface AcademicProviderRegistry {
-  semanticScholar: SemanticScholarProvider;
-  openAlex: OpenAlexProvider;
-  wikidata: WikidataProvider;
-  arxiv: ArxivProvider;
-  vibeCheck: VibeCheckProvider;
-  context7: Context7Provider;
+// Existing interface from types.ts
+export interface LlmAdapter {
+  complete: (prompt: string, maxTokens?: number) => Promise<string>;
 }
 
-interface AcademicProvider {
+// Enhanced interface for multiple backends with conversation support
+export interface EnhancedLlmAdapter extends LlmAdapter {
+  backend: 'ollama' | 'mlx' | 'llamacpp';
+  loadModel: (modelId: string) => Promise<void>;
+  unloadModel: (modelId: string) => Promise<void>;
+  getSupportedModels: () => Promise<string[]>;
+  getModelInfo: (modelId: string) => Promise<ModelInfo>;
+  
+  // Conversational capabilities for development assistance
+  startConversation: (context: ConversationContext) => Promise<ConversationId>;
+  continueConversation: (id: ConversationId, message: string) => Promise<string>;
+  endConversation: (id: ConversationId) => Promise<void>;
+  
+  // Specialized completion methods for different tasks
+  analyzeCode: (code: string, context: string) => Promise<CodeAnalysis>;
+  generateSolution: (problem: Problem, constraints: Constraints) => Promise<Solution>;
+  explainError: (error: Error, context: Context) => Promise<Explanation>;
+}
+
+export interface ModelInfo {
   id: string;
   name: string;
-  version: string;
+  size: string;
   capabilities: string[];
-  healthCheck: () => Promise<boolean>;
-  authenticate?: (credentials: any) => Promise<void>;
-  search: (query: ResearchQuery) => Promise<ResearchResult[]>;
-  validate: (data: any) => Promise<ValidationResult>;
+  loaded: boolean;
+  optimizedFor: ('code' | 'conversation' | 'debugging' | 'documentation')[];
+}
+
+export interface ConversationContext {
+  userId?: string;
+  sessionType: 'development' | 'debugging' | 'learning';
+  mcpContext?: MCPContext;
+  codeContext?: string;
+  problemContext?: Problem;
 }
 ```
 
-Each academic provider implements the FASTMCP v3.22 specification and provides:
+### Development Assistance Plugin Extensions
 
-- Research-specific tool definitions with parameter validation
-- Capability negotiation for academic data access and API authentication  
-- Error handling for API rate limits, availability, and quota management
-- Structured data output for research workflows and citation management
-- Integration with diagnostic framework for provider health monitoring
-- Sandboxed execution within the Insula MCP worker thread architecture
+New plugin types that extend `DiagnosticPlugin` to support conversational development assistance:
 
-Each academic provider implements the FASTMCP v3.22 specification and provides:
+```typescript
+export interface CodeGeneratorPlugin extends DiagnosticPlugin {
+  generateCode: (spec: CodeSpec, ctx: DiagnosticContext) => Promise<GeneratedCode>;
+  generateFromNaturalLanguage: (description: string, ctx: DiagnosticContext) => Promise<GeneratedCode>;
+  generateAPIConnector: (apiSpec: APISpec, ctx: DiagnosticContext) => Promise<MCPConnector>;
+  getTemplates: () => Promise<TemplateInfo[]>;
+  customizeTemplate: (templateId: string, customizations: TemplateCustomization) => Promise<GeneratedCode>;
+}
 
-- Research-specific tool definitions
-- Capability negotiation for academic data access
-- Error handling for API rate limits and availability
-- Structured data output for research workflows
+export interface InteractivePlugin extends DiagnosticPlugin {
+  startSession: (problem: string, ctx: DiagnosticContext) => Promise<SessionId>;
+  processInput: (sessionId: SessionId, input: string, ctx: DiagnosticContext) => Promise<Response>;
+  endSession: (sessionId: SessionId) => Promise<void>;
+  
+  // Enhanced for step-by-step guidance
+  askDiagnosticQuestion: (sessionId: SessionId, context: ProblemContext) => Promise<Question>;
+  suggestNextStep: (sessionId: SessionId, currentState: SessionState) => Promise<NextStep>;
+  validateSolution: (sessionId: SessionId, solution: Solution) => Promise<ValidationResult>;
+}
 
-### Network Adapters
+export interface DevelopmentAssistantPlugin extends DiagnosticPlugin {
+  provideGuidance: (userLevel: 'beginner' | 'intermediate' | 'expert', task: DevelopmentTask) => Promise<Guidance>;
+  generateTutorial: (topic: string, userContext: UserContext) => Promise<Tutorial>;
+  explainConcept: (concept: string, context: ConceptContext) => Promise<Explanation>;
+  suggestBestPractices: (implementation: MCPImplementation) => Promise<BestPractice[]>;
+}
 
-#### HTTP Adapter (`adapters/http.ts`)
+export interface ProblemResolverPlugin extends DiagnosticPlugin {
+  analyzeError: (error: Error, context: ErrorContext) => Promise<ErrorAnalysis>;
+  generateFix: (problem: Problem, strategy: FixStrategy) => Promise<Fix>;
+  applyFix: (fix: Fix, target: MCPImplementation) => Promise<FixResult>;
+  validateFix: (fix: Fix, originalProblem: Problem) => Promise<ValidationResult>;
+  suggestMultipleSolutions: (problem: Problem) => Promise<RankedSolution[]>;
+}
+```
 
-- Provides standardized HTTP request handling
-- Automatic JSON/text response parsing
-- Error handling with status codes
+### Academic Provider Integration
 
-#### MCP JSON-RPC Adapter (`adapters/jsonrpc.ts`)
+Academic providers extend existing patterns in `src/providers/academic/`:
 
-- Implements MCP compliant JSON-RPC 2.0 client protocol with authentication support
-- Handles MCP initialization handshake and capability negotiation
-- Auto-incrementing request IDs with MCP method routing and error handling
-- **Design Rationale**: Centralized JSON-RPC handling ensures consistent authentication and error handling across plugins
+```typescript
+// Following existing academic provider patterns
+export interface AcademicProvider {
+  validateLicense: (content: ResearchContent) => Promise<LicenseValidation>;
+  checkCompliance: (implementation: string) => Promise<ComplianceResult>;
+  suggestImprovements: (findings: Finding[]) => Promise<Finding[]>;
+}
 
-#### MCP SSE Adapter (`adapters/sse.ts`)
+// Integration with existing DiagnosticPlugin
+export interface AcademicValidationPlugin extends DiagnosticPlugin {
+  provider: AcademicProvider;
+  licenseValidator: LicenseValidator;
+}
+```
 
-- Server-Sent Events probing capabilities for MCP progress notifications and logging
-- Event parsing with eventsource-parser for MCP-specific message formats
-- Handles streaming tool execution progress with timeout and abort signal support
-- **Design Rationale**: SSE adapter abstracts streaming complexity while providing robust error handling for production environments
+### Enhanced Authentication Extensions
 
-#### WebSocket Adapter (`adapters/ws.ts`)
+Extends existing `src/plugins/auth.ts`:
 
-- WebSocket connection testing
-- Ping/pong validation
-- Connection lifecycle management
+```typescript
+// Enhanced authentication following existing auth plugin patterns
+export interface EnhancedAuthPlugin extends DiagnosticPlugin {
+  validateAuth0Token: (token: string) => Promise<AuthResult>;
+  checkRoleAccess: (role: string, feature: string) => Promise<boolean>;
+  trackAuthUsage: (userId: string, action: string) => Promise<void>;
+}
+```
+
+### Commercial Licensing Extensions
+
+New plugins following existing governance patterns:
+
+```typescript
+// Following existing governance.ts plugin patterns
+export interface CommercialLicensingPlugin extends DiagnosticPlugin {
+  validateCommercialLicense: (key: string) => Promise<LicenseValidation>;
+  checkFeatureAccess: (feature: string, license: License) => Promise<boolean>;
+  trackUsage: (feature: string, metrics: UsageMetrics) => Promise<void>;
+  generateComplianceReport: (period: TimePeriod) => Promise<Finding[]>;
+}
+```
+
+### License Validation Plugin Interface
+
+```typescript
+interface ILicenseValidatorPlugin extends IPlugin {
+  validateAcademicLicense(research: ResearchContent): Promise<LicenseValidation>;
+  checkImplementationCompliance(code: string, source: ResearchSource): Promise<ComplianceResult>;
+  getApprovedLicenses(): Promise<ApprovedLicense[]>;
+  flagProprietaryContent(content: AcademicContent): Promise<ProprietaryFlag[]>;
+}
+
+interface ComplianceResult {
+  compliant: boolean;
+  licenseType: string;
+  restrictions: string[];
+  approvalRequired: boolean;
+  implementationAllowed: boolean;
+}
+```
+
+### Academic MCP Plugin Integrations
+
+**Context7 MCP Plugin**:
+
+- **Purpose**: Provides academic-grade validation of MCP implementations and features
+- **Key Features**: Architecture validation, code quality assessment, best practices checking
+
+**Vibe_Check MCP Plugin**:
+
+- **Purpose**: Performs comprehensive error checking and improvement suggestions
+- **Key Features**: Anti-pattern detection, refactoring suggestions, code health analysis
+
+**Semantic Scholar MCP Plugin**:
+
+- **Purpose**: Validates implementations against academic research and best practices
+- **Key Features**: Research paper validation, citation checking, methodology verification
+
+**OpenAlex MCP Plugin**:
+
+- **Purpose**: Provides access to academic metadata for validation and research
+- **Key Features**: Academic concept validation, research trend analysis, citation networks
+
+**Wikidata MCP Plugin**:
+
+- **Purpose**: Validates data structures and relationships using Wikidata knowledge base
+- **Key Features**: Entity validation, relationship verification, knowledge graph integration
+
+**arXiv MCP Plugin**:
+
+- **Purpose**: Validates technical implementations against latest research papers
+- **Key Features**: Preprint analysis, technical validation, research trend integration
+
+**Exa MCP Plugin**:
+
+- **Purpose**: Provides enhanced search and validation capabilities
+- **Key Features**: Advanced search validation, content analysis, relevance scoring
+
+### License Validation and Compliance System
+
+**License Validator Plugin**:
+
+- **Purpose**: Validates academic research licenses before implementation suggestions
+- **Key Features**:
+  - Real-time license checking with <3s response time
+  - Database of approved open-source and permissive licenses
+  - Proprietary content flagging and approval workflow
+  - Integration with all academic MCP plugins
+
+**Compliance Monitor Plugin**:
+
+- **Purpose**: Tracks and reports license compliance for all academic integrations
+- **Key Features**:
+  - Continuous compliance monitoring
+  - Automated reporting and audit trails
+  - Legal framework integration
+  - Risk assessment and mitigation recommendations
+
+## Components and Interfaces
+
+### Local LLM Agent
+
+**Purpose**: Provides intelligent, conversational assistance for MCP development and debugging, supporting both developers and non-developers through natural language interactions.
+
+**Key Interfaces**:
+
+- `analyzeCode(code: string, context: string): Promise<Analysis>` - Response time: <2 seconds
+- `generateSolution(problem: Problem, constraints: Constraints): Promise<Solution>` - Response time: <5 seconds
+- `explainError(error: Error, context: Context): Promise<Explanation>` - Response time: <5 seconds
+- `suggestImprovements(implementation: MCPImplementation): Promise<Suggestion[]>` - Response time: <20 seconds
+- `interpretNaturalLanguage(description: string, intent: Intent): Promise<ActionPlan>` - Response time: <3 seconds
+- `provideStepByStepGuidance(task: DevelopmentTask, userLevel: UserLevel): Promise<GuidanceSession>` - Response time: <2 seconds
+- `maintainConversationContext(sessionId: string, interaction: Interaction): Promise<void>` - Persistent across sessions
+
+**Enhanced Capabilities**:
+
+- **Natural Language Processing**: Understands development requests in plain English from non-technical users
+- **Conversational Development**: Maintains context across multi-turn conversations for complex development tasks
+- **Adaptive Explanations**: Adjusts technical depth based on user expertise level (beginner/intermediate/expert)
+- **Interactive Tutorials**: Provides step-by-step guidance with real-time feedback and validation
+- **Code Generation from Descriptions**: Creates MCP servers and connectors from natural language specifications
+- **Contextual Problem Solving**: Analyzes error logs, configurations, and code together for comprehensive diagnosis
+- **Learning and Adaptation**: Improves suggestions based on successful resolution patterns and user feedback
+
+**Model Selection Strategy**:
+
+- **Conversational Tasks**: General-purpose models (Llama 3 Instruct, Mistral 7B Instruct) for natural dialogue
+- **Code Analysis**: Code-specialized models (CodeLlama, StarCoder) for technical analysis and generation
+- **Debugging**: Reasoning-focused models (Llama 3 Instruct) for complex problem diagnosis
+- **Documentation**: Writing-optimized models for clear, user-friendly explanations
+
+### MCP Inspector
+
+**Purpose**: Analyzes MCP servers and connectors for compliance, performance, and security issues.
+
+**Key Interfaces**:
+
+- `inspectServer(endpoint: string): Promise<InspectionReport>` - Response time: <30 seconds
+- `validateProtocol(messages: MCPMessage[]): Promise<ValidationResult>` - Accuracy: 99%
+- `analyzePerformance(server: MCPServer): Promise<PerformanceReport>` - Precision: millisecond-level
+- `scanSecurity(implementation: MCPCode): Promise<SecurityReport>` - Detection accuracy: 95%
+
+**Analysis Types**:
+
+- Protocol compliance validation
+- Security vulnerability scanning
+- Performance bottleneck identification
+- Configuration optimization opportunities
+- Compatibility issue detection
+
+### Problem Resolver
+
+**Purpose**: Automatically fixes identified issues and implements suggested improvements.
+
+**Key Interfaces**:
+
+- `resolveProblem(problem: Problem, strategy: ResolutionStrategy): Promise<Resolution>`
+- `applyFix(fix: Fix, target: MCPImplementation): Promise<Result>`
+- `generatePatch(issue: Issue, solution: Solution): Promise<Patch>`
+- `validateFix(fix: Fix, originalProblem: Problem): Promise<ValidationResult>`
+
+**Resolution Strategies**:
+
+- Automated code patching
+- Configuration adjustments
+- Dependency updates
+- Architecture refactoring
+- Performance optimizations
+
+### Code Generator
+
+**Purpose**: Creates MCP servers, connectors, and related code from both technical specifications and natural language descriptions, enabling non-developers to create MCP implementations.
+
+**Key Interfaces**:
+
+- `generateServer(spec: ServerSpec): Promise<MCPServerCode>` - Response time: <10 seconds
+- `generateFromNaturalLanguage(description: string, userContext: UserContext): Promise<MCPImplementation>` - Response time: <15 seconds
+- `generateConnector(apiSpec: APISpec, mcpSpec: MCPSpec): Promise<ConnectorCode>` - Response time: <60 seconds
+- `generateTools(toolSpecs: ToolSpec[]): Promise<ToolDefinitions>` - Response time: <5 seconds
+- `generateTests(implementation: MCPImplementation): Promise<TestSuite>` - Coverage: 80-90%
+- `generateCustomTemplate(requirements: TemplateRequirements, orgStandards: OrgStandards): Promise<CustomTemplate>` - Response time: <8 seconds
+- `refineGeneration(code: GeneratedCode, feedback: UserFeedback): Promise<RefinedCode>` - Response time: <12 seconds
+
+**Enhanced Generation Capabilities**:
+
+- **Natural Language to Code**: Converts plain English descriptions into working MCP implementations
+- **Conversational Refinement**: Iteratively improves generated code through user feedback and clarification
+- **Organization-Specific Templates**: Creates standardized templates following team conventions and coding standards
+- **API Integration Automation**: Automatically generates OAuth2 and API key authentication wrappers
+- **Comprehensive Documentation**: Creates user guides, API documentation, and deployment instructions
+- **Testing Framework Integration**: Generates comprehensive test suites with interoperability testing
+- **Configuration Optimization**: Automatically optimizes generated configurations for performance and security
+
+**Design Rationale**: The enhanced code generator addresses the need for non-developers to create MCP implementations through natural language, while maintaining the technical depth required for complex integrations. The conversational refinement capability ensures generated code meets specific requirements through iterative improvement.
+
+### Interactive Debugger
+
+**Purpose**: Provides conversational, step-by-step debugging assistance that can understand context from error messages, logs, and configurations to guide users through complex problem resolution.
+
+**Key Interfaces**:
+
+- `startDebuggingSession(problem: string, context?: ProblemContext): Promise<DebuggingSession>` - Response time: <10 seconds
+- `acceptMultipleInputs(session: DebuggingSession, inputs: MultipleInputs): Promise<ContextualAnalysis>` - Supports JSON, text, YAML formats
+- `askDiagnosticQuestion(session: DebuggingSession, currentContext: SessionContext): Promise<TargetedQuestion>` - Response time: <5 seconds
+- `suggestNextStep(session: DebuggingSession): Promise<DebuggingStep>` - Provides numbered, actionable instructions
+- `validateSolution(session: DebuggingSession, solution: Solution): Promise<ValidationResult>` - Includes automated testing
+- `provideSolutionAlternatives(session: DebuggingSession, problem: Problem): Promise<RankedSolution[]>` - Multiple approaches ranked by success likelihood
+- `maintainSessionContext(session: DebuggingSession, interaction: Interaction): Promise<void>` - Persistent context across interactions
+
+**Enhanced Debugging Flow**:
+
+1. **Multi-Input Analysis**: Accepts error messages, logs, configuration files, and code simultaneously
+2. **Contextual Understanding**: Analyzes relationships between different inputs to understand the complete problem
+3. **Targeted Questioning**: Asks specific diagnostic questions based on initial analysis rather than generic troubleshooting
+4. **Hypothesis Generation**: Creates multiple potential causes ranked by probability
+5. **Solution Ranking**: Provides multiple solution approaches with success likelihood and implementation complexity
+6. **Automated Verification**: Tests proposed solutions and confirms issue resolution
+7. **Learning Integration**: Improves future debugging based on successful resolution patterns
+
+**Design Rationale**: The enhanced interactive debugger addresses the need for intelligent, context-aware troubleshooting that can handle complex MCP issues by understanding the relationships between errors, configurations, and system state. The multi-input capability allows users to provide comprehensive context upfront, leading to more accurate and faster problem resolution.
+
+### Academic Validation Tools with License Compliance
+
+**Context7 Plugin**:
+
+- **Purpose**: Provides academic-grade validation of MCP implementations and features with integrated license compliance checking
+- **Key Interfaces**:
+  - `validateArchitecture(design: ArchitectureSpec): Promise<AcademicValidation>` - Includes license compliance check
+  - `reviewCodeQuality(code: string): Promise<QualityAssessment>` - Validates against academic standards with IP compliance
+  - `checkBestPractices(implementation: MCPImplementation): Promise<BestPracticesReport>` - Ensures legal compliance of suggested practices
+  - `validateLicenseCompliance(research: ResearchContent): Promise<LicenseValidation>` - <3s response time for license checking
+
+**Vibe Check Plugin**:
+
+- **Purpose**: Performs comprehensive error checking and improvement suggestions with legal compliance validation
+- **Key Interfaces**:
+  - `performVibeCheck(target: MCPTarget): Promise<VibeCheckResult>` - Includes proprietary content flagging
+  - `identifyAntiPatterns(code: string): Promise<AntiPatternReport>` - Flags patterns that may violate licenses
+  - `suggestRefactoring(analysis: CodeAnalysis): Promise<RefactoringPlan>` - Only suggests legally compliant refactoring approaches
+  - `flagProprietaryContent(content: AcademicContent): Promise<ProprietaryFlag[]>` - Identifies content requiring approval
+
+**Enhanced Academic Integration Features**:
+
+- **Real-time License Validation**: All academic suggestions are validated against approved licenses before presentation
+- **Proprietary Content Detection**: Automatically identifies and flags research that requires licensing approval
+- **Compliance Tracking**: Maintains audit trail of all academic research usage and license compliance
+- **Legal Framework Integration**: Integrates with organizational legal policies and approval workflows
+
+**Design Rationale**: The enhanced academic validation system ensures that all research-based suggestions comply with intellectual property and licensing requirements, addressing legal compliance concerns while maintaining the value of academic research integration. The real-time validation prevents legal issues by checking licenses before implementation suggestions are made.
+
+### Authentication and Licensing System
+
+**Auth0 Integration Plugin**:
+
+- **Purpose**: Provides enterprise-grade authentication for commercial deployment
+- **Key Features**:
+  - OAuth 2.0 and OpenID Connect support
+  - Multi-factor authentication
+  - Single sign-on (SSO) integration
+  - Role-based access control (RBAC)
+  - API key management for programmatic access
+
+**Licensing Manager Plugin**:
+
+- **Purpose**: Manages commercial licensing and feature access control
+- **Key Features**:
+  - License key validation and activation
+  - Feature-based licensing (diagnostic tools, LLM backends, etc.)
+  - Usage tracking and reporting
+  - Subscription management
+  - Offline license validation
+  - License compliance monitoring
+  - Academic research license validation
+  - Intellectual property compliance tracking
 
 ## Data Models
 
-### Finding Structure
-
-**Design Rationale**: Structured findings enable automated processing, CI/CD integration, and accessibility compliance while providing comprehensive remediation guidance.
+### Problem Definition
 
 ```typescript
-interface Finding {
-  id: string;                    // Unique identifier for tracking
-  area: string;                  // Category (auth, streaming, governance, etc.)
-  severity: Severity;            // info|minor|major|blocker (maps to exit codes)
-  title: string;                 // Human-readable title with accessibility prefixes
-  description: string;           // Detailed description with context
-  evidence: EvidencePointer[];   // Supporting evidence (required for all findings)
-  tags?: string[];               // Classification tags for filtering
-  confidence?: number;           // 0..1 confidence score for assessment quality
-  recommendation?: string;       // Actionable remediation advice
-  remediation?: {
-    filePlan?: FilePlan;         // Unified diff patches for automated fixes
-    steps?: string[];            // Manual remediation steps
-    codeSamples?: CodeSample[];  // Example implementations
-    arcTddPlan?: ArcTddStep[];   // Structured TDD remediation plan
-  };
-  // Accessibility and CI/CD integration
-  a11yPrefix?: string;           // Screen reader friendly severity prefix
-  cicdImpact?: 'fail' | 'warn' | 'info';  // CI/CD pipeline impact
+interface Problem {
+  id: string;
+  type: ProblemType;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  userFriendlyDescription: string; // Plain English explanation for non-developers
+  context: ProblemContext;
+  evidence: Evidence[];
+  affectedComponents: string[];
+  suggestedSolutions: RankedSolution[];
+  conversationHistory?: ConversationEntry[];
+  userLevel: 'beginner' | 'intermediate' | 'expert';
 }
 
-type Severity = 'info' | 'minor' | 'major' | 'blocker';
+interface ProblemContext {
+  mcpVersion: string;
+  serverType: string;
+  environment: string;
+  configuration: Record<string, any>;
+  errorLogs: string[];
+  performanceMetrics?: PerformanceMetrics;
+  userInputs?: MultipleInputs; // Support for JSON, text, YAML inputs
+  sessionContext?: SessionContext;
+  previousAttempts?: ResolutionAttempt[];
+}
+
+interface MultipleInputs {
+  errorMessages?: string[];
+  logFiles?: LogFile[];
+  configurationFiles?: ConfigFile[];
+  codeSnippets?: CodeSnippet[];
+  format: 'json' | 'text' | 'yaml' | 'mixed';
+}
+
+interface RankedSolution {
+  solution: Solution;
+  confidence: number;
+  successLikelihood: number;
+  implementationComplexity: 'low' | 'medium' | 'high';
+  estimatedTime: string;
+  prerequisites: string[];
+}
 ```
 
-### Evidence and Remediation
-
-**Design Rationale**: Evidence pointers provide traceability and debugging support, while structured remediation enables automated fixes and follows ArcTDD methodology.
+### Solution Framework
 
 ```typescript
-interface EvidencePointer {
-  type: "url" | "file" | "log" | "har";  // Extended to include HAR files
-  ref: string;                           // Reference to evidence source
-  lines?: [number, number];              // Line range for file evidence
-  redacted?: boolean;                    // Indicates if sensitive data was removed
-}
-
-interface FilePlan {
-  items: FilePlanItem[];
-  description?: string;
-  confidence?: number;
-}
-
-interface FilePlanItem {
-  action: "update" | "new" | "delete";   // Extended actions for comprehensive fixes
-  path: string;
-  description?: string;
-  patch?: string;                        // Unified diff format
-  content?: string;                      // Full content for new files
-}
-
-interface ArcTddStep {
-  phase: 'red' | 'green' | 'refactor';
+interface Solution {
+  id: string;
+  type: SolutionType;
+  confidence: number;
   description: string;
-  files: string[];
-  tests?: string[];
+  userFriendlyDescription: string; // Plain English explanation
+  steps: SolutionStep[];
+  codeChanges: CodeChange[];
+  configChanges: ConfigChange[];
+  testingStrategy: TestingStrategy;
+  rollbackPlan: RollbackPlan;
+  automatedFix?: AutomatedFix; // For problems that can be fixed automatically
+  licenseCompliance?: LicenseCompliance; // For academic research-based solutions
 }
 
-interface CodeSample {
-  language: string;
-  code: string;
-  description?: string;
-  filename?: string;
+interface SolutionStep {
+  order: number;
+  description: string;
+  userFriendlyDescription: string; // Numbered, actionable instructions
+  action: Action;
+  validation: ValidationCriteria;
+  dependencies: string[];
+  estimatedDuration: string;
+  canAutomate: boolean;
+}
+
+interface AutomatedFix {
+  canApplyAutomatically: boolean;
+  requiresUserConfirmation: boolean;
+  riskLevel: 'low' | 'medium' | 'high';
+  backupRequired: boolean;
+  validationTests: ValidationTest[];
+}
+
+interface LicenseCompliance {
+  requiresLicenseCheck: boolean;
+  approvedLicenses: string[];
+  proprietaryContent: boolean;
+  approvalRequired: boolean;
+  complianceStatus: 'compliant' | 'requires_approval' | 'non_compliant';
+}
+```
+
+### MCP Analysis Models
+
+```typescript
+interface MCPAnalysis {
+  serverId: string;
+  timestamp: Date;
+  protocolCompliance: ComplianceReport;
+  securityAssessment: SecurityReport;
+  performanceProfile: PerformanceReport;
+  compatibilityAssessment: CompatibilityReport;
+  recommendations: Recommendation[];
+  issues: Issue[];
+  conversationalSummary: string; // User-friendly summary of findings
+  interactiveActions: InteractiveAction[]; // Actions user can take through conversation
+}
+
+interface ComplianceReport {
+  version: string;
+  compliant: boolean;
+  violations: ProtocolViolation[];
+  warnings: ProtocolWarning[];
+  score: number;
+  migrationPath?: MigrationPath; // For version compatibility issues
+}
+
+interface CompatibilityReport {
+  testedClients: string[];
+  compatibilityMatrix: CompatibilityMatrix;
+  interoperabilityIssues: InteroperabilityIssue[];
+  migrationRecommendations: MigrationRecommendation[];
+  testDuration: number; // Should be ≤120 seconds
+}
+
+interface InteractiveAction {
+  id: string;
+  description: string;
+  type: 'fix' | 'explain' | 'generate' | 'test' | 'optimize';
+  canAutomate: boolean;
+  estimatedTime: string;
+  conversationPrompt: string; // How to initiate this action through conversation
 }
 ```
 
 ## Error Handling
 
-**Design Rationale**: Robust error handling ensures diagnostic reliability while maintaining security boundaries and providing actionable feedback.
+### Error Categories
 
-### Plugin Error Isolation
+1. **Protocol Errors**: MCP specification violations
+2. **Configuration Errors**: Invalid or suboptimal configurations
+3. **Security Errors**: Vulnerabilities and security misconfigurations
+4. **Performance Errors**: Bottlenecks and inefficiencies
+5. **Integration Errors**: Compatibility and interoperability issues
 
-- Worker thread crashes are contained and reported as framework findings with evidence pointers
-- Network timeouts are handled gracefully with configurable budgets (default 5000ms)
-- Plugin exceptions generate structured error findings with confidence scores
-- **Security Consideration**: Plugin sandboxes deny filesystem and child_process access
+### Error Resolution Pipeline
 
-### Graceful Degradation
+```mermaid
+graph LR
+    ERROR[Error Detected] --> CLASSIFY[Classify Error]
+    CLASSIFY --> ANALYZE[Analyze Context]
+    ANALYZE --> LLM_PROCESS[LLM Analysis]
+    LLM_PROCESS --> GENERATE[Generate Solutions]
+    GENERATE --> RANK[Rank Solutions]
+    RANK --> PRESENT[Present to User]
+    PRESENT --> APPLY[Apply Solution]
+    APPLY --> VALIDATE[Validate Fix]
+    VALIDATE --> COMPLETE[Resolution Complete]
+```
 
-- Sandbox initialization failures fall back to in-process execution with security warnings
-- Missing endpoints generate informational findings rather than blocking execution
-- Partial results are preserved when individual plugins fail, maintaining diagnostic value
-- Authentication failures are escalated to BLOCKER severity as per security requirements
+### Intelligent Error Interpretation
 
-### Error Reporting
+The Local LLM Agent provides context-aware error interpretation:
 
-- All errors include evidence pointers for debugging and audit trails
-- Stack traces are sanitized to prevent information leakage and secret exposure
-- Error severity is mapped to appropriate finding levels and CI/CD exit codes
-- HAR files are redacted for sensitive headers (authorization, cookie, token)
-
-### Accessibility Error Handling
-
-- Error messages include severity prefixes for screen reader compatibility
-- Color-blind friendly error indication using text markers
-- Summary-first error reporting when a11y mode is enabled
+- Translates technical errors into user-friendly explanations
+- Suggests probable causes based on context analysis
+- Provides step-by-step resolution guidance
+- Learns from successful resolutions to improve future recommendations
 
 ## Testing Strategy
 
-**Design Rationale**: Comprehensive testing ensures diagnostic reliability, security, and accessibility compliance while validating against real-world MCP server scenarios.
+### Automated Testing Framework
 
-### Unit Testing
+1. **Unit Tests**: Individual component functionality
+2. **Integration Tests**: Component interaction validation
+3. **MCP Protocol Tests**: Compliance and interoperability testing
+4. **Performance Tests**: Load and stress testing
+5. **Security Tests**: Vulnerability and penetration testing
 
-- Plugin logic tested in isolation with mock diagnostic contexts
-- Adapter functionality validated with comprehensive test servers
-- Report generation tested with fixture data covering all severity levels
-- Evidence pointer validation and sanitization testing
+### LLM Testing Approach
 
-### Integration Testing
+1. **Response Quality Tests**: Validate LLM output accuracy and helpfulness
+2. **Context Understanding Tests**: Verify proper context interpretation
+3. **Solution Effectiveness Tests**: Measure success rate of suggested solutions
+4. **Conversation Flow Tests**: Validate interactive debugging sessions
 
-- End-to-end CLI testing with mock MCP servers covering all plugin scenarios
-- Plugin sandboxing validated with resource exhaustion and timeout tests
-- Multi-plugin execution tested for interference and evidence collection
-- CI/CD integration tested with exit code validation
+### Test Data Generation
 
-### Mock MCP Servers
+- Synthetic MCP server implementations with known issues
+- Real-world error scenarios and edge cases
+- Performance benchmarks and stress test scenarios
+- Security vulnerability test cases
 
-- `ok.ts`: Baseline compliant MCP server with proper authentication
-- `broken-sse.ts`: SSE endpoint that terminates early for reconnection testing
-- `bad-jsonrpc.ts`: Incorrect batch response handling and malformed JSON-RPC
-- `bad-cors.ts`: Missing CORS headers for cross-origin testing
-- `auth-bypass.ts`: Authentication bypass scenarios for security testing
-- `over-privileged.ts`: Tools with excessive permissions for permissioning tests
+## Local LLM Integration
 
-### Accessibility Testing (WCAG 2.2 AA Compliance)
+### Supported Backends
 
-- Screen reader compatibility validation with severity prefixes
-- Keyboard navigation testing for CLI interactions
-- Color-blind friendly output verification with text-only indicators
-- Summary-first output mode testing for cognitive accessibility
+1. **Ollama**: Primary local LLM backend with model management and conversation support
+2. **MLX**: Apple Silicon optimized inference with quantization for <2s response times
+3. **llama.cpp**: Cross-platform CPU inference with memory optimization
+4. **Custom Backends**: Extensible architecture for additional backends
 
-### Security Testing
+### Enhanced Model Selection Strategy
 
-- Plugin sandbox escape attempts with forbidden module access
-- Resource exhaustion testing with memory and CPU limits
-- Input validation and sanitization testing for all adapters
-- HAR redaction testing for sensitive header protection
-- Authentication scheme testing for bypass vulnerabilities
+- **Conversational Development**: General-purpose models (Llama 3 Instruct, Mistral 7B Instruct) for natural dialogue with non-developers
+- **Code Analysis and Generation**: Code-specialized models (CodeLlama, StarCoder) for technical analysis and automated code generation
+- **Interactive Debugging**: Reasoning-focused models (Llama 3 Instruct) for complex problem diagnosis and step-by-step guidance
+- **Documentation and Explanation**: Writing-optimized models for clear, user-friendly explanations adapted to user expertise level
+- **Natural Language Processing**: Models optimized for understanding development requests in plain English
 
-### Performance Testing
+### Advanced Context Management
 
-- Baseline latency measurement validation
-- Timeout handling and circuit breaker behavior testing
-- Rate limiting response validation with proper Retry-After headers
-- Memory usage profiling for plugin execution
+- **Persistent Conversation History**: Maintains context across sessions for ongoing development projects
+- **Multi-Modal Context**: Preserves relationships between code, configurations, errors, and user interactions
+- **Adaptive Learning**: Improves suggestions based on successful resolution patterns and user feedback
+- **Session-Aware Context**: Maintains different context types for development, debugging, and learning sessions
+- **Cross-Session Knowledge**: Builds knowledge base from successful interactions to improve future assistance
 
-## Performance Considerations
+### Performance Optimization
 
-**Design Rationale**: Performance optimization ensures diagnostic efficiency while maintaining thorough coverage and supporting CI/CD integration requirements.
+- **Model Quantization**: Automatic quantization for faster inference targeting <2s response times
+- **Context Window Optimization**: Efficient memory usage for long conversations and large codebases
+- **Streaming Responses**: Real-time feedback for better user experience during long operations
+- **Model Caching**: Warm-up strategies to minimize cold start delays
+- **Automatic Model Selection**: Task-based model selection optimized for performance and accuracy
 
-### Resource Management
+**Design Rationale**: The enhanced LLM integration supports the conversational nature of the system, enabling natural language interactions for both developers and non-developers while maintaining high performance through optimized model selection and caching strategies.
 
-- Worker thread pools with configurable limits (default 96MB memory per plugin)
-- Memory budgets enforced per plugin with graceful degradation
-- Timeout mechanisms prevent hanging operations (default 5000ms per plugin)
-- **Security Benefit**: Resource limits prevent DoS attacks through malicious plugins
+## Security Considerations
 
-### Scalability
+### Local-First Security
 
-- Stateless plugin design enables horizontal scaling and parallel execution
-- Deterministic mode supports reproducible results for regression testing
-- Minimal memory footprint optimized for CI/CD environments
-- Plugin execution order optimized for early failure detection (security first)
+- All processing occurs locally without external API calls
+- No sensitive code or data transmitted to external services
+- Local model storage and execution
+- Encrypted conversation history storage
 
-### Optimization
+### MCP Security Analysis
 
-- Authentication and discovery plugins run early to fail fast on critical issues
-- Network request batching where possible to reduce latency
-- Lazy loading of expensive adapters (SSE, WebSocket) only when needed
-- Evidence collection optimized to minimize memory usage
+- Authentication and authorization validation according to MCP specification
+- Input sanitization checking based on OWASP guidelines
+- Privilege escalation detection and prevention
+- Secure communication verification for all transport protocols
 
-### CI/CD Performance
+### Protocol Compliance
 
-- Exit code determination optimized for immediate feedback
-- SBOM generation and artifact upload designed for pipeline efficiency
-- Report generation supports both detailed and summary modes for different audiences
+- Full compliance with MCP protocol specification version 2024-11-05
+- Support for OAuth2 and API key authentication methods
+- JSON-RPC 2.0 message format validation
+- WebSocket and HTTP transport protocol support
+- Backward compatibility testing for older MCP versions
 
-## Security Architecture
+## Commercial Deployment Architecture
 
-**Design Rationale**: Multi-layered security approach protects both the diagnostic system and target MCP servers while ensuring sensitive data protection throughout the analysis process.
+### Licensing Tiers
 
-### Sandbox Security
+**Community Edition (Free)**:
 
-- Worker threads deny filesystem and child_process access to prevent privilege escalation
-- Resource limits (CPU/memory budgets) prevent DoS attacks and resource exhaustion
-- Evidence collection sanitizes sensitive data and prevents information leakage
-- **Threat Mitigation**: Addresses spoofing, tampering, and denial-of-service attack vectors
+- Basic diagnostic tools
+- Limited LLM backend support
+- Core MCP validation
+- Open source plugins only
 
-### Input Validation
+**Professional Edition**:
 
-- All external inputs validated with Zod schemas to prevent injection attacks
-- URL parsing prevents SSRF attacks against internal services
-- Header injection protection for authentication schemes
-- **Authentication Security**: Multiple scheme validation prevents bypass vulnerabilities
+- Advanced diagnostic plugins
+- All LLM backend support
+- Academic validation tools (Context7, Vibe Check)
+- Priority support
+- Commercial plugin access
 
-### Output Security
+**Enterprise Edition**:
 
-- HAR files redacted for sensitive headers (authorization, cookie, token, etc.)
-- Log output sanitized for secrets and personally identifiable information
-- Evidence pointers validated for path traversal and directory escape attempts
-- **Compliance**: Supports audit requirements and governance policy validation
+- Full feature access
+- Auth0 integration
+- Custom plugin development
+- On-premises deployment
+- SLA guarantees
+- Advanced usage analytics
 
-### STRIDE Threat Model Implementation
+### Authentication Flow
 
-- **Spoofing**: Authentication scheme validation and bypass detection
-- **Tampering**: Tool drift detection and capability snapshot comparison
-- **Repudiation**: Comprehensive logging and audit trail capabilities
-- **Information Disclosure**: Evidence redaction and output sanitization
-- **Denial of Service**: Resource limits and timeout mechanisms
-- **Elevation of Privilege**: Tool permissioning analysis and sandbox enforcement
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Insula
+    participant Auth0
+    participant License
+    
+    Client->>Insula: Request Access
+    Insula->>Auth0: Validate Token
+    Auth0->>Insula: Token Valid
+    Insula->>License: Check Feature Access
+    License->>Insula: Access Granted
+    Insula->>Client: Service Available
+```
 
-## Observability
+### Usage Tracking
 
-**Design Rationale**: Comprehensive observability enables debugging, performance optimization, and compliance auditing while supporting governance requirements.
+- Feature usage metrics collection
+- API call tracking and rate limiting
+- License compliance monitoring
+- Automated billing integration
+- Usage analytics and reporting
 
-### Telemetry Integration
+## Performance Optimization
 
-- OpenTelemetry spans for plugin execution with endpoint, suite, severity, and confidence attributes
-- Structured logging with correlation IDs for distributed tracing
-- Performance metrics collection for baseline latency and SLA establishment
-- **Governance Integration**: Telemetry supports policy compliance monitoring
+### LLM Performance
 
-### Evidence Collection
+- **Sub-2-Second Response Times**: Model quantization and optimization targeting <2s for most operations
+- **Context Window Optimization**: Efficient memory usage for long conversations and large codebases
+- **Streaming Responses**: Real-time feedback for better UX during code generation and analysis
+- **Model Caching and Warm-up**: Strategies to minimize cold start delays and maintain responsive interactions
+- **Automatic Model Selection**: Task-based selection optimized for performance requirements and accuracy
+- **Conversation Context Optimization**: Efficient storage and retrieval of multi-turn conversation history
 
-- File, URL, log, and HAR evidence pointers with comprehensive validation
-- Line number precision for code issues and configuration problems
-- Confidence scoring for findings quality assessment and false positive reduction
-- **Security**: Evidence sanitization prevents sensitive data exposure
+### Enhanced Diagnostic Performance
 
-### Audit Trail
+- **Parallel Analysis Execution**: Multiple diagnostic tools running concurrently for faster results
+- **Real-time Monitoring**: Performance metrics collection with 1-second update intervals for live feedback
+- **Millisecond-Precision Timing**: Accurate performance profiling for bottleneck identification
+- **Incremental Analysis**: Updates with minimal recomputation for iterative development workflows
+- **Background Processing**: Non-critical tasks processed asynchronously to maintain responsiveness
+- **Caching Strategy**: Intelligent caching of analysis results to avoid redundant processing
 
-- Run manifests with execution metadata, timestamps, and plugin versions
-- SBOM generation for supply chain tracking and vulnerability management
-- Provenance information in reports for compliance and governance
-- **Accessibility**: Audit trails support screen reader navigation and summary reporting
+### Conversational Performance
 
-### Monitoring and Alerting
+- **Natural Language Processing**: <3s response time for interpreting development requests
+- **Step-by-Step Guidance**: <2s response time for providing development assistance
+- **Interactive Debugging**: <10s response time for starting debugging sessions with context analysis
+- **Code Generation**: <15s response time for generating implementations from natural language
+- **Multi-Input Analysis**: <5s response time for analyzing multiple inputs (logs, configs, code) simultaneously
 
-- Plugin execution time monitoring for performance regression detection
-- Memory usage tracking for resource optimization
-- Error rate monitoring for diagnostic system health
-- **CI/CD Integration**: Metrics support automated quality gates and build decisions
+### Real-time Monitoring and Adaptation
+
+- **Performance Metrics Collection**: 1-second update intervals with detailed timing breakdowns
+- **Automated Performance Alerting**: Degradation detection with adaptive thresholds
+- **Resource Usage Optimization**: Dynamic resource allocation for local LLM inference
+- **Adaptive Timeout Handling**: System capability-based timeout adjustments
+- **User Experience Monitoring**: Response time tracking for different interaction types
+
+**Design Rationale**: The performance optimization strategy ensures that conversational interactions remain responsive and natural, while complex operations like code generation and comprehensive analysis complete within acceptable timeframes. The real-time monitoring enables continuous optimization of the user experience.
+
+## Code Standards and Infrastructure Compliance
+
+### brAInwav CODESTYLE.md Compliance
+
+All implementations must follow established brAInwav standards:
+
+**Naming Conventions**:
+
+- Files and directories: `kebab-case` (e.g., `license-validator.ts`, `mcp-compatibility.ts`)
+- Functions and variables: `camelCase` (e.g., `validateLicense`, `checkCompliance`)
+- Types and interfaces: `PascalCase` (e.g., `LicenseValidator`, `ComplianceResult`)
+- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_VALIDATION_TIME_MS`)
+
+**Code Structure**:
+
+- Functions ≤ 40 lines; split into helpers when needed
+- Named exports only (no `export default`)
+- ESM modules with `"type": "module"`
+- AbortSignal support for all async operations
+- Proper error handling with context propagation
+
+**Infrastructure Reuse**:
+
+- Extend existing `DiagnosticPlugin` interface instead of creating new base classes
+- Use existing adapter patterns in `src/adapters/` for new integrations
+- Leverage existing worker sandbox system for plugin isolation
+- Follow existing observability patterns with brAInwav branding
+- Reuse existing `Finding`, `EvidencePointer`, and `FilePlan` types
+
+**Quality Gates**:
+
+- Branch coverage ≥ 65% (configurable via `BRANCH_MIN`)
+- Mutation score ≥ 75% (configurable via `MUTATION_MIN`)
+- All functions must include proper TypeScript types
+- Security scanning with Semgrep and governance rules
+- No `Math.random()`, hard-coded mocks, or TODO comments in production paths
+
+## Natural Language Development Interface
+
+### Conversational Development Workflow
+
+The system provides a natural language interface that guides users through MCP development without requiring deep technical knowledge:
+
+**User Interaction Flow**:
+
+1. **Intent Recognition**: Understands development goals from natural language descriptions
+2. **Requirement Clarification**: Asks targeted questions to gather necessary details
+3. **Solution Planning**: Proposes implementation approach with user-friendly explanations
+4. **Iterative Development**: Generates code with conversational refinement based on feedback
+5. **Testing and Validation**: Automatically tests generated implementations with user-friendly results
+
+**Key Design Decisions**:
+
+- **Adaptive Communication**: Adjusts technical depth based on detected user expertise level
+- **Contextual Memory**: Maintains conversation context across development sessions
+- **Progressive Disclosure**: Reveals technical details gradually as users become more comfortable
+- **Error Recovery**: Gracefully handles misunderstandings and provides clarification options
+
+### Team Standardization and Templates
+
+**Organization-Specific Customization**:
+
+- **Template Management**: JSON-configurable templates for team-specific patterns and conventions
+- **Coding Standards Enforcement**: Automated validation against organizational guidelines
+- **Best Practices Integration**: Team-defined rules integrated into AI suggestions and code generation
+- **Documentation Standards**: Consistent documentation generation following team preferences
+
+**Standardization Features**:
+
+- **Convention Validation**: Ensures generated code follows naming conventions and architectural patterns
+- **Template Customization**: Allows teams to define custom MCP server and connector templates
+- **Quality Gates**: Automated checks for code quality, security, and compliance with team standards
+- **Knowledge Sharing**: Captures and reuses successful patterns across team members
+
+## Extensibility Framework
+
+### FASTMCP v3 Plugin System
+
+The modular plugin architecture enables:
+
+- **Diagnostic Plugins**: Pluggable analyzers for different MCP aspects (security, performance, compliance)
+- **LLM Backend Plugins**: Swappable local LLM implementations (Ollama, MLX, llama.cpp)
+- **Code Generator Plugins**: Modular code generation for different languages and frameworks
+- **Transport Plugins**: Support for different MCP transport protocols
+- **Authentication Plugins**: Pluggable authentication mechanisms
+- **Reporting Plugins**: Customizable output formats and destinations
+
+### Plugin Development Kit
+
+- **Plugin SDK**: TypeScript SDK for developing custom plugins
+- **Plugin Templates**: Boilerplate code for common plugin types
+- **Testing Framework**: Automated testing tools for plugin validation
+- **Documentation Generator**: Automatic API documentation for plugins
+- **Plugin Registry**: Centralized registry for plugin discovery and distribution
+
+### Version Management
+
+- **Semantic Versioning**: Automatic compatibility checking between plugin versions
+- **Dependency Resolution**: Automatic resolution of plugin dependencies
+- **Migration Tools**: Automated migration between plugin versions
+- **Rollback Support**: Safe rollback to previous plugin versions
+- **Update Notifications**: Automatic notifications for available plugin updates
+
+### API Extensions
+
+- **REST API**: External integrations with version-specific endpoints
+- **WebSocket API**: Real-time updates with plugin-specific channels
+- **CLI Interface**: Command-line automation with plugin-aware commands
+- **IDE Plugin Support**: Integration APIs for popular development environments
+
+## License Validation and Compliance Architecture
+
+### Academic Research License Validation
+
+**Real-Time License Checking**:
+
+- **Sub-3-Second Validation**: All academic research suggestions validated against approved licenses within 3 seconds
+- **Approved License Database**: Maintains comprehensive database of open-source and permissive licenses
+- **Proprietary Content Detection**: Automatically identifies research requiring licensing approval
+- **Legal Framework Integration**: Integrates with organizational legal policies and approval workflows
+
+**Compliance Monitoring System**:
+
+- **Continuous Tracking**: Monitors all academic integration usage with audit trail maintenance
+- **Automated Reporting**: Generates compliance reports for legal and management review
+- **Risk Assessment**: Evaluates intellectual property risks and provides mitigation recommendations
+- **Approval Workflow**: Manages approval process for proprietary research content
+
+**Integration with Academic Providers**:
+
+- **Context7 Integration**: License validation integrated into architecture and code quality assessments
+- **Semantic Scholar Compliance**: Citation checking includes license compliance verification
+- **arXiv Validation**: Preprint analysis includes intellectual property compliance checking
+- **OpenAlex Integration**: Research trend analysis includes license compatibility assessment
+
+**Design Rationale**: The license validation system ensures legal compliance while maintaining the value of academic research integration. By validating licenses before suggestions are made, the system prevents legal issues and provides confidence in the compliance of all research-based recommendations.
+
+### Compliance Workflow
+
+```mermaid
+graph LR
+    RESEARCH[Academic Research] --> LICENSE_CHECK[License Validation]
+    LICENSE_CHECK --> APPROVED{Approved License?}
+    APPROVED -->|Yes| SUGGEST[Provide Suggestion]
+    APPROVED -->|No| FLAG[Flag for Approval]
+    FLAG --> APPROVAL_WORKFLOW[Legal Approval Process]
+    APPROVAL_WORKFLOW --> TRACK[Track Usage]
+    SUGGEST --> TRACK
+    TRACK --> AUDIT[Compliance Audit Trail]
+```

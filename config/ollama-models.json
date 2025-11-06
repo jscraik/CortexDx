@@ -1,0 +1,552 @@
+{
+    "$schema": "../schemas/ollama-models.schema.json",
+    "endpoint": "http://127.0.0.1:11434",
+    "embedding_models": {
+        "qwen3-embed": {
+            "name": "Qwen/Qwen3-Embedding",
+            "model_tag": "qwen3-embedding:latest",
+            "dimensions": 768,
+            "max_tokens": 8192,
+            "memory_gb": 2.0,
+            "context_length": 8192,
+            "status": "available",
+            "size_bytes": 2500000000,
+            "recommended_for": [
+                "state_of_art_embedding",
+                "high_accuracy_search",
+                "production_rag",
+                "multilingual_embedding"
+            ],
+            "ollama_model": "qwen3-embedding:latest",
+            "priority": 1,
+            "supports_multilingual": true,
+            "model_version": "v0.12.1+",
+            "features": [
+                "state_of_art_performance",
+                "multilingual_support",
+                "high_dimensional_space"
+            ]
+        },
+        "nomic-embed": {
+            "name": "nomic-ai/nomic-embed-text-v1.5",
+            "model_tag": "nomic-embed-text:v1.5",
+            "dimensions": 768,
+            "max_tokens": 8192,
+            "memory_gb": 1.5,
+            "context_length": 8192,
+            "status": "available",
+            "size_bytes": 274302450,
+            "recommended_for": [
+                "general_embedding",
+                "semantic_search",
+                "rag_systems"
+            ],
+            "ollama_model": "nomic-embed-text:v1.5",
+            "priority": 2
+        },
+        "granite-embed": {
+            "name": "ibm/granite-embedding-278m",
+            "model_tag": "granite-embedding:278m",
+            "dimensions": 384,
+            "max_tokens": 512,
+            "memory_gb": 1.0,
+            "context_length": 512,
+            "status": "available",
+            "size_bytes": 562777301,
+            "recommended_for": [
+                "enterprise_embedding",
+                "ibm_ecosystem",
+                "lightweight_rag"
+            ],
+            "ollama_model": "granite-embedding:278m",
+            "priority": 3
+        }
+    },
+    "chat_models": {
+        "deepseek-coder": {
+            "name": "deepseek-coder:6.7b",
+            "model_tag": "deepseek-coder:6.7b",
+            "context_length": 16384,
+            "memory_gb": 8.0,
+            "priority": 1,
+            "status": "available",
+            "size_bytes": 3827834503,
+            "modified": "2025-08-05T21:00:30.365815382+01:00",
+            "recommended_for": [
+                "code_generation",
+                "completion",
+                "debugging",
+                "refactoring",
+                "code_review"
+            ],
+            "coding_tasks": [
+                "code_generation",
+                "completion",
+                "debugging",
+                "refactoring",
+                "code_review"
+            ],
+            "ollama_model": "deepseek-coder:6.7b",
+            "quantization": "q4_0",
+            "type": "code_specialist"
+        },
+        "gpt-oss": {
+            "name": "gpt-oss:20b",
+            "model_tag": "gpt-oss:20b",
+            "context_length": 8192,
+            "memory_gb": 24.0,
+            "priority": 2,
+            "status": "available",
+            "size_bytes": 13780173724,
+            "modified": "2025-08-30T18:28:50.563989624+01:00",
+            "recommended_for": [
+                "advanced_algorithms",
+                "performance_optimization",
+                "system_design",
+                "complex_reasoning"
+            ],
+            "coding_tasks": [
+                "advanced_algorithms",
+                "performance_optimization",
+                "system_design",
+                "architecture_planning"
+            ],
+            "ollama_model": "gpt-oss:20b",
+            "quantization": "q4_0",
+            "type": "general_purpose"
+        },
+        "qwen3-coder": {
+            "name": "qwen3-coder:30b",
+            "model_tag": "qwen3-coder:30b",
+            "context_length": 32768,
+            "memory_gb": 32.0,
+            "priority": 3,
+            "status": "available",
+            "size_bytes": 18556701140,
+            "modified": "2025-08-26T14:22:44.773672199+01:00",
+            "recommended_for": [
+                "architecture",
+                "complex_refactoring",
+                "large_codebase",
+                "system_design",
+                "tool_calling_tasks"
+            ],
+            "coding_tasks": [
+                "architecture",
+                "complex_refactoring",
+                "large_codebase",
+                "system_design",
+                "enterprise_patterns",
+                "tool_calling",
+                "function_calling"
+            ],
+            "ollama_model": "qwen3-coder:30b",
+            "quantization": "q4_0",
+            "type": "code_specialist",
+            "supports_tool_calling": true,
+            "model_version": "v0.12.1+",
+            "enhanced_features": [
+                "tool_calling",
+                "function_calling",
+                "improved_parsing",
+                "enhanced_code_generation"
+            ]
+        },
+        "phi4-mini-reasoning": {
+            "name": "phi4-mini-reasoning:latest",
+            "model_tag": "phi4-mini-reasoning:latest",
+            "context_length": 4096,
+            "memory_gb": 4.0,
+            "priority": 4,
+            "status": "available",
+            "size_bytes": 3152479391,
+            "modified": "2025-08-19T00:05:50.162097785+01:00",
+            "recommended_for": [
+                "fast_reasoning",
+                "quick_fixes",
+                "code_review",
+                "lightweight_tasks"
+            ],
+            "coding_tasks": [
+                "quick_fixes",
+                "simple_generation",
+                "code_review",
+                "reasoning_tasks"
+            ],
+            "ollama_model": "phi4-mini-reasoning:latest",
+            "quantization": "q4_0",
+            "type": "reasoning"
+        },
+        "gemma3n": {
+            "name": "gemma3n:e4b",
+            "model_tag": "gemma3n:e4b",
+            "context_length": 8192,
+            "memory_gb": 4.0,
+            "priority": 5,
+            "status": "available",
+            "size_bytes": 7547589116,
+            "modified": "2025-08-05T22:22:57.456060359+01:00",
+            "recommended_for": [
+                "efficient_inference",
+                "google_ecosystem",
+                "balanced_performance",
+                "multimodal_fallback"
+            ],
+            "coding_tasks": [
+                "general",
+                "code_review",
+                "documentation",
+                "explanation"
+            ],
+            "ollama_model": "gemma3n:e4b",
+            "quantization": "q4_0",
+            "type": "general_purpose"
+        }
+    },
+    "reranker_models": {},
+    "safety_models": {},
+    "default_models": {
+        "embedding": "qwen3-embed",
+        "chat": "deepseek-coder",
+        "coding": "deepseek-coder",
+        "lightweight": "phi4-mini-reasoning",
+        "large_context": "qwen3-coder",
+        "reasoning": "phi4-mini-reasoning",
+        "general_purpose": "gemma3n",
+        "enterprise": "granite-embed",
+        "tool_calling": "qwen3-coder",
+        "state_of_art_embedding": "qwen3-embed"
+    },
+    "cloud_models": {
+        "kimi-k2-cloud": {
+            "name": "kimi-k2:1t-cloud",
+            "model_tag": "kimi-k2:1t-cloud",
+            "context_length": 200000,
+            "memory_gb": 0,
+            "priority": 1,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "recommended_for": [
+                "mixture_of_experts",
+                "state_of_art_reasoning",
+                "large_context_analysis",
+                "complex_problem_solving",
+                "enterprise_architecture",
+                "advanced_coding_tasks"
+            ],
+            "coding_tasks": [
+                "complex_architecture",
+                "large_system_design",
+                "advanced_algorithms",
+                "enterprise_patterns",
+                "performance_optimization",
+                "multi_language_codebases"
+            ],
+            "ollama_model": "kimi-k2:1t-cloud",
+            "requires_signin": true,
+            "model_version": "v0.12.3+",
+            "features": [
+                "mixture_of_experts",
+                "32b_activated_parameters",
+                "1t_total_parameters",
+                "state_of_art_performance",
+                "large_context_window"
+            ],
+            "architecture": "mixture_of_experts",
+            "activated_parameters": "32B",
+            "total_parameters": "1T"
+        },
+        "qwen3-coder-cloud": {
+            "name": "qwen3-coder:480b-cloud",
+            "model_tag": "qwen3-coder:480b-cloud",
+            "context_length": 262144,
+            "memory_gb": 0,
+            "priority": 1,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "recommended_for": [
+                "massive_context",
+                "repository_scale_analysis",
+                "enterprise_architecture",
+                "complex_system_design",
+                "agentic_coding_tasks"
+            ],
+            "coding_tasks": [
+                "large_codebase_analysis",
+                "enterprise_architecture",
+                "complex_system_design",
+                "repository_refactoring",
+                "cross_project_analysis"
+            ],
+            "ollama_model": "qwen3-coder:480b-cloud",
+            "requires_signin": true,
+            "tier": "ON_DEMAND",
+            "run_command": "ollama run qwen3-coder:480b-cloud",
+            "max_tokens": 32768,
+            "notes": "High-accuracy model for long refactors"
+        },
+        "glm-4.6-cloud": {
+            "name": "glm-4.6:cloud",
+            "model_tag": "glm-4.6:cloud",
+            "context_length": 32768,
+            "memory_gb": 0,
+            "priority": 2,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "tier": "ON_DEMAND",
+            "run_command": "ollama run glm-4.6:cloud",
+            "max_tokens": 32768,
+            "notes": "General reasoning / documentation synthesis",
+            "recommended_for": [
+                "general_reasoning",
+                "documentation_synthesis",
+                "knowledge_distillation",
+                "strategic_briefings"
+            ],
+            "capabilities": [
+                "reasoning",
+                "analysis",
+                "documentation",
+                "narrative_generation"
+            ],
+            "features": [
+                "high_accuracy",
+                "long_context",
+                "cloud_scaling",
+                "governed_responses"
+            ],
+            "ollama_model": "glm-4.6:cloud",
+            "requires_signin": true
+        },
+        "qwen3-vl-cloud": {
+            "name": "qwen3-vl:235b-cloud",
+            "model_tag": "qwen3-vl:235b-cloud",
+            "context_length": 131072,
+            "memory_gb": 0,
+            "priority": 2,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "vision_cloud",
+            "supports_vision": true,
+            "recommended_for": [
+                "multimodal_reasoning",
+                "vision_language_understanding",
+                "design_analysis",
+                "diagram_interpretation",
+                "advanced_visual_debugging"
+            ],
+            "vision_tasks": [
+                "vision_analysis",
+                "ui_review",
+                "spatial_reasoning",
+                "document_understanding"
+            ],
+            "ollama_model": "qwen3-vl:235b-cloud",
+            "requires_signin": true,
+            "features": [
+                "multimodal_understanding",
+                "large_context_window",
+                "high_fidelity_visual_reasoning",
+                "cloud_scale_performance"
+            ]
+        }
+    },
+    "task_routing": {
+        "quick_fix": "phi4-mini-reasoning",
+        "code_generation": "deepseek-coder",
+        "refactoring": "deepseek-coder",
+        "debugging": "deepseek-coder",
+        "documentation": "gemma3n",
+        "documentation_synthesis": "glm-4.6-cloud",
+        "general_reasoning": "glm-4.6-cloud",
+        "architecture": "qwen3-coder",
+        "complex_analysis": "qwen3-coder",
+        "performance_optimization": "gpt-oss",
+        "system_design": "gpt-oss",
+        "reasoning_tasks": "phi4-mini-reasoning",
+        "lightweight_tasks": "phi4-mini-reasoning",
+        "general_purpose": "gemma3n",
+        "code_review": "deepseek-coder",
+        "enterprise_patterns": "qwen3-coder",
+        "enterprise_embedding": "granite-embed",
+        "massive_context": "qwen3-coder-cloud",
+        "repository_analysis": "qwen3-coder-cloud",
+        "enterprise_architecture": "qwen3-coder-cloud",
+        "tool_calling": "qwen3-coder",
+        "function_calling": "qwen3-coder",
+        "state_of_art_embedding": "qwen3-embed",
+        "multilingual_embedding": "qwen3-embed",
+        "high_accuracy_search": "qwen3-embed",
+        "mixture_of_experts": "kimi-k2-cloud",
+        "state_of_art_reasoning": "kimi-k2-cloud",
+        "complex_problem_solving": "kimi-k2-cloud",
+        "large_context_analysis": "kimi-k2-cloud",
+        "advanced_coding_tasks": "kimi-k2-cloud",
+        "vision_cloud": "qwen3-vl-cloud",
+        "advanced_vision_analysis": "qwen3-vl-cloud",
+        "default": "deepseek-coder"
+    },
+    "hybrid_routing": {
+        "mlx_conjunction": {
+            "embedding_primary": "mlx:qwen3-4b",
+            "embedding_verification": "qwen3-embed",
+            "embedding_fallback": "nomic-embed",
+            "rerank_primary": "mlx:qwen3-reranker",
+            "chat_lightweight": "mlx:gemma-3-270m",
+            "chat_balanced": "mlx:glm-4.5",
+            "chat_enterprise": "qwen3-coder-cloud",
+            "chat_documentation": "glm-4.6-cloud",
+            "chat_tool_calling": "qwen3-coder",
+            "vision_tasks": "mlx:qwen2.5-vl",
+            "vision_cloud": "qwen3-vl-cloud"
+        },
+        "decision_matrix": {
+            "privacy_required": "mlx_only",
+            "context_large": "cloud_primary_mlx_fallback",
+            "performance_critical": "mlx_primary_cloud_verification",
+            "enterprise_scale": "cloud_primary_mlx_support",
+            "mixture_of_experts_required": "kimi_k2_cloud_primary",
+            "state_of_art_reasoning_required": "kimi_k2_cloud_primary",
+            "trillion_parameter_tasks": "kimi_k2_cloud_exclusive",
+            "vision_multimodal_required": "qwen3_vl_cloud_conjunction",
+            "documentation_synthesis_required": "glm46_cloud_with_mlx_support"
+        }
+    },
+    "service_configuration": {
+        "ollama_endpoint": "http://localhost:11434",
+        "api_timeout_ms": 30000,
+        "max_concurrent_requests": 4,
+        "auto_pull_models": true,
+        "model_pull_timeout_ms": 300000,
+        "health_check_interval_ms": 10000,
+        "retry_attempts": 3,
+        "retry_delay_ms": 1000
+    },
+    "fallback_chains": {
+        "coding": [
+            "deepseek-coder",
+            "qwen3-coder",
+            "gpt-oss",
+            "gemma3n"
+        ],
+        "reasoning": [
+            "phi4-mini-reasoning",
+            "gpt-oss",
+            "gemma3n",
+            "deepseek-coder"
+        ],
+        "lightweight": [
+            "phi4-mini-reasoning",
+            "gemma3n",
+            "deepseek-coder"
+        ],
+        "heavy_lifting": [
+            "gpt-oss",
+            "qwen3-coder",
+            "deepseek-coder",
+            "gemma3n"
+        ],
+        "vision": [
+            "mlx:qwen2.5-vl",
+            "cloud:qwen3-vl:235b-cloud"
+        ],
+        "documentation": [
+            "gemma3n",
+            "glm-4.6-cloud",
+            "qwen3-coder"
+        ]
+    },
+    "performance_tiers": {
+        "ultra_fast": {
+            "models": [
+                "phi4-mini-reasoning",
+                "gemma3n"
+            ],
+            "max_latency_ms": 2000,
+            "memory_limit_gb": 6
+        },
+        "balanced": {
+            "models": [
+                "deepseek-coder",
+                "gemma3n"
+            ],
+            "max_latency_ms": 5000,
+            "memory_limit_gb": 12
+        },
+        "high_performance": {
+            "models": [
+                "gpt-oss",
+                "qwen3-coder",
+                "glm-4.6-cloud",
+                "qwen3-vl-cloud"
+            ],
+            "max_latency_ms": 10000,
+            "memory_limit_gb": 40
+        }
+    },
+    "model_management": {
+        "auto_unload_inactive_models": true,
+        "inactive_timeout_minutes": 15,
+        "memory_pressure_threshold": 0.8,
+        "preload_models": [
+            "deepseek-coder",
+            "phi4-mini-reasoning"
+        ],
+        "warm_standby": [
+            "gemma3n",
+            "nomic-embed-text:v1.5"
+        ]
+    },
+    "models": [
+        {
+            "name": "deepseek-coder:6.7b",
+            "maxTokens": 16384,
+            "ram": "8GB"
+        },
+        {
+            "name": "gpt-oss:20b",
+            "maxTokens": 8192,
+            "ram": "24GB"
+        },
+        {
+            "name": "qwen3-coder:30b",
+            "maxTokens": 32768,
+            "ram": "32GB"
+        },
+        {
+            "name": "phi4-mini-reasoning:latest",
+            "maxTokens": 4096,
+            "ram": "4GB"
+        },
+        {
+            "name": "gemma3n:e4b",
+            "maxTokens": 8192,
+            "ram": "4GB"
+        }
+    ],
+    "embeddings": [
+        {
+            "name": "qwen3-embedding:latest",
+            "dimensions": 768,
+            "maxTokens": 8192,
+            "ram": "2GB"
+        },
+        {
+            "name": "nomic-embed-text:v1.5",
+            "dimensions": 768,
+            "maxTokens": 8192,
+            "ram": "1.5GB"
+        },
+        {
+            "name": "granite-embedding:278m",
+            "dimensions": 384,
+            "maxTokens": 512,
+            "ram": "1GB"
+        }
+    ]
+}

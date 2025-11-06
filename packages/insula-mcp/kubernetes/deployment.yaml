@@ -1,0 +1,449 @@
+# Insula MCP Kubernetes Deployment
+# Production-ready deployment with scaling and monitoring
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: insula-mcp
+  labels:
+    app: insula-mcp
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: insula-mcp-config
+  namespace: insula-mcp
+data:
+  NODE_ENV: "production"
+  INSULA_MCP_LOG_LEVEL: "info"
+  INSULA_MCP_LLM_BACKEND: "ollama"
+  OLLAMA_HOST: "ollama-service:11434"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: insula-mcp-secrets
+  namespace: insula-mcp
+type: Opaque
+stringData:
+  license-key: "REPLACE_WITH_LICENSE_KEY"
+  auth0-domain: "REPLACE_WITH_AUTH0_DOMAIN"
+  auth0-client-id: "REPLACE_WITH_CLIENT_ID"
+  auth0-client-secret: "REPLACE_WITH_CLIENT_SECRET"
+  postgres-password: "REPLACE_WITH_PASSWORD"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insula-mcp-community
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: community
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insula-mcp
+      tier: community
+  template:
+    metadata:
+      labels:
+        app: insula-mcp
+        tier: community
+    spec:
+      containers:
+        - name: insula-mcp
+          image: brainwav/insula-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: INSULA_MCP_TIER
+              value: "community"
+          envFrom:
+            - configMapRef:
+                name: insula-mcp-config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: logs
+              mountPath: /app/logs
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: insula-mcp-data-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: insula-mcp-logs-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insula-mcp-professional
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: professional
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: insula-mcp
+      tier: professional
+  template:
+    metadata:
+      labels:
+        app: insula-mcp
+        tier: professional
+    spec:
+      containers:
+        - name: insula-mcp
+          image: brainwav/insula-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: INSULA_MCP_TIER
+              value: "professional"
+            - name: INSULA_MCP_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: insula-mcp-secrets
+                  key: license-key
+          envFrom:
+            - configMapRef:
+                name: insula-mcp-config
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: logs
+              mountPath: /app/logs
+            - name: models
+              mountPath: /app/models
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: insula-mcp-data-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: insula-mcp-logs-pvc
+        - name: models
+          persistentVolumeClaim:
+            claimName: insula-mcp-models-pvc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insula-mcp-enterprise
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: enterprise
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: insula-mcp
+      tier: enterprise
+  template:
+    metadata:
+      labels:
+        app: insula-mcp
+        tier: enterprise
+    spec:
+      containers:
+        - name: insula-mcp
+          image: brainwav/insula-mcp:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: INSULA_MCP_TIER
+              value: "enterprise"
+            - name: INSULA_MCP_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: insula-mcp-secrets
+                  key: license-key
+            - name: AUTH0_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: insula-mcp-secrets
+                  key: auth0-domain
+            - name: AUTH0_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: insula-mcp-secrets
+                  key: auth0-client-id
+            - name: AUTH0_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: insula-mcp-secrets
+                  key: auth0-client-secret
+          envFrom:
+            - configMapRef:
+                name: insula-mcp-config
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "1000m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: logs
+              mountPath: /app/logs
+            - name: models
+              mountPath: /app/models
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: insula-mcp-data-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: insula-mcp-logs-pvc
+        - name: models
+          persistentVolumeClaim:
+            claimName: insula-mcp-models-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insula-mcp-community-service
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: community
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: insula-mcp
+    tier: community
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insula-mcp-professional-service
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: professional
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: insula-mcp
+    tier: professional
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insula-mcp-enterprise-service
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    tier: enterprise
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: insula-mcp
+    tier: enterprise
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: insula-mcp-data-pvc
+  namespace: insula-mcp
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: insula-mcp-logs-pvc
+  namespace: insula-mcp
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: insula-mcp-models-pvc
+  namespace: insula-mcp
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: insula-mcp-enterprise-hpa
+  namespace: insula-mcp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: insula-mcp-enterprise
+  minReplicas: 5
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: insula-mcp-ingress
+  namespace: insula-mcp
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts:
+        - insula-mcp.example.com
+      secretName: insula-mcp-tls
+  rules:
+    - host: insula-mcp.example.com
+      http:
+        paths:
+          - path: /community
+            pathType: Prefix
+            backend:
+              service:
+                name: insula-mcp-community-service
+                port:
+                  number: 80
+          - path: /professional
+            pathType: Prefix
+            backend:
+              service:
+                name: insula-mcp-professional-service
+                port:
+                  number: 80
+          - path: /enterprise
+            pathType: Prefix
+            backend:
+              service:
+                name: insula-mcp-enterprise-service
+                port:
+                  number: 80

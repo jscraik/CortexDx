@@ -5,7 +5,7 @@ export function jsonRpcClient(base: string) {
     const res = await fetch(base, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params })
+      body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params }),
     });
     const body = await res.json();
     if (body.error) {

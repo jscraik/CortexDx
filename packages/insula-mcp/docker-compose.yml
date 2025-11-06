@@ -1,0 +1,175 @@
+# Insula MCP Docker Compose Configuration
+# Supports Community, Professional, and Enterprise tiers
+
+version: '3.8'
+
+services:
+  # Community Edition (Free)
+  insula-mcp-community:
+    build:
+      context: ../..
+      dockerfile: packages/insula-mcp/Dockerfile
+    container_name: insula-mcp-community
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - INSULA_MCP_TIER=community
+      - INSULA_MCP_LOG_LEVEL=info
+    volumes:
+      - insula-data-community:/app/data
+      - insula-logs-community:/app/logs
+    restart: unless-stopped
+    networks:
+      - insula-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Professional Edition
+  insula-mcp-professional:
+    build:
+      context: ../..
+      dockerfile: packages/insula-mcp/Dockerfile
+    container_name: insula-mcp-professional
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - INSULA_MCP_TIER=professional
+      - INSULA_MCP_LOG_LEVEL=info
+      - INSULA_MCP_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - INSULA_MCP_LLM_BACKEND=ollama
+      - OLLAMA_HOST=ollama:11434
+    volumes:
+      - insula-data-pro:/app/data
+      - insula-logs-pro:/app/logs
+      - insula-models-pro:/app/models
+    restart: unless-stopped
+    networks:
+      - insula-network
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Enterprise Edition
+  insula-mcp-enterprise:
+    build:
+      context: ../..
+      dockerfile: packages/insula-mcp/Dockerfile
+    container_name: insula-mcp-enterprise
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - INSULA_MCP_TIER=enterprise
+      - INSULA_MCP_LOG_LEVEL=info
+      - INSULA_MCP_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - INSULA_MCP_LLM_BACKEND=ollama
+      - OLLAMA_HOST=ollama:11434
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT}
+    volumes:
+      - insula-data-enterprise:/app/data
+      - insula-logs-enterprise:/app/logs
+      - insula-models-enterprise:/app/models
+    restart: unless-stopped
+    networks:
+      - insula-network
+    depends_on:
+      - ollama
+      - postgres
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Ollama LLM Backend (Professional & Enterprise)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: insula-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - insula-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # PostgreSQL (Enterprise only)
+  postgres:
+    image: postgres:16-alpine
+    container_name: insula-postgres
+    environment:
+      - POSTGRES_DB=insula_mcp
+      - POSTGRES_USER=insula
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - insula-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insula"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (Enterprise only)
+  redis:
+    image: redis:7-alpine
+    container_name: insula-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - insula-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # Community volumes
+  insula-data-community:
+  insula-logs-community:
+  
+  # Professional volumes
+  insula-data-pro:
+  insula-logs-pro:
+  insula-models-pro:
+  
+  # Enterprise volumes
+  insula-data-enterprise:
+  insula-logs-enterprise:
+  insula-models-enterprise:
+  
+  # Shared volumes
+  ollama-models:
+  postgres-data:
+  redis-data:
+
+networks:
+  insula-network:
+    driver: bridge

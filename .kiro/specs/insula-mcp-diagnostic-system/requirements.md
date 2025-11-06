@@ -2,170 +2,186 @@
 
 ## Introduction
 
-Insula MCP is a diagnostic meta-inspector designed to proactively identify security, performance, and compliance issues in MCP (Model Context Protocol) servers before they reach production. The system provides evidence-linked findings with actionable remediation plans, supporting the brAInwav governance framework with TDD, accessibility compliance (WCAG 2.2 AA), and comprehensive security scanning.
+Insula MCP is an Agentic MCP Server that serves as a meta-diagnostic and inspector tool to help developers and non-developers build, debug, and resolve problems with MCP servers and connectors. The system uses local LLM capabilities to provide intelligent assistance, automated problem resolution, and guided development support for the Model Context Protocol ecosystem.
 
 ## Glossary
 
-- **Insula_MCP_System**: The diagnostic meta-inspector system that validates MCP servers for security, performance, and compliance issues
-- **MCP_Server**: A Model Context Protocol server that provides tools, resources, and prompts to AI agents
-- **Diagnostic_Plugin**: A sandboxed module that performs specific security, performance, or compliance checks
-- **Finding**: A discovered issue with severity level (info, minor, major, blocker) and evidence pointers
-- **Evidence_Pointer**: A reference to specific files, URLs, or log entries that support a finding
-- **File_Plan**: A collection of patches and diffs that can be applied to remediate findings
-- **ArcTDD_Plan**: A structured remediation plan following the brAInwav ArcTDD methodology
-- **Worker_Sandbox**: An isolated Node.js worker thread with CPU/memory budgets for plugin execution
-- **Diagnostic_Context**: The runtime environment provided to plugins with adapters and utilities
-- **SSE_Endpoint**: Server-Sent Events endpoint used for streaming MCP progress notifications
-- **Tool_Classification**: Risk assessment system that categorizes MCP tools by privilege level and capabilities
-- **Academic_Provider**: A FASTMCP v3.22 compliant module that interfaces with scholarly research APIs
-- **Provider_Registry**: A centralized system for registering and discovering academic research providers
-- **Research_Quality_Assessment**: Automated validation of academic methodology and integrity standards
-- **Semantic_Scholar_Integration**: Academic provider for paper search and citation analysis capabilities
-- **OpenAlex_Provider**: Scholarly work and author research functionality provider
-- **Wikidata_SPARQL_Queries**: Knowledge graph access through SPARQL query capabilities
-- **arXiv_Provider**: Preprint search and metadata extraction functionality
-- **Vibe_Check_Provider**: Research quality and methodology assessment provider
-- **Context7_Integration**: Contextual research analysis and cross-referencing provider
-- **Academic_Providers**: Collection of research-focused MCP providers under registry.providers.academic
-- **FASTMCP_v3_22_Compliance**: Adherence to FASTMCP version 3.22 protocol specifications
-- **Worker_Thread**: Node.js worker thread execution environment with resource constraints
-- **Fail_On_Minor**: Configuration option to treat minor severity findings as build failures
-- **A11y_Option**: Accessibility configuration for screen reader compatible output
-- **File_Plan_Option**: Configuration to enable generation of remediation patches and diffs
+- **Insula_MCP_Server**: An enhanced version of the existing brAInwav MCP server that provides diagnostic, debugging, and development assistance for MCP ecosystems
+- **Local_LLM_Agent**: An enhanced version of the existing LlmAdapter that provides intelligent assistance and problem resolution using local language models
+- **License_Validator**: A component that validates academic research licenses and ensures legal compliance for implementation
+- **MCP_Inspector**: An enhanced version of existing diagnostic plugins that analyzes MCP servers, connectors, and configurations for issues
+- **Problem_Resolver**: The automated system that suggests and implements fixes for identified MCP issues
+- **Development_Assistant**: The AI-powered helper that guides users through MCP development processes
+- **MCP_Connector**: A bridge component that connects different MCP servers or external systems
+- **Diagnostic_Tool**: Enhanced versions of existing DiagnosticPlugin implementations that identify specific types of MCP problems or configuration issues
+- **Code_Generator**: The component that automatically generates MCP server code, connectors, and configurations
+- **Interactive_Debugger**: A conversational interface for step-by-step problem diagnosis and resolution
+- **MCP_Validator**: A tool that validates MCP protocol compliance and best practices
+- **Configuration_Analyzer**: A system that examines MCP configurations for optimization opportunities
+- **Performance_Profiler**: A tool that analyzes MCP server performance and suggests improvements
+- **Security_Scanner**: A component that identifies security vulnerabilities in MCP implementations
+- **Compatibility_Checker**: A tool that verifies MCP version compatibility and migration paths
+- **Template_Generator**: A system that creates boilerplate MCP servers and connectors from specifications
+- **Error_Interpreter**: An AI component that translates technical errors into user-friendly explanations
+- **Best_Practices_Advisor**: A system that provides recommendations based on MCP development best practices
+- **Integration_Helper**: A tool that assists with integrating MCP servers into existing workflows
+- **Testing_Framework**: A comprehensive system for testing MCP servers and connectors
+- **Documentation_Generator**: A tool that automatically creates documentation for MCP implementations
 
 ## Requirements
 
 ### Requirement 1
 
-**User Story:** As a security engineer, I want to scan MCP servers for authentication vulnerabilities, so that I can prevent unauthorized access to sensitive tools and resources.
+**User Story:** As a developer new to MCP, I want an AI assistant that can help me understand and build my first MCP server, so that I can quickly get started without deep protocol knowledge.
 
 #### Acceptance Criteria
 
-1. WHEN THE Insula_MCP_System receives an endpoint URL, THE Insula_MCP_System SHALL attempt unauthenticated discovery calls
-2. IF THE MCP_Server responds to tool discovery without authentication, THEN THE Insula_MCP_System SHALL generate a BLOCKER severity finding
-3. THE Insula_MCP_System SHALL test multiple authentication schemes including Bearer tokens, Basic auth, and custom headers
-4. THE Insula_MCP_System SHALL detect authentication bypass vulnerabilities and header case sensitivity issues
-5. THE Insula_MCP_System SHALL provide evidence pointers to specific endpoints and response headers
+1. WHEN a user requests MCP development help, THE Local_LLM_Agent SHALL provide step-by-step guidance within 2 seconds
+2. THE Development_Assistant SHALL generate boilerplate MCP server code based on user requirements within 10 seconds
+3. THE Insula_MCP_Server SHALL provide interactive tutorials and examples for common MCP patterns
+4. THE Template_Generator SHALL create customized MCP server templates with proper tool definitions within 5 seconds
+5. THE Documentation_Generator SHALL create comprehensive documentation for generated MCP implementations within 15 seconds
 
 ### Requirement 2
 
-**User Story:** As a DevOps engineer, I want to validate streaming endpoints for production readiness, so that I can ensure SSE connections work reliably behind proxies and CDNs.
+**User Story:** As a non-developer, I want to create MCP connectors through natural language descriptions, so that I can integrate AI tools without writing code.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL probe SSE endpoints for proper content-type headers and streaming behavior
-2. THE Insula_MCP_System SHALL verify retry directives and Last-Event-ID support for reconnection handling
-3. WHEN THE SSE_Endpoint lacks proper buffering headers, THE Insula_MCP_System SHALL generate remediation patches for common proxy configurations
-4. THE Insula_MCP_System SHALL test heartbeat mechanisms and connection persistence
-5. THE Insula_MCP_System SHALL validate chunked encoding and compression settings
+1. THE Local_LLM_Agent SHALL interpret natural language descriptions of desired MCP functionality
+2. THE Code_Generator SHALL automatically create MCP connectors from high-level specifications
+3. THE Insula_MCP_Server SHALL provide a conversational interface for refining generated code
+4. THE Configuration_Analyzer SHALL optimize generated configurations for performance and security
+5. THE Testing_Framework SHALL automatically test generated connectors for functionality
 
 ### Requirement 3
 
-**User Story:** As a compliance officer, I want to assess tool permissioning against least-privilege principles, so that I can ensure MCP servers don't expose overly broad capabilities.
+**User Story:** As an MCP server developer, I want automated diagnosis of protocol compliance issues, so that I can ensure my server works correctly with all MCP clients.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL enumerate all available tools via JSON-RPC discovery
-2. THE Insula_MCP_System SHALL classify tools by risk level using heuristic pattern matching
-3. WHEN THE Tool_Classification detects high-risk capabilities like filesystem or shell access, THE Insula_MCP_System SHALL generate MAJOR severity findings
-4. THE Insula_MCP_System SHALL provide confidence scores for permissioning assessments
-5. THE Insula_MCP_System SHALL recommend confirmation prompts and scoping restrictions
+1. THE MCP_Inspector SHALL analyze MCP server implementations for protocol compliance within 30 seconds
+2. THE MCP_Validator SHALL check JSON-RPC message formats and response structures with 99% accuracy
+3. WHEN protocol violations are detected, THE Problem_Resolver SHALL suggest specific fixes within 5 seconds
+4. THE Compatibility_Checker SHALL verify compatibility across different MCP client versions within 60 seconds
+5. THE Error_Interpreter SHALL provide clear explanations of protocol compliance issues in plain English
 
 ### Requirement 4
 
-**User Story:** As a developer, I want comprehensive diagnostic reports with actionable remediation steps, so that I can quickly fix identified issues.
+**User Story:** As a system integrator, I want intelligent debugging assistance when MCP connections fail, so that I can quickly identify and resolve connectivity issues.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL generate findings in both Markdown and JSON formats
-2. THE Insula_MCP_System SHALL create ArcTDD remediation plans prioritizing blockers and majors
-3. WHERE THE File_Plan_Option is enabled, THE Insula_MCP_System SHALL generate unified diff patches
-4. THE Insula_MCP_System SHALL include evidence pointers with file paths, line numbers, and URLs
-5. THE Insula_MCP_System SHALL provide confidence scores and remediation code samples
+1. THE Interactive_Debugger SHALL provide step-by-step diagnosis of connection failures within 10 seconds
+2. THE Local_LLM_Agent SHALL analyze error logs and suggest probable causes with 85% accuracy
+3. THE Diagnostic_Tool SHALL test network connectivity, authentication, and protocol handshakes within 15 seconds
+4. THE Problem_Resolver SHALL automatically fix common configuration issues without user intervention
+5. THE Best_Practices_Advisor SHALL recommend optimal connection settings based on detected environment
 
 ### Requirement 5
 
-**User Story:** As a CI/CD engineer, I want exit codes that reflect finding severity, so that I can fail builds on critical security issues.
+**User Story:** As a performance-conscious developer, I want AI-powered analysis of my MCP server performance, so that I can optimize response times and resource usage.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL exit with code 1 when BLOCKER severity findings are present
-2. THE Insula_MCP_System SHALL exit with code 2 when MAJOR severity findings are present
-3. WHERE THE Fail_On_Minor option is specified, THE Insula_MCP_System SHALL exit with code 2 for MINOR findings
-4. THE Insula_MCP_System SHALL exit with code 0 when only INFO severity findings are present
-5. THE Insula_MCP_System SHALL generate SBOM artifacts and upload diagnostic reports
+1. THE Performance_Profiler SHALL measure and analyze MCP server response times and throughput with millisecond precision
+2. THE Local_LLM_Agent SHALL identify performance bottlenecks and suggest optimizations within 20 seconds
+3. THE Configuration_Analyzer SHALL recommend optimal server configurations for different workloads based on measured metrics
+4. THE Insula_MCP_Server SHALL provide real-time performance monitoring and alerts with 1-second update intervals
+5. THE Problem_Resolver SHALL automatically implement performance improvements where possible without breaking functionality
 
 ### Requirement 6
 
-**User Story:** As a security researcher, I want plugin sandboxing with resource limits, so that I can safely run diagnostic plugins without system compromise.
+**User Story:** As a security engineer, I want automated security analysis of MCP implementations, so that I can identify and fix vulnerabilities before deployment.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL execute each plugin in an isolated Node.js worker thread
-2. THE Insula_MCP_System SHALL enforce configurable time budgets with default 5000ms timeout
-3. THE Insula_MCP_System SHALL enforce memory limits with default 96MB old-space allocation
-4. WHEN THE Worker_Thread fails to initialize, THE Insula_MCP_System SHALL fallback to in-process execution
-5. THE Insula_MCP_System SHALL deny filesystem and child_process access within plugin sandboxes
+1. THE Security_Scanner SHALL identify common security vulnerabilities in MCP server code with 95% detection accuracy
+2. THE Local_LLM_Agent SHALL explain security risks in user-friendly terms without technical jargon
+3. THE Problem_Resolver SHALL generate secure code patches for identified vulnerabilities within 30 seconds
+4. THE MCP_Validator SHALL check for proper authentication and authorization implementations according to MCP specification
+5. THE Best_Practices_Advisor SHALL recommend security best practices for MCP development based on OWASP guidelines
 
 ### Requirement 7
 
-**User Story:** As an accessibility advocate, I want CLI output that supports screen readers, so that visually impaired developers can use the diagnostic tools effectively.
+**User Story:** As a DevOps engineer, I want assistance with MCP server deployment and configuration, so that I can reliably deploy MCP services in production environments.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL prefix severity levels with text markers ([BLOCKER], [MAJOR], [MINOR], [INFO])
-2. THE Insula_MCP_System SHALL avoid color-only signaling for status indication
-3. WHERE THE A11y_Option is enabled, THE Insula_MCP_System SHALL provide summary-first output mode
-4. THE Insula_MCP_System SHALL support keyboard navigation help with ? key
-5. THE Insula_MCP_System SHALL comply with WCAG 2.2 AA accessibility standards
+1. THE Integration_Helper SHALL assist with containerization and deployment configurations for Docker and Kubernetes
+2. THE Configuration_Analyzer SHALL validate production-ready configurations against industry standards
+3. THE Local_LLM_Agent SHALL provide deployment troubleshooting and optimization advice within 15 seconds
+4. THE Testing_Framework SHALL generate comprehensive test suites for deployment validation with 90% code coverage
+5. THE Documentation_Generator SHALL create deployment guides and operational documentation in Markdown format
 
 ### Requirement 8
 
-**User Story:** As a threat modeler, I want STRIDE-based security assessments, so that I can identify potential attack vectors in MCP server configurations.
+**User Story:** As an API developer, I want automated generation of MCP tool definitions from existing APIs, so that I can quickly expose my services through MCP.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL perform spoofing checks against authentication schemes
-2. THE Insula_MCP_System SHALL detect tampering risks in mutable tool surfaces
-3. THE Insula_MCP_System SHALL validate logging and audit trail capabilities
-4. THE Insula_MCP_System SHALL identify information disclosure risks in tool descriptions
-5. THE Insula_MCP_System SHALL assess denial-of-service vulnerabilities in streaming endpoints
+1. THE Code_Generator SHALL analyze API specifications and generate corresponding MCP tool definitions within 60 seconds
+2. THE Local_LLM_Agent SHALL suggest optimal tool categorization and parameter mapping based on API semantics
+3. THE MCP_Validator SHALL ensure generated tools comply with MCP protocol standards version 2024-11-05
+4. THE Integration_Helper SHALL create authentication and error handling wrappers for OAuth2 and API key authentication
+5. THE Testing_Framework SHALL generate test cases for API-to-MCP mappings with 80% path coverage
 
 ### Requirement 9
 
-**User Story:** As a performance engineer, I want baseline latency measurements, so that I can establish SLA baselines and detect performance regressions.
+**User Story:** As a troubleshooter, I want conversational debugging that can understand context from error messages and logs, so that I can resolve complex MCP issues efficiently.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL measure response times for JSON-RPC calls
-2. THE Insula_MCP_System SHALL test timeout handling and circuit breaker behavior
-3. THE Insula_MCP_System SHALL validate rate limiting with proper Retry-After headers
-4. THE Insula_MCP_System SHALL generate performance findings with latency measurements
-5. THE Insula_MCP_System SHALL provide recommendations for timeout and retry configurations
+1. THE Interactive_Debugger SHALL accept error messages, logs, and configuration files as input in JSON, text, or YAML formats
+2. THE Local_LLM_Agent SHALL analyze context and provide targeted diagnostic questions within 5 seconds
+3. THE Error_Interpreter SHALL translate technical errors into actionable troubleshooting steps with numbered instructions
+4. THE Problem_Resolver SHALL suggest multiple solution approaches ranked by likelihood of success
+5. THE Diagnostic_Tool SHALL verify fixes and confirm issue resolution through automated testing
 
 ### Requirement 10
 
-**User Story:** As a governance officer, I want policy drift detection, so that I can ensure MCP servers remain compliant with organizational standards over time.
+**User Story:** As a team lead, I want standardized MCP development patterns and templates, so that my team can build consistent and maintainable MCP implementations.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL detect presence of .cortex governance packs
-2. THE Insula_MCP_System SHALL validate policy version consistency across deployments
-3. THE Insula_MCP_System SHALL check for governance rule violations and exceptions
-4. THE Insula_MCP_System SHALL generate MAJOR findings when governance packs are missing
-5. THE Insula_MCP_System SHALL provide remediation steps for governance compliance
+1. THE Template_Generator SHALL provide organization-specific MCP templates and patterns configurable through JSON configuration
+2. THE Best_Practices_Advisor SHALL enforce coding standards and architectural guidelines based on team-defined rules
+3. THE Code_Generator SHALL generate code that follows established team conventions including naming and structure patterns
+4. THE Documentation_Generator SHALL create standardized documentation templates in team-preferred format
+5. THE MCP_Validator SHALL check compliance with organizational MCP standards defined in configuration files
 
 ### Requirement 11
 
-**User Story:** As a researcher, I want integrated academic research providers, so that I can validate and interact with scholarly data sources through standardized MCP interfaces.
+**User Story:** As an MCP ecosystem contributor, I want tools to test compatibility and interoperability between different MCP implementations, so that I can ensure ecosystem health.
 
 #### Acceptance Criteria
 
-1. THE Insula_MCP_System SHALL provide Semantic_Scholar_Integration for paper search and citation analysis
-2. THE Insula_MCP_System SHALL include OpenAlex_Provider for scholarly work and author research
-3. THE Insula_MCP_System SHALL support Wikidata_SPARQL_Queries for knowledge graph access
-4. THE Insula_MCP_System SHALL integrate arXiv_Provider for preprint search and metadata extraction
-5. THE Insula_MCP_System SHALL include Vibe_Check_Provider for research quality assessment
-6. THE Insula_MCP_System SHALL provide Context7_Integration for contextual research analysis
-7. THE Insula_MCP_System SHALL register all Academic_Providers under registry.providers.academic
-8. WHERE THE Academic_Provider is accessed, THE Insula_MCP_System SHALL ensure FASTMCP_v3_22_Compliance
+1. THE Compatibility_Checker SHALL test MCP servers against multiple client implementations within 120 seconds
+2. THE Testing_Framework SHALL provide comprehensive interoperability test suites covering all MCP protocol features
+3. THE MCP_Inspector SHALL identify compatibility issues and version conflicts with detailed error descriptions
+4. THE Local_LLM_Agent SHALL suggest migration paths for protocol version upgrades with step-by-step instructions
+5. THE Problem_Resolver SHALL automatically fix common interoperability issues without manual intervention
+
+### Requirement 12
+
+**User Story:** As a local-first developer, I want all AI assistance to run on local models without external dependencies, so that I can maintain privacy and work offline.
+
+#### Acceptance Criteria
+
+1. THE Local_LLM_Agent SHALL operate entirely on locally hosted language models without external API calls
+2. THE Insula_MCP_Server SHALL function without internet connectivity for core features including diagnostics and code generation
+3. THE Local_LLM_Agent SHALL support multiple local model backends including Ollama, MLX, and llama.cpp
+4. THE Insula_MCP_Server SHALL provide model management and optimization tools with automatic model selection
+5. THE Local_LLM_Agent SHALL maintain conversation context and learning from interactions across sessions
+
+### Requirement 13
+
+**User Story:** As a legal compliance officer, I want automated license validation for academic research integration, so that I can ensure all implemented solutions comply with intellectual property and licensing requirements.
+
+#### Acceptance Criteria
+
+1. THE License_Validator SHALL verify academic research licenses before implementation suggestions within 3 seconds
+2. THE Academic_Plugin_Manager SHALL only access research with compatible open-source or permissive licenses
+3. THE Local_LLM_Agent SHALL flag proprietary research requiring licensing approval before suggesting implementation
+4. THE Compliance_Monitor SHALL track and report license compliance for all academic integrations
+5. THE Legal_Framework SHALL maintain a database of approved licenses and usage restrictions for academic content

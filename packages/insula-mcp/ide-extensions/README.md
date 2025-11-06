@@ -1,0 +1,198 @@
+# Insula MCP IDE Extensions
+
+This directory contains IDE-specific extensions and plugins for integrating Insula MCP with popular development environments.
+
+## Available Extensions
+
+### Visual Studio Code
+
+Location: `vscode/`
+
+A full-featured VS Code extension providing:
+
+- Real-time MCP validation
+- Code completions and IntelliSense
+- Quick fixes and refactoring
+- Project analysis tools
+- Integrated debugging
+
+**Installation:**
+
+```bash
+cd vscode
+npm install
+npm run compile
+npm run package
+code --install-extension insula-mcp-vscode-1.0.0.vsix
+```
+
+### IntelliJ IDEA / WebStorm / PyCharm
+
+Location: `intellij/`
+
+A JetBrains plugin providing:
+
+- Real-time inspections
+- Code completions
+- Intention actions (quick fixes)
+- Tool window for diagnostics
+- Integrated MCP server management
+
+**Installation:**
+
+```bash
+cd intellij
+./gradlew buildPlugin
+# Install from Settings → Plugins → Install from disk
+```
+
+## Architecture
+
+All IDE extensions communicate with Insula MCP via the Model Context Protocol (MCP):
+
+```
+┌─────────────┐
+│     IDE     │
+│  Extension  │
+└──────┬──────┘
+       │ MCP Protocol
+       │ (HTTP/WebSocket/stdio)
+       ▼
+┌─────────────┐
+│   Insula    │
+│  MCP Server │
+└─────────────┘
+```
+
+### Communication Protocols
+
+1. **HTTP**: REST-like requests over HTTP
+2. **WebSocket**: Real-time bidirectional communication
+3. **stdio**: Standard input/output for local processes
+
+## Development
+
+### Prerequisites
+
+- Node.js 20.11.1+
+- pnpm 9.12.2+
+- IDE-specific SDKs:
+  - VS Code: Extension API
+  - IntelliJ: IntelliJ Platform SDK
+
+### Building Extensions
+
+**VS Code:**
+
+```bash
+cd vscode
+npm install
+npm run compile
+npm run package
+```
+
+**IntelliJ:**
+
+```bash
+cd intellij
+./gradlew buildPlugin
+```
+
+### Testing
+
+**VS Code:**
+
+```bash
+cd vscode
+npm test
+# Or press F5 in VS Code to launch Extension Development Host
+```
+
+**IntelliJ:**
+
+```bash
+cd intellij
+./gradlew runIde
+```
+
+## MCP Tools for IDE Integration
+
+The following MCP tools are available for IDE extensions:
+
+| Tool | Description |
+|------|-------------|
+| `ide_validate_code` | Real-time code validation |
+| `ide_get_suggestions` | Context-aware suggestions |
+| `ide_apply_quick_fix` | Apply automated fixes |
+| `ide_get_diagnostics` | Get all diagnostics |
+| `ide_format_code` | Format code |
+| `ide_get_completions` | Code completions |
+| `ide_get_hover_info` | Hover information |
+| `ide_refactor_code` | Refactoring operations |
+| `ide_analyze_project` | Project-wide analysis |
+| `ide_generate_tests` | Test generation |
+
+See [IDE Integration Guide](../docs/ide-integration.md) for detailed documentation.
+
+## Configuration
+
+### Server Configuration
+
+Configure the Insula MCP server in `mcp-server.config.json`:
+
+```json
+{
+  "server": {
+    "port": 3000,
+    "host": "localhost",
+    "transport": ["http", "websocket", "stdio"]
+  },
+  "ide": {
+    "enableDiagnostics": true,
+    "enableCompletions": true,
+    "enableQuickFixes": true,
+    "diagnosticDelay": 500
+  }
+}
+```
+
+### Extension Configuration
+
+Each IDE extension has its own configuration:
+
+**VS Code** (`.vscode/settings.json`):
+
+```json
+{
+  "insula-mcp.server.url": "http://localhost:3000",
+  "insula-mcp.diagnostics.enabled": true
+}
+```
+
+**IntelliJ** (Settings → Tools → Insula MCP):
+
+- Server URL: <http://localhost:3000>
+- Enable diagnostics: ✓
+- Enable completions: ✓
+
+## Contributing
+
+To contribute IDE extension improvements:
+
+1. Follow [AGENTS.md](../../AGENTS.md) guidelines
+2. Test with multiple IDEs
+3. Ensure MCP protocol compliance
+4. Add tests for new features
+5. Update documentation
+
+## Support
+
+For issues or questions:
+
+- GitHub Issues: <https://github.com/brainwav/insula-mcp/issues>
+- Documentation: [IDE Integration Guide](../docs/ide-integration.md)
+- MCP Specification: <https://spec.modelcontextprotocol.io/>
+
+## License
+
+Apache 2.0 - See [LICENSE](../LICENSE) for details.

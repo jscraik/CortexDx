@@ -1,0 +1,161 @@
+{
+    "name": "insula-mcp-vscode",
+    "displayName": "Insula MCP",
+    "description": "Real-time MCP validation and assistance for Visual Studio Code",
+    "version": "1.0.0",
+    "publisher": "brainwav",
+    "engines": {
+        "vscode": "^1.80.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Linters",
+        "Formatters"
+    ],
+    "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "validation",
+        "diagnostics",
+        "ai"
+    ],
+    "activationEvents": [
+        "onLanguage:typescript",
+        "onLanguage:javascript",
+        "onLanguage:python",
+        "onLanguage:go"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "configuration": {
+            "title": "Insula MCP",
+            "properties": {
+                "insula-mcp.server.url": {
+                    "type": "string",
+                    "default": "http://localhost:3000",
+                    "description": "URL of the Insula MCP server"
+                },
+                "insula-mcp.server.transport": {
+                    "type": "string",
+                    "enum": [
+                        "http",
+                        "websocket",
+                        "stdio"
+                    ],
+                    "default": "http",
+                    "description": "Transport protocol for MCP communication"
+                },
+                "insula-mcp.diagnostics.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable real-time diagnostics"
+                },
+                "insula-mcp.diagnostics.delay": {
+                    "type": "number",
+                    "default": 500,
+                    "description": "Delay in milliseconds before running diagnostics"
+                },
+                "insula-mcp.completions.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable code completions"
+                },
+                "insula-mcp.quickFixes.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable quick fixes"
+                },
+                "insula-mcp.formatting.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable code formatting"
+                },
+                "insula-mcp.formatting.onSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Format code on save"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "insula-mcp.validate",
+                "title": "Insula MCP: Validate Current File"
+            },
+            {
+                "command": "insula-mcp.analyzeProject",
+                "title": "Insula MCP: Analyze Project"
+            },
+            {
+                "command": "insula-mcp.generateTests",
+                "title": "Insula MCP: Generate Tests"
+            },
+            {
+                "command": "insula-mcp.formatCode",
+                "title": "Insula MCP: Format Code"
+            },
+            {
+                "command": "insula-mcp.startServer",
+                "title": "Insula MCP: Start Server"
+            },
+            {
+                "command": "insula-mcp.stopServer",
+                "title": "Insula MCP: Stop Server"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "insula-mcp.validate",
+                "key": "ctrl+shift+v",
+                "mac": "cmd+shift+v",
+                "when": "editorTextFocus"
+            },
+            {
+                "command": "insula-mcp.formatCode",
+                "key": "ctrl+shift+f",
+                "mac": "cmd+shift+f",
+                "when": "editorTextFocus"
+            }
+        ],
+        "languages": [
+            {
+                "id": "typescript",
+                "extensions": [
+                    ".ts",
+                    ".tsx"
+                ],
+                "aliases": [
+                    "TypeScript",
+                    "typescript"
+                ]
+            },
+            {
+                "id": "javascript",
+                "extensions": [
+                    ".js",
+                    ".jsx",
+                    ".mjs"
+                ],
+                "aliases": [
+                    "JavaScript",
+                    "javascript"
+                ]
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.80.0",
+        "typescript": "^5.0.0",
+        "vsce": "^2.15.0"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.0"
+    }
+}
