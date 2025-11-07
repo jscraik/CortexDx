@@ -1,0 +1,88 @@
+# Documentation Validation Configuration for Insula MCP
+# This file defines the validation rules and requirements for project documentation
+
+validation:
+  # Required documentation files that must exist
+  required_files:
+    - README.md
+    - CONTRIBUTING.md
+    - packages/insula-mcp/README.md
+    - packages/insula-mcp/docs/GETTING_STARTED.md
+    - packages/insula-mcp/docs/USER_GUIDE.md
+    - packages/insula-mcp/docs/API_REFERENCE.md
+    - packages/insula-mcp/docs/CONTRIBUTING.md
+    - packages/insula-mcp/docs/TROUBLESHOOTING.md
+    - packages/insula-mcp/docs/DEPLOYMENT.md
+    - packages/insula-mcp/docs/IDE_INTEGRATION.md
+    - packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md
+
+  # Directories to exclude from validation
+  exclude_paths:
+    - node_modules/**
+    - .nx/**
+    - dist/**
+    - reports/**
+    - enhanced-reports/**
+    - packages/*/node_modules/**
+
+  # Validation rules
+  rules:
+    # Markdown linting
+    markdown_lint:
+      enabled: true
+      max_line_length: 120
+      allow_html: true
+      allow_duplicate_headings: true
+
+    # Link checking
+    link_check:
+      enabled: true
+      timeout: 20s
+      retry_count: 3
+      ignore_localhost: true
+      ignore_example_domains: true
+
+    # Spell checking
+    spell_check:
+      enabled: true
+      language: en
+      ignore_code_blocks: true
+      ignore_urls: true
+      ignore_technical_terms: true
+
+    # Content quality
+    content_quality:
+      enabled: true
+      min_content_length: 100
+      check_headings: true
+      warn_on_todos: true
+
+    # Cross-reference validation
+    cross_references:
+      enabled: true
+      check_internal_links: true
+      validate_anchors: true
+
+# Tools configuration
+tools:
+  markdownlint:
+    config_file: .markdownlint-cli2.jsonc
+
+  markdown_link_check:
+    config_file: .markdown-link-check.json
+
+  cspell:
+    config_file: cspell.config.js
+
+# Reporting
+reporting:
+  formats:
+    - json
+    - markdown
+
+  output_files:
+    json: docs-validation-report.json
+    markdown: docs-validation-report.md
+
+  include_warnings: true
+  include_suggestions: true

@@ -1,0 +1,235 @@
+# Documentation Maintenance Configuration for Insula MCP
+# This file defines maintenance schedules, thresholds, and automated procedures
+
+maintenance:
+  # Maintenance schedule configuration
+  schedule:
+    # Daily maintenance tasks (automated via CI)
+    daily:
+      - link-check
+      - version-sync
+      - spell-check
+
+    # Weekly maintenance tasks
+    weekly:
+      - content-freshness
+      - cross-reference-audit
+      - broken-link-report
+      - outdated-content-scan
+
+    # Monthly maintenance tasks
+    monthly:
+      - comprehensive-review
+      - documentation-metrics
+      - user-feedback-analysis
+      - maintenance-report-archive
+
+  # Version synchronization settings
+  version_sync:
+    enabled: true
+
+    # Files that should contain current version references
+    monitored_files:
+      - README.md
+      - packages/insula-mcp/README.md
+      - packages/insula-mcp/docs/GETTING_STARTED.md
+      - packages/insula-mcp/docs/USER_GUIDE.md
+      - packages/insula-mcp/docs/API_REFERENCE.md
+
+    # Version patterns to check
+    patterns:
+      - version_badges: "https://img.shields.io/npm/v/@brainwav/insula-mcp"
+      - node_version: "node.*>=?\\d+\\.\\d+\\.\\d+"
+      - package_version: "version\\s+\\d+\\.\\d+\\.\\d+"
+
+    # Auto-update settings
+    auto_update:
+      enabled: false # Manual approval required for version updates
+      create_pr: true
+      pr_title: "docs: sync version references to {version}"
+
+  # Content freshness monitoring
+  freshness:
+    # Thresholds for content age warnings
+    warning_days: 90 # Warn if not updated in 90 days
+    error_days: 180 # Error if not updated in 180 days
+    critical_days: 365 # Critical if not updated in 1 year
+
+    # Files to exclude from freshness checks
+    exclude_patterns:
+      - CHANGELOG.md
+      - LICENSE
+      - CODE_OF_CONDUCT.md
+      - "**/*.lock"
+      - "**/node_modules/**"
+
+    # Content quality indicators
+    quality_checks:
+      min_content_length: 100
+      check_for_placeholders: true
+      check_for_todos: true
+      check_heading_structure: true
+
+  # Link monitoring configuration
+  link_monitoring:
+    # External link checking
+    external_links:
+      timeout: 10000 # 10 second timeout
+      retry_count: 3 # Retry failed links 3 times
+      retry_delay: 1000 # 1 second between retries
+
+      # Patterns to ignore during link checking
+      ignore_patterns:
+        - localhost
+        - 127.0.0.1
+        - example.com
+        - example.org
+        - "*.local"
+
+      # Response time thresholds
+      slow_threshold: 5000 # Warn if response > 5 seconds
+
+    # Internal link checking
+    internal_links:
+      check_anchors: true
+      case_sensitive: false
+
+    # Link health reporting
+    reporting:
+      include_response_times: true
+      group_by_domain: true
+      track_historical_data: true
+
+  # Automated checks for outdated information
+  outdated_content:
+    # Technology version references to monitor
+    technology_versions:
+      - name: "Node.js"
+        pattern: "node.*\\d+\\.\\d+\\.\\d+"
+        current_source: "packages/insula-mcp/package.json"
+        current_path: "engines.node"
+
+      - name: "npm packages"
+        pattern: "@[\\w-]+/[\\w-]+@\\d+\\.\\d+\\.\\d+"
+        check_against: "package.json"
+
+    # Date references that might become outdated
+    date_references:
+      - pattern: "\\d{4}-\\d{2}-\\d{2}"
+        context: "last updated"
+        max_age_days: 180
+
+      - pattern: "\\b\\d{4}\\b"
+        context: "copyright"
+        auto_update: true
+
+    # Feature flags and status indicators
+    status_indicators:
+      - pattern: "\\[experimental\\]"
+        review_after_days: 90
+
+      - pattern: "\\[beta\\]"
+        review_after_days: 180
+
+      - pattern: "coming soon"
+        review_after_days: 30
+
+  # Broken link detection and reporting
+  broken_links:
+    # Detection frequency
+    check_frequency: "daily"
+
+    # Notification settings
+    notifications:
+      email: false
+      github_issue: true
+      slack: false
+
+    # Auto-fix capabilities
+    auto_fix:
+      enabled: false
+      create_pr: true
+      fix_internal_links: true
+      suggest_alternatives: true
+
+    # Reporting
+    report_format: ["json", "markdown"]
+    include_suggestions: true
+    track_fix_history: true
+
+# Integration settings
+integrations:
+  # GitHub integration
+  github:
+    create_issues: true
+    issue_labels: ["documentation", "maintenance"]
+    assign_to: ["maintainers"]
+
+    # Pull request automation
+    auto_pr:
+      enabled: false
+      branch_prefix: "docs/maintenance"
+      reviewer_teams: ["docs-reviewers"]
+
+  # CI/CD integration
+  ci_cd:
+    fail_on_errors: true
+    fail_on_critical_warnings: true
+    generate_artifacts: true
+
+    # Workflow triggers
+    triggers:
+      - push_to_main
+      - pull_request
+      - scheduled_daily
+      - manual_dispatch
+
+# Reporting configuration
+reporting:
+  # Output formats
+  formats:
+    - json
+    - markdown
+    - html
+
+  # Report destinations
+  outputs:
+    json: "docs-maintenance-report.json"
+    markdown: "docs-maintenance-report.md"
+    html: "docs-maintenance-report.html"
+
+  # Report content
+  include:
+    - summary_metrics
+    - detailed_findings
+    - historical_trends
+    - recommended_actions
+    - maintenance_schedule
+
+  # Retention policy
+  retention:
+    keep_reports: 30 # Keep reports for 30 days
+    archive_monthly: true
+    compress_old_reports: true
+
+# Notification settings
+notifications:
+  # Maintenance reminders
+  reminders:
+    weekly_review: true
+    monthly_review: true
+    quarterly_audit: true
+
+  # Alert thresholds
+  alerts:
+    critical_errors: 1
+    major_warnings: 5
+    broken_links: 3
+    stale_content_files: 10
+
+  # Delivery methods
+  delivery:
+    console: true
+    file: true
+    github_issue: false
+    email: false

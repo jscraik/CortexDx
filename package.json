@@ -6,7 +6,18 @@
     "build": "NX_CLOUD=false nx run insula-mcp:build",
     "test": "NX_CLOUD=false nx run insula-mcp:test",
     "lint": "NX_CLOUD=false nx run insula-mcp:lint",
-    "doctor": "NX_CLOUD=false nx run insula-mcp:doctor"
+    "doctor": "NX_CLOUD=false nx run insula-mcp:doctor",
+    "docs:validate": "node scripts/validate-docs.js",
+    "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.nx\" \"#dist\" \"#reports\" \"#enhanced-reports\"",
+    "docs:links": "find . -name \"*.md\" -not -path \"./node_modules/*\" -not -path \"./.nx/*\" -not -path \"./dist/*\" -not -path \"./reports/*\" -not -path \"./enhanced-reports/*\" -exec markdown-link-check {} \\;",
+    "docs:spell": "cspell \"**/*.md\" --exclude \"node_modules/**\" --exclude \".nx/**\" --exclude \"dist/**\" --exclude \"reports/**\" --exclude \"enhanced-reports/**\"",
+    "docs:maintenance": "node scripts/docs-maintenance.js",
+    "docs:maintenance:version-sync": "node scripts/docs-maintenance.js version-sync",
+    "docs:maintenance:freshness": "node scripts/docs-maintenance.js content-freshness",
+    "docs:maintenance:links": "node scripts/docs-maintenance.js link-check",
+    "docs:sync-versions": "node scripts/sync-versions.js",
+    "docs:sync-versions:dry-run": "node scripts/sync-versions.js --dry-run",
+    "docs:monitor-links": "node scripts/broken-link-monitor.js"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
