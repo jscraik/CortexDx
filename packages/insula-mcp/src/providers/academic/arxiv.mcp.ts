@@ -341,19 +341,20 @@ export class ArxivProvider {
         const url = `${this.baseUrl}?${searchParams}`;
 
         try {
-            const response = await this.ctx.request<string>(url, {
+            // Use fetch directly for XML response instead of ctx.request which expects JSON
+            const response = await fetch(url, {
                 headers: {
                     "User-Agent": this.userAgent,
                     ...this.ctx.headers
                 }
             });
 
-            this.ctx.evidence({
-                type: "url",
-                ref: url
-            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
-            return this.parseArxivXml(response);
+            const xmlText = await response.text();
+            return this.parseArxivXml(xmlText);
         } catch (error) {
             this.ctx.logger("arXiv search failed:", error);
             throw new Error(`arXiv API error: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -409,12 +410,13 @@ export class ArxivProvider {
     async healthCheck(): Promise<boolean> {
         try {
             const url = `${this.baseUrl}?search_query=cat:cs.AI&max_results=1`;
-            await this.ctx.request(url, {
+            const response = await fetch(url, {
                 headers: {
                     "User-Agent": this.userAgent,
                     ...this.ctx.headers
                 }
             });
+            return response.ok;
             return true;
         } catch {
             return false;

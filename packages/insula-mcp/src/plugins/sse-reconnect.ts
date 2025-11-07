@@ -37,9 +37,11 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
   order: 205,
   async run(ctx) {
     const findings: Finding[] = [];
-    const url = `${ctx.endpoint.replace(/\/$/, "")}/events`;
+    const base = `${ctx.endpoint.replace(/\/$/, "")}`;
+    const url = `${base}/events`;
+    const sessionHeaders = ctx.transport?.headers?.() ?? ctx.headers ?? {};
 
-    const first = await readHead(url);
+    const first = await readHead(url, sessionHeaders);
     if (!first.ok) {
       return [
         {
@@ -75,7 +77,7 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
       });
     }
 
-    const again = await readHead(url, { "Last-Event-ID": "1" });
+    const again = await readHead(url, { ...sessionHeaders, "Last-Event-ID": "1" });
     if (!again.ok) {
       findings.push({
         id: "sse.last_event_id.unhandled",

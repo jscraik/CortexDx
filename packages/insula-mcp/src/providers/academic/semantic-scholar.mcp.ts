@@ -12,6 +12,8 @@ import {
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "../../types.js";
 
+const SEMANTIC_SCHOLAR_CONTACT = "jscraik@brainwav.io";
+
 export interface SemanticScholarAuthor {
     authorId: string;
     name: string;
@@ -126,6 +128,20 @@ export class SemanticScholarProvider {
 
     constructor(private ctx: DiagnosticContext) {
         this.licenseValidator = createLicenseValidator(ctx);
+    }
+
+    private buildRequestHeaders(extra?: Record<string, string>): Record<string, string> {
+        const headers: Record<string, string> = {
+            "User-Agent": this.userAgent,
+            ...(this.ctx.headers ?? {}),
+            ...(extra ?? {})
+        };
+        const existingKey = headers["x-api-key"];
+        if (!existingKey || existingKey.length === 0) {
+            headers["x-api-key"] =
+                process.env.SEMANTIC_SCHOLAR_API_KEY ?? SEMANTIC_SCHOLAR_CONTACT;
+        }
+        return headers;
     }
 
     /**
@@ -378,11 +394,11 @@ export class SemanticScholarProvider {
 
         // Add optional filters
         if (params.year) searchParams.append("year", params.year);
-        if (params.venue) searchParams.append("venue", params.venue.join(","));
-        if (params.fieldsOfStudy) searchParams.append("fieldsOfStudy", params.fieldsOfStudy.join(","));
+        // if (params.venue) searchParams.append("venue", params.venue.join(","));
+        // if (params.fieldsOfStudy) searchParams.append("fieldsOfStudy", params.fieldsOfStudy.join(","));
         if (params.minCitationCount !== undefined) searchParams.append("minCitationCount", String(params.minCitationCount));
-        if (params.publicationTypes) searchParams.append("publicationTypes", params.publicationTypes.join(","));
-        if (params.openAccessPdf !== undefined) searchParams.append("openAccessPdf", String(params.openAccessPdf));
+        // if (params.publicationTypes) searchParams.append("publicationTypes", params.publicationTypes.join(","));
+        // if (params.openAccessPdf !== undefined) searchParams.append("openAccessPdf", String(params.openAccessPdf));
 
         const url = `${this.baseUrl}/paper/search?${searchParams}`;
 
@@ -393,10 +409,7 @@ export class SemanticScholarProvider {
                 offset: number;
                 next?: number;
             }>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -407,6 +420,9 @@ export class SemanticScholarProvider {
             return response.data || [];
         } catch (error) {
             this.ctx.logger("Semantic Scholar search failed:", error);
+            if (error instanceof Error && error.message.includes("429")) {
+                throw new Error("Semantic Scholar API rate limit exceeded. Please try again later.");
+            }
             throw new Error(`Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
@@ -420,10 +436,7 @@ export class SemanticScholarProvider {
 
         try {
             const response = await this.ctx.request<SemanticScholarPaper>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -456,10 +469,7 @@ export class SemanticScholarProvider {
                 offset: number;
                 next?: number;
             }>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -470,6 +480,9 @@ export class SemanticScholarProvider {
             return response.data?.map(item => item.citingPaper) || [];
         } catch (error) {
             this.ctx.logger("Semantic Scholar citations failed:", error);
+            if (error instanceof Error && error.message.includes("429")) {
+                throw new Error("Semantic Scholar API rate limit exceeded. Please try again later.");
+            }
             throw new Error(`Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
@@ -492,10 +505,7 @@ export class SemanticScholarProvider {
                 offset: number;
                 next?: number;
             }>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -506,6 +516,9 @@ export class SemanticScholarProvider {
             return response.data?.map(item => item.citedPaper) || [];
         } catch (error) {
             this.ctx.logger("Semantic Scholar references failed:", error);
+            if (error instanceof Error && error.message.includes("429")) {
+                throw new Error("Semantic Scholar API rate limit exceeded. Please try again later.");
+            }
             throw new Error(`Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
@@ -530,10 +543,7 @@ export class SemanticScholarProvider {
                 offset: number;
                 next?: number;
             }>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -544,6 +554,9 @@ export class SemanticScholarProvider {
             return response.data || [];
         } catch (error) {
             this.ctx.logger("Semantic Scholar author search failed:", error);
+            if (error instanceof Error && error.message.includes("429")) {
+                throw new Error("Semantic Scholar API rate limit exceeded. Please try again later.");
+            }
             throw new Error(`Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
@@ -557,10 +570,7 @@ export class SemanticScholarProvider {
 
         try {
             const response = await this.ctx.request<SemanticScholarAuthor>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -593,10 +603,7 @@ export class SemanticScholarProvider {
                 offset: number;
                 next?: number;
             }>(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
 
             this.ctx.evidence({
@@ -607,6 +614,9 @@ export class SemanticScholarProvider {
             return response.data || [];
         } catch (error) {
             this.ctx.logger("Semantic Scholar author papers failed:", error);
+            if (error instanceof Error && error.message.includes("429")) {
+                throw new Error("Semantic Scholar API rate limit exceeded. Please try again later.");
+            }
             throw new Error(`Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }
@@ -744,10 +754,7 @@ export class SemanticScholarProvider {
         try {
             const url = `${this.baseUrl}/paper/search?query=test&limit=1`;
             await this.ctx.request(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
+                headers: this.buildRequestHeaders()
             });
             return true;
         } catch {

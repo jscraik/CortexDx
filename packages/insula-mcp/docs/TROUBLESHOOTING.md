@@ -1,117 +1,303 @@
 # Troubleshooting Guide
 
-Common issues and solutions when using Insula MCP.
+This comprehensive guide helps you diagnose and resolve common issues when using Insula MCP. The guide is organized by problem category with platform-specific solutions and debugging techniques.
+
+## Quick Diagnostic Commands
+
+Before diving into specific issues, try these diagnostic commands:
+
+```bash
+# Check system health and requirements
+insula-mcp doctor
+
+# Run basic diagnostics with verbose output
+insula-mcp diagnose <endpoint> --verbose --debug
+
+# Interactive troubleshooting assistant
+insula-mcp interactive
+
+# Explain specific error messages
+insula-mcp explain error "<error-message>"
+
+# Get debugging help for specific problems
+insula-mcp debug "<problem-description>"
+```
 
 ## Connection Issues
 
 ### Server Not Responding
 
-**Symptom**: `Connection refused` or `ECONNREFUSED` errors
+**Error Messages**:
+
+- `ECONNREFUSED: Connection refused`
+- `ENOTFOUND: getaddrinfo ENOTFOUND`
+- `ETIMEDOUT: connect ETIMEDOUT`
+
+**Platform-Specific Diagnostics**:
+
+#### macOS Connection Diagnostics
+
+```bash
+# Check if server is running
+lsof -i :3000
+netstat -an | grep 3000
+
+# Check firewall settings
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+
+# Test connectivity
+nc -zv localhost 3000
+```
+
+#### Linux Connection Diagnostics
+
+```bash
+# Check if server is running
+ss -tlnp | grep :3000
+netstat -tlnp | grep :3000
+
+# Check firewall settings
+sudo ufw status
+sudo iptables -L
+
+# Test connectivity
+nc -zv localhost 3000
+```
+
+#### Windows Connection Diagnostics
+
+```powershell
+# Check if server is running
+netstat -an | findstr :3000
+
+# Check firewall settings
+Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*3000*"}
+
+# Test connectivity
+Test-NetConnection -ComputerName localhost -Port 3000
+```
 
 **Solutions**:
 
-1. **Check if server is running**:
+1. **Verify server is running**:
 
    ```bash
+   # Use Insula MCP diagnostics
+   insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
+   
    # Test with curl
-   curl http://localhost:3000
+   curl -v http://localhost:3000
+   ```
+
+2. **Check correct endpoint format**:
+
+   ```bash
+   # Correct formats
+   insula-mcp diagnose http://localhost:3000
+   insula-mcp diagnose https://api.example.com/mcp
    
-   # Or use Insula MCP
-   insula-mcp diagnose http://localhost:3000 --verbose
+   # Common mistakes to avoid
+   # ❌ insula-mcp diagnose localhost:3000 (missing protocol)
+   # ❌ insula-mcp diagnose http://localhost:3000/ (trailing slash)
    ```
 
-2. **Verify port number**:
+3. **Use interactive debugger**:
 
    ```bash
-   # Check what's running on the port
-   lsof -i :3000
-   ```
-
-3. **Check firewall settings**:
-
-   ```bash
-   # macOS
-   sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
-   
-   # Linux
-   sudo ufw status
-   ```
-
-4. **Use interactive debugger**:
-
-   ```bash
-   insula-mcp interactive
-   # Then: "Help me debug connection to localhost:3000"
+   insula-mcp debug "Cannot connect to localhost:3000"
    ```
 
 ### SSL/TLS Errors
 
-**Symptom**: `CERT_HAS_EXPIRED` or `UNABLE_TO_VERIFY_LEAF_SIGNATURE`
+**Error Messages**:
+
+- `CERT_HAS_EXPIRED: certificate has expired`
+- `UNABLE_TO_VERIFY_LEAF_SIGNATURE: unable to verify the first certificate`
+- `DEPTH_ZERO_SELF_SIGNED_CERT: self signed certificate`
+- `CERT_UNTRUSTED: certificate not trusted`
+
+**Platform-Specific Solutions**:
+
+#### macOS
+
+```bash
+# Check certificate details
+openssl s_client -connect example.com:443 -servername example.com
+
+# Add certificate to keychain (if self-signed)
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain cert.pem
+
+# Use system certificate store
+export SSL_CERT_FILE=/etc/ssl/cert.pem
+```
+
+#### Linux
+
+```bash
+# Check certificate details
+openssl s_client -connect example.com:443 -servername example.com
+
+# Add certificate to system store (Ubuntu/Debian)
+sudo cp cert.pem /usr/local/share/ca-certificates/cert.crt
+sudo update-ca-certificates
+
+# Add certificate to system store (RHEL/CentOS)
+sudo cp cert.pem /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust
+```
+
+#### Windows
+
+```powershell
+# Check certificate details
+openssl s_client -connect example.com:443 -servername example.com
+
+# Import certificate to trusted root store
+Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Root
+```
 
 **Solutions**:
 
-1. **Use HTTP for local development**:
+1. **For development environments**:
 
    ```bash
+   # Use HTTP instead of HTTPS
    insula-mcp diagnose http://localhost:3000
-   ```
-
-2. **Skip certificate validation** (development only):
-
-   ```bash
+   
+   # Skip certificate validation (development only)
    NODE_TLS_REJECT_UNAUTHORIZED=0 insula-mcp diagnose https://localhost:3000
    ```
 
-3. **Install proper certificates**:
+2. **Generate proper certificates**:
 
    ```bash
-   # Generate self-signed cert
-   openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+   # Generate self-signed certificate
+   openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
+     -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+   
+   # Generate certificate with SAN
+   openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes \
+     -config <(printf "[req]\ndistinguished_name=req\n[san]\nsubjectAltName=DNS:localhost,IP:127.0.0.1\n[req]\nreq_extensions=san")
+   ```
+
+3. **Use custom CA bundle**:
+
+   ```bash
+   # Specify custom CA bundle
+   export NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.pem
+   insula-mcp diagnose https://localhost:3000
    ```
 
 ### Timeout Errors
 
-**Symptom**: `Request timeout` or operations taking too long
+**Error Messages**:
 
-**Solutions**:
+- `ETIMEDOUT: connect ETIMEDOUT`
+- `Request timeout after 5000ms`
+- `Plugin execution timeout`
+- `Worker thread timeout`
 
-1. **Increase timeout**:
+**Debugging Steps**:
+
+1. **Identify timeout source**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --timeout 60000
+   # Run with detailed timing
+   insula-mcp diagnose http://localhost:3000 --verbose --debug
+   
+   # Check specific performance metrics
+   insula-mcp diagnose http://localhost:3000 --suites performance
    ```
 
-2. **Check server performance**:
+2. **Adjust timeout settings**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --suite performance
+   # Increase overall timeout (default: 5000ms)
+   insula-mcp diagnose http://localhost:3000 --budget-time 30000
+   
+   # Increase memory budget (default: 96MB)
+   insula-mcp diagnose http://localhost:3000 --budget-mem 256
    ```
 
-3. **Use performance profiler**:
+3. **Platform-specific network diagnostics**:
+
+   #### macOS/Linux
 
    ```bash
-   insula-mcp profile http://localhost:3000
+   # Check network latency
+   ping -c 4 example.com
+   
+   # Trace network path
+   traceroute example.com
+   
+   # Check DNS resolution time
+   dig example.com
+   ```
+
+   #### Windows
+
+   ```powershell
+   # Check network latency
+   ping -n 4 example.com
+   
+   # Trace network path
+   tracert example.com
+   
+   # Check DNS resolution time
+   nslookup example.com
+   ```
+
+4. **Performance analysis**:
+
+   ```bash
+   # Run performance-focused diagnostics
+   insula-mcp best-practices http://localhost:3000 --focus performance
+   
+   # Generate performance report
+   insula-mcp diagnose http://localhost:3000 --suites performance --out performance-report
    ```
 
 ## Protocol Compliance Issues
 
 ### Invalid JSON-RPC Messages
 
-**Symptom**: `Invalid JSON-RPC 2.0 message` errors
+**Error Messages**:
 
-**Solutions**:
+- `Invalid JSON-RPC 2.0 message format`
+- `Missing required field: jsonrpc`
+- `Invalid method name format`
+- `Malformed JSON in request/response`
 
-1. **Validate message structure**:
+**Debugging Protocol Issues**:
+
+1. **Run protocol validation**:
 
    ```bash
-   insula-mcp validate http://localhost:3000 --verbose
+   # Comprehensive protocol compliance check
+   insula-mcp diagnose http://localhost:3000 --suites protocol
+   
+   # Check specific JSON-RPC compliance
+   insula-mcp diagnose http://localhost:3000 --suites jsonrpc-batch
    ```
 
-2. **Check for required fields**:
-   - Request must have: `jsonrpc`, `method`, `id`
-   - Response must have: `jsonrpc`, `result` or `error`, `id`
+2. **Validate message structure**:
 
-3. **Example valid request**:
+   ```bash
+   # Enable detailed protocol logging
+   insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+   
+   # Check HAR file for raw request/response data
+   # Output: reports/capture.har (redacted)
+   ```
+
+3. **Common JSON-RPC validation rules**:
+   - **Request must have**: `jsonrpc: "2.0"`, `method`, `id` (except notifications)
+   - **Response must have**: `jsonrpc: "2.0"`, (`result` OR `error`), `id`
+   - **Method names**: Must follow MCP convention (e.g., `tools/list`, `resources/read`)
+
+4. **Example valid messages**:
+
+   **Request**:
 
    ```json
    {
@@ -121,123 +307,395 @@ Common issues and solutions when using Insula MCP.
    }
    ```
 
+   **Response (Success)**:
+
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "result": {
+       "tools": []
+     },
+     "id": 1
+   }
+   ```
+
+   **Response (Error)**:
+
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "error": {
+       "code": -32601,
+       "message": "Method not found"
+     },
+     "id": 1
+   }
+   ```
+
+5. **Debug malformed JSON**:
+
+   ```bash
+   # Use interactive mode for JSON validation
+   insula-mcp explain error "Unexpected token } in JSON"
+   
+   # Validate JSON manually
+   echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq .
+   ```
+
 ### Protocol Version Mismatch
 
-**Symptom**: `Unsupported protocol version` warnings
+**Error Messages**:
+
+- `Unsupported MCP protocol version`
+- `Protocol version negotiation failed`
+- `Client requires protocol version X.Y.Z`
 
 **Solutions**:
 
-1. **Check supported versions**:
+1. **Check protocol compatibility**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --suite protocol
+   # Check MCP protocol compliance
+   insula-mcp diagnose http://localhost:3000 --suites mcp-compatibility
+   
+   # Get detailed protocol information
+   insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
    ```
 
-2. **Update server to latest protocol**:
+2. **Supported MCP protocol versions**:
+   - **Current**: `2024-11-05` (latest)
+   - **Previous**: `2024-06-25`, `2024-04-15`
+
+3. **Update server implementation**:
 
    ```bash
-   insula-mcp migrate http://localhost:3000 --to 2024-11-05
+   # Generate updated server template
+   insula-mcp generate template my-server --lang typescript
+   
+   # Get migration guidance
+   insula-mcp best-practices --focus protocol
    ```
 
-3. **Test compatibility**:
+4. **Test version compatibility**:
 
    ```bash
-   insula-mcp compatibility http://localhost:3000
+   # Test against specific protocol version
+   insula-mcp diagnose http://localhost:3000 --suites protocol --verbose
    ```
 
 ## LLM Integration Issues
 
-### LLM Not Available
+### LLM Backend Not Available
 
-**Symptom**: `LLM not available` or `No LLM backend detected`
+**Error Messages**:
 
-**Solutions**:
+- `LLM backend not available`
+- `No LLM service detected`
+- `Failed to connect to Ollama/MLX`
+- `Model not found or not loaded`
 
-1. **Install Ollama** (recommended):
+**Platform-Specific Installation**:
+
+#### macOS (Apple Silicon - MLX Recommended)
+
+```bash
+# Install MLX (optimized for Apple Silicon)
+pip3 install mlx-lm
+
+# Verify MLX installation
+python3 -c "import mlx.core; print('MLX available')"
+
+# Install Ollama as alternative
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.2:3b
+```
+
+#### macOS (Intel - Ollama Recommended)
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Or via Homebrew
+brew install ollama
+
+# Start Ollama service
+ollama serve &
+ollama pull llama3.2:3b
+```
+
+#### Linux
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Start as systemd service
+sudo systemctl enable ollama
+sudo systemctl start ollama
+
+# Pull model
+ollama pull llama3.2:3b
+```
+
+#### Windows
+
+```powershell
+# Download and install Ollama from https://ollama.com/download
+# Or use winget
+winget install Ollama.Ollama
+
+# Pull model
+ollama pull llama3.2:3b
+```
+
+**Verification and Configuration**:
+
+1. **Check LLM availability**:
 
    ```bash
-   curl -fsSL https://ollama.com/install.sh | sh
-   ollama pull llama3
-   ```
-
-2. **Install MLX** (Apple Silicon):
-
-   ```bash
-   pip install mlx-lm
-   ```
-
-3. **Verify installation**:
-
-   ```bash
+   # Run system diagnostics
    insula-mcp doctor
+   
+   # Test LLM integration specifically
+   insula-mcp interactive
+   # Then ask: "Test LLM connection"
    ```
 
-4. **Configure backend manually**:
+2. **Manual configuration**:
+
+   ```json
+   // .insula-mcp.json
+   {
+     "llm": {
+       "backend": "ollama",
+       "model": "llama3.2:3b",
+       "endpoint": "http://localhost:11434",
+       "timeout": 30000
+     }
+   }
+   ```
+
+3. **Alternative configuration for MLX**:
 
    ```json
    {
      "llm": {
-       "backend": "ollama",
-       "model": "llama3",
-       "endpoint": "http://localhost:11434"
+       "backend": "mlx",
+       "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
+       "maxTokens": 2048
      }
    }
    ```
 
 ### Slow LLM Responses
 
-**Symptom**: LLM operations taking longer than 2 seconds
+**Symptoms**:
 
-**Solutions**:
+- LLM operations taking longer than 30 seconds
+- Interactive mode responses are slow
+- High CPU/memory usage during LLM operations
 
-1. **Use smaller model**:
+**Performance Optimization**:
+
+1. **Use appropriate model size**:
 
    ```bash
-   ollama pull llama3:8b
+   # Lightweight models (faster, less accurate)
+   ollama pull llama3.2:1b    # ~1GB RAM
+   ollama pull llama3.2:3b    # ~2GB RAM
+   
+   # Balanced models (good speed/quality)
+   ollama pull llama3.1:8b    # ~4.7GB RAM
+   
+   # High-quality models (slower, more accurate)
+   ollama pull llama3.1:70b   # ~40GB RAM
    ```
 
-2. **Enable quantization**:
+2. **Platform-specific optimizations**:
 
-   ```json
+   #### Apple Silicon (MLX)
+
+   ```bash
+   # Use quantized models for better performance
+   pip3 install mlx-lm
+   
+   # Configuration for Apple Silicon
    {
      "llm": {
-       "quantization": "q4_0"
+       "backend": "mlx",
+       "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
+       "maxTokens": 1024
      }
    }
    ```
 
-3. **Check system resources**:
+   #### NVIDIA GPU
 
    ```bash
-   # Monitor CPU/Memory
-   top
-   
-   # Check GPU usage (if applicable)
+   # Check GPU availability
    nvidia-smi
+   
+   # Use GPU-optimized Ollama
+   ollama pull llama3.2:3b
+   # Ollama automatically uses GPU if available
+   ```
+
+   #### CPU-only systems
+
+   ```bash
+   # Use smallest viable model
+   ollama pull llama3.2:1b
+   
+   # Limit concurrent operations
+   {
+     "llm": {
+       "maxConcurrency": 1,
+       "timeout": 60000
+     }
+   }
+   ```
+
+3. **Monitor system resources**:
+
+   #### macOS
+
+   ```bash
+   # Monitor CPU and memory
+   top -o cpu
+   
+   # Check memory pressure
+   memory_pressure
+   
+   # Monitor GPU usage (Apple Silicon)
+   sudo powermetrics -n 1 -i 1000 --samplers gpu_power
+   ```
+
+   #### Linux
+
+   ```bash
+   # Monitor resources
+   htop
+   
+   # Check GPU usage (NVIDIA)
+   nvidia-smi -l 1
+   
+   # Monitor memory
+   free -h
+   ```
+
+   #### Windows
+
+   ```powershell
+   # Monitor resources
+   Get-Process | Sort-Object CPU -Descending | Select-Object -First 10
+   
+   # Check GPU usage
+   nvidia-smi
+   ```
+
+4. **Optimize configuration**:
+
+   ```json
+   {
+     "llm": {
+       "backend": "ollama",
+       "model": "llama3.2:3b",
+       "timeout": 30000,
+       "maxTokens": 1024,
+       "temperature": 0.1,
+       "stream": true
+     }
+   }
    ```
 
 ### Model Loading Errors
 
-**Symptom**: `Failed to load model` errors
+**Error Messages**:
+
+- `Failed to load model: model not found`
+- `Model download failed`
+- `Insufficient disk space for model`
+- `Model file corrupted`
 
 **Solutions**:
 
 1. **Check available models**:
 
    ```bash
+   # List installed models
    ollama list
+   
+   # Check model details
+   ollama show llama3.2:3b
    ```
 
-2. **Pull model explicitly**:
+2. **Download models explicitly**:
 
    ```bash
-   ollama pull llama3
+   # Pull specific model
+   ollama pull llama3.2:3b
+   
+   # Pull with progress
+   ollama pull llama3.2:3b --verbose
    ```
 
-3. **Verify disk space**:
+3. **Platform-specific disk space checks**:
+
+   #### macOS/Linux
 
    ```bash
+   # Check available disk space
    df -h
+   
+   # Check Ollama model directory
+   du -sh ~/.ollama/models
+   
+   # Clean up old models
+   ollama rm old-model-name
+   ```
+
+   #### Windows
+
+   ```powershell
+   # Check disk space
+   Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, FreeSpace, Size
+   
+   # Check Ollama directory
+   Get-ChildItem -Path "$env:USERPROFILE\.ollama\models" -Recurse | Measure-Object -Property Length -Sum
+   ```
+
+4. **Model storage requirements**:
+   - `llama3.2:1b` → ~1.3GB
+   - `llama3.2:3b` → ~2.0GB  
+   - `llama3.1:8b` → ~4.7GB
+   - `llama3.1:70b` → ~40GB
+
+5. **Troubleshoot corrupted models**:
+
+   ```bash
+   # Remove and re-download corrupted model
+   ollama rm llama3.2:3b
+   ollama pull llama3.2:3b
+   
+   # Verify model integrity
+   ollama run llama3.2:3b "Hello, world!"
+   ```
+
+6. **Alternative model sources**:
+
+   ```bash
+   # Use Hugging Face models with MLX (Apple Silicon)
+   pip3 install huggingface-hub
+   
+   # Configuration for Hugging Face models
+   {
+     "llm": {
+       "backend": "mlx",
+       "model": "microsoft/Phi-3-mini-4k-instruct",
+       "source": "huggingface"
+     }
+   }
    ```
 
 ## Plugin Issues
@@ -355,63 +813,198 @@ Common issues and solutions when using Insula MCP.
 
 ### Slow Diagnostics
 
-**Symptom**: Diagnostic runs taking too long
+**Symptoms**:
 
-**Solutions**:
+- Diagnostic runs taking longer than 2 minutes
+- High CPU usage during diagnostics
+- Memory usage growing during execution
 
-1. **Run specific suites only**:
+**Performance Tuning**:
 
-   ```bash
-   insula-mcp diagnose http://localhost:3000 --suite protocol,security
-   ```
-
-2. **Skip optional checks**:
+1. **Optimize diagnostic scope**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --skip-optional
+   # Run only essential suites
+   insula-mcp diagnose http://localhost:3000 --suites protocol,cors,auth
+   
+   # Skip resource-intensive suites
+   insula-mcp diagnose http://localhost:3000 --suites protocol --budget-time 10000
+   
+   # Quick health check
+   insula-mcp diagnose http://localhost:3000 --suites discovery
    ```
 
-3. **Use parallel execution**:
+2. **Available diagnostic suites** (ordered by performance impact):
+   - **Fast**: `discovery`, `protocol`, `cors`
+   - **Medium**: `auth`, `jsonrpc-batch`, `permissioning`
+   - **Slow**: `performance`, `governance`, `threat-model`
+   - **Resource-intensive**: `streaming-sse`, `sse-reconnect`
+
+3. **Adjust resource budgets**:
+
+   ```bash
+   # Increase time budget per plugin (default: 5000ms)
+   insula-mcp diagnose http://localhost:3000 --budget-time 15000
+   
+   # Increase memory budget per plugin (default: 96MB)
+   insula-mcp diagnose http://localhost:3000 --budget-mem 256
+   
+   # Conservative settings for slow systems
+   insula-mcp diagnose http://localhost:3000 --budget-time 30000 --budget-mem 512
+   ```
+
+4. **Platform-specific optimizations**:
+
+   #### macOS
+
+   ```bash
+   # Check system load
+   sysctl -n vm.loadavg
+   
+   # Monitor memory pressure
+   memory_pressure
+   
+   # Optimize for Apple Silicon
+   insula-mcp diagnose http://localhost:3000 --budget-mem 128
+   ```
+
+   #### Linux
+
+   ```bash
+   # Check system load
+   uptime
+   
+   # Monitor memory
+   free -h
+   
+   # Check for swap usage
+   swapon --show
+   ```
+
+   #### Windows
+
+   ```powershell
+   # Check system performance
+   Get-Counter "\Processor(_Total)\% Processor Time"
+   
+   # Check memory usage
+   Get-WmiObject -Class Win32_OperatingSystem | Select-Object TotalVisibleMemorySize, FreePhysicalMemory
+   ```
+
+5. **Configuration for performance**:
 
    ```json
+   // .insula-mcp.json
    {
      "diagnostics": {
-       "parallel": true,
-       "maxConcurrency": 4
+       "defaultSuites": ["protocol", "cors", "auth"],
+       "budgets": {
+         "timeMs": 10000,
+         "memMb": 128
+       },
+       "parallel": false,
+       "deterministic": true
      }
    }
    ```
 
 ### High Memory Usage
 
-**Symptom**: Insula MCP consuming too much memory
+**Symptoms**:
 
-**Solutions**:
+- Insula MCP consuming >1GB RAM
+- System becoming unresponsive during diagnostics
+- Out of memory errors
 
-1. **Limit conversation history**:
+**Memory Optimization**:
+
+1. **Reduce plugin memory budgets**:
+
+   ```bash
+   # Limit memory per plugin (default: 96MB)
+   insula-mcp diagnose http://localhost:3000 --budget-mem 64
+   
+   # Very conservative settings
+   insula-mcp diagnose http://localhost:3000 --budget-mem 32
+   ```
+
+2. **Optimize LLM memory usage**:
 
    ```json
    {
      "llm": {
-       "maxHistoryLength": 10
+       "maxHistoryLength": 5,
+       "maxTokens": 512,
+       "model": "llama3.2:1b"
      }
    }
    ```
 
-2. **Disable caching**:
+3. **Platform-specific memory monitoring**:
+
+   #### macOS
+
+   ```bash
+   # Monitor Insula MCP memory usage
+   ps aux | grep insula-mcp
+   
+   # Check memory pressure
+   memory_pressure
+   
+   # Monitor in real-time
+   top -pid $(pgrep -f insula-mcp)
+   ```
+
+   #### Linux
+
+   ```bash
+   # Monitor memory usage
+   ps aux | grep insula-mcp
+   
+   # Check system memory
+   cat /proc/meminfo
+   
+   # Monitor with htop
+   htop -p $(pgrep -f insula-mcp)
+   ```
+
+   #### Windows
+
+   ```powershell
+   # Monitor process memory
+   Get-Process | Where-Object {$_.ProcessName -like "*node*"} | Select-Object ProcessName, WorkingSet
+   
+   # Monitor system memory
+   Get-WmiObject -Class Win32_OperatingSystem | Select-Object TotalVisibleMemorySize, FreePhysicalMemory
+   ```
+
+4. **Memory-efficient configuration**:
 
    ```json
    {
+     "diagnostics": {
+       "budgets": {
+         "memMb": 64
+       }
+     },
+     "llm": {
+       "maxHistoryLength": 3,
+       "maxTokens": 256
+     },
      "cache": {
        "enabled": false
      }
    }
    ```
 
-3. **Use streaming mode**:
+5. **Garbage collection tuning**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --stream
+   # Force garbage collection (Node.js)
+   node --expose-gc $(which insula-mcp) diagnose http://localhost:3000
+   
+   # Increase heap size if needed
+   node --max-old-space-size=2048 $(which insula-mcp) diagnose http://localhost:3000
    ```
 
 ## Configuration Issues
@@ -474,72 +1067,477 @@ Common issues and solutions when using Insula MCP.
    insula-mcp diagnose http://localhost:3000 --config ./my-config.json
    ```
 
-## Getting More Help
+## Advanced Debugging Techniques
+
+### Verbose Logging and Debugging
+
+1. **Enable comprehensive logging**:
+
+   ```bash
+   # Maximum verbosity
+   insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+   
+   # Debug specific plugin
+   DEBUG=insula:plugin:* insula-mcp diagnose http://localhost:3000
+   
+   # Debug network requests
+   DEBUG=insula:http:* insula-mcp diagnose http://localhost:3000
+   ```
+
+2. **Capture network traffic**:
+
+   ```bash
+   # Enable HAR capture (HTTP Archive)
+   insula-mcp diagnose http://localhost:3000 --har
+   
+   # Output: reports/capture.har (sensitive data redacted)
+   # View with: Chrome DevTools > Network > Import HAR
+   ```
+
+3. **Platform-specific debugging**:
+
+   #### macOS
+
+   ```bash
+   # Use Console.app to view system logs
+   log stream --predicate 'process == "node"'
+   
+   # Network debugging with tcpdump
+   sudo tcpdump -i lo0 port 3000
+   ```
+
+   #### Linux
+
+   ```bash
+   # View system logs
+   journalctl -f -u insula-mcp
+   
+   # Network debugging
+   sudo tcpdump -i lo port 3000
+   ```
+
+   #### Windows
+
+   ```powershell
+   # View Windows Event Log
+   Get-WinEvent -LogName Application | Where-Object {$_.ProviderName -like "*Node*"}
+   
+   # Network debugging with netsh
+   netsh trace start capture=yes tracefile=network.etl
+   # ... run diagnostics ...
+   netsh trace stop
+   ```
 
 ### Interactive Troubleshooting
 
 ```bash
+# Start interactive troubleshooting session
 insula-mcp interactive
-# Then describe your issue in natural language
+
+# Or get help with specific problems
+insula-mcp debug "Server returns 500 errors"
+insula-mcp explain error "ECONNREFUSED"
 ```
 
-### Diagnostic Doctor
+**Interactive commands**:
+
+- `"Help me debug connection issues"`
+- `"Explain this error: [paste error message]"`
+- `"How do I optimize performance?"`
+- `"Generate a test server for debugging"`
+
+### System Health Check
 
 ```bash
+# Comprehensive system diagnostics
 insula-mcp doctor
 ```
 
-This will check:
+**Doctor checks**:
 
-- LLM backend availability
-- Plugin installation
-- Configuration validity
-- Network connectivity
-- System requirements
+- ✅ Node.js version compatibility
+- ✅ LLM backend availability (Ollama/MLX)
+- ✅ Network connectivity
+- ✅ Plugin installation
+- ✅ Configuration validity
+- ✅ System requirements
+- ✅ Platform-specific dependencies
 
-### Verbose Logging
+### Bug Reporting
+
+When reporting issues, include:
+
+1. **System information**:
+
+   ```bash
+   # Generate system report
+   insula-mcp doctor > system-info.txt
+   
+   # Include Node.js and npm versions
+   node --version && npm --version
+   ```
+
+2. **Reproduction steps**:
+
+   ```bash
+   # Run with maximum debugging
+   insula-mcp diagnose http://localhost:3000 --verbose --debug --har 2>&1 | tee debug.log
+   ```
+
+3. **Configuration and logs**:
+
+   ```bash
+   # Sanitize and include configuration
+   cat .insula-mcp.json | jq 'del(.auth, .secrets)'
+   
+   # Include relevant log files (sanitized)
+   tail -100 ~/.insula-mcp/logs/error.log
+   ```
+
+4. **Create GitHub issue**:
+   - Visit: <https://github.com/brainwav/insula-mcp/issues/new>
+   - Use the bug report template
+   - Include system info, logs, and reproduction steps
+   - Attach HAR file if network-related (ensure sensitive data is redacted)
+
+### Performance Profiling
 
 ```bash
-insula-mcp diagnose http://localhost:3000 --verbose --debug
+# Generate performance profile
+node --prof $(which insula-mcp) diagnose http://localhost:3000
+
+# Process profile (generates report)
+node --prof-process isolate-*.log > profile.txt
+
+# Memory profiling
+node --inspect $(which insula-mcp) diagnose http://localhost:3000
+# Then open Chrome DevTools > Memory tab
 ```
 
-### Report an Issue
+## Common Error Codes Reference
+
+| Error Code | Category | Meaning | Quick Solution |
+|------------|----------|---------|----------------|
+| `ECONNREFUSED` | Network | Server not running or wrong port | Check server status: `lsof -i :3000` |
+| `ETIMEDOUT` | Network | Request timeout | Increase timeout: `--budget-time 30000` |
+| `ENOTFOUND` | Network | DNS resolution failed | Verify endpoint URL format |
+| `EADDRINUSE` | Network | Port already in use | Find process: `lsof -i :3000` and kill it |
+| `CERT_HAS_EXPIRED` | TLS | SSL certificate expired | Use HTTP or renew certificate |
+| `UNABLE_TO_VERIFY_LEAF_SIGNATURE` | TLS | Self-signed certificate | Add to trust store or use `NODE_TLS_REJECT_UNAUTHORIZED=0` |
+| `DEPTH_ZERO_SELF_SIGNED_CERT` | TLS | Self-signed certificate | Add certificate to system trust store |
+| `ERR_INVALID_PROTOCOL` | MCP | Wrong MCP protocol version | Update server to latest MCP protocol |
+| `ERR_LLM_NOT_AVAILABLE` | LLM | No LLM backend detected | Install Ollama: `curl -fsSL https://ollama.com/install.sh \| sh` |
+| `ERR_PLUGIN_TIMEOUT` | Plugin | Plugin execution timeout | Increase budget: `--budget-time 15000` |
+| `ERR_PLUGIN_MEMORY` | Plugin | Plugin memory limit exceeded | Increase budget: `--budget-mem 256` |
+| `ERR_PLUGIN_FAILED` | Plugin | Plugin execution error | Run with `--verbose --debug` for details |
+| `ERR_LICENSE_VIOLATION` | Compliance | License compliance issue | Review licenses: `insula-mcp best-practices --focus compliance` |
+| `ERR_MALFORMED_JSON` | Protocol | Invalid JSON in request/response | Validate JSON: `echo '{}' \| jq .` |
+| `ERR_JSONRPC_INVALID` | Protocol | Invalid JSON-RPC message | Check required fields: `jsonrpc`, `method`, `id` |
+| `ERR_METHOD_NOT_FOUND` | Protocol | MCP method not implemented | Check server capabilities |
+| `ERR_INVALID_PARAMS` | Protocol | Invalid method parameters | Validate parameter format |
+| `ERR_INTERNAL_ERROR` | Server | Server internal error | Check server logs |
+| `ERR_PARSE_ERROR` | Protocol | JSON parsing failed | Validate JSON syntax |
+| `ERR_INVALID_REQUEST` | Protocol | Malformed request | Check JSON-RPC 2.0 format |
+
+### Error Code Debugging Commands
 
 ```bash
-insula-mcp report-issue --include-logs
+# Network errors (ECONNREFUSED, ETIMEDOUT, ENOTFOUND)
+insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
+
+# TLS/SSL errors (CERT_*, UNABLE_TO_VERIFY_*)
+insula-mcp diagnose https://localhost:3000 --verbose --debug
+
+# Protocol errors (ERR_INVALID_PROTOCOL, ERR_JSONRPC_*)
+insula-mcp diagnose http://localhost:3000 --suites protocol,jsonrpc-batch --verbose
+
+# LLM errors (ERR_LLM_*)
+insula-mcp doctor
+insula-mcp interactive
+
+# Plugin errors (ERR_PLUGIN_*)
+insula-mcp diagnose http://localhost:3000 --budget-time 30000 --budget-mem 256 --verbose
+
+# Compliance errors (ERR_LICENSE_*)
+insula-mcp best-practices http://localhost:3000 --focus compliance
 ```
 
-This will:
+## Best Practices for Troubleshooting
 
-- Collect relevant logs
-- Sanitize sensitive information
-- Generate issue template
-- Open GitHub issue (if configured)
+### Systematic Debugging Approach
 
-## Common Error Codes
+1. **Start with system health check**:
 
-| Code | Meaning | Solution |
-|------|---------|----------|
-| `ECONNREFUSED` | Server not running | Start the server |
-| `ETIMEDOUT` | Request timeout | Increase timeout or check server |
-| `ENOTFOUND` | DNS resolution failed | Check endpoint URL |
-| `CERT_HAS_EXPIRED` | SSL certificate expired | Renew certificate |
-| `ERR_INVALID_PROTOCOL` | Wrong protocol version | Update server or client |
-| `ERR_LLM_NOT_AVAILABLE` | No LLM backend | Install Ollama or MLX |
-| `ERR_PLUGIN_FAILED` | Plugin execution error | Check plugin logs |
-| `ERR_LICENSE_VIOLATION` | License compliance issue | Review and approve licenses |
+   ```bash
+   insula-mcp doctor
+   ```
 
-## Best Practices
+2. **Run basic diagnostics**:
 
-1. **Always run diagnostics first**: `insula-mcp diagnose`
-2. **Use interactive mode for complex issues**: `insula-mcp interactive`
-3. **Keep logs for debugging**: `--verbose --debug`
-4. **Update regularly**: `npm update @brainwav/insula-mcp`
-5. **Test in development first**: Use local servers before production
+   ```bash
+   insula-mcp diagnose <endpoint> --suites discovery,protocol
+   ```
 
-## Resources
+3. **Use interactive mode for complex issues**:
 
-- [Getting Started Guide](./GETTING_STARTED.md)
-- [API Reference](./API_REFERENCE.md)
-- [Plugin Development](./PLUGIN_DEVELOPMENT.md)
-- [GitHub Issues](https://github.com/brainwav/insula-mcp/issues)
+   ```bash
+   insula-mcp interactive
+   # Then describe your problem in natural language
+   ```
+
+4. **Enable verbose logging when needed**:
+
+   ```bash
+   insula-mcp diagnose <endpoint> --verbose --debug --har
+   ```
+
+### Development vs Production
+
+#### Development Environment
+
+```bash
+# Use local HTTP endpoints
+insula-mcp diagnose http://localhost:3000
+
+# Enable all debugging features
+insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+
+# Use smaller, faster models
+ollama pull llama3.2:1b
+```
+
+#### Production Environment
+
+```bash
+# Use HTTPS endpoints
+insula-mcp diagnose https://api.example.com/mcp
+
+# Focus on essential suites
+insula-mcp diagnose https://api.example.com/mcp --suites protocol,auth,cors
+
+# Use deterministic mode for consistent results
+insula-mcp diagnose https://api.example.com/mcp --deterministic
+```
+
+### Maintenance and Updates
+
+1. **Keep Insula MCP updated**:
+
+   ```bash
+   npm update @brainwav/insula-mcp
+   
+   # Check for updates
+   npm outdated @brainwav/insula-mcp
+   ```
+
+2. **Update LLM models regularly**:
+
+   ```bash
+   # Update Ollama models
+   ollama pull llama3.2:3b
+   
+   # Update MLX models
+   pip3 install --upgrade mlx-lm
+   ```
+
+3. **Clean up old data**:
+
+   ```bash
+   # Clean old reports
+   rm -rf reports/*
+   
+   # Clean old Ollama models
+   ollama rm old-model-name
+   ```
+
+### Performance Best Practices
+
+1. **Choose appropriate diagnostic scope**:
+   - **Quick health check**: `--suites discovery`
+   - **Basic compliance**: `--suites protocol,cors,auth`
+   - **Full audit**: `--full` (use sparingly)
+
+2. **Optimize for your platform**:
+   - **Apple Silicon**: Use MLX backend with quantized models
+   - **NVIDIA GPU**: Use Ollama with GPU acceleration
+   - **CPU-only**: Use smallest viable models (1B-3B parameters)
+
+3. **Monitor resource usage**:
+
+   ```bash
+   # Set conservative budgets for slow systems
+   insula-mcp diagnose <endpoint> --budget-time 30000 --budget-mem 128
+   ```
+
+### Security Considerations
+
+1. **Protect sensitive data**:
+   - Always use `--har` flag to enable redaction
+   - Never share raw logs containing authentication tokens
+   - Use environment variables for sensitive configuration
+
+2. **Validate endpoints**:
+
+   ```bash
+   # Always test with discovery suite first
+   insula-mcp diagnose <endpoint> --suites discovery
+   ```
+
+3. **Use appropriate authentication**:
+
+   ```bash
+   # Bearer token
+   insula-mcp diagnose <endpoint> --auth bearer:your-token
+   
+   # Basic auth
+   insula-mcp diagnose <endpoint> --auth basic:user:pass
+   ```
+
+## Platform-Specific Issues
+
+### macOS
+
+#### Common Issues
+
+- **Gatekeeper blocking execution**: `xattr -d com.apple.quarantine /usr/local/bin/insula-mcp`
+- **Permission denied for network access**: Check System Preferences > Security & Privacy > Privacy > Network
+- **MLX not working on Intel Macs**: Use Ollama instead of MLX on Intel-based Macs
+
+#### Debugging Commands
+
+```bash
+# Check system architecture
+uname -m
+
+# Check macOS version
+sw_vers
+
+# Monitor system resources
+sudo fs_usage -w -f network | grep insula-mcp
+```
+
+### Linux
+
+#### Common Issues
+
+- **Permission denied for ports < 1024**: Use `sudo` or ports > 1024
+- **Missing dependencies**: Install build tools: `sudo apt-get install build-essential`
+- **SELinux blocking network access**: Check with `sestatus` and adjust policies
+
+#### Debugging Commands
+
+```bash
+# Check distribution
+cat /etc/os-release
+
+# Check available ports
+ss -tlnp
+
+# Monitor network connections
+sudo netstat -tulpn | grep insula-mcp
+```
+
+### Windows
+
+#### Common Issues
+
+- **Windows Defender blocking execution**: Add exception for insula-mcp
+- **PowerShell execution policy**: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- **WSL networking issues**: Use Windows IP instead of localhost in WSL
+
+#### Debugging Commands
+
+```powershell
+# Check Windows version
+Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion
+
+# Check network configuration
+Get-NetAdapter | Where-Object {$_.Status -eq "Up"}
+
+# Monitor process
+Get-Process | Where-Object {$_.ProcessName -like "*node*"}
+```
+
+### Docker/Container Issues
+
+#### Common Problems
+
+- **Network isolation**: Use `--network host` for local testing
+- **DNS resolution**: Configure custom DNS or use IP addresses
+- **Resource limits**: Increase memory limits for LLM operations
+
+#### Solutions
+
+```bash
+# Run with host networking
+docker run --network host insula-mcp diagnose http://localhost:3000
+
+# Increase memory limit
+docker run -m 2g insula-mcp diagnose http://localhost:3000
+
+# Debug container networking
+docker exec -it container-name ping host.docker.internal
+```
+
+## Emergency Recovery
+
+### Complete Reset
+
+```bash
+# Reset all configuration
+rm -rf ~/.insula-mcp/
+
+# Reinstall from scratch
+npm uninstall -g @brainwav/insula-mcp
+npm install -g @brainwav/insula-mcp
+
+# Verify installation
+insula-mcp doctor
+```
+
+### Minimal Working Configuration
+
+```json
+// .insula-mcp.json (minimal)
+{
+  "llm": {
+    "backend": "ollama",
+    "model": "llama3.2:1b"
+  },
+  "diagnostics": {
+    "suites": ["discovery", "protocol"]
+  }
+}
+```
+
+## Getting Help
+
+### Self-Service Resources
+
+- **Interactive Help**: `insula-mcp interactive`
+- **System Diagnostics**: `insula-mcp doctor`
+- **Error Explanation**: `insula-mcp explain error "<message>"`
+- **Best Practices**: `insula-mcp best-practices <endpoint>`
+
+### Documentation
+
+- [Getting Started Guide](./GETTING_STARTED.md) - Installation and basic usage
+- [User Guide](./USER_GUIDE.md) - Comprehensive user documentation
+- [API Reference](./API_REFERENCE.md) - Complete command reference
+- [Plugin Development](./PLUGIN_DEVELOPMENT.md) - Creating custom plugins
+- [Deployment Guide](./DEPLOYMENT.md) - Production deployment
+- [Contributing Guide](./CONTRIBUTING.md) - Development setup
+
+### Community Support
+
+- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/insula-mcp/issues)
+- **GitHub Discussions**: [Ask questions and share tips](https://github.com/brainwav/insula-mcp/discussions)
+- **Documentation**: [Official documentation](https://github.com/brainwav/insula-mcp/tree/main/docs)
+
+### Professional Support
+
+For enterprise support and consulting services, contact [brAInwav](https://brainwav.dev).
+
+---
+
+**Remember**: When reporting issues, always include the output of `insula-mcp doctor` and use `--verbose --debug` flags to capture detailed logs.

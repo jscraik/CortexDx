@@ -38,11 +38,38 @@ export interface Finding {
   };
 }
 
+export interface SseProbeOptions {
+  timeoutMs?: number;
+  headers?: Record<string, string>;
+}
+
 export interface SseResult {
   ok: boolean;
   reason?: string;
   firstEventMs?: number;
   heartbeatMs?: number;
+  resolvedUrl?: string;
+}
+
+export interface TransportExchange {
+  method: string;
+  request?: unknown;
+  response?: unknown;
+  error?: string;
+  status?: number;
+  timestamp: string;
+}
+
+export interface TransportTranscript {
+  sessionId?: string;
+  initialize?: TransportExchange;
+  exchanges: TransportExchange[];
+}
+
+export interface TransportState {
+  sessionId?: string;
+  transcript: () => TransportTranscript;
+  headers?: () => Record<string, string>;
 }
 
 export interface GovernancePack {
@@ -385,11 +412,12 @@ export interface DiagnosticContext {
   logger: (...args: unknown[]) => void;
   request: <T>(input: RequestInfo, init?: RequestInit) => Promise<T>;
   jsonrpc: <T>(method: string, params?: unknown) => Promise<T>;
-  sseProbe: (url: string, opts?: unknown) => Promise<SseResult>;
+  sseProbe: (url: string, opts?: SseProbeOptions) => Promise<SseResult>;
   governance?: GovernancePack;
   llm?: LlmAdapter | null;
   evidence: (ev: EvidencePointer) => void;
   deterministic?: boolean;
+  transport?: TransportState;
 }
 
 export interface DiagnosticPlugin {

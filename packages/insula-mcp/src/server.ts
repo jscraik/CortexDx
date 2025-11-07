@@ -19,7 +19,7 @@ import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } fr
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 5000;
+const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 5001;
 const HOST = process.env.HOST || "127.0.0.1";
 
 // SSE clients for real-time updates

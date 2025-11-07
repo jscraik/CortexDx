@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete guide for deploying Insula MCP in production environments across all licensing tiers.
+Complete guide for deploying Insula MCP in production environments across all licensing tiers. This guide covers Docker, Docker Compose, and Kubernetes deployments with production-ready configurations, security best practices, monitoring, and operational procedures.
 
 ## Licensing Tiers
 
@@ -91,11 +91,62 @@ docker run -d \
 git clone https://github.com/brainwav/insula-mcp.git
 cd insula-mcp
 
-# Build Docker image
-docker build -t insula-mcp:local -f packages/insula-mcp/Dockerfile .
+# Build Docker image with build args
+docker build \
+  --build-arg NODE_VERSION=20.11.1 \
+  --build-arg PNPM_VERSION=9.12.2 \
+  -t insula-mcp:local \
+  -f packages/insula-mcp/Dockerfile .
 
-# Run
-docker run -d -p 3000:3000 insula-mcp:local
+# Run with production settings
+docker run -d \
+  --name insula-mcp-local \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e INSULA_MCP_TIER=community \
+  --restart unless-stopped \
+  --memory="512m" \
+  --cpus="0.5" \
+  insula-mcp:local
+```
+
+### Production Docker Best Practices
+
+```bash
+# Use multi-stage builds for smaller images
+# Enable BuildKit for better performance
+export DOCKER_BUILDKIT=1
+
+# Build with cache optimization
+docker build \
+  --cache-from brainwav/insula-mcp:latest \
+  --build-arg BUILDKIT_INLINE_CACHE=1 \
+  -t insula-mcp:production \
+  -f packages/insula-mcp/Dockerfile .
+
+# Security scanning
+docker scout cves insula-mcp:production
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+  aquasec/trivy image insula-mcp:production
+
+# Resource limits and security
+docker run -d \
+  --name insula-mcp-secure \
+  -p 3000:3000 \
+  --user 1001:1001 \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=100m \
+  --cap-drop ALL \
+  --cap-add NET_BIND_SERVICE \
+  --security-opt no-new-privileges:true \
+  --restart unless-stopped \
+  --memory="1g" \
+  --memory-swap="1g" \
+  --cpus="1.0" \
+  --pids-limit 100 \
+  -v insula-data:/app/data:rw \
+  -v insula-logs:/app/logs:rw \
+  insula-mcp:production
 ```
 
 ## Docker Compose Deployment
@@ -258,25 +309,337 @@ kubectl top nodes
 kubectl describe deployment insula-mcp-enterprise -n insula-mcp
 ```
 
+## Production Deployment Best Practices
+
+### Pre-Deployment Checklist
+
+#### Infrastructure Requirements
+
+- [ ] **Compute Resources**: Verify CPU, memory, and storage requirements
+- [ ] **Network**: Configure load balancers, firewalls, and DNS
+- [ ] **Security**: Set up TLS certificates, secrets management, and access controls
+- [ ] **Monitoring**: Deploy observability stack (Prometheus, Grafana, AlertManager)
+- [ ] **Backup**: Configure automated backup and disaster recovery procedures
+
+#### Configuration Validation
+
+```bash
+# Validate environment configuration
+./scripts/validate-config.sh production
+
+# Test database connectivity
+./scripts/test-db-connection.sh
+
+# Verify LLM backend availability
+./scripts/test-llm-backend.sh
+
+# Check resource limits
+./scripts/check-resources.sh
+```
+
+#### Security Hardening
+
+```bash
+# Container security scanning
+docker scout cves brainwav/insula-mcp:latest
+trivy image brainwav/insula-mcp:latest
+
+# Kubernetes security policies
+kubectl apply -f security/pod-security-policy.yaml
+kubectl apply -f security/network-policy.yaml
+kubectl apply -f security/rbac.yaml
+
+# Secrets rotation
+./scripts/rotate-secrets.sh --dry-run
+```
+
+### Deployment Strategies
+
+#### Blue-Green Deployment
+
+```bash
+# Deploy to green environment
+kubectl apply -f k8s/green-deployment.yaml
+
+# Validate green deployment
+./scripts/validate-deployment.sh green
+
+# Switch traffic to green
+kubectl patch service insula-mcp-service \
+  -p '{"spec":{"selector":{"version":"green"}}}'
+
+# Monitor and rollback if needed
+kubectl patch service insula-mcp-service \
+  -p '{"spec":{"selector":{"version":"blue"}}}'
+```
+
+#### Canary Deployment
+
+```yaml
+# Istio canary configuration
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: insula-mcp-canary
+spec:
+  http:
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: insula-mcp-service
+        subset: canary
+  - route:
+    - destination:
+        host: insula-mcp-service
+        subset: stable
+      weight: 90
+    - destination:
+        host: insula-mcp-service
+        subset: canary
+      weight: 10
+```
+
+#### Rolling Updates
+
+```bash
+# Kubernetes rolling update
+kubectl set image deployment/insula-mcp-enterprise \
+  insula-mcp=brainwav/insula-mcp:v1.2.0 \
+  --record
+
+# Monitor rollout progress
+kubectl rollout status deployment/insula-mcp-enterprise
+
+# Configure rollout strategy
+kubectl patch deployment insula-mcp-enterprise -p '{
+  "spec": {
+    "strategy": {
+      "type": "RollingUpdate",
+      "rollingUpdate": {
+        "maxUnavailable": "25%",
+        "maxSurge": "25%"
+      }
+    }
+  }
+}'
+```
+
+### Load Balancing and High Availability
+
+#### HAProxy Configuration
+
+```bash
+# /etc/haproxy/haproxy.cfg
+global
+    daemon
+    maxconn 4096
+    log stdout local0
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option httplog
+
+frontend insula_mcp_frontend
+    bind *:80
+    bind *:443 ssl crt /etc/ssl/certs/insula-mcp.pem
+    redirect scheme https if !{ ssl_fc }
+    default_backend insula_mcp_backend
+
+backend insula_mcp_backend
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server app1 10.0.1.10:3000 check
+    server app2 10.0.1.11:3000 check
+    server app3 10.0.1.12:3000 check
+```
+
+#### NGINX Configuration
+
+```nginx
+# /etc/nginx/sites-available/insula-mcp
+upstream insula_mcp {
+    least_conn;
+    server 10.0.1.10:3000 max_fails=3 fail_timeout=30s;
+    server 10.0.1.11:3000 max_fails=3 fail_timeout=30s;
+    server 10.0.1.12:3000 max_fails=3 fail_timeout=30s;
+}
+
+server {
+    listen 80;
+    server_name insula-mcp.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name insula-mcp.yourdomain.com;
+
+    ssl_certificate /etc/ssl/certs/insula-mcp.crt;
+    ssl_certificate_key /etc/ssl/private/insula-mcp.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
+
+    location / {
+        proxy_pass http://insula_mcp;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Health check bypass
+        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    location /health {
+        proxy_pass http://insula_mcp;
+        access_log off;
+    }
+}
+```
+
+### Performance Optimization
+
+#### Application Tuning
+
+```bash
+# Node.js performance tuning
+export NODE_OPTIONS="--max-old-space-size=2048 --optimize-for-size"
+export UV_THREADPOOL_SIZE=8
+
+# Enable clustering
+export INSULA_MCP_WORKERS=4
+export INSULA_MCP_CLUSTER_MODE=true
+
+# Memory optimization
+export INSULA_MCP_CACHE_SIZE=256
+export INSULA_MCP_MAX_CONCURRENT_REQUESTS=200
+```
+
+#### Database Optimization
+
+```sql
+-- PostgreSQL performance tuning
+ALTER SYSTEM SET shared_buffers = '256MB';
+ALTER SYSTEM SET effective_cache_size = '1GB';
+ALTER SYSTEM SET maintenance_work_mem = '64MB';
+ALTER SYSTEM SET checkpoint_completion_target = 0.9;
+ALTER SYSTEM SET wal_buffers = '16MB';
+ALTER SYSTEM SET default_statistics_target = 100;
+ALTER SYSTEM SET random_page_cost = 1.1;
+SELECT pg_reload_conf();
+
+-- Create indexes for performance
+CREATE INDEX CONCURRENTLY idx_diagnostics_created_at ON diagnostics(created_at);
+CREATE INDEX CONCURRENTLY idx_findings_severity ON findings(severity);
+CREATE INDEX CONCURRENTLY idx_sessions_user_id ON sessions(user_id);
+```
+
+#### Caching Strategy
+
+```yaml
+# Redis configuration for caching
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis.conf: |
+    maxmemory 512mb
+    maxmemory-policy allkeys-lru
+    save 900 1
+    save 300 10
+    save 60 10000
+    tcp-keepalive 300
+    timeout 0
+```
+
 ## Production Configuration
 
 ### Environment Variables
 
+#### Core Configuration
+
 **Required**:
 
-- `NODE_ENV`: Set to `production`
+- `NODE_ENV`: Set to `production` for production deployments
 - `INSULA_MCP_TIER`: `community`, `professional`, or `enterprise`
-- `INSULA_MCP_LICENSE_KEY`: License key (Professional/Enterprise)
+- `INSULA_MCP_LICENSE_KEY`: License key (Professional/Enterprise only)
 
-**Optional**:
+**Application Settings**:
 
 - `INSULA_MCP_LOG_LEVEL`: `debug`, `info`, `warn`, `error` (default: `info`)
-- `INSULA_MCP_LLM_BACKEND`: `ollama`, `mlx`, `llamacpp`
+- `INSULA_MCP_PORT`: Application port (default: `3000`)
+- `INSULA_MCP_HOST`: Bind address (default: `0.0.0.0`)
+- `INSULA_MCP_WORKERS`: Number of worker processes (default: CPU cores)
+- `INSULA_MCP_TIMEOUT`: Request timeout in milliseconds (default: `30000`)
+
+#### LLM Backend Configuration
+
+- `INSULA_MCP_LLM_BACKEND`: `ollama`, `mlx`, `llamacpp` (default: `ollama`)
 - `OLLAMA_HOST`: Ollama endpoint (default: `http://localhost:11434`)
-- `OTEL_EXPORTER_OTLP_ENDPOINT`: OpenTelemetry endpoint
-- `AUTH0_DOMAIN`: Auth0 domain (Enterprise)
-- `AUTH0_CLIENT_ID`: Auth0 client ID (Enterprise)
-- `AUTH0_CLIENT_SECRET`: Auth0 client secret (Enterprise)
+- `OLLAMA_TIMEOUT`: Ollama request timeout (default: `60000`)
+- `MLX_MODEL_PATH`: Path to MLX models (Enterprise only)
+- `LLAMACPP_ENDPOINT`: LlamaCpp server endpoint (Enterprise only)
+
+#### Authentication & Security (Enterprise)
+
+- `AUTH0_DOMAIN`: Auth0 domain (e.g., `your-domain.auth0.com`)
+- `AUTH0_CLIENT_ID`: Auth0 application client ID
+- `AUTH0_CLIENT_SECRET`: Auth0 application client secret
+- `AUTH0_AUDIENCE`: Auth0 API audience identifier
+- `JWT_SECRET`: JWT signing secret (generate with `openssl rand -hex 32`)
+- `SESSION_SECRET`: Session encryption secret
+- `CORS_ORIGINS`: Comma-separated list of allowed origins
+
+#### Database Configuration (Enterprise)
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `DATABASE_POOL_SIZE`: Connection pool size (default: `10`)
+- `DATABASE_TIMEOUT`: Query timeout in milliseconds (default: `5000`)
+- `REDIS_URL`: Redis connection string for caching
+- `REDIS_TTL`: Cache TTL in seconds (default: `3600`)
+
+#### Observability & Monitoring
+
+- `OTEL_EXPORTER_OTLP_ENDPOINT`: OpenTelemetry collector endpoint
+- `OTEL_SERVICE_NAME`: Service name for tracing (default: `insula-mcp`)
+- `OTEL_RESOURCE_ATTRIBUTES`: Additional resource attributes
+- `METRICS_ENABLED`: Enable Prometheus metrics (default: `true`)
+- `METRICS_PORT`: Metrics endpoint port (default: `9090`)
+- `HEALTH_CHECK_INTERVAL`: Health check interval in seconds (default: `30`)
+
+#### Storage & Persistence
+
+- `DATA_DIR`: Data directory path (default: `/app/data`)
+- `LOGS_DIR`: Logs directory path (default: `/app/logs`)
+- `MODELS_DIR`: Models directory path (default: `/app/models`)
+- `BACKUP_ENABLED`: Enable automatic backups (default: `false`)
+- `BACKUP_SCHEDULE`: Cron schedule for backups (default: `0 2 * * *`)
+- `BACKUP_RETENTION`: Backup retention days (default: `7`)
+
+#### Performance Tuning
+
+- `NODE_OPTIONS`: Node.js runtime options (e.g., `--max-old-space-size=2048`)
+- `UV_THREADPOOL_SIZE`: libuv thread pool size (default: `4`)
+- `CACHE_SIZE`: In-memory cache size in MB (default: `128`)
+- `MAX_CONCURRENT_REQUESTS`: Maximum concurrent requests (default: `100`)
+
+#### Development & Debug
+
+- `DEBUG`: Debug namespaces (e.g., `insula:*`)
+- `PROFILING_ENABLED`: Enable CPU profiling (default: `false`)
+- `MEMORY_MONITORING`: Enable memory monitoring (default: `false`)
+- `SLOW_QUERY_THRESHOLD`: Log slow queries over N ms (default: `1000`)
 
 ### Resource Requirements
 
@@ -366,83 +729,435 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 
 ### Health Checks
 
+#### Basic Health Endpoint
+
 ```bash
 # HTTP health endpoint
 curl http://localhost:3000/health
 
-# Response
+# Detailed health check with authentication
+curl -H "Authorization: Bearer $TOKEN" \
+     http://localhost:3000/health?detailed=true
+
+# Response format
 {
   "status": "healthy",
   "version": "0.1.0",
   "tier": "enterprise",
-  "llm": "available",
-  "uptime": 3600
+  "timestamp": "2024-01-15T10:30:00Z",
+  "uptime": 3600,
+  "checks": {
+    "llm": {
+      "status": "healthy",
+      "backend": "ollama",
+      "models": ["llama2", "codellama"],
+      "response_time": 150
+    },
+    "database": {
+      "status": "healthy",
+      "connections": 8,
+      "response_time": 5
+    },
+    "cache": {
+      "status": "healthy",
+      "hit_rate": 0.85,
+      "memory_usage": "45%"
+    },
+    "storage": {
+      "status": "healthy",
+      "disk_usage": "23%",
+      "available_space": "45GB"
+    }
+  }
 }
 ```
 
-### Logging
-
-**Docker**:
+#### Advanced Health Monitoring
 
 ```bash
-# View logs
-docker logs -f insula-mcp
+# Kubernetes health probes
+kubectl get pods -n insula-mcp -o wide
 
-# Export logs
-docker logs insula-mcp > insula-mcp.log
+# Custom health check script
+#!/bin/bash
+HEALTH_URL="http://localhost:3000/health"
+RESPONSE=$(curl -s -w "%{http_code}" -o /tmp/health.json $HEALTH_URL)
+
+if [ "$RESPONSE" = "200" ]; then
+  STATUS=$(jq -r '.status' /tmp/health.json)
+  if [ "$STATUS" = "healthy" ]; then
+    echo "✅ Service is healthy"
+    exit 0
+  fi
+fi
+
+echo "❌ Service is unhealthy"
+exit 1
 ```
 
-**Kubernetes**:
+### Comprehensive Logging
+
+#### Structured Logging Configuration
 
 ```bash
-# View logs
-kubectl logs -n insula-mcp -l app=insula-mcp -f
-
-# Export logs
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise > insula-mcp.log
+# Environment variables for logging
+export INSULA_MCP_LOG_LEVEL=info
+export INSULA_MCP_LOG_FORMAT=json
+export INSULA_MCP_LOG_DESTINATION=stdout
+export INSULA_MCP_AUDIT_ENABLED=true
 ```
 
-### Metrics
+#### Docker Logging
 
-**OpenTelemetry Integration**:
+```bash
+# Configure Docker logging driver
+docker run -d \
+  --name insula-mcp \
+  --log-driver=json-file \
+  --log-opt max-size=100m \
+  --log-opt max-file=5 \
+  --log-opt compress=true \
+  brainwav/insula-mcp:latest
+
+# View logs with timestamps
+docker logs -f --timestamps insula-mcp
+
+# Export logs with rotation
+docker logs --since="2024-01-01T00:00:00" \
+           --until="2024-01-02T00:00:00" \
+           insula-mcp > insula-mcp-$(date +%Y%m%d).log
+
+# Centralized logging with Fluentd
+docker run -d \
+  --log-driver=fluentd \
+  --log-opt fluentd-address=fluentd:24224 \
+  --log-opt tag="insula-mcp.{{.Name}}" \
+  brainwav/insula-mcp:latest
+```
+
+#### Kubernetes Logging
+
+```bash
+# View logs across all pods
+kubectl logs -n insula-mcp -l app=insula-mcp -f --tail=100
+
+# Export logs with filtering
+kubectl logs -n insula-mcp deployment/insula-mcp-enterprise \
+  --since=1h --timestamps > insula-mcp-$(date +%Y%m%d-%H%M).log
+
+# Log aggregation with ELK stack
+kubectl apply -f - <<EOF
+apiVersion: logging.coreos.com/v1
+kind: ClusterLogForwarder
+metadata:
+  name: insula-mcp-logs
+spec:
+  outputs:
+  - name: elasticsearch
+    type: elasticsearch
+    url: http://elasticsearch:9200
+  pipelines:
+  - name: insula-mcp-pipeline
+    inputRefs:
+    - application
+    filterRefs:
+    - insula-mcp-filter
+    outputRefs:
+    - elasticsearch
+EOF
+```
+
+#### Log Analysis and Monitoring
+
+```bash
+# Real-time log analysis with jq
+kubectl logs -n insula-mcp -l app=insula-mcp -f | \
+  jq 'select(.level == "error" or .level == "warn")'
+
+# Performance monitoring from logs
+kubectl logs -n insula-mcp -l app=insula-mcp --tail=1000 | \
+  jq -r 'select(.response_time) | .response_time' | \
+  awk '{sum+=$1; count++} END {print "Avg response time:", sum/count "ms"}'
+
+# Error rate calculation
+kubectl logs -n insula-mcp -l app=insula-mcp --since=1h | \
+  jq -r '.level' | sort | uniq -c
+```
+
+### Metrics and Observability
+
+#### Prometheus Metrics
 
 ```yaml
-# Configure OTEL
-environment:
-  - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-  - OTEL_SERVICE_NAME=insula-mcp
-  - OTEL_RESOURCE_ATTRIBUTES=tier=enterprise
+# Prometheus configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'insula-mcp'
+    static_configs:
+      - targets: ['insula-mcp:9090']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  - job_name: 'insula-mcp-kubernetes'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: ['insula-mcp']
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
 ```
 
-**Key Metrics**:
+#### Key Performance Metrics
 
-- Request rate
-- Response time
-- Error rate
-- LLM inference time
-- Plugin execution time
-- Memory usage
-- CPU usage
+```bash
+# Application metrics
+insula_mcp_requests_total{method="POST",status="200"}
+insula_mcp_request_duration_seconds{quantile="0.95"}
+insula_mcp_active_connections
+insula_mcp_llm_inference_duration_seconds
+insula_mcp_plugin_execution_duration_seconds
+insula_mcp_cache_hit_ratio
+insula_mcp_database_connections_active
 
-### Alerting
+# System metrics
+process_cpu_seconds_total
+process_resident_memory_bytes
+nodejs_heap_size_total_bytes
+nodejs_heap_size_used_bytes
+nodejs_gc_duration_seconds
 
-**Prometheus Alerts**:
+# Business metrics
+insula_mcp_diagnostics_completed_total
+insula_mcp_findings_by_severity
+insula_mcp_license_usage_percentage
+insula_mcp_user_sessions_active
+```
+
+#### OpenTelemetry Integration
+
+```yaml
+# OpenTelemetry Collector configuration
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  resource:
+    attributes:
+      - key: service.name
+        value: insula-mcp
+        action: upsert
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [jaeger, logging]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [prometheus, logging]
+```
+
+#### Grafana Dashboards
+
+```json
+{
+  "dashboard": {
+    "title": "Insula MCP Production Dashboard",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(insula_mcp_requests_total[5m])",
+            "legendFormat": "{{method}} {{status}}"
+          }
+        ]
+      },
+      {
+        "title": "Response Time P95",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "rate(insula_mcp_requests_total{status=~\"5..\"}[5m]) / rate(insula_mcp_requests_total[5m])",
+            "legendFormat": "Error Rate"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Alerting and Notifications
+
+#### Prometheus Alerting Rules
 
 ```yaml
 groups:
-- name: insula-mcp
+- name: insula-mcp-critical
   rules:
+  - alert: InsulaMCPDown
+    expr: up{job="insula-mcp"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Insula MCP service is down"
+      description: "Insula MCP has been down for more than 1 minute"
+
   - alert: HighErrorRate
-    expr: rate(insula_mcp_errors_total[5m]) > 0.05
+    expr: rate(insula_mcp_requests_total{status=~"5.."}[5m]) / rate(insula_mcp_requests_total[5m]) > 0.05
     for: 5m
+    labels:
+      severity: warning
     annotations:
       summary: "High error rate detected"
-  
+      description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
   - alert: SlowResponseTime
-    expr: histogram_quantile(0.95, insula_mcp_response_time_seconds) > 2
+    expr: histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m])) > 2
     for: 5m
+    labels:
+      severity: warning
     annotations:
-      summary: "95th percentile response time > 2s"
+      summary: "Slow response time detected"
+      description: "95th percentile response time is {{ $value }}s"
+
+  - alert: HighMemoryUsage
+    expr: process_resident_memory_bytes / 1024 / 1024 / 1024 > 1.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage is {{ $value | humanize }}GB"
+
+  - alert: LLMBackendUnavailable
+    expr: insula_mcp_llm_backend_available == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "LLM backend unavailable"
+      description: "LLM backend has been unavailable for more than 2 minutes"
+
+- name: insula-mcp-capacity
+  rules:
+  - alert: HighCPUUsage
+    expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage is {{ $value | humanizePercentage }}"
+
+  - alert: DatabaseConnectionsHigh
+    expr: insula_mcp_database_connections_active > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High database connection usage"
+      description: "Database connections: {{ $value }}/100"
+
+  - alert: DiskSpaceLow
+    expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Low disk space"
+      description: "Disk usage is {{ $value | humanizePercentage }}"
+```
+
+#### AlertManager Configuration
+
+```yaml
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@yourcompany.com'
+  smtp_auth_username: 'alerts@yourcompany.com'
+  smtp_auth_password: 'your-app-password'
+
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+  - match:
+      severity: critical
+    receiver: 'critical-alerts'
+  - match:
+      severity: warning
+    receiver: 'warning-alerts'
+
+receivers:
+- name: 'web.hook'
+  webhook_configs:
+  - url: 'http://slack-webhook-url'
+
+- name: 'critical-alerts'
+  email_configs:
+  - to: 'oncall@yourcompany.com'
+    subject: 'CRITICAL: {{ .GroupLabels.alertname }}'
+    body: |
+      {{ range .Alerts }}
+      Alert: {{ .Annotations.summary }}
+      Description: {{ .Annotations.description }}
+      {{ end }}
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    channel: '#alerts-critical'
+    title: 'Critical Alert: {{ .GroupLabels.alertname }}'
+
+- name: 'warning-alerts'
+  email_configs:
+  - to: 'team@yourcompany.com'
+    subject: 'WARNING: {{ .GroupLabels.alertname }}'
+  slack_configs:
+  - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    channel: '#alerts-warning'
+    title: 'Warning: {{ .GroupLabels.alertname }}'
 ```
 
 ## Security
@@ -538,72 +1253,933 @@ spec:
       key: insula-mcp/license-key
 ```
 
+## Disaster Recovery and Business Continuity
+
+### Backup Strategies
+
+#### Automated Backup System
+
+```bash
+#!/bin/bash
+# /usr/local/bin/backup-insula-mcp.sh
+
+set -euo pipefail
+
+BACKUP_DIR="/backups/insula-mcp"
+DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=30
+
+# Create backup directory
+mkdir -p "$BACKUP_DIR"
+
+# Database backup
+pg_dump -h postgres -U insula -d insula_mcp | \
+  gzip > "$BACKUP_DIR/database_$DATE.sql.gz"
+
+# Application data backup
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  tar czf - /app/data | \
+  aws s3 cp - "s3://insula-backups/data_$DATE.tar.gz"
+
+# Configuration backup
+kubectl get configmap,secret -n insula-mcp -o yaml | \
+  gzip > "$BACKUP_DIR/config_$DATE.yaml.gz"
+
+# Cleanup old backups
+find "$BACKUP_DIR" -name "*.gz" -mtime +$RETENTION_DAYS -delete
+
+# Verify backup integrity
+gunzip -t "$BACKUP_DIR/database_$DATE.sql.gz"
+echo "Backup completed successfully: $DATE"
+```
+
+#### Cross-Region Replication
+
+```yaml
+# PostgreSQL streaming replication
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: insula-postgres-cluster
+spec:
+  instances: 3
+  primaryUpdateStrategy: unsupervised
+  
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+      
+  bootstrap:
+    initdb:
+      database: insula_mcp
+      owner: insula
+      
+  storage:
+    size: 100Gi
+    storageClass: fast-ssd
+    
+  monitoring:
+    enabled: true
+```
+
+### Recovery Procedures
+
+#### Point-in-Time Recovery
+
+```bash
+# Restore from specific backup
+RESTORE_DATE="20240115_143000"
+
+# Stop application
+kubectl scale deployment insula-mcp-enterprise --replicas=0
+
+# Restore database
+gunzip -c "/backups/insula-mcp/database_$RESTORE_DATE.sql.gz" | \
+  psql -h postgres -U insula -d insula_mcp
+
+# Restore application data
+aws s3 cp "s3://insula-backups/data_$RESTORE_DATE.tar.gz" - | \
+  kubectl exec -i -n insula-mcp deployment/insula-mcp-enterprise -- \
+  tar xzf - -C /app
+
+# Restart application
+kubectl scale deployment insula-mcp-enterprise --replicas=3
+
+# Verify recovery
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -f http://localhost:3000/health
+```
+
+#### Multi-Region Failover
+
+```bash
+# Automated failover script
+#!/bin/bash
+PRIMARY_REGION="us-east-1"
+SECONDARY_REGION="us-west-2"
+HEALTH_ENDPOINT="https://insula-mcp.yourdomain.com/health"
+
+# Check primary region health
+if ! curl -f --max-time 10 "$HEALTH_ENDPOINT" > /dev/null 2>&1; then
+  echo "Primary region unhealthy, initiating failover..."
+  
+  # Update DNS to point to secondary region
+  aws route53 change-resource-record-sets \
+    --hosted-zone-id Z123456789 \
+    --change-batch file://failover-dns.json
+  
+  # Scale up secondary region
+  kubectl --context="$SECONDARY_REGION" \
+    scale deployment insula-mcp-enterprise --replicas=5
+  
+  # Notify operations team
+  curl -X POST "$SLACK_WEBHOOK" \
+    -d '{"text":"🚨 Failover initiated to secondary region"}'
+fi
+```
+
+### Operational Procedures
+
+#### Maintenance Windows
+
+```bash
+# Planned maintenance procedure
+#!/bin/bash
+
+# 1. Notify users (30 minutes before)
+curl -X POST "$NOTIFICATION_API" \
+  -d '{"message":"Maintenance starting in 30 minutes"}'
+
+# 2. Enable maintenance mode
+kubectl patch configmap insula-mcp-config \
+  -p '{"data":{"MAINTENANCE_MODE":"true"}}'
+
+# 3. Drain traffic gradually
+for i in {5..1}; do
+  kubectl scale deployment insula-mcp-enterprise --replicas=$i
+  sleep 60
+done
+
+# 4. Perform maintenance tasks
+./scripts/database-maintenance.sh
+./scripts/update-certificates.sh
+./scripts/cleanup-logs.sh
+
+# 5. Deploy updates
+kubectl set image deployment/insula-mcp-enterprise \
+  insula-mcp=brainwav/insula-mcp:latest
+
+# 6. Scale back up
+kubectl scale deployment insula-mcp-enterprise --replicas=5
+
+# 7. Disable maintenance mode
+kubectl patch configmap insula-mcp-config \
+  -p '{"data":{"MAINTENANCE_MODE":"false"}}'
+
+# 8. Verify health
+./scripts/post-maintenance-checks.sh
+```
+
+#### Capacity Planning
+
+```bash
+# Resource usage analysis
+#!/bin/bash
+
+echo "=== CPU Usage Analysis ==="
+kubectl top nodes | awk 'NR>1 {cpu+=$3} END {print "Average CPU:", cpu/NR "%"}'
+
+echo "=== Memory Usage Analysis ==="
+kubectl top pods -n insula-mcp --sort-by=memory
+
+echo "=== Storage Usage Analysis ==="
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  df -h /app/data /app/logs /app/models
+
+echo "=== Network Usage Analysis ==="
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  ss -tuln | grep :3000
+
+# Generate capacity report
+cat > capacity-report.json <<EOF
+{
+  "timestamp": "$(date -Iseconds)",
+  "cpu_usage": $(kubectl top nodes --no-headers | awk '{sum+=$3} END {print sum/NR}'),
+  "memory_usage": $(kubectl top nodes --no-headers | awk '{sum+=$5} END {print sum/NR}'),
+  "pod_count": $(kubectl get pods -n insula-mcp --no-headers | wc -l),
+  "storage_usage": $(kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- df /app/data | awk 'NR==2 {print $5}' | tr -d '%')
+}
+EOF
+```
+
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
+
+#### Application Startup Issues
 
 **Container won't start**:
 
 ```bash
-# Check logs
-docker logs insula-mcp
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise
+# Check container logs for startup errors
+docker logs --tail=50 insula-mcp
+kubectl logs -n insula-mcp deployment/insula-mcp-enterprise --tail=50
 
-# Check events
+# Check container events and status
 kubectl describe pod -n insula-mcp <pod-name>
+kubectl get events -n insula-mcp --sort-by='.lastTimestamp'
+
+# Verify resource constraints
+kubectl describe node <node-name>
+docker stats insula-mcp
+
+# Check image pull issues
+kubectl describe pod -n insula-mcp <pod-name> | grep -A 10 "Events:"
+
+# Debug with interactive shell
+kubectl run debug-pod --rm -i --tty \
+  --image=brainwav/insula-mcp:latest \
+  --restart=Never -- /bin/sh
 ```
+
+**Configuration Issues**:
+
+```bash
+# Validate environment variables
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- env | sort
+
+# Check configuration file syntax
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node -e "console.log(JSON.stringify(process.env, null, 2))"
+
+# Test configuration loading
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node -e "require('./dist/config').validate()"
+```
+
+#### Health Check and Connectivity Issues
 
 **Health check failing**:
 
 ```bash
-# Test health endpoint
+# Test health endpoint directly
 curl -v http://localhost:3000/health
+curl -v -H "Accept: application/json" http://localhost:3000/health?detailed=true
 
-# Check port binding
+# Check port binding and network
 netstat -tulpn | grep 3000
+ss -tulpn | grep 3000
+
+# Test from within cluster
+kubectl run curl-test --rm -i --tty \
+  --image=curlimages/curl:latest \
+  --restart=Never -- \
+  curl -v http://insula-mcp-service:80/health
+
+# Check service and endpoint configuration
+kubectl get svc,endpoints -n insula-mcp
+kubectl describe svc insula-mcp-service -n insula-mcp
 ```
+
+**Network connectivity issues**:
+
+```bash
+# Test DNS resolution
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  nslookup ollama-service
+
+# Check network policies
+kubectl get networkpolicy -n insula-mcp
+kubectl describe networkpolicy -n insula-mcp
+
+# Test inter-service communication
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -v http://ollama-service:11434/api/tags
+
+# Check ingress configuration
+kubectl get ingress -n insula-mcp
+kubectl describe ingress insula-mcp-ingress -n insula-mcp
+```
+
+#### LLM Backend Issues
 
 **LLM not available**:
 
 ```bash
-# Check Ollama connection
+# Check Ollama service health
 curl http://ollama:11434/api/tags
+kubectl exec -n insula-mcp deployment/ollama -- \
+  curl http://localhost:11434/api/tags
+
+# Verify Ollama models
+kubectl exec -n insula-mcp deployment/ollama -- \
+  ollama list
+
+# Check Ollama logs
+kubectl logs -n insula-mcp deployment/ollama --tail=100
+
+# Test model loading
+kubectl exec -n insula-mcp deployment/ollama -- \
+  ollama run llama2 "Hello, world!"
 
 # Verify environment variables
 docker exec insula-mcp env | grep OLLAMA
 kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- env | grep OLLAMA
+
+# Check resource allocation for GPU
+kubectl describe node | grep -A 5 "Allocated resources"
+nvidia-smi  # On GPU nodes
+```
+
+#### Database and Storage Issues
+
+**Database connection problems**:
+
+```bash
+# Test database connectivity
+kubectl exec -n insula-mcp deployment/postgres -- \
+  pg_isready -U insula -d insula_mcp
+
+# Check database logs
+kubectl logs -n insula-mcp deployment/postgres --tail=100
+
+# Test connection from application
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node -e "
+    const { Client } = require('pg');
+    const client = new Client(process.env.DATABASE_URL);
+    client.connect().then(() => console.log('Connected')).catch(console.error);
+  "
+
+# Check connection pool status
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl http://localhost:3000/debug/db-pool
+```
+
+**Storage and persistence issues**:
+
+```bash
+# Check persistent volume status
+kubectl get pv,pvc -n insula-mcp
+kubectl describe pvc insula-mcp-data-pvc -n insula-mcp
+
+# Check disk space
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  df -h /app/data /app/logs /app/models
+
+# Verify file permissions
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  ls -la /app/data /app/logs /app/models
+
+# Check storage class and provisioner
+kubectl get storageclass
+kubectl describe storageclass standard
+```
+
+#### Performance and Resource Issues
+
+**High memory usage**:
+
+```bash
+# Check memory usage patterns
+kubectl top pods -n insula-mcp --sort-by=memory
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node -e "console.log(process.memoryUsage())"
+
+# Analyze heap dumps
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node --inspect=0.0.0.0:9229 dist/server.js &
+
+# Check for memory leaks
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl http://localhost:3000/debug/memory
+
+# Monitor garbage collection
+kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+  grep -i "gc\|memory"
+```
+
+**High CPU usage**:
+
+```bash
+# Check CPU usage patterns
+kubectl top pods -n insula-mcp --sort-by=cpu
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  top -p $(pgrep node)
+
+# Profile CPU usage
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node --prof dist/server.js
+
+# Check for CPU-intensive operations
+kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+  grep -i "slow\|timeout\|performance"
+```
+
+#### Authentication and Authorization Issues
+
+**Auth0 integration problems** (Enterprise):
+
+```bash
+# Test Auth0 configuration
+curl -X POST https://$AUTH0_DOMAIN/oauth/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "'$AUTH0_CLIENT_ID'",
+    "client_secret": "'$AUTH0_CLIENT_SECRET'",
+    "audience": "'$AUTH0_AUDIENCE'",
+    "grant_type": "client_credentials"
+  }'
+
+# Verify JWT token validation
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -H "Authorization: Bearer $JWT_TOKEN" \
+  http://localhost:3000/api/protected
+
+# Check Auth0 logs
+kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+  grep -i "auth\|jwt\|token"
+```
+
+#### Monitoring and Observability Issues
+
+**Metrics not appearing**:
+
+```bash
+# Check Prometheus targets
+curl http://prometheus:9090/api/v1/targets
+
+# Verify metrics endpoint
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl http://localhost:9090/metrics
+
+# Check OpenTelemetry configuration
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl http://localhost:3000/debug/otel
+
+# Test trace export
+kubectl logs -n insula-mcp deployment/otel-collector
+```
+
+### Diagnostic Tools and Scripts
+
+#### Health Check Script
+
+```bash
+#!/bin/bash
+# comprehensive-health-check.sh
+
+set -euo pipefail
+
+NAMESPACE="insula-mcp"
+SERVICE_NAME="insula-mcp-enterprise"
+
+echo "🔍 Comprehensive Health Check for Insula MCP"
+echo "============================================="
+
+# Check Kubernetes resources
+echo "📋 Checking Kubernetes resources..."
+kubectl get pods,svc,ingress -n $NAMESPACE
+kubectl get pv,pvc -n $NAMESPACE
+
+# Check pod health
+echo "🏥 Checking pod health..."
+kubectl get pods -n $NAMESPACE -o wide
+kubectl top pods -n $NAMESPACE
+
+# Check application health
+echo "🌐 Checking application health..."
+for pod in $(kubectl get pods -n $NAMESPACE -l app=insula-mcp -o name); do
+  echo "Testing $pod..."
+  kubectl exec -n $NAMESPACE $pod -- curl -f http://localhost:3000/health || echo "❌ Health check failed for $pod"
+done
+
+# Check external dependencies
+echo "🔗 Checking external dependencies..."
+kubectl exec -n $NAMESPACE deployment/$SERVICE_NAME -- \
+  curl -f http://ollama-service:11434/api/tags || echo "❌ Ollama unavailable"
+
+kubectl exec -n $NAMESPACE deployment/postgres -- \
+  pg_isready -U insula -d insula_mcp || echo "❌ Database unavailable"
+
+# Check resource usage
+echo "📊 Checking resource usage..."
+kubectl top nodes
+kubectl describe nodes | grep -A 5 "Allocated resources"
+
+# Check recent events
+echo "📰 Recent events..."
+kubectl get events -n $NAMESPACE --sort-by='.lastTimestamp' | tail -10
+
+echo "✅ Health check completed"
+```
+
+#### Performance Analysis Script
+
+```bash
+#!/bin/bash
+# performance-analysis.sh
+
+NAMESPACE="insula-mcp"
+DURATION="5m"
+
+echo "📈 Performance Analysis for Insula MCP"
+echo "======================================"
+
+# CPU and Memory usage over time
+echo "💻 Resource usage analysis..."
+kubectl top pods -n $NAMESPACE --sort-by=cpu
+kubectl top pods -n $NAMESPACE --sort-by=memory
+
+# Application metrics
+echo "📊 Application metrics..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  curl -s http://localhost:9090/metrics | grep -E "(request_duration|error_rate|active_connections)"
+
+# Database performance
+echo "🗄️ Database performance..."
+kubectl exec -n $NAMESPACE deployment/postgres -- \
+  psql -U insula -d insula_mcp -c "
+    SELECT query, calls, total_time, mean_time 
+    FROM pg_stat_statements 
+    ORDER BY total_time DESC 
+    LIMIT 10;"
+
+# Log analysis for errors
+echo "📝 Error analysis..."
+kubectl logs -n $NAMESPACE -l app=insula-mcp --since=$DURATION | \
+  grep -i error | tail -20
+
+echo "✅ Performance analysis completed"
 ```
 
 ## Upgrade Procedures
 
-### Docker
+### Pre-Upgrade Checklist
+
+#### Preparation Steps
 
 ```bash
-# Pull new image
-docker pull brainwav/insula-mcp:latest
+# 1. Backup current deployment
+./scripts/backup-insula-mcp.sh
 
-# Stop and remove old container
+# 2. Review release notes
+curl -s https://api.github.com/repos/brainwav/insula-mcp/releases/latest | \
+  jq -r '.body'
+
+# 3. Test upgrade in staging environment
+kubectl apply -f k8s/staging/ --dry-run=client
+
+# 4. Verify resource requirements
+kubectl describe nodes | grep -A 5 "Allocated resources"
+
+# 5. Check compatibility matrix
+./scripts/check-compatibility.sh v1.2.0
+```
+
+#### Version Compatibility
+
+| Insula MCP | Node.js | Kubernetes | PostgreSQL | Redis |
+|------------|---------|------------|------------|-------|
+| v1.0.x     | 18.x    | 1.24+      | 13+        | 6+    |
+| v1.1.x     | 20.x    | 1.25+      | 14+        | 7+    |
+| v1.2.x     | 20.11+  | 1.26+      | 15+        | 7+    |
+
+### Docker Upgrade
+
+#### Standard Upgrade
+
+```bash
+# 1. Pull new image
+docker pull brainwav/insula-mcp:v1.2.0
+
+# 2. Create backup
+docker exec insula-mcp tar czf - /app/data | \
+  gzip > "backup-$(date +%Y%m%d).tar.gz"
+
+# 3. Stop current container gracefully
+docker kill -s SIGTERM insula-mcp
+sleep 30
+docker stop insula-mcp
+
+# 4. Remove old container
+docker rm insula-mcp
+
+# 5. Start new container with same configuration
+docker run -d \
+  --name insula-mcp \
+  --env-file .env \
+  -v insula-data:/app/data \
+  -v insula-logs:/app/logs \
+  -p 3000:3000 \
+  brainwav/insula-mcp:v1.2.0
+
+# 6. Verify upgrade
+docker logs -f insula-mcp
+curl http://localhost:3000/health
+```
+
+#### Zero-Downtime Docker Upgrade
+
+```bash
+# 1. Start new container on different port
+docker run -d \
+  --name insula-mcp-new \
+  --env-file .env \
+  -v insula-data:/app/data \
+  -v insula-logs:/app/logs \
+  -p 3001:3000 \
+  brainwav/insula-mcp:v1.2.0
+
+# 2. Wait for new container to be ready
+while ! curl -f http://localhost:3001/health; do
+  echo "Waiting for new container..."
+  sleep 5
+done
+
+# 3. Update load balancer to point to new container
+# (Update your load balancer configuration)
+
+# 4. Stop old container
 docker stop insula-mcp
 docker rm insula-mcp
 
-# Start new container
-docker run -d --name insula-mcp brainwav/insula-mcp:latest
+# 5. Rename new container
+docker rename insula-mcp-new insula-mcp
+
+# 6. Update port mapping
+docker stop insula-mcp
+docker run -d \
+  --name insula-mcp-final \
+  --env-file .env \
+  -v insula-data:/app/data \
+  -v insula-logs:/app/logs \
+  -p 3000:3000 \
+  brainwav/insula-mcp:v1.2.0
 ```
 
-### Kubernetes
+### Kubernetes Upgrade
+
+#### Rolling Update Strategy
 
 ```bash
-# Update image
+# 1. Update deployment with new image
 kubectl set image deployment/insula-mcp-enterprise \
-  insula-mcp=brainwav/insula-mcp:latest \
-  -n insula-mcp
+  insula-mcp=brainwav/insula-mcp:v1.2.0 \
+  -n insula-mcp \
+  --record
 
-# Monitor rollout
+# 2. Monitor rollout progress
+kubectl rollout status deployment/insula-mcp-enterprise -n insula-mcp -w
+
+# 3. Verify pods are running new version
+kubectl get pods -n insula-mcp -o wide
+kubectl describe pod -n insula-mcp <pod-name> | grep Image
+
+# 4. Test application functionality
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -f http://localhost:3000/health
+
+# 5. Check application logs
+kubectl logs -n insula-mcp -l app=insula-mcp --tail=50
+```
+
+#### Blue-Green Deployment Upgrade
+
+```yaml
+# blue-green-upgrade.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: insula-mcp-rollout
+  namespace: insula-mcp
+spec:
+  replicas: 5
+  strategy:
+    blueGreen:
+      activeService: insula-mcp-active
+      previewService: insula-mcp-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: insula-mcp-preview
+      postPromotionAnalysis:
+        templates:
+        - templateName: success-rate
+        args:
+        - name: service-name
+          value: insula-mcp-active
+  selector:
+    matchLabels:
+      app: insula-mcp
+  template:
+    metadata:
+      labels:
+        app: insula-mcp
+    spec:
+      containers:
+      - name: insula-mcp
+        image: brainwav/insula-mcp:v1.2.0
+```
+
+#### Canary Deployment Upgrade
+
+```yaml
+# canary-upgrade.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: insula-mcp-canary
+  namespace: insula-mcp
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+      - setWeight: 10
+      - pause: {duration: 5m}
+      - setWeight: 25
+      - pause: {duration: 10m}
+      - setWeight: 50
+      - pause: {duration: 15m}
+      - setWeight: 75
+      - pause: {duration: 10m}
+      analysis:
+        templates:
+        - templateName: error-rate
+        - templateName: response-time
+        args:
+        - name: service-name
+          value: insula-mcp-canary
+  selector:
+    matchLabels:
+      app: insula-mcp
+  template:
+    metadata:
+      labels:
+        app: insula-mcp
+    spec:
+      containers:
+      - name: insula-mcp
+        image: brainwav/insula-mcp:v1.2.0
+```
+
+### Database Migration
+
+#### Automated Migration
+
+```bash
+# 1. Create database backup
+kubectl exec -n insula-mcp deployment/postgres -- \
+  pg_dump -U insula insula_mcp | \
+  gzip > "db-backup-$(date +%Y%m%d).sql.gz"
+
+# 2. Run database migrations
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  npm run migrate
+
+# 3. Verify migration status
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  npm run migrate:status
+
+# 4. Test database connectivity
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  node -e "require('./dist/db').testConnection()"
+```
+
+#### Manual Migration Steps
+
+```sql
+-- Example migration for v1.2.0
+BEGIN;
+
+-- Add new columns
+ALTER TABLE diagnostics ADD COLUMN IF NOT EXISTS severity_score INTEGER;
+ALTER TABLE findings ADD COLUMN IF NOT EXISTS confidence_level DECIMAL(3,2);
+
+-- Create new indexes
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_diagnostics_severity_score 
+ON diagnostics(severity_score);
+
+-- Update existing data
+UPDATE diagnostics SET severity_score = 
+  CASE 
+    WHEN severity = 'critical' THEN 100
+    WHEN severity = 'major' THEN 75
+    WHEN severity = 'minor' THEN 50
+    ELSE 25
+  END
+WHERE severity_score IS NULL;
+
+-- Verify migration
+SELECT COUNT(*) FROM diagnostics WHERE severity_score IS NOT NULL;
+
+COMMIT;
+```
+
+### Rollback Procedures
+
+#### Kubernetes Rollback
+
+```bash
+# 1. Check rollout history
+kubectl rollout history deployment/insula-mcp-enterprise -n insula-mcp
+
+# 2. Rollback to previous version
+kubectl rollout undo deployment/insula-mcp-enterprise -n insula-mcp
+
+# 3. Rollback to specific revision
+kubectl rollout undo deployment/insula-mcp-enterprise \
+  --to-revision=2 -n insula-mcp
+
+# 4. Monitor rollback progress
 kubectl rollout status deployment/insula-mcp-enterprise -n insula-mcp
 
-# Rollback if needed
-kubectl rollout undo deployment/insula-mcp-enterprise -n insula-mcp
+# 5. Verify rollback
+kubectl get pods -n insula-mcp -o wide
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -f http://localhost:3000/health
 ```
+
+#### Database Rollback
+
+```bash
+# 1. Stop application to prevent data corruption
+kubectl scale deployment insula-mcp-enterprise --replicas=0 -n insula-mcp
+
+# 2. Restore database from backup
+gunzip -c "db-backup-$(date +%Y%m%d).sql.gz" | \
+  kubectl exec -i -n insula-mcp deployment/postgres -- \
+  psql -U insula -d insula_mcp
+
+# 3. Restart application with previous version
+kubectl set image deployment/insula-mcp-enterprise \
+  insula-mcp=brainwav/insula-mcp:v1.1.0 -n insula-mcp
+
+kubectl scale deployment insula-mcp-enterprise --replicas=5 -n insula-mcp
+
+# 4. Verify rollback
+kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+  curl -f http://localhost:3000/health
+```
+
+### Post-Upgrade Validation
+
+#### Automated Testing
+
+```bash
+#!/bin/bash
+# post-upgrade-validation.sh
+
+set -euo pipefail
+
+NAMESPACE="insula-mcp"
+SERVICE_URL="http://insula-mcp-service"
+
+echo "🧪 Post-Upgrade Validation"
+echo "========================="
+
+# 1. Health check
+echo "🏥 Testing health endpoint..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  curl -f $SERVICE_URL/health
+
+# 2. API functionality
+echo "🔧 Testing API endpoints..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  curl -f -X POST $SERVICE_URL/api/diagnose \
+  -H "Content-Type: application/json" \
+  -d '{"target": "http://example.com"}'
+
+# 3. Database connectivity
+echo "🗄️ Testing database..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  node -e "require('./dist/db').testConnection()"
+
+# 4. LLM backend
+echo "🤖 Testing LLM backend..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  curl -f http://ollama-service:11434/api/tags
+
+# 5. Performance test
+echo "⚡ Performance test..."
+kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+  ab -n 100 -c 10 $SERVICE_URL/health
+
+echo "✅ Validation completed successfully"
+```
+
+#### Manual Verification Steps
+
+1. **Functional Testing**:
+   - Test all major API endpoints
+   - Verify diagnostic functionality
+   - Check report generation
+   - Test plugin execution
+
+2. **Performance Testing**:
+   - Monitor response times
+   - Check resource usage
+   - Verify throughput metrics
+   - Test under load
+
+3. **Integration Testing**:
+   - Test LLM backend integration
+   - Verify database operations
+   - Check external service connectivity
+   - Test authentication flows
+
+4. **User Acceptance Testing**:
+   - Test web interface (if applicable)
+   - Verify CLI functionality
+   - Check documentation accuracy
+   - Test common user workflows
 
 ## Support
 

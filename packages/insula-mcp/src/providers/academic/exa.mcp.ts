@@ -11,6 +11,23 @@ import {
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext, Finding } from "../../types.js";
 
+const EXA_API_URL = "https://api.exa.ai";
+
+interface ExaApiResult {
+    id?: string;
+    title?: string;
+    url?: string;
+    score?: number;
+    highlights?: string[];
+    publishedDate?: string;
+    author?: string;
+    authors?: string[];
+}
+
+interface ExaSearchResponse {
+    results?: ExaApiResult[];
+}
+
 export interface ExaSearchResult {
     id: string;
     title: string;
@@ -168,26 +185,26 @@ export class ExaProvider {
      * Advanced search with relevance scoring
      */
     async search(params: ExaSearchParams): Promise<ExaSearchResult[]> {
-        const results: ExaSearchResult[] = [];
+        const apiKey = this.getApiKey();
+        const payload = this.buildSearchPayload(params);
 
-        const queryTerms = params.query.toLowerCase().split(/\s+/);
-        const limit = params.limit || 10;
+        const response = await fetch(`${EXA_API_URL}/search`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-api-key": apiKey,
+                "User-Agent": this.userAgent
+            },
+            body: JSON.stringify(payload)
+        });
 
-        for (let i = 0; i < limit; i++) {
-            const relevanceScore = Math.random() * 0.4 + 0.6;
-            const confidence = this.calculateConfidence(relevanceScore);
-
-            results.push({
-                id: `exa-${i + 1}`,
-                title: `Result ${i + 1} for "${params.query}"`,
-                url: `https://example.com/result-${i + 1}`,
-                snippet: `This is a relevant result for ${params.query}...`,
-                relevanceScore,
-                confidence,
-                source: "academic-database",
-                publishedDate: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
-            });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Exa API error ${response.status}: ${errorText.slice(0, 200)}`);
         }
+
+        const data = (await response.json()) as ExaSearchResponse;
+        const results = this.mapSearchResults(data, params.query);
 
         this.ctx.evidence({
             type: "log",
@@ -276,6 +293,64 @@ export class ExaProvider {
         return findings;
     }
 
+    private getApiKey(): string {
+        const headerKey = this.ctx.headers?.["x-exa-api-key"];
+        const envKey = process.env.EXA_API_KEY;
+        const key = (headerKey || envKey || "").trim();
+        if (key.length === 0) {
+            throw new Error(
+                "Missing EXA_API_KEY environment variable or x-exa-api-key header.",
+            );
+        }
+        return key;
+    }
+
+    private buildSearchPayload(params: ExaSearchParams): Record<string, unknown> {
+        const limit = Math.min(Math.max(params.limit ?? 10, 1), 100);
+        const payload: Record<string, unknown> = {
+            query: params.query,
+            numResults: limit,
+            offset: params.offset ?? 0,
+        };
+        if (params.includeAnalysis) payload.text = true;
+        const filters = params.filters;
+        if (filters?.dateRange?.start) payload.startPublishedDate = filters.dateRange.start;
+        if (filters?.dateRange?.end) payload.endPublishedDate = filters.dateRange.end;
+        if (filters?.sources?.length) payload.includeDomains = filters.sources;
+        if (filters?.contentType?.length) payload.documentTypes = filters.contentType;
+        return payload;
+    }
+
+    private mapSearchResults(
+        response: ExaSearchResponse,
+        query: string,
+    ): ExaSearchResult[] {
+        const results = response.results ?? [];
+        return results.map((item, index) => {
+            const relevance = typeof item.score === "number" ? item.score : 0.75;
+            const snippet =
+                item.highlights && item.highlights.length > 0
+                    ? item.highlights.join(" ")
+                    : `Matched "${query}"`;
+            const authorsArray = Array.isArray(item.authors)
+                ? item.authors
+                : item.author
+                ? [item.author]
+                : undefined;
+            return {
+                id: item.id ?? `exa-${index + 1}`,
+                title: item.title ?? `Result ${index + 1}`,
+                url: item.url ?? "",
+                snippet,
+                relevanceScore: relevance,
+                confidence: this.calculateConfidence(relevance),
+                source: "exa",
+                publishedDate: item.publishedDate,
+                authors: authorsArray,
+            };
+        });
+    }
+
     /**
      * Calculate confidence score from relevance
      */
@@ -357,7 +432,12 @@ export class ExaProvider {
      * Health check for the provider
      */
     async healthCheck(): Promise<boolean> {
-        return true;
+        try {
+            this.getApiKey();
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     /**

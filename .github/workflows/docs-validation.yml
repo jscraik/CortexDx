@@ -1,0 +1,179 @@
+name: Documentation Validation
+
+on:
+    pull_request:
+        paths:
+            - "**.md"
+            - "packages/insula-mcp/docs/**"
+            - ".github/workflows/docs-validation.yml"
+    push:
+        branches: [main]
+        paths:
+            - "**.md"
+            - "packages/insula-mcp/docs/**"
+    workflow_dispatch:
+
+jobs:
+    validate-docs:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: "npm"
+
+            - name: Install markdown validation tools
+              run: |
+                  npm install -g markdownlint-cli2
+                  npm install -g markdown-link-check
+                  npm install -g cspell
+
+            - name: Lint markdown files
+              run: |
+                  echo "Running markdown linting..."
+                  markdownlint-cli2 "**/*.md" "#node_modules" "#.nx" "#dist" "#reports" "#enhanced-reports"
+
+            - name: Check links in documentation
+              run: |
+                  echo "Checking links in documentation files..."
+                  find . -name "*.md" \
+                    -not -path "./node_modules/*" \
+                    -not -path "./.nx/*" \
+                    -not -path "./dist/*" \
+                    -not -path "./reports/*" \
+                    -not -path "./enhanced-reports/*" \
+                    -exec markdown-link-check {} \;
+
+            - name: Spell check documentation
+              run: |
+                  echo "Running spell check on documentation..."
+                  cspell "**/*.md" \
+                    --exclude "node_modules/**" \
+                    --exclude ".nx/**" \
+                    --exclude "dist/**" \
+                    --exclude "reports/**" \
+                    --exclude "enhanced-reports/**"
+
+            - name: Validate documentation structure
+              run: |
+                  echo "Validating documentation structure..."
+
+                  # Check required files exist
+                  required_files=(
+                    "README.md"
+                    "CONTRIBUTING.md"
+                    "packages/insula-mcp/README.md"
+                    "packages/insula-mcp/docs/GETTING_STARTED.md"
+                    "packages/insula-mcp/docs/USER_GUIDE.md"
+                    "packages/insula-mcp/docs/API_REFERENCE.md"
+                    "packages/insula-mcp/docs/CONTRIBUTING.md"
+                    "packages/insula-mcp/docs/TROUBLESHOOTING.md"
+                    "packages/insula-mcp/docs/DEPLOYMENT.md"
+                    "packages/insula-mcp/docs/IDE_INTEGRATION.md"
+                    "packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md"
+                  )
+
+                  missing_files=()
+                  for file in "${required_files[@]}"; do
+                    if [[ ! -f "$file" ]]; then
+                      missing_files+=("$file")
+                    fi
+                  done
+
+                  if [[ ${#missing_files[@]} -gt 0 ]]; then
+                    echo "❌ Missing required documentation files:"
+                    printf '%s\n' "${missing_files[@]}"
+                    exit 1
+                  else
+                    echo "✅ All required documentation files are present"
+                  fi
+
+            - name: Check documentation cross-references
+              run: |
+                  echo "Checking documentation cross-references..."
+
+                  # Create a simple script to validate internal links
+                  cat > validate_refs.js << 'EOF'
+                  const fs = require('fs');
+                  const path = require('path');
+                  const glob = require('glob');
+
+                  // Find all markdown files
+                  const markdownFiles = glob.sync('**/*.md', {
+                    ignore: ['node_modules/**', '.nx/**', 'dist/**', 'reports/**', 'enhanced-reports/**']
+                  });
+
+                  let errors = [];
+
+                  markdownFiles.forEach(file => {
+                    const content = fs.readFileSync(file, 'utf8');
+                    const relativeLinkRegex = /\[([^\]]+)\]\(([^)]+\.md[^)]*)\)/g;
+                    
+                    let match;
+                    while ((match = relativeLinkRegex.exec(content)) !== null) {
+                      const linkText = match[1];
+                      const linkPath = match[2];
+                      
+                      // Skip external links and anchors
+                      if (linkPath.startsWith('http') || linkPath.startsWith('#')) {
+                        continue;
+                      }
+                      
+                      // Resolve relative path
+                      const basePath = path.dirname(file);
+                      const resolvedPath = path.resolve(basePath, linkPath.split('#')[0]);
+                      const relativePath = path.relative('.', resolvedPath);
+                      
+                      if (!fs.existsSync(relativePath)) {
+                        errors.push(`${file}: Broken internal link "${linkPath}" (resolved to "${relativePath}")`);
+                      }
+                    }
+                  });
+
+                  if (errors.length > 0) {
+                    console.log('❌ Found broken internal links:');
+                    errors.forEach(error => console.log(error));
+                    process.exit(1);
+                  } else {
+                    console.log('✅ All internal links are valid');
+                  }
+                  EOF
+
+                  npm install glob
+                  node validate_refs.js
+
+            - name: Generate validation report
+              if: always()
+              run: |
+                  echo "# Documentation Validation Report" > docs-validation-report.md
+                  echo "" >> docs-validation-report.md
+                  echo "Generated on: $(date)" >> docs-validation-report.md
+                  echo "Commit: ${{ github.sha }}" >> docs-validation-report.md
+                  echo "" >> docs-validation-report.md
+
+                  if [[ ${{ job.status }} == 'success' ]]; then
+                    echo "✅ **Status**: All validation checks passed" >> docs-validation-report.md
+                  else
+                    echo "❌ **Status**: Some validation checks failed" >> docs-validation-report.md
+                  fi
+
+                  echo "" >> docs-validation-report.md
+                  echo "## Validation Steps Performed" >> docs-validation-report.md
+                  echo "" >> docs-validation-report.md
+                  echo "- [x] Markdown linting (markdownlint-cli2)" >> docs-validation-report.md
+                  echo "- [x] Link checking (markdown-link-check)" >> docs-validation-report.md
+                  echo "- [x] Spell checking (cspell)" >> docs-validation-report.md
+                  echo "- [x] Documentation structure validation" >> docs-validation-report.md
+                  echo "- [x] Cross-reference validation" >> docs-validation-report.md
+
+            - name: Upload validation report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: docs-validation-report
+                  path: docs-validation-report.md
+                  if-no-files-found: warn
