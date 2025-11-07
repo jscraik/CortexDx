@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import { getAcademicRegistry } from "../src/registry/index.js";
+import { SemanticScholarProvider } from "../src/providers/academic/semantic-scholar.mcp.js";
 import type { DiagnosticContext } from "../src/types.js";
 
 // Mock diagnostic context for testing
@@ -99,6 +100,43 @@ describe("Semantic Scholar Provider", () => {
         expect(toolNames).toContain("semantic_scholar_get_paper");
         expect(toolNames).toContain("semantic_scholar_get_paper_citations");
         expect(toolNames).toContain("semantic_scholar_search_authors");
+    });
+
+    it("should attach fallback contact email when no API key is configured", async () => {
+        const capturedHeaders: Record<string, string>[] = [];
+        const ctx: DiagnosticContext = {
+            ...mockContext,
+            request: async (_input, init) => {
+                capturedHeaders.push((init?.headers as Record<string, string>) || {});
+                return { data: [], total: 0 };
+            }
+        };
+
+        delete process.env.SEMANTIC_SCHOLAR_API_KEY;
+        const provider = new SemanticScholarProvider(ctx);
+        await provider.searchPapers({ query: "SSE diagnostics" });
+
+        expect(capturedHeaders[0]?.["x-api-key"]).toBe("jscraik@brainwav.io");
+    });
+
+    it("should prefer SEMANTIC_SCHOLAR_API_KEY when present", async () => {
+        const capturedHeaders: Record<string, string>[] = [];
+        const ctx: DiagnosticContext = {
+            ...mockContext,
+            request: async (_input, init) => {
+                capturedHeaders.push((init?.headers as Record<string, string>) || {});
+                return { data: [], total: 0 };
+            }
+        };
+
+        const originalKey = process.env.SEMANTIC_SCHOLAR_API_KEY;
+        process.env.SEMANTIC_SCHOLAR_API_KEY = "test-semantic-key";
+        const provider = new SemanticScholarProvider(ctx);
+        await provider.searchPapers({ query: "FastMCP handshake" });
+
+        expect(capturedHeaders[0]?.["x-api-key"]).toBe("test-semantic-key");
+        if (originalKey) process.env.SEMANTIC_SCHOLAR_API_KEY = originalKey;
+        else delete process.env.SEMANTIC_SCHOLAR_API_KEY;
     });
 });
 

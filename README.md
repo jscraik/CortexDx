@@ -16,6 +16,7 @@
 - **⚡ CI/CD Ready**: GitHub Actions integration with severity-based failure modes
 - **♿ Accessibility**: WCAG 2.2 AA compliant CLI output with screen reader support
 - **🎯 Deterministic**: Reproducible results with `--deterministic` mode for reliable testing
+- **🧠 Self-Improvement**: Built-in internal diagnostics plugin highlights handshake, dependency, and health regressions inside Insula MCP itself
 
 ## 📦 Quick Start
 
@@ -103,6 +104,13 @@ insula-mcp diagnose <endpoint> --budget-time 10000 --budget-mem 128
 # Accessibility & CI/CD
 insula-mcp diagnose <endpoint> --a11y --no-color --deterministic
 ```
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `EXA_API_KEY` | Required for the Exa academic provider. Stored in 1Password-managed `.env` and injected at runtime. |
+| `SEMANTIC_SCHOLAR_API_KEY` | Optional API key for Semantic Scholar. If unset, Insula MCP falls back to `jscraik@brainwav.io` as the contact identity so traffic stays compliant until a dedicated email is provisioned. |
 
 ## 📚 Documentation
 

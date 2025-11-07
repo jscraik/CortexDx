@@ -1,0 +1,32 @@
+--- a/packages/insula-mcp/src/providers/academic/arxiv.mcp.ts
++++ b/packages/insula-mcp/src/providers/academic/arxiv.mcp.ts
+@@ -341,7 +341,16 @@ export class ArxivProvider implements AcademicProvider {
+         const url = `${this.baseUrl}?${searchParams}`;
+ 
+         try {
+-            const response = await this.ctx.request<string>(url, {
++            // Use fetch directly for XML response instead of ctx.request which expects JSON
++            const response = await fetch(url, {
++                headers: {
++                    "User-Agent": this.userAgent,
++                    ...this.ctx.headers
++                }
++            });
++
++            if (!response.ok) {
++                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
++            }
++
++            const xmlText = await response.text();
++
++            this.ctx.evidence({
++                type: "url",
++                ref: url
++            });
++
++            return this.parseArxivXml(xmlText);
++        } catch (error) {
++            this.ctx.logger("arXiv search failed:", error);
++            throw new Error(`arXiv API error: ${error instanceof Error ? error.message : "Unknown error"}`);
++        }
++    }

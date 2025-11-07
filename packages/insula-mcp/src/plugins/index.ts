@@ -32,6 +32,7 @@ import { LearningAdaptationPlugin } from "./development/learning-adaptation.js";
 import { PerformanceAnalysisPlugin } from "./development/performance-analysis.js";
 import { PerformanceTestingPlugin } from "./development/performance-testing.js";
 import { ProblemResolverPlugin } from "./development/problem-resolver.js";
+import { SelfImprovementPlugin } from "./development/self-improvement.js";
 import { TemplateGeneratorPlugin } from "./development/template-generator.js";
 import { TestingFrameworkPlugin } from "./development/testing-framework.js";
 
@@ -69,6 +70,7 @@ export const DEVELOPMENT_PLUGINS: DevelopmentPlugin[] = [
   IntegrationHelperPlugin,
   PerformanceTestingPlugin,
   IdeIntegrationPlugin,
+  SelfImprovementPlugin,
 ];
 
 export function getPluginById(id: string): DiagnosticPlugin | undefined {

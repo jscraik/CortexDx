@@ -99,7 +99,7 @@ npx @brainwav/insula-mcp interactive
 
 ```bash
 # Clone repository for development/contribution
-git clone https://github.com/brainwav/insula-mcp.git
+git clone https://github.com/jscraik/insula-mcp.git
 cd insula-mcp
 
 # Install mise for toolchain management

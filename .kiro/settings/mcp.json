@@ -1,14 +1,18 @@
 {
-    "mcpServers": {
-        "gitkraken": {
-            "command": "/Users/jamiecraik/Library/Application Support/GitKrakenCLI/gk",
-            "args": [
-                "mcp",
-                "--host=kiro"
-            ],
-            "env": {},
-            "disabled": false,
-            "autoApprove": []
-        }
+  "mcpServers": {
+    "gitkraken": {
+      "command": "/Users/jamiecraik/Library/Application Support/GitKrakenCLI/gk",
+      "args": [
+        "mcp",
+        "--host=kiro"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "git_branch",
+        "git_checkout",
+        "git_add_or_commit"
+      ]
     }
+  }
 }

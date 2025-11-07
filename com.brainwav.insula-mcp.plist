@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Service Identification -->
+    <key>Label</key>
+    <string>com.brainwav.insula-mcp</string>
+    
+    <!-- Program Configuration -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/jamiecraik/.local/share/mise/installs/pnpm/9.12.2/pnpm</string>
+        <string>--dir</string>
+        <string>/Volumes/ExternalSSD/dev/insula-mcp/packages/insula-mcp</string>
+        <string>run</string>
+        <string>server</string>
+    </array>
+    
+    <!-- Working Directory -->
+    <key>WorkingDirectory</key>
+    <string>/Volumes/ExternalSSD/dev/insula-mcp</string>
+    
+    <!-- Environment Variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>NODE_ENV</key>
+        <string>production</string>
+        <key>PORT</key>
+        <string>5001</string>
+        <key>HOST</key>
+        <string>127.0.0.1</string>
+        <key>PATH</key>
+        <string>/Users/jamiecraik/.local/share/mise/installs/pnpm/9.12.2:/Users/jamiecraik/.local/share/mise/installs/node/20.11.1/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    
+    <!-- Execution Settings -->
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <!-- Keep service running, but with throttle to prevent spam -->
+    <key>KeepAlive</key>
+    <true/>
+    
+    <!-- Throttle restarts to prevent spam (wait 10 seconds between restarts) -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    
+    <!-- Logging -->
+    <key>StandardOutPath</key>
+    <string>/var/log/insula-mcp.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/var/log/insula-mcp.error.log</string>
+    
+    <!-- Process Management -->
+    <key>ProcessType</key>
+    <string>Background</string>
+    
+    <key>ExitTimeOut</key>
+    <integer>30</integer>
+    
+    <!-- Resource Limits -->
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>1024</integer>
+    </dict>
+    
+    <!-- User Context -->
+    <key>UserName</key>
+    <string>jamiecraik</string>
+    
+    <key>GroupName</key>
+    <string>staff</string>
+</dict>
+</plist>

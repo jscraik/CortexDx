@@ -1,8 +1,7 @@
 import { Worker } from "node:worker_threads";
 import { httpAdapter } from "./adapters/http.js";
-import { jsonRpcClient } from "./adapters/jsonrpc.js";
-import { sseProbe } from "./adapters/sse.js";
 import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
+import { createInspectorSession } from "./context/inspector-session.js";
 import type { ConversationalPlugin, DevelopmentContext, DevelopmentPlugin, DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding } from "./types.js";
 
 export interface SandboxBudgets {
@@ -100,14 +99,16 @@ function pickDevelopmentPlugins(suites: string[], full: boolean): DevelopmentPlu
 }
 
 function createFallbackCtx(endpoint: string, deterministic: boolean): DiagnosticContext {
+  const session = createInspectorSession(endpoint);
   return {
     endpoint,
     logger: (...args: unknown[]) => console.log("[brAInwav]", ...args),
     request: httpAdapter,
-    jsonrpc: jsonRpcClient(endpoint),
-    sseProbe: (url: string, opts?: unknown) => sseProbe(url, opts as { timeoutMs?: number }),
+    jsonrpc: session.jsonrpc,
+    sseProbe: session.sseProbe,
     evidence: (ev: EvidencePointer) => console.log("[evidence]", ev),
-    deterministic
+    deterministic,
+    transport: session.transport
   };
 }
 
