@@ -12,6 +12,12 @@ const RULES: Array<{ re: RegExp; tag: string; severity: "major" | "minor" }> = [
   { re: /\b(curl|http|get|post|fetch|open[-_ ]?url)\b/i, tag: "net", severity: "minor" }
 ];
 
+const SQL_ALLOWLIST = new Set([
+  "memory.relationships",
+  "memory.query",
+  "memory.search",
+]);
+
 function classify(tool: ToolLike) {
   const haystack = `${tool.name ?? ""} ${tool.description ?? ""}`;
   return RULES.filter((rule) => rule.re.test(haystack));
@@ -42,6 +48,7 @@ export const PermissioningPlugin: DiagnosticPlugin = {
     let flagged = 0;
     for (const tool of tools) {
       for (const hit of classify(tool)) {
+        if (hit.tag === "sql" && tool.name && SQL_ALLOWLIST.has(tool.name)) continue;
         flagged += 1;
         findings.push({
           id: `perm.${hit.tag}.${tool.name ?? "unnamed"}`,

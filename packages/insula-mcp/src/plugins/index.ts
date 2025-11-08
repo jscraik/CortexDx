@@ -6,7 +6,12 @@ import { DevtoolEnvPlugin } from "./devtool-env.js";
 import { DiscoveryPlugin } from "./discovery.js";
 import { GovernancePlugin } from "./governance.js";
 import { JsonRpcBatchPlugin } from "./jsonrpc-batch.js";
-import { PerformancePlugin } from "./performance.js";
+import {
+  ClinicJsPerformanceProfilerPlugin,
+  PerformancePlugin,
+  PySpyPerformanceProfilerPlugin,
+  UnifiedFlameGraphPlugin,
+} from "./performance.js";
 import { PermissioningPlugin } from "./permissioning.js";
 import { ProtocolPlugin } from "./protocol.js";
 import { RateLimitPlugin } from "./ratelimit.js";
@@ -21,6 +26,9 @@ import { CommercialSecurityPlugin } from "./commercial-security.js";
 import { ComplianceMonitorPlugin } from "./compliance-monitor.js";
 import { LicenseValidatorPlugin } from "./license-validator.js";
 
+// Supply-chain security plugins
+import { DependencyScannerPlugin } from "./dependency-scanner.js";
+
 // Development plugins
 import { ApiCodeGeneratorPlugin } from "./development/api-code-generator.js";
 import { CodeGenerationPlugin } from "./development/code-generation.js";
@@ -32,9 +40,18 @@ import { LearningAdaptationPlugin } from "./development/learning-adaptation.js";
 import { PerformanceAnalysisPlugin } from "./development/performance-analysis.js";
 import { PerformanceTestingPlugin } from "./development/performance-testing.js";
 import { ProblemResolverPlugin } from "./development/problem-resolver.js";
-import { SelfImprovementPlugin } from "./development/self-improvement.js";
 import { TemplateGeneratorPlugin } from "./development/template-generator.js";
 import { TestingFrameworkPlugin } from "./development/testing-framework.js";
+
+// Pattern learning resolver
+export {
+  createPatternLearningResolver,
+  exportPatterns,
+  importPatterns,
+  learnFromFailure,
+  learnFromSuccess,
+  type PatternLearningConfig
+} from "./development/pattern-learning-resolver.js";
 
 export const BUILTIN_PLUGINS: DiagnosticPlugin[] = [
   DevtoolEnvPlugin,
@@ -51,10 +68,14 @@ export const BUILTIN_PLUGINS: DiagnosticPlugin[] = [
   GovernancePlugin,
   ThreatModelPlugin,
   PerformancePlugin,
+  ClinicJsPerformanceProfilerPlugin,
+  PySpyPerformanceProfilerPlugin,
+  UnifiedFlameGraphPlugin,
   CommercialLicensingPlugin,
   CommercialSecurityPlugin,
   LicenseValidatorPlugin,
   ComplianceMonitorPlugin,
+  DependencyScannerPlugin,
 ];
 
 export const DEVELOPMENT_PLUGINS: DevelopmentPlugin[] = [
@@ -70,7 +91,6 @@ export const DEVELOPMENT_PLUGINS: DevelopmentPlugin[] = [
   IntegrationHelperPlugin,
   PerformanceTestingPlugin,
   IdeIntegrationPlugin,
-  SelfImprovementPlugin,
 ];
 
 export function getPluginById(id: string): DiagnosticPlugin | undefined {

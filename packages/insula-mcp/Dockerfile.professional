@@ -1,0 +1,98 @@
+# Insula MCP Production Dockerfile - Professional Edition
+# Optimized multi-stage build with LLM backend support
+
+# Stage 1: Dependencies
+FROM node:20.11.1-alpine AS deps
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++ git
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package.json pnpm-lock.yaml ./
+COPY packages/insula-mcp/package.json ./packages/insula-mcp/
+
+# Install pnpm globally
+RUN npm install -g pnpm@9.12.2
+
+# Install all dependencies (including dev for build)
+RUN pnpm install --frozen-lockfile
+
+# Stage 2: Build
+FROM node:20.11.1-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/insula-mcp/node_modules ./packages/insula-mcp/node_modules
+
+# Copy source code
+COPY packages/insula-mcp ./packages/insula-mcp
+COPY tsconfig.base.json ./
+COPY package.json pnpm-lock.yaml ./
+
+# Build the application
+WORKDIR /app/packages/insula-mcp
+RUN npm install -g pnpm@9.12.2 && pnpm build
+
+# Remove dev dependencies and rebuild for production only
+RUN pnpm install --prod --frozen-lockfile
+
+# Stage 3: Production Runtime
+FROM node:20.11.1-alpine AS runtime
+
+# Install runtime dependencies, security updates, and LLM tools
+RUN apk add --no-cache \
+    ca-certificates \
+    tini \
+    dumb-init \
+    curl \
+    && apk upgrade --no-cache
+
+# Create non-root user with specific UID/GID
+RUN addgroup -g 1001 -S insula && \
+    adduser -S -D -H -u 1001 -h /app -s /sbin/nologin -G insula -g insula insula
+
+WORKDIR /app
+
+# Copy only production artifacts
+COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/dist ./dist
+COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/package.json ./
+COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/node_modules ./node_modules
+
+# Create directories for data persistence with proper permissions
+RUN mkdir -p /app/data /app/logs /app/reports /app/config /app/models /app/patterns && \
+    chown -R insula:insula /app && \
+    chmod 755 /app/data /app/logs /app/reports /app/config /app/models /app/patterns
+
+# Set environment variables for optimization
+ENV NODE_ENV=production \
+    NODE_OPTIONS="--max-old-space-size=1024" \
+    INSULA_MCP_TIER=professional \
+    INSULA_MCP_LOG_LEVEL=info \
+    INSULA_MCP_LLM_BACKEND=ollama
+
+# Switch to non-root user
+USER insula
+
+# Expose HTTP port
+EXPOSE 3000
+
+# Enhanced health check with LLM backend validation
+HEALTHCHECK --interval=15s --timeout=5s --start-period=15s --retries=3 \
+    CMD node -e "const http=require('http');http.get('http://localhost:3000/health',(r)=>{let d='';r.on('data',c=>d+=c);r.on('end',()=>{const h=JSON.parse(d);process.exit(r.statusCode===200&&h.status==='healthy'&&(!h.llm||h.llm.status==='ready')?0:1)})}).on('error',()=>process.exit(1))"
+
+# Use dumb-init as PID 1 for proper signal handling
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+# Default command with graceful shutdown support and increased memory
+CMD ["node", "--enable-source-maps", "dist/server.js"]
+
+# Labels for metadata
+LABEL org.opencontainers.image.title="Insula MCP Professional Edition" \
+      org.opencontainers.image.description="MCP diagnostic and development assistant - Professional tier with LLM support" \
+      org.opencontainers.image.vendor="brAInwav" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.licenses="Apache-2.0"

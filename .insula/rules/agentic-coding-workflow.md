@@ -22,26 +22,8 @@
 ## 0.1 Preflight Guards and Governance Hooks (mandatory)
 
 - **Time Freshness Guard** — Anchor to harness timezone/date; convert relative dates to ISO-8601 in specs and PRs.
-- **Academic Research Enhancement** — Before vibe check, enhance all implementation plans with academic research and validate licenses:
-
-  ```bash
-  # Automatic academic research integration with license validation
-  pnpm oversight:academic-research --goal "<task>" --plan "<steps>" --session <id> \
-    --save ~/.insula-mcp/tasks/<slug>/logs/academic-research/findings.json \
-    --validate-licenses --risk-threshold review
-  ```
-
-  Research findings MUST be incorporated into plan steps with evidence citations. License validation MUST pass and only SAFE/REVIEW content may be included. See `/.insula/rules/vibe-check.md` §2.1.
-- **Vibe Check MCP (Oversight)** — After academic research enhancement and license validation, before any file writes/network calls/long runs:
-
-  ```bash
-  pnpm oversight:vibe-check --goal "<task>" --plan "<license-compliant-steps>" --session <id> \
-    --save ~/.insula-mcp/tasks/<slug>/logs/vibe-check/initial.json \
-    --with-academic-research --validate-licenses
-  # or JSON-RPC to ${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}
-  ```
-
-  Save raw response to `logs/vibe-check/<task>.json`; missing logs block merge. License validation evidence must be attached. See `/.insula/rules/vibe-check.md`.
+- **Academic Research Enhancement** — Before vibe check, enhance all implementation plans with academic research and validate licenses by using Insula’s built-in academic MCP providers (Wikidata, arXiv, Semantic Scholar, OpenAlex, Context7, EXA, and Vibe Check). Call the tools defined in `packages/insula-mcp/src/tools/academic-integration-tools.ts` (e.g., `validate_architecture_academic`, `validate_research_methodology`, `perform_vibe_check`) through your MCP client or the Insula CLI, capture the full JSON-RPC transcripts, and store them under `~/.insula-mcp/tasks/<slug>/logs/academic-research/`. Research findings MUST be merged back into the plan with citations, and the compliance monitor output must prove that only SAFE/REVIEW sources were used. See `/.insula/rules/vibe-check.md` §2.1 for required evidence keys.
+- **Vibe Check MCP (Oversight)** — After the academic suite is complete (and before touching the repo), invoke the bundled `vibe-check` MCP provider (tools `vibe_check` / `vibe_learn`) and archive the response under `logs/vibe-check/<task>.json`. The request must include the latest goal + ≤7 step plan, plus the academic evidence identifiers, and the stored response must show the provider’s approval. JSON-RPC samples and required metadata are documented in `/.insula/rules/vibe-check.md`; missing or stale artifacts keep the PR blocked.
 - **Local Memory Parity** — Append key decisions to `.github/instructions/memories.instructions.md` and persist via Local Memory MCP/REST.
 - **Knowledge Connectors Live-Check** — Verify `${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health` and `${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health`. Store timestamps/responses in `research/connectors-health.log`. Planning is blocked if down, except where tier-based cached health fallback is permitted (see "Toolchain Resilience", lines 281–283).
 - **Academic Connector Health** — Verify all academic research endpoints are healthy before research enhancement:
@@ -456,7 +438,10 @@ CLI behavior (expected):
 4. **Run the preflight guard trio** — Execute:
 
   ```bash
-  pnpm oversight:vibe-check --goal "<task>" --plan "<steps>" --session <id>
+  curl -s ${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}/mcp \
+    -H 'Content-Type: application/json' \
+    -d @~/.insula-mcp/tasks/<slug>/payloads/vibe-check-<session>.json \
+    | tee ~/.insula-mcp/tasks/<slug>/logs/vibe-check/<session>.json
   pnpm models:health && pnpm models:smoke
   pnpm tsx scripts/ci/verify-trace-context.ts <logfile>
   ```

@@ -17,7 +17,8 @@
     "docs:maintenance:links": "node scripts/docs-maintenance.js link-check",
     "docs:sync-versions": "node scripts/sync-versions.js",
     "docs:sync-versions:dry-run": "node scripts/sync-versions.js --dry-run",
-    "docs:monitor-links": "node scripts/broken-link-monitor.js"
+    "docs:monitor-links": "node scripts/broken-link-monitor.js",
+    "internal:self-improvement": "pnpm --filter @brainwav/insula-mcp run internal:self-improvement"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

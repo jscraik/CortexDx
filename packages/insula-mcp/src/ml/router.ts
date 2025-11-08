@@ -1,11 +1,14 @@
 import { createMlxAdapter } from "../adapters/mlx.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import type { EnhancedLlmAdapter, LlmAdapter } from "../types.js";
-import { hasMlx, hasOllama } from "./detect.js";
+import { hasMlx, hasOllama, isOllamaReachable } from "./detect.js";
+
+const ENABLE_LOCAL_LLM = process.env.INSULA_ENABLE_LOCAL_LLM === "true";
 
 export async function pickLocalLLM(): Promise<"mlx" | "ollama" | "none"> {
+  if (!ENABLE_LOCAL_LLM) return "none";
   if (hasMlx()) return "mlx";
-  if (hasOllama()) return "ollama";
+  if (hasOllama() && (await isOllamaReachable())) return "ollama";
   return "none";
 }
 

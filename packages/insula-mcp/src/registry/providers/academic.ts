@@ -5,6 +5,7 @@
 
 import { ArxivProvider, arxivCapabilities } from "../../providers/academic/arxiv.mcp.js";
 import { Context7Provider, context7Capabilities } from "../../providers/academic/context7.mcp.js";
+import { ExaProvider, exaCapabilities } from "../../providers/academic/exa.mcp.js";
 import { OpenAlexProvider, openAlexCapabilities } from "../../providers/academic/openalex.mcp.js";
 import { SemanticScholarProvider, semanticScholarCapabilities } from "../../providers/academic/semantic-scholar.mcp.js";
 import { VibeCheckProvider, vibeCheckCapabilities } from "../../providers/academic/vibe-check.mcp.js";
@@ -177,6 +178,22 @@ export class AcademicRegistry {
             capabilities: context7Capabilities,
             requires_auth: false,
             tags: ["context", "analysis", "cross-reference", "academic", "relationships"]
+        });
+
+        // Register Exa provider
+        this.registerProvider({
+            id: "exa",
+            name: "Exa Advanced Search Provider",
+            description: "Advanced search validation and content analysis with relevance scoring",
+            provider_class: ExaProvider,
+            capabilities: exaCapabilities,
+            health_check_endpoint: "https://api.exa.ai/search",
+            requires_auth: true,
+            rate_limits: {
+                requests_per_minute: 60,
+                requests_per_hour: 1000
+            },
+            tags: ["search", "validation", "content-analysis", "academic", "relevance"]
         });
     }
 
@@ -363,5 +380,5 @@ export const academicRegistryCapabilities = {
 
 // Export all provider capabilities for easy access
 export {
-    arxivCapabilities, context7Capabilities, openAlexCapabilities, semanticScholarCapabilities, vibeCheckCapabilities, wikidataCapabilities
+    arxivCapabilities, context7Capabilities, exaCapabilities, openAlexCapabilities, semanticScholarCapabilities, vibeCheckCapabilities, wikidataCapabilities
 };

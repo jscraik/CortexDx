@@ -1,0 +1,221 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Version to release (e.g., 1.0.0)"
+                required: true
+                type: string
+
+env:
+    NODE_VERSION: "20.11.1"
+    PNPM_VERSION: "9.12.2"
+
+jobs:
+    validate:
+        name: Validate Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run linter
+              run: pnpm lint
+
+            - name: Run tests
+              run: pnpm test
+
+            - name: Build package
+              run: pnpm build
+
+            - name: Verify version
+              run: |
+                  VERSION="${{ github.event.inputs.version || github.ref_name }}"
+                  VERSION="${VERSION#v}"
+                  PACKAGE_VERSION=$(node -p "require('./packages/insula-mcp/package.json').version")
+                  if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+                    echo "Version mismatch: package.json has $PACKAGE_VERSION, expected $VERSION"
+                    exit 1
+                  fi
+
+    build-docker:
+        name: Build Docker Images
+        needs: validate
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                tier: [community, professional, enterprise]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Extract version
+              id: version
+              run: |
+                  VERSION="${{ github.event.inputs.version || github.ref_name }}"
+                  VERSION="${VERSION#v}"
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  file: packages/insula-mcp/Dockerfile.${{ matrix.tier }}
+                  push: true
+                  tags: |
+                      brainwav/insula-mcp:${{ steps.version.outputs.version }}-${{ matrix.tier }}
+                      brainwav/insula-mcp:latest-${{ matrix.tier }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  platforms: linux/amd64,linux/arm64
+
+            - name: Tag latest (community only)
+              if: matrix.tier == 'community'
+              run: |
+                  docker tag brainwav/insula-mcp:${{ steps.version.outputs.version }}-community \
+                             brainwav/insula-mcp:latest
+                  docker push brainwav/insula-mcp:latest
+
+    publish-npm:
+        name: Publish to NPM
+        needs: validate
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build package
+              run: pnpm build
+              working-directory: packages/insula-mcp
+
+            - name: Publish to NPM
+              run: npm publish --access public
+              working-directory: packages/insula-mcp
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    create-release:
+        name: Create GitHub Release
+        needs: [build-docker, publish-npm]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Extract version
+              id: version
+              run: |
+                  VERSION="${{ github.event.inputs.version || github.ref_name }}"
+                  VERSION="${VERSION#v}"
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: v${{ steps.version.outputs.version }}
+                  name: Insula MCP v${{ steps.version.outputs.version }}
+                  body_path: packages/insula-mcp/RELEASE_NOTES.md
+                  draft: false
+                  prerelease: false
+                  files: |
+                      packages/insula-mcp/RELEASE_NOTES.md
+                      packages/insula-mcp/MIGRATION_GUIDE.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    notify:
+        name: Notify Release
+        needs: create-release
+        runs-on: ubuntu-latest
+        steps:
+            - name: Extract version
+              id: version
+              run: |
+                  VERSION="${{ github.event.inputs.version || github.ref_name }}"
+                  VERSION="${VERSION#v}"
+                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            - name: Notify Slack
+              if: ${{ secrets.SLACK_WEBHOOK_URL }}
+              uses: slackapi/slack-github-action@v1
+              with:
+                  payload: |
+                      {
+                        "text": "🎉 Insula MCP v${{ steps.version.outputs.version }} has been released!",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "*Insula MCP v${{ steps.version.outputs.version }} Released*\n\n✅ NPM Package Published\n✅ Docker Images Built\n✅ GitHub Release Created"
+                            }
+                          },
+                          {
+                            "type": "actions",
+                            "elements": [
+                              {
+                                "type": "button",
+                                "text": {
+                                  "type": "plain_text",
+                                  "text": "View Release"
+                                },
+                                "url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+            - name: Summary
+              run: |
+                  echo "## 🎉 Release Complete!" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**Version:** v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### Published Artifacts" >> $GITHUB_STEP_SUMMARY
+                  echo "- 📦 NPM: [@brainwav/insula-mcp@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@brainwav/insula-mcp)" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🐳 Docker: [brainwav/insula-mcp:${{ steps.version.outputs.version }}](https://hub.docker.com/r/brainwav/insula-mcp)" >> $GITHUB_STEP_SUMMARY
+                  echo "- 📝 GitHub: [Release Notes](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY

@@ -8,6 +8,17 @@ import type {
   TransportTranscript,
 } from "../types.js";
 
+export interface SharedSessionState {
+  sessionId?: string;
+  initialize?: TransportExchange;
+  initialized: boolean;
+}
+
+interface InspectorSessionOptions {
+  preinitialized?: boolean;
+  sharedState?: SharedSessionState;
+}
+
 interface InspectorSession {
   jsonrpc: <T>(method: string, params?: unknown) => Promise<T>;
   sseProbe: (url: string, opts?: SseProbeOptions) => Promise<SseResult>;
@@ -18,15 +29,23 @@ interface HeadersMap {
   [key: string]: string;
 }
 
-export function createInspectorSession(endpoint: string, base?: HeadersMap): InspectorSession {
+export function createInspectorSession(
+  endpoint: string,
+  base?: HeadersMap,
+  options?: InspectorSessionOptions,
+): InspectorSession {
   const sessionHeaders: HeadersMap = {
     "content-type": "application/json",
-    accept: "application/json",
+    accept: "application/json, text/event-stream",
     ...(base ?? {}),
   };
+  const shared = options?.sharedState;
+  const providedSessionId = shared?.sessionId;
 
   const transcript: TransportTranscript = {
     exchanges: [],
+    sessionId: providedSessionId,
+    initialize: shared?.initialize ? { ...shared.initialize } : undefined,
   };
 
   const transportState: TransportState = {
@@ -38,7 +57,15 @@ export function createInspectorSession(endpoint: string, base?: HeadersMap): Ins
     headers: () => ({ ...sessionHeaders }),
   };
 
-  let initialized = false;
+  if (providedSessionId) {
+    transportState.sessionId = providedSessionId;
+  }
+
+  if (providedSessionId) {
+    transportState.sessionId = providedSessionId;
+  }
+
+  let initialized = Boolean(options?.preinitialized && providedSessionId);
   let requestCounter = 1;
 
   const rpcCache = new Map<string, unknown>();
@@ -70,13 +97,18 @@ export function createInspectorSession(endpoint: string, base?: HeadersMap): Ins
     const sessionId =
       response.headers.get("mcp-session-id") ||
       response.headers.get("Mcp-Session-Id") ||
+      sessionHeaders["mcp-session-id"] ||
       randomUUID();
 
-    sessionHeaders["mcp-session-id"] = sessionId;
     sessionHeaders.accept = "application/json, text/event-stream";
     transcript.sessionId = sessionId;
     transportState.sessionId = sessionId;
     transcript.initialize = buildExchange("initialize", initRequest, body, response.status);
+    if (shared) {
+      shared.sessionId = sessionId;
+      shared.initialize = transcript.initialize ? { ...transcript.initialize } : undefined;
+      shared.initialized = true;
+    }
 
     initialized = true;
   };
@@ -108,19 +140,37 @@ export function createInspectorSession(endpoint: string, base?: HeadersMap): Ins
 
   const probeStream = async (url: string, opts?: SseProbeOptions): Promise<SseResult> => {
     await ensureSession();
+    const authHeaders = Object.fromEntries(
+      Object.entries(sessionHeaders).filter(([key]) => key.toLowerCase() !== "content-type"),
+    );
+    const sessionId = transcript.sessionId;
     const headers = {
-      "mcp-session-id": transcript.sessionId ?? "",
+      ...authHeaders,
       accept: "text/event-stream",
+      ...(sessionId
+        ? { "mcp-session-id": sessionId, "Mcp-Session-Id": sessionId }
+        : {}),
       ...(opts?.headers ?? {}),
     };
     const mergedOptions: SseProbeOptions = { ...(opts ?? {}), headers };
-    const initial = await sseProbe(url, mergedOptions);
-    if (initial.ok || !url.endsWith("/events")) {
-      return initial;
+    const candidates = [url];
+    if (url.endsWith("/events")) {
+      candidates.push(`${url.replace(/\/events$/, "")}/sse`);
     }
-    const fallbackUrl = `${url.replace(/\/events$/, "")}/sse`;
-    const fallback = await sseProbe(fallbackUrl, mergedOptions);
-    return fallback;
+
+    let lastResult: SseResult | undefined;
+    for (const candidate of candidates) {
+      const primary = await sseProbe(candidate, mergedOptions);
+      if (primary.ok) return primary;
+      lastResult = primary;
+      if (!sessionId) continue;
+      const separator = candidate.includes("?") ? "&" : "?";
+      const withQuery = `${candidate}${separator}mcp-session-id=${encodeURIComponent(sessionId)}`;
+      const withSession = await sseProbe(withQuery, mergedOptions);
+      if (withSession.ok) return withSession;
+      lastResult = withSession;
+    }
+    return lastResult ?? { ok: false, reason: "probe failed", resolvedUrl: url };
   };
 
   return {
@@ -130,7 +180,7 @@ export function createInspectorSession(endpoint: string, base?: HeadersMap): Ins
   };
 }
 
-async function safeJsonParse(response: Response): Promise<any> {
+async function safeJsonParse(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) return undefined;
   try {

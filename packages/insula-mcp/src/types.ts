@@ -36,6 +36,19 @@ export interface Finding {
     steps?: string[];
     codeSamples?: CodeSample[];
   };
+  // Enhanced LLM analysis fields
+  llmAnalysis?: string;
+  rootCause?: string;
+  filesToModify?: string[];
+  codeChanges?: string;
+  validationSteps?: string[];
+  riskLevel?: 'low' | 'medium' | 'high';
+  templateId?: string;
+  canAutoFix?: boolean;
+  inspectorData?: unknown; // Raw Inspector data for reference
+  requiresLLMAnalysis?: boolean;
+  autoFixed?: boolean;
+  fixEvidence?: unknown;
 }
 
 export interface SseProbeOptions {

@@ -1,3 +1,5 @@
+import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
+import { getEnhancedLlmAdapter } from "../../ml/router.js";
 import type {
   ChatMessage,
   DevelopmentContext,
@@ -118,15 +120,205 @@ async function probeHealth(
   }
 }
 
+export async function analyzeWithLLM(
+  findings: Finding[],
+  ctx: DevelopmentContext
+): Promise<Finding[]> {
+  const startTime = Date.now();
+  const adapter = await getEnhancedLlmAdapter();
+
+  if (!adapter) {
+    ctx.logger?.("[Self-Improvement] LLM not available, returning raw findings");
+    return findings;
+  }
+
+  const analyzedFindings: Finding[] = [];
+
+  for (const finding of findings) {
+    const findingStartTime = Date.now();
+
+    try {
+      ctx.logger?.(`[Self-Improvement] Analyzing finding with LLM: ${finding.id}`);
+
+      const prompt = `
+You are Insula MCP's self-healing AI assistant. Analyze this Inspector finding and provide Insula-specific guidance.
+
+Inspector Finding:
+${JSON.stringify(finding, null, 2)}
+
+Current Insula Context:
+- Project Files: ${ctx.projectContext?.sourceFiles?.slice(0, 10).join(', ') || 'unknown'}
+- Dependencies: ${ctx.projectContext?.dependencies?.slice(0, 10).join(', ') || 'unknown'}
+- Language: ${ctx.projectContext?.language || 'typescript'}
+- Expertise Level: ${ctx.userExpertiseLevel || 'intermediate'}
+
+Provide analysis in JSON format with these REQUIRED fields:
+{
+  "rootCause": "Specific cause in Insula's codebase (REQUIRED)",
+  "filesToModify": ["file1.ts", "file2.ts"],
+  "codeChanges": "Actual code changes needed with line numbers and context",
+  "validationSteps": ["step1: specific validation action", "step2: verification command"],
+  "riskLevel": "low|medium|high",
+  "templateId": "template.identifier or null",
+  "canAutoFix": true/false
+}
+
+IMPORTANT: Provide specific, actionable code changes with file paths and line numbers. Include validation commands that can be executed.
+`;
+
+      const analysis = await adapter.complete(prompt, 2000);
+      const findingDuration = Date.now() - findingStartTime;
+
+      let analysisData: {
+        rootCause?: string;
+        filesToModify?: string[];
+        codeChanges?: string;
+        validationSteps?: string[];
+        riskLevel?: 'low' | 'medium' | 'high';
+        templateId?: string | null;
+        canAutoFix?: boolean;
+      } = {};
+
+      // Try to parse JSON response
+      try {
+        // Extract JSON from markdown code blocks if present
+        const jsonMatch = analysis.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        const jsonStr = jsonMatch?.[1] ?? analysis;
+        analysisData = JSON.parse(jsonStr);
+
+        // Validate required fields
+        if (!analysisData.rootCause) {
+          throw new Error("Missing required field: rootCause");
+        }
+
+        ctx.logger?.(`[Self-Improvement] Successfully parsed LLM analysis for ${finding.id} in ${findingDuration}ms`);
+      } catch (parseError) {
+        ctx.logger?.(`[Self-Improvement] Failed to parse LLM response as JSON for ${finding.id}:`, parseError);
+
+        // Fallback: extract what we can from text
+        analysisData = {
+          rootCause: analysis.slice(0, 500),
+          filesToModify: extractFilePaths(analysis),
+          codeChanges: analysis,
+          validationSteps: extractValidationSteps(analysis),
+          riskLevel: "medium",
+          templateId: null,
+          canAutoFix: false,
+        };
+      }
+
+      // Enhance finding with LLM analysis
+      const enhancedFinding: Finding = {
+        ...finding,
+        llmAnalysis: analysis,
+        rootCause: analysisData.rootCause,
+        filesToModify: analysisData.filesToModify || [],
+        codeChanges: analysisData.codeChanges || "",
+        validationSteps: analysisData.validationSteps || [],
+        riskLevel: analysisData.riskLevel || "medium",
+        templateId: analysisData.templateId ?? undefined,
+        canAutoFix: analysisData.canAutoFix ?? false,
+        tags: [...(finding.tags || []), 'llm-analyzed'],
+      };
+
+      analyzedFindings.push(enhancedFinding);
+      ctx.logger?.(`[Self-Improvement] Enhanced finding ${finding.id} with LLM analysis (${findingDuration}ms)`);
+
+    } catch (error) {
+      const findingDuration = Date.now() - findingStartTime;
+      ctx.logger?.(`[Self-Improvement] LLM analysis failed for ${finding.id} after ${findingDuration}ms:`, error);
+      // Return original finding if analysis fails
+      analyzedFindings.push(finding);
+    }
+  }
+
+  const totalDuration = Date.now() - startTime;
+  ctx.logger?.(`[Self-Improvement] Completed LLM analysis of ${findings.length} findings in ${totalDuration}ms`);
+
+  // Verify performance requirement: <15s per finding (Req 15.5)
+  const avgDuration = totalDuration / findings.length;
+  if (avgDuration > 15000) {
+    ctx.logger?.(`[Self-Improvement] WARNING: Average LLM analysis time (${avgDuration}ms) exceeds 15s requirement`);
+  }
+
+  return analyzedFindings;
+}
+
+// Helper function to extract file paths from text
+function extractFilePaths(text: string): string[] {
+  const pathPattern = /(?:packages\/[\w-]+\/)?src\/[\w/-]+\.ts/g;
+  const matches = text.match(pathPattern);
+  return matches ? [...new Set(matches)] : [];
+}
+
+// Helper function to extract validation steps from text
+function extractValidationSteps(text: string): string[] {
+  const steps: string[] = [];
+
+  // Look for numbered lists
+  const numberedPattern = /\d+\.\s+([^\n]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = numberedPattern.exec(text)) !== null) {
+    if (match[1]) {
+      steps.push(match[1].trim());
+    }
+  }
+
+  // Look for bullet points if no numbered list found
+  if (steps.length === 0) {
+    const bulletPattern = /[-*]\s+([^\n]+)/g;
+    while ((match = bulletPattern.exec(text)) !== null) {
+      if (match[1]) {
+        steps.push(match[1].trim());
+      }
+    }
+  }
+
+  return steps.slice(0, 5); // Limit to 5 steps
+}
+
+async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding[]> {
+  const inspector = new InspectorAdapter(ctx);
+
+  try {
+    ctx.logger?.("[Self-Improvement] Running MCP Inspector self-diagnosis");
+    const report = await inspector.selfDiagnose();
+
+    // Convert Inspector findings to Insula format
+    const insulaFindings = inspector.convertFindings(report.findings);
+
+    ctx.logger?.(`[Self-Improvement] Inspector found ${insulaFindings.length} issues`);
+    return insulaFindings;
+
+  } catch (error) {
+    ctx.logger?.("[Self-Improvement] Inspector self-diagnosis failed:", error);
+
+    return [{
+      id: "self_improvement.inspector_failed",
+      area: "development",
+      severity: "minor",
+      title: "Inspector self-diagnosis unavailable",
+      description: `MCP Inspector integration failed: ${String(error)}`,
+      evidence: [{ type: "log" as const, ref: String(error) }],
+      tags: ["self-improvement", "inspector-failed"],
+    }];
+  }
+}
+
 export const SelfImprovementPlugin: DevelopmentPlugin = {
   id: "self-improvement",
   title: "Internal Self-Improvement Diagnostics",
   category: "development",
   order: 15,
-  requiresLlm: false,
+  requiresLlm: true, // Now requires LLM for enhanced analysis
   async run(ctx) {
-    const findings: Finding[] = [];
+    let findings: Finding[] = [];
 
+    // 1. Run Inspector diagnostics first (most comprehensive)
+    const inspectorFindings = await runInspectorDiagnostics(ctx);
+    findings.push(...inspectorFindings);
+
+    // 2. Run traditional self-improvement checks
     const handshake = evaluateHandshake(ctx.projectContext);
     if (handshake) findings.push(handshake);
 
@@ -142,6 +334,11 @@ export const SelfImprovementPlugin: DevelopmentPlugin = {
     const transport = summarizeTransport(ctx);
     if (transport) findings.push(transport);
 
+    // 3. Analyze findings with LLM for enhanced insights
+    if (findings.length > 0) {
+      findings = await analyzeWithLLM(findings, ctx);
+    }
+
     if (findings.length === 0) {
       findings.push({
         id: "self_improvement.ok",
@@ -150,6 +347,7 @@ export const SelfImprovementPlugin: DevelopmentPlugin = {
         title: "Internal diagnostics baseline satisfied",
         description:
           "All tracked adapters and dependencies are present; no repeated failure signals detected.",
+        evidence: [],
         tags: ["self-improvement"],
       });
     }
@@ -177,7 +375,7 @@ function summarizeTransport(ctx: DevelopmentContext): Finding | null {
         ref: JSON.stringify(
           {
             sessionId: transcript.sessionId,
-            initialize: transcript.initialize?.response?.result ?? null,
+            initialize: (transcript.initialize?.response as { result?: unknown })?.result ?? null,
             exchanges: transcript.exchanges.slice(-3),
           },
           null,

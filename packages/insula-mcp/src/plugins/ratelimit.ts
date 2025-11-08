@@ -46,7 +46,21 @@ export const RateLimitPlugin: DiagnosticPlugin = {
   async run(ctx) {
     const findings: Finding[] = [];
     try {
-      const res = await fetch(ctx.endpoint, { method: "POST", body: "{}" });
+      try {
+        await ctx.jsonrpc<unknown>("rpc.ping");
+      } catch (error) {
+        ctx.logger("[brAInwav] ratelimit ping failed", error);
+      }
+      const sessionHeaders = ctx.transport?.headers?.() ?? ctx.headers ?? {};
+      const res = await fetch(ctx.endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+          ...sessionHeaders,
+        },
+        body: "{}",
+      });
       if (res.status === 429) {
         const retry = res.headers.get("retry-after");
         if (!retry) {

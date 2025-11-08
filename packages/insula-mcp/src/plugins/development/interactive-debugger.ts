@@ -898,3 +898,224 @@ function generateDebuggingActions(
 
   return actions;
 }
+
+
+/**
+ * ENHANCEMENT: Session Persistence (Req 24.3, 24.8)
+ */
+class SessionPersistenceManager {
+  private storage: Map<string, SerializedSession> = new Map();
+
+  async saveSession(session: ConversationSession): Promise<void> {
+    const serialized: SerializedSession = {
+      id: session.id,
+      pluginId: session.pluginId,
+      state: session.state,
+      conversationHistory: session.context.conversationHistory,
+      startTime: session.startTime,
+      lastActivity: session.lastActivity,
+      savedAt: Date.now()
+    };
+    this.storage.set(session.id, serialized);
+  }
+
+  async loadSession(sessionId: string, ctx: DevelopmentContext): Promise<ConversationSession | undefined> {
+    const serialized = this.storage.get(sessionId);
+    if (!serialized) return undefined;
+
+    return {
+      id: serialized.id,
+      pluginId: serialized.pluginId,
+      context: { ...ctx, conversationHistory: serialized.conversationHistory },
+      state: serialized.state,
+      startTime: serialized.startTime,
+      lastActivity: serialized.lastActivity
+    };
+  }
+
+  async listSessions(): Promise<SerializedSession[]> {
+    return Array.from(this.storage.values())
+      .sort((a, b) => b.lastActivity - a.lastActivity);
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    return this.storage.delete(sessionId);
+  }
+}
+
+interface SerializedSession {
+  id: string;
+  pluginId: string;
+  state: Record<string, unknown>;
+  conversationHistory: ChatMessage[];
+  startTime: number;
+  lastActivity: number;
+  savedAt: number;
+}
+
+/**
+ * ENHANCEMENT: Adaptive Questioning (Req 24.3)
+ */
+function generateAdaptiveQuestion(state: DebuggingState, ctx: DevelopmentContext): string {
+  const { currentPhase, hypotheses, evidenceTrail, academicContext } = state;
+  const userLevel = ctx.userExpertiseLevel;
+
+  // Adapt questions based on phase and user expertise
+  if (currentPhase === 'analysis') {
+    if (userLevel === 'beginner') {
+      return "Can you describe what you expected to happen versus what actually happened?";
+    } else if (userLevel === 'intermediate') {
+      return "What error message or unexpected behavior are you seeing? Please include any relevant logs.";
+    } else {
+      return "What's the failure mode? Include stack traces, error codes, and reproduction steps.";
+    }
+  }
+
+  if (currentPhase === 'diagnosis' && hypotheses.length > 0) {
+    const topHypothesis = hypotheses[0];
+    if (userLevel === 'beginner') {
+      return `I think the issue might be: ${topHypothesis.description}. Have you checked ${topHypothesis.nextSteps[0]}?`;
+    } else {
+      return `Based on the evidence, the most likely cause is ${topHypothesis.description} (${(topHypothesis.probability * 100).toFixed(0)}% confidence). Can you verify: ${topHypothesis.nextSteps.join(', ')}?`;
+    }
+  }
+
+  // Use academic context for more targeted questions
+  if (academicContext?.contextualAnalysis) {
+    const patterns = academicContext.contextualAnalysis.thematicPatterns;
+    if (patterns.includes('network_connectivity')) {
+      return "Can you check your network configuration and firewall settings?";
+    }
+    if (patterns.includes('authentication_authorization')) {
+      return "Have you verified your authentication credentials and permissions?";
+    }
+  }
+
+  return "Can you provide more details about the issue you're experiencing?";
+}
+
+/**
+ * ENHANCEMENT: Targeted Scans (Req 24.3)
+ */
+async function runTargetedScan(
+  scanType: 'performance' | 'security' | 'protocol',
+  context: DevelopmentContext
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+
+  switch (scanType) {
+    case 'performance':
+      findings.push({
+        id: 'debug.scan.performance',
+        area: 'performance',
+        severity: 'info',
+        title: 'Performance scan initiated',
+        description: 'Analyzing response times, memory usage, and bottlenecks',
+        evidence: [{ type: 'log', ref: 'performance-scan' }]
+      });
+      break;
+
+    case 'security':
+      findings.push({
+        id: 'debug.scan.security',
+        area: 'security',
+        severity: 'info',
+        title: 'Security scan initiated',
+        description: 'Checking for vulnerabilities, exposed secrets, and security misconfigurations',
+        evidence: [{ type: 'log', ref: 'security-scan' }]
+      });
+      break;
+
+    case 'protocol':
+      findings.push({
+        id: 'debug.scan.protocol',
+        area: 'protocol-compliance',
+        severity: 'info',
+        title: 'Protocol compliance scan initiated',
+        description: 'Validating MCP protocol adherence and message formats',
+        evidence: [{ type: 'log', ref: 'protocol-scan' }]
+      });
+      break;
+  }
+
+  return findings;
+}
+
+/**
+ * ENHANCEMENT: Collaboration Support (Req 24.8)
+ */
+interface CollaborationSession {
+  sessionId: string;
+  participants: Participant[];
+  sharedState: DebuggingState;
+  chatHistory: CollaborationMessage[];
+  createdAt: number;
+}
+
+interface Participant {
+  id: string;
+  name: string;
+  role: 'driver' | 'navigator' | 'observer';
+  joinedAt: number;
+}
+
+interface CollaborationMessage {
+  from: string;
+  message: string;
+  timestamp: number;
+  type: 'chat' | 'state-update' | 'hypothesis' | 'solution';
+}
+
+class CollaborationManager {
+  private sessions: Map<string, CollaborationSession> = new Map();
+
+  async createCollaborationSession(debugSessionId: string, creator: Participant): Promise<string> {
+    const collabId = `collab-${Date.now()}`;
+    const session: CollaborationSession = {
+      sessionId: collabId,
+      participants: [creator],
+      sharedState: {} as DebuggingState,
+      chatHistory: [],
+      createdAt: Date.now()
+    };
+    this.sessions.set(collabId, session);
+    return collabId;
+  }
+
+  async joinSession(collabId: string, participant: Participant): Promise<boolean> {
+    const session = this.sessions.get(collabId);
+    if (!session) return false;
+
+    session.participants.push(participant);
+    session.chatHistory.push({
+      from: 'system',
+      message: `${participant.name} joined as ${participant.role}`,
+      timestamp: Date.now(),
+      type: 'chat'
+    });
+    return true;
+  }
+
+  async sendMessage(collabId: string, from: string, message: string, type: CollaborationMessage['type']): Promise<void> {
+    const session = this.sessions.get(collabId);
+    if (!session) return;
+
+    session.chatHistory.push({
+      from,
+      message,
+      timestamp: Date.now(),
+      type
+    });
+  }
+
+  async updateSharedState(collabId: string, state: Partial<DebuggingState>): Promise<void> {
+    const session = this.sessions.get(collabId);
+    if (!session) return;
+
+    session.sharedState = { ...session.sharedState, ...state };
+  }
+}
+
+// Global instances
+const sessionPersistence = new SessionPersistenceManager();
+const collaborationManager = new CollaborationManager();

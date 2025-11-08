@@ -8,7 +8,7 @@
 ## Errors
 
 - ❌ Markdown syntax validation failed: markdownlint-cli2 v0.18.1 (markdownlint v0.38.0)
-Finding: **/*.md !node_modules !.nx !dist !reports !enhanced-reports **/*.md !node_modules/** !.nx/** !dist/** !reports/** !enhanced-reports/** !packages/insula-mcp/node_modules/**
+Finding: **/*.md !node_modules !.nx !dist !reports !enhanced-reports **/*.md !node_modules/** !.nx/**!dist/** !reports/**!enhanced-reports/** !packages/insula-mcp/node_modules/**
 Linting: 51 file(s)
 Summary: 733 error(s)
 
@@ -35,7 +35,7 @@ Summary: 733 error(s)
 
 ## Warnings
 
-- ⚠️ Link validation failed for .insula/rules/RULES_OF_AI.md: 
+- ⚠️ Link validation failed for .insula/rules/RULES_OF_AI.md:
 FILE: .insula/rules/RULES_OF_AI.md
   [✖] /.cortex/rules/_time-freshness.md
   [✖] /.cortex/rules/vision.md
@@ -58,7 +58,7 @@ FILE: .insula/rules/RULES_OF_AI.md
   [✖] /docs/governance/standards-mapping.md → Status: 400
   [✖] /docs/governance/eu-ai-act-dates.md → Status: 400
 
-- ⚠️ Link validation failed for .insula/rules/agentic-coding-workflow.md: 
+- ⚠️ Link validation failed for .insula/rules/agentic-coding-workflow.md:
 FILE: .insula/rules/agentic-coding-workflow.md
   [✖] ../../security/semgrep/packs/brainwav-custom.yml
   [✓] #tdd-plan-reuse-ledger-g5-evidence-hook
@@ -88,7 +88,7 @@ FILE: .insula/rules/agentic-coding-workflow.md
   [✖] ../../scripts/ci/security-scan.sh → Status: 400
   [✖] ../../scripts/narrated-diff.ts → Status: 400
 
-- ⚠️ Link validation failed for .insula/rules/agentic-phase-policy.md: 
+- ⚠️ Link validation failed for .insula/rules/agentic-phase-policy.md:
 FILE: .insula/rules/agentic-phase-policy.md
   [✖] ../../.github/workflows/pr-quality-gates.yml
   [✖] ../../.github/PULL_REQUEST_TEMPLATE/default.md
@@ -97,14 +97,14 @@ FILE: .insula/rules/agentic-phase-policy.md
   [✖] ../../.github/workflows/pr-quality-gates.yml → Status: 400
   [✖] ../../.github/PULL_REQUEST_TEMPLATE/default.md → Status: 400
 
-- ⚠️ Link validation failed for .insula/rules/code-review-checklist.md: 
+- ⚠️ Link validation failed for .insula/rules/code-review-checklist.md:
 FILE: .insula/rules/code-review-checklist.md
   [✖] ../../.github/PULL_REQUEST_TEMPLATE/default.md
 
   1 link checked.
   [✖] ../../.github/PULL_REQUEST_TEMPLATE/default.md → Status: 400
 
-- ⚠️ Link validation failed for CODESTYLE.md: 
+- ⚠️ Link validation failed for CODESTYLE.md:
 FILE: CODESTYLE.md
   [✖] ./docs/architecture/decisions/004-node-24-active-lts.md
   [✖] security/semgrep/packs/brainwav-custom.yml
@@ -119,7 +119,7 @@ FILE: CODESTYLE.md
   [✖] ./.eslintrc.cjs → Status: 400
   [✖] ./eslint.config.js → Status: 400
 
-- ⚠️ Link validation failed for CODE_OF_CONDUCT.md: 
+- ⚠️ Link validation failed for CODE_OF_CONDUCT.md:
 FILE: CODE_OF_CONDUCT.md
   [✓] code_of_conduct.md
   [✓] #community-standards
@@ -155,7 +155,7 @@ FILE: CODE_OF_CONDUCT.md
   [✖] mailto:security@cortex-os.dev → Status: 400
   [✖] https://img.shields.io/badge/safe-space-protected-green.svg → Status: 404
 
-- ⚠️ Link validation failed for CONTRIBUTING.md: 
+- ⚠️ Link validation failed for CONTRIBUTING.md:
 FILE: CONTRIBUTING.md
   [✓] CODE_OF_CONDUCT.md
   [✖] #community-guidelines
@@ -192,7 +192,7 @@ FILE: CONTRIBUTING.md
   [✖] #security → Status: 404
   [✖] #recognition → Status: 404
 
-- ⚠️ Link validation failed for README.md: 
+- ⚠️ Link validation failed for README.md:
 FILE: README.md
   [✖] https://github.com/brainwav/insula-mcp/actions
   [✖] https://www.npmjs.com/package/@brainwav/insula-mcp
@@ -229,7 +229,7 @@ FILE: README.md
   [✖] https://docs.brainwav.io/mcp → Status: 0
   [✖] https://github.com/brainwav/insula-mcp/workflows/Insula%20MCP%20Diagnose/badge.svg → Status: 404
 
-- ⚠️ Link validation failed for packages/insula-mcp/README.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/README.md:
 FILE: packages/insula-mcp/README.md
   [✖] https://www.npmjs.com/package/@brainwav/insula-mcp
   [✓] LICENSE
@@ -249,7 +249,7 @@ FILE: packages/insula-mcp/README.md
   14 links checked.
   [✖] https://www.npmjs.com/package/@brainwav/insula-mcp → Status: 403
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/API_REFERENCE.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/API_REFERENCE.md:
 FILE: packages/insula-mcp/docs/API_REFERENCE.md
   [✓] #core-interfaces
   [✓] #cli-commands
@@ -290,7 +290,7 @@ FILE: packages/insula-mcp/docs/API_REFERENCE.md
   [✖] https://github.com/brainwav/insula-mcp/tree/main/examples/integrations → Status: 404
   [✖] https://github.com/brainwav/insula-mcp/tree/main/examples/configs → Status: 404
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/DEPLOYMENT.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/DEPLOYMENT.md:
 FILE: packages/insula-mcp/docs/DEPLOYMENT.md
   [✓] ./GETTING_STARTED.md
   [✖] mailto:support@brainwav.com
@@ -298,7 +298,7 @@ FILE: packages/insula-mcp/docs/DEPLOYMENT.md
   2 links checked.
   [✖] mailto:support@brainwav.com → Status: 400
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/GETTING_STARTED.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/GETTING_STARTED.md:
 FILE: packages/insula-mcp/docs/GETTING_STARTED.md
   [✓] ./USER_GUIDE.md
   [✓] ./API_REFERENCE.md
@@ -318,7 +318,7 @@ FILE: packages/insula-mcp/docs/GETTING_STARTED.md
   [✖] https://github.com/brainwav/insula-mcp/issues → Status: 404
   [✖] https://github.com/brainwav/insula-mcp/discussions → Status: 404
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md:
 FILE: packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md
   [✖] ./examples
   [✖] ./LICENSE
@@ -333,7 +333,7 @@ FILE: packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md
   [✖] ./examples → Status: 400
   [✖] ./LICENSE → Status: 400
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/TROUBLESHOOTING.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/TROUBLESHOOTING.md:
 FILE: packages/insula-mcp/docs/TROUBLESHOOTING.md
   [✖] https://github.com/brainwav/insula-mcp/issues/new
   [✓] ./GETTING_STARTED.md
@@ -354,7 +354,7 @@ FILE: packages/insula-mcp/docs/TROUBLESHOOTING.md
   [✖] https://github.com/brainwav/insula-mcp/tree/main/docs → Status: 404
   [✖] https://brainwav.dev → Status: 0
 
-- ⚠️ Link validation failed for packages/insula-mcp/docs/USER_GUIDE.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/docs/USER_GUIDE.md:
 FILE: packages/insula-mcp/docs/USER_GUIDE.md
   [✓] #overview
   [✓] #installation
@@ -384,7 +384,7 @@ FILE: packages/insula-mcp/docs/USER_GUIDE.md
   [✖] https://github.com/brainwav/insula-mcp/issues → Status: 404
   [✖] ./README.md → Status: 400
 
-- ⚠️ Link validation failed for packages/insula-mcp/ide-extensions/README.md: 
+- ⚠️ Link validation failed for packages/insula-mcp/ide-extensions/README.md:
 FILE: packages/insula-mcp/ide-extensions/README.md
   [✖] ../docs/ide-integration.md
   [✖] http://localhost:3000

@@ -1,8 +1,8 @@
 import { Worker } from "node:worker_threads";
 import { httpAdapter } from "./adapters/http.js";
 import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
-import { createInspectorSession } from "./context/inspector-session.js";
-import type { ConversationalPlugin, DevelopmentContext, DevelopmentPlugin, DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding } from "./types.js";
+import { createInspectorSession, type SharedSessionState } from "./context/inspector-session.js";
+import type { ConversationalPlugin, DevelopmentContext, DevelopmentPlugin, DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding, TransportTranscript } from "./types.js";
 
 export interface SandboxBudgets {
   timeMs: number;
@@ -11,12 +11,14 @@ export interface SandboxBudgets {
 
 export async function runPlugins({
   endpoint,
+  headers,
   suites,
   full,
   deterministic,
   budgets
 }: {
   endpoint: string;
+  headers?: Record<string, string>;
   suites: string[];
   full: boolean;
   deterministic: boolean;
@@ -24,11 +26,31 @@ export async function runPlugins({
 }): Promise<{ findings: Finding[] }> {
   const plugins = pickPlugins(suites, full);
   const findings: Finding[] = [];
-  const fallbackCtx = createFallbackCtx(endpoint, deterministic);
+  const authHeaders: Record<string, string> = { ...(headers ?? {}) };
+  const sharedSession: SharedSessionState = {
+    sessionId: authHeaders["mcp-session-id"],
+    initialize: undefined,
+    initialized: Boolean(authHeaders["mcp-session-id"]),
+  };
+
+  await bootstrapSession(endpoint, authHeaders, sharedSession);
+
+  const fallbackCtx = createFallbackCtx(endpoint, deterministic, authHeaders, {
+    preinitialized: sharedSession.initialized,
+    sharedState: sharedSession,
+  });
 
   for (const plugin of plugins) {
     try {
-      const results = await runWithSandbox(plugin.id, endpoint, deterministic, budgets, fallbackCtx);
+      const results = await runWithSandbox(
+        plugin.id,
+        endpoint,
+        deterministic,
+        budgets,
+        fallbackCtx,
+        authHeaders,
+        sharedSession,
+      );
       findings.push(...results);
     } catch (error) {
       findings.push({
@@ -98,12 +120,52 @@ function pickDevelopmentPlugins(suites: string[], full: boolean): DevelopmentPlu
   return DEVELOPMENT_PLUGINS.filter((p) => wanted.has(p.id));
 }
 
-function createFallbackCtx(endpoint: string, deterministic: boolean): DiagnosticContext {
-  const session = createInspectorSession(endpoint);
+async function bootstrapSession(
+  endpoint: string,
+  headers: Record<string, string>,
+  sharedSession: SharedSessionState,
+): Promise<void> {
+  if (sharedSession.initialized) return;
+  const bootstrap = createInspectorSession(endpoint, headers);
+  try {
+    await bootstrap.jsonrpc("tools/list");
+  } catch {
+    // Swallow bootstrap failures; transcripts still capture initialize exchange if it succeeded.
+  }
+  const transcript = bootstrap.transport?.transcript();
+  if (transcript?.sessionId) {
+    sharedSession.sessionId = transcript.sessionId;
+    sharedSession.initialize = transcript.initialize ? { ...transcript.initialize } : undefined;
+    sharedSession.initialized = true;
+    headers["mcp-session-id"] = transcript.sessionId;
+  }
+}
+
+function createFallbackCtx(
+  endpoint: string,
+  deterministic: boolean,
+  headers: Record<string, string>,
+  sessionOptions?: { preinitialized?: boolean; sharedState?: SharedSessionState },
+): DiagnosticContext {
+  const session = createInspectorSession(endpoint, headers, sessionOptions);
+  const baseHeaders = headers ?? {};
   return {
     endpoint,
+    headers: baseHeaders,
     logger: (...args: unknown[]) => console.log("[brAInwav]", ...args),
-    request: httpAdapter,
+    request: (input, init) => {
+      const mergedHeaders =
+        Object.keys(baseHeaders).length === 0 && !init?.headers
+          ? init?.headers
+          : {
+              ...baseHeaders,
+              ...(init?.headers as Record<string, string> | undefined),
+            };
+      const nextInit = mergedHeaders
+        ? { ...(init ?? {}), headers: mergedHeaders }
+        : init;
+      return httpAdapter(input, nextInit);
+    },
     jsonrpc: session.jsonrpc,
     sseProbe: session.sseProbe,
     evidence: (ev: EvidencePointer) => console.log("[evidence]", ev),
@@ -117,16 +179,28 @@ async function runWithSandbox(
   endpoint: string,
   deterministic: boolean,
   budgets: SandboxBudgets,
-  fallbackCtx: ReturnType<typeof createFallbackCtx>
+  fallbackCtx: ReturnType<typeof createFallbackCtx>,
+  headers: Record<string, string>,
+  sharedSession: SharedSessionState,
 ): Promise<Finding[]> {
   const workerUrl = new URL("./workers/sandbox.js", import.meta.url);
   try {
-    return await launchWorker(pluginId, endpoint, deterministic, budgets, workerUrl);
+    return await launchWorker(
+      pluginId,
+      endpoint,
+      deterministic,
+      budgets,
+      workerUrl,
+      headers,
+      sharedSession,
+    );
   } catch (error) {
     console.warn("[brAInwav] Sandbox boot failed; running in-process:", error);
     const plugin = getPluginById(pluginId);
     if (!plugin) throw new Error(`Unknown plugin: ${pluginId}`);
-    return await plugin.run(fallbackCtx);
+    const findings = await plugin.run(fallbackCtx);
+    const transcript = fallbackCtx.transport?.transcript();
+    return transcript ? [...findings, buildTransportFinding(pluginId, transcript)] : findings;
   }
 }
 
@@ -135,11 +209,24 @@ function launchWorker(
   endpoint: string,
   deterministic: boolean,
   budgets: SandboxBudgets,
-  workerUrl: URL
+  workerUrl: URL,
+  headers: Record<string, string>,
+  sharedSession: SharedSessionState,
 ): Promise<Finding[]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(workerUrl, {
-      workerData: { pluginId, ctxInit: { endpoint, deterministic } },
+      workerData: {
+        pluginId,
+        ctxInit: {
+          endpoint,
+          deterministic,
+          headers,
+          preinitialized: sharedSession.initialized,
+          sessionState: sharedSession.initialized
+            ? { sessionId: sharedSession.sessionId, initialize: sharedSession.initialize }
+            : undefined,
+        },
+      },
       resourceLimits: { maxOldGenerationSizeMb: Math.max(32, Math.floor(budgets.memMb)) }
     });
 
@@ -211,6 +298,29 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
     candidate.type === "result" ||
     candidate.type === "error"
   );
+}
+function buildTransportFinding(pluginId: string, transcript: TransportTranscript): Finding {
+  return {
+    id: `transport.session.${pluginId}`,
+    area: "framework",
+    severity: "info",
+    title: `Transport session (${pluginId})`,
+    description: `session=${transcript.sessionId ?? "n/a"} exchanges=${
+      transcript.exchanges.length
+    }`,
+    evidence: [
+      {
+        type: "log",
+        ref: JSON.stringify(
+          {
+            initialize: transcript.initialize?.response ?? null,
+            recent: transcript.exchanges.slice(-2),
+          },
+        ).slice(0, 600),
+      },
+    ],
+    tags: ["transport", "evidence"],
+  };
 }
 async function runDevelopmentPlugin(
   plugin: DevelopmentPlugin,

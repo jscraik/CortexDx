@@ -16,7 +16,7 @@
 - **⚡ CI/CD Ready**: GitHub Actions integration with severity-based failure modes
 - **♿ Accessibility**: WCAG 2.2 AA compliant CLI output with screen reader support
 - **🎯 Deterministic**: Reproducible results with `--deterministic` mode for reliable testing
-- **🧠 Self-Improvement**: Built-in internal diagnostics plugin highlights handshake, dependency, and health regressions inside Insula MCP itself
+- **🧠 Internal Self-Improvement** *(Brainwav dev builds only)*: Internal diagnostics plugin highlights handshake, dependency, and health regressions inside Insula MCP itself
 
 ## 📦 Quick Start
 

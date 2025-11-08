@@ -1,12 +1,18 @@
 import { parentPort, workerData } from "node:worker_threads";
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "../types.js";
+import type { DiagnosticContext, DiagnosticPlugin, Finding, TransportExchange } from "../types.js";
 import { getPluginById } from "../plugins/index.js";
 import { httpAdapter } from "../adapters/http.js";
-import { createInspectorSession } from "../context/inspector-session.js";
+import { createInspectorSession, type SharedSessionState } from "../context/inspector-session.js";
 
 type Inbound = {
   pluginId: string;
-  ctxInit: { endpoint: string; headers?: Record<string, string>; deterministic?: boolean };
+  ctxInit: {
+    endpoint: string;
+    headers?: Record<string, string>;
+    deterministic?: boolean;
+    preinitialized?: boolean;
+    sessionState?: { sessionId?: string; initialize?: TransportExchange };
+  };
 };
 
 const data = workerData as Inbound;
@@ -15,13 +21,32 @@ async function main(): Promise<void> {
   const plugin: DiagnosticPlugin | undefined = getPluginById(data.pluginId);
   if (!plugin) throw new Error(`Unknown plugin id: ${data.pluginId}`);
 
-  const session = createInspectorSession(data.ctxInit.endpoint, data.ctxInit.headers);
+  const workerSharedState: SharedSessionState | undefined = data.ctxInit.sessionState
+    ? {
+        sessionId: data.ctxInit.sessionState.sessionId,
+        initialize: data.ctxInit.sessionState.initialize,
+        initialized: Boolean(data.ctxInit.sessionState.sessionId),
+      }
+    : undefined;
 
+  const session = createInspectorSession(data.ctxInit.endpoint, data.ctxInit.headers, {
+    preinitialized: data.ctxInit.preinitialized,
+    sharedState: workerSharedState,
+  });
+
+  const baseHeaders = data.ctxInit.headers ?? {};
   const ctx: DiagnosticContext = {
     endpoint: data.ctxInit.endpoint,
-    headers: data.ctxInit.headers,
+    headers: baseHeaders,
     logger: (...args: unknown[]) => parentPort?.postMessage({ type: "log", args }),
-    request: httpAdapter,
+    request: (input, init) => {
+      const merged =
+        Object.keys(baseHeaders).length === 0 && !init?.headers
+          ? init?.headers
+          : { ...baseHeaders, ...(init?.headers as Record<string, string> | undefined) };
+      const nextInit = merged ? { ...(init ?? {}), headers: merged } : init;
+      return httpAdapter(input, nextInit);
+    },
     jsonrpc: session.jsonrpc,
     sseProbe: session.sseProbe,
     governance: undefined,

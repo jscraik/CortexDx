@@ -4,8 +4,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { getAcademicRegistry } from "../src/registry/index.js";
 import { SemanticScholarProvider } from "../src/providers/academic/semantic-scholar.mcp.js";
+import { getAcademicRegistry } from "../src/registry/index.js";
 import type { DiagnosticContext } from "../src/types.js";
 
 // Mock diagnostic context for testing
@@ -24,13 +24,14 @@ describe("Academic Providers Registry", () => {
         const registry = getAcademicRegistry();
         const providers = registry.getAllProviders();
 
-        expect(Object.keys(providers)).toHaveLength(6);
+        expect(Object.keys(providers)).toHaveLength(7);
         expect(providers).toHaveProperty("semantic-scholar");
         expect(providers).toHaveProperty("openalex");
         expect(providers).toHaveProperty("wikidata");
         expect(providers).toHaveProperty("arxiv");
         expect(providers).toHaveProperty("vibe-check");
         expect(providers).toHaveProperty("context7");
+        expect(providers).toHaveProperty("exa");
     });
 
     it("should provide correct capabilities for each provider", () => {
