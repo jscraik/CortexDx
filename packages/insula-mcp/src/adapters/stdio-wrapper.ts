@@ -326,7 +326,12 @@ function parseArgs(): StdioWrapperConfig {
       case '-t': {
         const timeoutArg = args[++i];
         if (timeoutArg) {
-          config.timeout = Number.parseInt(timeoutArg, 10) * 1000;
+          const timeoutSec = +timeoutArg;
+          if (!Number.isNaN(timeoutSec) && timeoutSec > 0) {
+            config.timeout = timeoutSec * 1000;
+          } else {
+            console.warn(`Invalid timeout value: "${timeoutArg}". Timeout must be a positive integer.`);
+          }
         }
         break;
       }
