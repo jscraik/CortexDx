@@ -1,0 +1,188 @@
+name: Deploy to Production
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: "Deployment environment"
+                required: true
+                type: choice
+                options:
+                    - staging
+                    - production
+            tier:
+                description: "Deployment tier"
+                required: true
+                type: choice
+                options:
+                    - community
+                    - professional
+                    - enterprise
+
+env:
+    NODE_VERSION: "20.11.1"
+    PNPM_VERSION: "9.12.2"
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    validate:
+        name: Validate Build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: ${{ env.PNPM_VERSION }}
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Run linter
+              run: pnpm lint
+
+            - name: Run tests
+              run: pnpm test
+
+            - name: Build package
+              run: pnpm build
+
+    build-and-push-docker:
+        name: Build and Push Docker Images
+        needs: validate
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        strategy:
+            matrix:
+                tier: [community, professional, enterprise]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Log in to Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Extract metadata
+              id: meta
+              uses: docker/metadata-action@v5
+              with:
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                  tags: |
+                      type=semver,pattern={{version}},suffix=-${{ matrix.tier }}
+                      type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.tier }}
+                      type=semver,pattern={{major}},suffix=-${{ matrix.tier }}
+                      type=raw,value=latest-${{ matrix.tier }}
+
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  file: packages/insula-mcp/Dockerfile.${{ matrix.tier }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+                  platforms: linux/amd64,linux/arm64
+                  build-args: |
+                      BUILD_DATE=${{ github.event.head_commit.timestamp }}
+                      VCS_REF=${{ github.sha }}
+                      VERSION=${{ github.ref_name }}
+
+    deploy-kubernetes:
+        name: Deploy to Kubernetes
+        needs: build-and-push-docker
+        runs-on: ubuntu-latest
+        if: github.event_name == 'workflow_dispatch'
+        environment: ${{ github.event.inputs.environment }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup kubectl
+              uses: azure/setup-kubectl@v3
+              with:
+                  version: "latest"
+
+            - name: Setup Helm
+              uses: azure/setup-helm@v3
+              with:
+                  version: "latest"
+
+            - name: Configure kubectl
+              run: |
+                  echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+                  export KUBECONFIG=kubeconfig
+
+            - name: Deploy with Helm
+              run: |
+                  helm upgrade --install insula-mcp-${{ github.event.inputs.tier }} \
+                    ./packages/insula-mcp/kubernetes/helm/insula-mcp \
+                    --namespace insula-mcp \
+                    --create-namespace \
+                    --set tier=${{ github.event.inputs.tier }} \
+                    --set image.tag=${{ github.ref_name }}-${{ github.event.inputs.tier }} \
+                    --set secrets.licenseKey="${{ secrets.INSULA_LICENSE_KEY }}" \
+                    --set secrets.auth0Domain="${{ secrets.AUTH0_DOMAIN }}" \
+                    --set secrets.auth0ClientId="${{ secrets.AUTH0_CLIENT_ID }}" \
+                    --set secrets.auth0ClientSecret="${{ secrets.AUTH0_CLIENT_SECRET }}" \
+                    --wait \
+                    --timeout 10m
+
+            - name: Verify deployment
+              run: |
+                  kubectl rollout status deployment/insula-mcp-${{ github.event.inputs.tier }} \
+                    -n insula-mcp \
+                    --timeout=5m
+
+            - name: Run smoke tests
+              run: |
+                  POD=$(kubectl get pod -n insula-mcp -l app.kubernetes.io/name=insula-mcp -o jsonpath="{.items[0].metadata.name}")
+                  kubectl exec -n insula-mcp $POD -- node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+    notify:
+        name: Notify Deployment
+        needs: [build-and-push-docker, deploy-kubernetes]
+        runs-on: ubuntu-latest
+        if: always()
+        steps:
+            - name: Notify Slack
+              if: ${{ secrets.SLACK_WEBHOOK_URL }}
+              uses: slackapi/slack-github-action@v1
+              with:
+                  payload: |
+                      {
+                        "text": "Deployment ${{ needs.deploy-kubernetes.result == 'success' && '✅ Successful' || '❌ Failed' }}",
+                        "blocks": [
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "*Insula MCP Deployment*\n\nEnvironment: ${{ github.event.inputs.environment }}\nTier: ${{ github.event.inputs.tier }}\nVersion: ${{ github.ref_name }}\nStatus: ${{ needs.deploy-kubernetes.result }}"
+                            }
+                          }
+                        ]
+                      }
+              env:
+                  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+                  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

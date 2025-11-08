@@ -1,0 +1,167 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: insula-mcp-backup
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    component: backup
+spec:
+  # Run daily at 2 AM
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: insula-mcp
+            component: backup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: insula-mcp-backup
+          containers:
+            - name: backup
+              image: brainwav/insula-mcp:latest-community
+              command: ["/bin/bash", "/app/scripts/backup.sh"]
+              env:
+                - name: BACKUP_DIR
+                  value: "/backups"
+                - name: DATA_DIR
+                  value: "/app/data"
+                - name: PATTERNS_DIR
+                  value: "/app/patterns"
+                - name: MODELS_DIR
+                  value: "/app/models"
+                - name: CONFIG_DIR
+                  value: "/app/config"
+                - name: RETENTION_DAYS
+                  value: "30"
+                - name: BACKUP_MODELS
+                  value: "false"
+                - name: BACKUP_REMOTE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup-secrets
+                      key: remote-url
+                      optional: true
+              volumeMounts:
+                - name: data
+                  mountPath: /app/data
+                  readOnly: true
+                - name: patterns
+                  mountPath: /app/patterns
+                  readOnly: true
+                - name: models
+                  mountPath: /app/models
+                  readOnly: true
+                - name: config
+                  mountPath: /app/config
+                  readOnly: true
+                - name: backups
+                  mountPath: /backups
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: insula-mcp-data-pvc
+            - name: patterns
+              persistentVolumeClaim:
+                claimName: insula-mcp-patterns-pvc
+            - name: models
+              persistentVolumeClaim:
+                claimName: insula-mcp-models-pvc
+            - name: config
+              configMap:
+                name: insula-mcp-config
+            - name: backups
+              persistentVolumeClaim:
+                claimName: insula-mcp-backups-pvc
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: insula-mcp-backup
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    component: backup
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: insula-mcp-backup
+  namespace: insula-mcp
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: insula-mcp-backup
+  namespace: insula-mcp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: insula-mcp-backup
+subjects:
+  - kind: ServiceAccount
+    name: insula-mcp-backup
+    namespace: insula-mcp
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: insula-mcp-backups-pvc
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    component: backup
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-secrets
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    component: backup
+type: Opaque
+stringData:
+  # Set your remote backup URL (S3, GCS, Azure Blob)
+  # Examples:
+  # S3: s3://my-bucket/insula-mcp-backups
+  # GCS: gs://my-bucket/insula-mcp-backups
+  # Azure: https://myaccount.blob.core.windows.net/backups
+  remote-url: ""
+
+  # Cloud provider credentials (if needed)
+  aws-access-key-id: ""
+  aws-secret-access-key: ""
+  gcp-service-account-key: ""
+  azure-storage-account-key: ""

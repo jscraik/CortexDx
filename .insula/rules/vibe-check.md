@@ -22,14 +22,26 @@ The Vibe Check MCP gate provides mandatory human-in-the-loop oversight before an
 
 ### 2.1 Academic Research Integration (Mandatory)
 
-Before running vibe check, all implementation plans MUST be enhanced with academic research and validated for license compliance:
+Before running vibe check, all implementation plans MUST be enhanced with academic research and validated for license compliance by using the academic MCP providers that ship with Insula (Wikidata, arXiv, Semantic Scholar, OpenAlex, Context7, EXA, Vibe Check). Invoke the tool definitions in `packages/insula-mcp/src/tools/academic-integration-tools.ts` via your preferred MCP client (Insula CLI, `curl`, or another MCP-aware agent), capture the JSON-RPC transcripts, and store them under `~/.insula-mcp/tasks/<slug>/logs/academic-research/`. A minimal example using `validate_architecture_academic`:
 
 ```bash
-# Complete research enhancement workflow with license validation
-pnpm oversight:academic-research --goal "<task>" --plan "<steps>" --session <session-id> \
-  --save ~/.insula-mcp/tasks/<slug>/logs/academic-research/findings.json \
-  --validate-licenses \
-  --risk-threshold review
+curl -s ${ACADEMIC_MCP_URL:-http://127.0.0.1:3029}/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "jsonrpc":"2.0",
+        "id":"acad-001",
+        "method":"tools/call",
+        "params":{
+          "name":"validate_architecture_academic",
+          "arguments":{
+            "architectureSpec":"<plan summary>",
+            "researchDomains":["distributed systems","security"],
+            "includeLicenseValidation":true,
+            "checkCodeQuality":true
+          }
+        }
+      }' \
+  | tee ~/.insula-mcp/tasks/<slug>/logs/academic-research/validate_architecture_academic.json
 ```
 
 **Research Requirements:**
@@ -62,12 +74,7 @@ pnpm oversight:academic-research --goal "<task>" --plan "<steps>" --session <ses
 
 ### 3.1 CLI Shortcut
 
-```bash
-# Complete workflow with academic research integration
-pnpm oversight:vibe-check --goal "<task summary>" --plan "<ordered steps>" --session <session-id> \
-  --save ~/.insula-mcp/tasks/<slug>/logs/vibe-check/initial.json \
-  --with-academic-research
-```
+Use the bundled Vibe Check MCP provider at `${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}` (tools `vibe_check`, `vibe_learn`). Submit a `tools/call` request containing the current goal, ≤7-step plan, academic evidence pointers, and OWASP LLM control mapping; save the JSON response under `~/.insula-mcp/tasks/<slug>/logs/vibe-check/<session-id>.json`. A `curl` invocation identical to the JSON-RPC example in §3.3 is sufficient; CLI wrappers are optional as long as the stored transcript shows the provider’s approval.
 
 **Parameters:**
 

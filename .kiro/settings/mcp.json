@@ -11,7 +11,9 @@
       "autoApprove": [
         "git_branch",
         "git_checkout",
-        "git_add_or_commit"
+        "git_add_or_commit",
+        "git_push",
+        "git_status"
       ]
     }
   }

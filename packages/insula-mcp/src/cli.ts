@@ -261,6 +261,105 @@ program
     process.exitCode = code;
   });
 
+// Self-healing commands
+program
+  .command("self-diagnose")
+  .description("run comprehensive self-diagnosis and auto-fixing")
+  .option("--auto-fix", "automatically apply fixes for identified issues")
+  .option("--dry-run", "show what would be fixed without making changes")
+  .option("--severity <level>", "minimum severity level to auto-fix (blocker,major,minor,info)", "major")
+  .option("--no-backup", "skip creating backups before applying fixes")
+  .option("--validate", "run post-fix validation to verify fixes")
+  .option("--out <file>", "save report to JSON file")
+  .action(async (opts) => {
+    const { runSelfDiagnose } = await import("./commands/self-healing.js");
+    const code = await runSelfDiagnose(opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("heal")
+  .description("diagnose and attempt to fix issues with an MCP endpoint")
+  .argument("<endpoint>", "MCP endpoint URL to diagnose and heal")
+  .option("--auto-fix", "automatically apply fixes (default: false for external endpoints)")
+  .option("--dry-run", "show what would be fixed without making changes")
+  .option("--severity <level>", "minimum severity level to auto-fix", "major")
+  .option("--probes <list>", "comma-separated list of probes to run", "all")
+  .option("--webhook <url>", "send results to webhook URL")
+  .option("--out <file>", "save report to JSON file")
+  .action(async (endpoint, opts) => {
+    const { runHealEndpoint } = await import("./commands/self-healing.js");
+    const code = await runHealEndpoint(endpoint, opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("monitor")
+  .description("start background monitoring with auto-healing")
+  .option("--start", "start the monitoring scheduler")
+  .option("--stop", "stop the monitoring scheduler")
+  .option("--status", "show monitoring status")
+  .option("--interval <seconds>", "check interval in seconds", "300")
+  .option("--auto-heal", "enable automatic healing for issues")
+  .option("--webhook <url>", "send notifications to webhook URL")
+  .option("--config <file>", "load monitoring configuration from file")
+  .option("--export <file>", "export current configuration to file")
+  .action(async (opts) => {
+    const { runMonitoring } = await import("./commands/self-healing.js");
+    const code = await runMonitoring(opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("templates")
+  .description("manage fix templates")
+  .addCommand(
+    new Command("list")
+      .description("list available fix templates")
+      .option("--area <type>", "filter by area (security,performance,protocol,development)")
+      .option("--severity <level>", "filter by severity (blocker,major,minor,info)")
+      .action(async (opts) => {
+        const { runTemplatesList } = await import("./commands/templates.js");
+        const code = await runTemplatesList(opts);
+        process.exitCode = code;
+      })
+  )
+  .addCommand(
+    new Command("apply")
+      .description("apply a fix template")
+      .argument("<template-id>", "template identifier")
+      .option("--dry-run", "show what would be changed without applying")
+      .option("--no-backup", "skip creating backups")
+      .option("--validate", "run validation after applying")
+      .action(async (templateId, opts) => {
+        const { runTemplateApply } = await import("./commands/templates.js");
+        const code = await runTemplateApply(templateId, opts);
+        process.exitCode = code;
+      })
+  )
+  .addCommand(
+    new Command("show")
+      .description("show template details")
+      .argument("<template-id>", "template identifier")
+      .action(async (templateId) => {
+        const { runTemplateShow } = await import("./commands/templates.js");
+        const code = await runTemplateShow(templateId);
+        process.exitCode = code;
+      })
+  );
+
+program
+  .command("health")
+  .description("quick health check")
+  .option("--endpoint <url>", "check specific endpoint (default: self)")
+  .option("--webhook <url>", "send health status to webhook")
+  .option("--json", "output in JSON format")
+  .action(async (opts) => {
+    const { runHealthCheck } = await import("./commands/health.js");
+    const code = await runHealthCheck(opts);
+    process.exitCode = code;
+  });
+
 program.parseAsync().catch((e) => {
   console.error("[brAInwav] fatal:", e?.stack || String(e));
   process.exit(1);

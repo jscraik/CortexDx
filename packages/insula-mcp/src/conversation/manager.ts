@@ -1,6 +1,7 @@
 /**
  * Conversation Manager for Development Assistance
  * Manages conversational sessions for MCP development guidance
+ * Enhanced with persistent storage for cross-session learning
  */
 
 import type {
@@ -9,10 +10,34 @@ import type {
     ConversationSession,
     DevelopmentContext
 } from "../types.js";
+import { ConversationStorage } from "../storage/conversation-storage.js";
+import type { ConversationExport } from "../storage/conversation-storage.js";
 
 export class ConversationManager {
     private sessions = new Map<string, ConversationSession>();
     private readonly sessionTimeout = 30 * 60 * 1000; // 30 minutes
+    private storage: ConversationStorage;
+
+    constructor(persistencePath?: string) {
+        this.storage = new ConversationStorage(persistencePath);
+        // Restore sessions from disk on startup
+        this.restoreSessions();
+    }
+
+    private async restoreSessions(): Promise<void> {
+        try {
+            const restored = await this.storage.restoreFromDisk();
+            if (restored > 0) {
+                const sessions = await this.storage.loadAllConversations();
+                for (const session of sessions) {
+                    this.sessions.set(session.id, session);
+                }
+                console.log(`Restored ${restored} conversation sessions from disk`);
+            }
+        } catch (error) {
+            console.error("Failed to restore sessions:", error);
+        }
+    }
 
     async startConversation(
         ctx: DevelopmentContext,
@@ -36,6 +61,9 @@ export class ConversationManager {
         };
 
         this.sessions.set(sessionId, session);
+
+        // Persist to storage
+        await this.storage.saveConversation(session);
 
         // Clean up old sessions
         this.cleanupExpiredSessions();
@@ -76,6 +104,9 @@ export class ConversationManager {
         };
 
         session.context.conversationHistory.push(assistantMessage);
+
+        // Persist updated session
+        await this.storage.saveConversation(session);
 
         return response;
     }
@@ -180,6 +211,8 @@ export class ConversationManager {
         for (const [sessionId, session] of this.sessions.entries()) {
             if (now - session.lastActivity > this.sessionTimeout) {
                 this.sessions.delete(sessionId);
+                // Also delete from persistent storage
+                this.storage.deleteConversation(sessionId);
             }
         }
     }
@@ -192,7 +225,38 @@ export class ConversationManager {
         return Array.from(this.sessions.values());
     }
 
-    endSession(sessionId: string): boolean {
-        return this.sessions.delete(sessionId);
+    async endSession(sessionId: string): Promise<boolean> {
+        const deleted = this.sessions.delete(sessionId);
+        if (deleted) {
+            await this.storage.deleteConversation(sessionId);
+        }
+        return deleted;
+    }
+
+    /**
+     * Export conversations for backup or transfer
+     */
+    async exportConversations(sessionIds?: string[]) {
+        return await this.storage.exportConversations(sessionIds);
+    }
+
+    /**
+     * Import conversations from backup
+     */
+    async importConversations(exportData: ConversationExport) {
+        const imported = await this.storage.importConversations(exportData);
+        // Reload sessions into memory
+        const sessions = await this.storage.loadAllConversations();
+        for (const session of sessions) {
+            this.sessions.set(session.id, session);
+        }
+        return imported;
+    }
+
+    /**
+     * Get storage statistics
+     */
+    getStorageStats() {
+        return this.storage.getStats();
     }
 }

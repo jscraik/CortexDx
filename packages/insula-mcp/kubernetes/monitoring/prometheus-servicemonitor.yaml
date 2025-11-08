@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: insula-mcp
+  namespace: insula-mcp
+  labels:
+    app: insula-mcp
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: insula-mcp
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      scheme: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: "go_.*"
+          action: drop
+  namespaceSelector:
+    matchNames:
+      - insula-mcp

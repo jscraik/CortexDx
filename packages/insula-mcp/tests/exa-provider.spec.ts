@@ -3,7 +3,7 @@
  * Verifies API-key handling and result mapping
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExaProvider } from "../src/providers/academic/exa.mcp.js";
 import type { DiagnosticContext } from "../src/types.js";
 
@@ -20,6 +20,10 @@ const baseContext: DiagnosticContext = {
 const originalFetch = globalThis.fetch;
 
 describe("ExaProvider search", () => {
+  beforeEach(() => {
+    delete process.env.EXA_API_KEY;
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     if (originalFetch) {

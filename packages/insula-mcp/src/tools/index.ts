@@ -10,6 +10,7 @@ export { createDevelopmentTools } from "./development-tools.js";
 export { createDiagnosticTools } from "./diagnostic-tools.js";
 export { ideIntegrationTools } from "./ide-integration-tools.js";
 export { createLicenseValidationTools } from "./license-validation-tools.js";
+export { createPluginOrchestrationTools, executePluginOrchestrationTool } from "./plugin-orchestration-tools.js";
 
 import type { McpTool } from "../types.js";
 import { createAcademicIntegrationTools } from "./academic-integration-tools.js";
@@ -19,6 +20,7 @@ import { createDevelopmentTools } from "./development-tools.js";
 import { createDiagnosticTools } from "./diagnostic-tools.js";
 import { ideIntegrationTools } from "./ide-integration-tools.js";
 import { createLicenseValidationTools } from "./license-validation-tools.js";
+import { createPluginOrchestrationTools } from "./plugin-orchestration-tools.js";
 
 /**
  * Get all MCP tools organized by category
@@ -31,6 +33,7 @@ export const getAllMcpTools = (): Record<string, McpTool[]> => ({
   commercial: createCommercialFeatureTools(),
   license: createLicenseValidationTools(),
   ide: ideIntegrationTools,
+  orchestration: createPluginOrchestrationTools(),
 });
 
 /**

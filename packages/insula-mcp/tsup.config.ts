@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/cli.ts", "src/index.ts", "src/server.ts", "src/workers/sandbox.ts", "src/plugins/index.ts"],
+  entry: ["src/cli.ts", "src/index.ts", "src/server.ts", "src/workers/sandbox.ts", "src/plugins/index.ts", "src/adapters/stdio-wrapper.ts"],
   format: ["esm"],
   splitting: false,
   sourcemap: true,

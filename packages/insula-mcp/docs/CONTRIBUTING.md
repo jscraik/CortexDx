@@ -127,6 +127,12 @@ We follow **ArcTDD (Architecture-Test-Driven Development)** with strict guidelin
 - Test against mock servers when relevant: `npx insula-mcp diagnose`
 - Validate outputs make sense and include proper branding
 
+### Internal Self-Improvement Diagnostics (Brainwav dev team only)
+
+- Run `pnpm internal:self-improvement -- --endpoint http://127.0.0.1:5001` from the workspace root to execute the internal-only plugin against a local Insula instance.
+- Optional flags: `--project <path>` to target a different package, `--history <file>` for JSON-formatted chat history, and `--out <file>` to persist findings.
+- This runner executes TypeScript directly via `tsx`, stays outside the published `dist/` bundle, and satisfies the "internal only" requirement—do not enable or ship it with commercial builds.
+
 ## Testing Strategy
 
 ### Test Structure

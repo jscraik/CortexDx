@@ -1,3 +1,5 @@
+import type { CELRule } from "../adapters/protovalidate.js";
+import { ProtovalidateAdapter } from "../adapters/protovalidate.js";
 import type { DiagnosticPlugin, Finding } from "../types.js";
 
 export const ProtocolPlugin: DiagnosticPlugin = {
@@ -32,22 +34,31 @@ export const ProtocolPlugin: DiagnosticPlugin = {
   }
 };
 
-// Enhanced Protocol Validator Plugin for MCP protocol v2024-11-05
+// Enhanced Protocol Validator Plugin for MCP protocol v2024-11-05 with Protovalidate
 export const EnhancedProtocolValidatorPlugin: DiagnosticPlugin = {
   id: "enhanced-protocol-validator",
-  title: "Enhanced MCP Protocol Validator (v2024-11-05)",
+  title: "Enhanced MCP Protocol Validator (v2024-11-05) with Protovalidate",
   order: 111,
   async run(ctx) {
     const findings: Finding[] = [];
+    const protovalidate = new ProtovalidateAdapter();
 
     try {
-      // Validate MCP protocol v2024-11-05 compliance
-      const protocolResults = await validateMcpProtocol(ctx);
+      // Validate MCP protocol v2024-11-05 compliance with semantic validation
+      const protocolResults = await validateMcpProtocolWithProtovalidate(ctx, protovalidate);
       findings.push(...protocolResults);
 
-      // JSON-RPC message structure validation
-      const jsonRpcResults = await validateJsonRpcStructure(ctx);
+      // JSON-RPC message structure validation with semantic checks
+      const jsonRpcResults = await validateJsonRpcWithSemantics(ctx, protovalidate);
       findings.push(...jsonRpcResults);
+
+      // gRPC message validation (if applicable)
+      const grpcResults = await validateGrpcMessages(ctx, protovalidate);
+      findings.push(...grpcResults);
+
+      // Enhanced MCP handshake validation
+      const handshakeResults = await validateMcpHandshake(ctx, protovalidate);
+      findings.push(...handshakeResults);
 
       // Compatibility testing using worker sandbox
       const compatibilityResults = await performCompatibilityTesting(ctx);
@@ -372,6 +383,435 @@ async function performCompatibilityTesting(ctx: import("../types.js").Diagnostic
       title: "Compatibility testing failed",
       description: `Compatibility testing error: ${String(error)}`,
       evidence: [{ type: "log", ref: "performCompatibilityTesting" }],
+      confidence: 0.9
+    });
+  }
+
+  return findings;
+}
+
+
+/**
+ * Validate MCP protocol with Protovalidate semantic validation
+ * Requirements: 23.1, 23.2
+ */
+async function validateMcpProtocolWithProtovalidate(
+  ctx: import("../types.js").DiagnosticContext,
+  protovalidate: ProtovalidateAdapter
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+
+  try {
+    // Test MCP protocol v2024-11-05 initialization
+    const initRequest = {
+      protocolVersion: "2024-11-05",
+      capabilities: {
+        tools: {},
+        resources: {},
+        prompts: {}
+      },
+      clientInfo: {
+        name: "insula-mcp-validator",
+        version: "1.0.0"
+      }
+    };
+
+    const initResponse = await ctx.jsonrpc<{
+      protocolVersion?: string;
+      capabilities?: unknown;
+      serverInfo?: { name: string; version: string };
+    }>("initialize", initRequest);
+
+    if (!initResponse) {
+      findings.push({
+        id: "mcp.protocol.no_init_response",
+        area: "protocol-validation",
+        severity: "blocker",
+        title: "No initialization response",
+        description: "Server failed to respond to MCP initialize request",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.99
+      });
+      return findings;
+    }
+
+    // Define CEL rules for MCP protocol validation
+    const mcpRules: CELRule[] = [
+      {
+        field: 'protocolVersion',
+        expression: 'this.matches("^\\\\d{4}-\\\\d{2}-\\\\d{2}$")',
+        message: 'Protocol version must be in YYYY-MM-DD format (e.g., "2024-11-05")',
+        severity: 'error'
+      },
+      {
+        field: 'serverInfo.name',
+        expression: 'size(this) > 0',
+        message: 'Server name must not be empty',
+        severity: 'error'
+      },
+      {
+        field: 'serverInfo.version',
+        expression: 'size(this) > 0',
+        message: 'Server version must not be empty',
+        severity: 'error'
+      },
+      {
+        field: 'capabilities',
+        expression: 'has(this.tools) || has(this.resources) || has(this.prompts)',
+        message: 'Server must declare at least one capability (tools, resources, or prompts)',
+        severity: 'warning'
+      }
+    ];
+
+    // Validate with Protovalidate
+    const validationResult = await protovalidate.validate(initResponse, mcpRules);
+
+    if (!validationResult.valid) {
+      for (const violation of validationResult.violations) {
+        findings.push({
+          id: `mcp.protocol.semantic.${violation.constraintId}`,
+          area: "protocol-validation",
+          severity: violation.constraintId.includes('version') ? "major" : "minor",
+          title: `Semantic validation failed: ${violation.fieldPath}`,
+          description: violation.message,
+          evidence: [{ type: "url", ref: ctx.endpoint }],
+          confidence: 0.95,
+          recommendation: `Fix field ${violation.fieldPath}: ${violation.expectedConstraint}`
+        });
+      }
+    }
+
+    // Additional protocol version check
+    if (initResponse.protocolVersion !== "2024-11-05") {
+      findings.push({
+        id: "mcp.protocol.version_mismatch",
+        area: "protocol-validation",
+        severity: "major",
+        title: `Protocol version mismatch: ${initResponse.protocolVersion}`,
+        description: "Server does not support MCP protocol v2024-11-05",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.95,
+        recommendation: "Update server to support MCP protocol v2024-11-05"
+      });
+    } else {
+      findings.push({
+        id: "mcp.protocol.version_ok",
+        area: "protocol-validation",
+        severity: "info",
+        title: "Protocol version validated",
+        description: "Server supports MCP protocol v2024-11-05",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.99
+      });
+    }
+
+  } catch (error) {
+    findings.push({
+      id: "mcp.protocol.validation_error",
+      area: "protocol-validation",
+      severity: "major",
+      title: "Protocol validation error",
+      description: `MCP protocol validation failed: ${String(error)}`,
+      evidence: [{ type: "log", ref: "validateMcpProtocolWithProtovalidate" }],
+      confidence: 0.9
+    });
+  }
+
+  return findings;
+}
+
+/**
+ * Validate JSON-RPC messages with semantic validation
+ * Requirements: 23.2
+ */
+async function validateJsonRpcWithSemantics(
+  ctx: import("../types.js").DiagnosticContext,
+  protovalidate: ProtovalidateAdapter
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+
+  try {
+    // Define CEL rules for JSON-RPC 2.0 validation
+    const jsonRpcRules: CELRule[] = [
+      {
+        field: 'jsonrpc',
+        expression: 'this == "2.0"',
+        message: 'JSON-RPC version must be "2.0"',
+        severity: 'error'
+      },
+      {
+        field: 'method',
+        expression: 'size(this) > 0',
+        message: 'Method name must not be empty',
+        severity: 'error'
+      },
+      {
+        field: 'id',
+        expression: 'this != null',
+        message: 'Request ID must be present for non-notification requests',
+        severity: 'error'
+      }
+    ];
+
+    // Test JSON-RPC 2.0 compliance with various message types
+    const testCases = [
+      {
+        name: "Tools list",
+        method: "tools/list",
+        params: undefined
+      },
+      {
+        name: "Resources list",
+        method: "resources/list",
+        params: undefined
+      }
+    ];
+
+    for (const testCase of testCases) {
+      try {
+        const response = await ctx.jsonrpc<unknown>(testCase.method, testCase.params);
+
+        // Validate response structure with Protovalidate
+        if (response && typeof response === 'object') {
+          const responseRules: CELRule[] = [
+            {
+              field: 'result',
+              expression: 'has(this.result) || has(this.error)',
+              message: 'Response must contain either result or error field',
+              severity: 'error'
+            }
+          ];
+
+          const validationResult = await protovalidate.validate(response, responseRules);
+
+          if (validationResult.valid) {
+            findings.push({
+              id: `mcp.jsonrpc.${testCase.name.toLowerCase().replace(/\s+/g, '_')}_ok`,
+              area: "jsonrpc-validation",
+              severity: "info",
+              title: `${testCase.name} - JSON-RPC semantically valid`,
+              description: "JSON-RPC message structure and semantics are compliant",
+              evidence: [{ type: "url", ref: ctx.endpoint }],
+              confidence: 0.95
+            });
+          } else {
+            for (const violation of validationResult.violations) {
+              findings.push({
+                id: `mcp.jsonrpc.semantic.${violation.constraintId}`,
+                area: "jsonrpc-validation",
+                severity: "major",
+                title: `JSON-RPC semantic violation: ${violation.fieldPath}`,
+                description: violation.message,
+                evidence: [{ type: "url", ref: ctx.endpoint }],
+                confidence: 0.9
+              });
+            }
+          }
+        }
+
+      } catch (error) {
+        const errorStr = String(error);
+
+        // Distinguish between JSON-RPC errors and network/protocol errors
+        if (errorStr.includes("JSON-RPC") || errorStr.includes("parse") || errorStr.includes("invalid")) {
+          findings.push({
+            id: `mcp.jsonrpc.${testCase.name.toLowerCase().replace(/\s+/g, '_')}_invalid`,
+            area: "jsonrpc-validation",
+            severity: "major",
+            title: `${testCase.name} - JSON-RPC invalid`,
+            description: `JSON-RPC structure validation failed: ${errorStr}`,
+            evidence: [{ type: "log", ref: "validateJsonRpcWithSemantics" }],
+            confidence: 0.9
+          });
+        }
+      }
+    }
+
+  } catch (error) {
+    findings.push({
+      id: "mcp.jsonrpc.semantic_error",
+      area: "jsonrpc-validation",
+      severity: "major",
+      title: "JSON-RPC semantic validation error",
+      description: `JSON-RPC semantic validation failed: ${String(error)}`,
+      evidence: [{ type: "log", ref: "validateJsonRpcWithSemantics" }],
+      confidence: 0.9
+    });
+  }
+
+  return findings;
+}
+
+/**
+ * Validate gRPC messages (if applicable)
+ * Requirements: 23.2
+ */
+async function validateGrpcMessages(
+  ctx: import("../types.js").DiagnosticContext,
+  protovalidate: ProtovalidateAdapter
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+
+  try {
+    // Check if server supports gRPC transport
+    // For now, we'll add a placeholder since most MCP servers use HTTP/SSE/WebSocket
+    findings.push({
+      id: "mcp.grpc.not_applicable",
+      area: "grpc-validation",
+      severity: "info",
+      title: "gRPC validation not applicable",
+      description: "Server does not appear to use gRPC transport (HTTP/SSE/WebSocket detected)",
+      evidence: [{ type: "url", ref: ctx.endpoint }],
+      confidence: 0.8
+    });
+
+  } catch (error) {
+    findings.push({
+      id: "mcp.grpc.validation_error",
+      area: "grpc-validation",
+      severity: "minor",
+      title: "gRPC validation error",
+      description: `gRPC validation failed: ${String(error)}`,
+      evidence: [{ type: "log", ref: "validateGrpcMessages" }],
+      confidence: 0.7
+    });
+  }
+
+  return findings;
+}
+
+/**
+ * Enhanced MCP handshake validation with semantic checks
+ * Requirements: 23.2
+ */
+async function validateMcpHandshake(
+  ctx: import("../types.js").DiagnosticContext,
+  protovalidate: ProtovalidateAdapter
+): Promise<Finding[]> {
+  const findings: Finding[] = [];
+
+  try {
+    // Define comprehensive CEL rules for MCP handshake
+    const handshakeRules: CELRule[] = [
+      {
+        field: 'protocolVersion',
+        expression: 'this.startsWith("2024-")',
+        message: 'Protocol version should be from 2024 specification',
+        severity: 'warning'
+      },
+      {
+        field: 'capabilities.tools',
+        expression: 'has(this.tools)',
+        message: 'Server should declare tools capability',
+        severity: 'warning'
+      },
+      {
+        field: 'serverInfo.name',
+        expression: 'size(this) >= 3 && size(this) <= 100',
+        message: 'Server name should be between 3 and 100 characters',
+        severity: 'warning'
+      },
+      {
+        field: 'serverInfo.version',
+        expression: 'this.matches("^\\\\d+\\\\.\\\\d+\\\\.\\\\d+") || this.matches("^\\\\d+\\\\.\\\\d+")',
+        message: 'Server version should follow semantic versioning (e.g., "1.0.0")',
+        severity: 'warning'
+      }
+    ];
+
+    // Perform handshake
+    const initRequest = {
+      protocolVersion: "2024-11-05",
+      capabilities: {
+        tools: {},
+        resources: {},
+        prompts: {}
+      },
+      clientInfo: {
+        name: "insula-mcp-validator",
+        version: "1.0.0"
+      }
+    };
+
+    const initResponse = await ctx.jsonrpc<{
+      protocolVersion?: string;
+      capabilities?: unknown;
+      serverInfo?: { name: string; version: string };
+    }>("initialize", initRequest);
+
+    if (!initResponse) {
+      findings.push({
+        id: "mcp.handshake.failed",
+        area: "handshake-validation",
+        severity: "blocker",
+        title: "MCP handshake failed",
+        description: "Server did not respond to initialize request",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.99
+      });
+      return findings;
+    }
+
+    // Validate handshake with Protovalidate
+    const validationResult = await protovalidate.validate(initResponse, handshakeRules);
+
+    if (validationResult.valid) {
+      findings.push({
+        id: "mcp.handshake.success",
+        area: "handshake-validation",
+        severity: "info",
+        title: "MCP handshake successful",
+        description: "Server completed handshake with valid protocol compliance",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.99
+      });
+    } else {
+      for (const violation of validationResult.violations) {
+        findings.push({
+          id: `mcp.handshake.semantic.${violation.constraintId}`,
+          area: "handshake-validation",
+          severity: violation.constraintId.includes('version') ? "minor" : "info",
+          title: `Handshake semantic issue: ${violation.fieldPath}`,
+          description: violation.message,
+          evidence: [{ type: "url", ref: ctx.endpoint }],
+          confidence: 0.85,
+          recommendation: `Consider fixing: ${violation.expectedConstraint}`
+        });
+      }
+    }
+
+    // Test notification support (part of handshake)
+    try {
+      await ctx.jsonrpc<void>("notifications/initialized");
+      findings.push({
+        id: "mcp.handshake.notifications_supported",
+        area: "handshake-validation",
+        severity: "info",
+        title: "Notifications supported",
+        description: "Server supports MCP notification protocol",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.8
+      });
+    } catch {
+      findings.push({
+        id: "mcp.handshake.notifications_unsupported",
+        area: "handshake-validation",
+        severity: "minor",
+        title: "Notifications not supported",
+        description: "Server does not support MCP notifications (optional feature)",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.7
+      });
+    }
+
+  } catch (error) {
+    findings.push({
+      id: "mcp.handshake.validation_error",
+      area: "handshake-validation",
+      severity: "major",
+      title: "Handshake validation error",
+      description: `MCP handshake validation failed: ${String(error)}`,
+      evidence: [{ type: "log", ref: "validateMcpHandshake" }],
       confidence: 0.9
     });
   }

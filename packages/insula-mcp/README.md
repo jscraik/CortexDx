@@ -3,10 +3,25 @@
 [![npm version](https://img.shields.io/npm/v/@brainwav/insula-mcp.svg)](https://www.npmjs.com/package/@brainwav/insula-mcp)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Docker](https://img.shields.io/docker/v/brainwav/insula-mcp?label=docker)](https://hub.docker.com/r/brainwav/insula-mcp)
 
-**Comprehensive diagnostic meta-inspector for Model Context Protocol (MCP) servers and clients.** Provides stateless, plugin-based analysis with evidence-backed findings, ArcTDD implementation plans, and actionable remediation guidance.
+**Comprehensive diagnostic meta-inspector and AI-powered development assistant for Model Context Protocol (MCP) servers and clients.** Provides stateless, plugin-based analysis with evidence-backed findings, local LLM integration, academic research validation, and actionable remediation guidance.
+
+## 🎉 v1.0.0 Released
+
+Insula MCP v1.0.0 is now available with major enhancements:
+
+- 🤖 **Local LLM Integration**: Conversational development with Ollama, MLX, and llama.cpp
+- 🎓 **Academic Research Validation**: 7 integrated academic providers with license compliance
+- 💼 **Commercial Licensing**: Three tiers (Community, Professional, Enterprise)
+- 🧠 **Learning System**: Pattern recognition and RAG-based knowledge accumulation
+- 📊 **Enhanced Diagnostics**: Real-time monitoring and performance profiling
+
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details and [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for upgrade instructions.
 
 ## 🚀 Installation
+
+### NPM Package
 
 ```bash
 # Install globally
@@ -14,7 +29,46 @@ npm install -g @brainwav/insula-mcp
 
 # Or use with npx (recommended)
 npx @brainwav/insula-mcp diagnose https://your-mcp-server.com
+```
 
+### Docker (Recommended for Production)
+
+```bash
+# Quick deploy Community Edition
+curl -fsSL https://raw.githubusercontent.com/brainwav/insula-mcp/main/packages/insula-mcp/scripts/quick-deploy.sh | bash -s community
+
+# Or manually with Docker
+docker run -p 3000:3000 brainwav/insula-mcp:1.0.0-community
+
+# Professional Edition (requires license)
+docker run -p 3000:3000 \
+  -e INSULA_LICENSE_KEY=your-key \
+  -e OLLAMA_HOST=ollama:11434 \
+  brainwav/insula-mcp:1.0.0-professional
+
+# Enterprise Edition (requires license and Auth0)
+docker run -p 3000:3000 \
+  -e INSULA_LICENSE_KEY=your-key \
+  -e AUTH0_DOMAIN=your-domain.auth0.com \
+  -e AUTH0_CLIENT_ID=your-client-id \
+  -e AUTH0_CLIENT_SECRET=your-secret \
+  brainwav/insula-mcp:1.0.0-enterprise
+```
+
+### Docker Compose
+
+```bash
+# Clone repository
+git clone https://github.com/brainwav/insula-mcp.git
+cd insula-mcp/packages/insula-mcp
+
+# Start with docker-compose
+docker-compose up insula-mcp-community
+```
+
+### Development Setup
+
+```bash
 # For development/contribution
 git clone https://github.com/brainwav/insula-mcp.git
 cd insula-mcp

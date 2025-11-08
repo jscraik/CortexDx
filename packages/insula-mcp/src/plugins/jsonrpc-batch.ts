@@ -12,11 +12,22 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
       { jsonrpc: "2.0", id: 7, method: "tools/list" }
     ];
 
+    try {
+      await ctx.jsonrpc<unknown>("rpc.ping");
+    } catch (error) {
+      ctx.logger("[brAInwav] jsonrpc-batch preflight ping failed", error);
+    }
+    const sessionHeaders = ctx.transport?.headers?.() ?? ctx.headers ?? {};
+
     let response: unknown;
     try {
       const res = await fetch(ctx.endpoint, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          accept: "application/json, text/event-stream",
+          ...sessionHeaders,
+        },
         body: JSON.stringify(body)
       });
       response = await res.json();

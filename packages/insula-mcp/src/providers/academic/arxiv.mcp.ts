@@ -417,7 +417,6 @@ export class ArxivProvider {
                 }
             });
             return response.ok;
-            return true;
         } catch {
             return false;
         }

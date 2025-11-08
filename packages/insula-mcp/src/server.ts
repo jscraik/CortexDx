@@ -10,9 +10,25 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { extname, join } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import { ConversationManager } from "./conversation/manager.js";
+import { AutoHealer } from "./healing/auto-healer.js";
+import { MonitoringScheduler } from "./healing/scheduler.js";
 import { createLlmOrchestrator } from "./ml/index.js";
+import {
+    performHealthCheck,
+    recordDiagnostic,
+    recordRequest,
+    updateActiveConnections,
+    updateConversations,
+} from "./observability/health-checks.js";
+import { getGlobalMonitoring } from "./observability/monitoring.js";
 import { runPlugins } from "./plugin-host.js";
+import { createAuthMiddleware, createToolAccessMiddleware, type AuthenticatedRequest, type AuthMiddlewareConfig } from "./plugins/auth-middleware.js";
+import type { LicenseKey } from "./plugins/commercial-licensing.js";
+import { createFeatureAccessMiddleware, createLicenseEnforcementMiddleware, type LicenseEnforcementConfig } from "./plugins/license-enforcement.js";
 import { getAcademicRegistry } from "./registry/index.js";
+import { TemplateEngine } from "./template-engine/engine.js";
+import type { FixTemplate } from "./templates/fix-templates.js";
+import { getTemplate, getTemplatesByArea, getTemplatesBySeverity } from "./templates/fix-templates.js";
 import { findMcpTool, getAllMcpToolsFlat } from "./tools/index.js";
 import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "./types.js";
 
@@ -21,6 +37,51 @@ const __dirname = join(__filename, '..');
 
 const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 5001;
 const HOST = process.env.HOST || "127.0.0.1";
+
+// Auth0 configuration from environment
+const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "";
+const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || "";
+const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || "";
+const REQUIRE_AUTH = process.env.REQUIRE_AUTH === "true";
+
+// License configuration from environment
+const REQUIRE_LICENSE = process.env.REQUIRE_LICENSE === "true";
+const DEFAULT_TIER = (process.env.DEFAULT_TIER as "community" | "professional" | "enterprise") || "community";
+
+// License database (in production, this would be backed by a database)
+const licenseDatabase = new Map<string, LicenseKey>();
+
+// Initialize demo licenses
+licenseDatabase.set("community-demo-key", {
+    key: "community-demo-key",
+    tier: "community",
+    features: ["basic-diagnostics", "protocol-validation", "core-mcp-tools"],
+});
+
+licenseDatabase.set("professional-demo-key", {
+    key: "professional-demo-key",
+    tier: "professional",
+    features: [
+        "basic-diagnostics",
+        "protocol-validation",
+        "core-mcp-tools",
+        "advanced-diagnostics",
+        "llm-backends",
+        "academic-validation",
+        "performance-profiling",
+        "security-scanning",
+    ],
+    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+});
+
+licenseDatabase.set("enterprise-demo-key", {
+    key: "enterprise-demo-key",
+    tier: "enterprise",
+    features: ["*"],
+    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+    organizationId: "demo-org",
+    maxUsers: 100,
+});
 
 // SSE clients for real-time updates
 const sseClients = new Set<ServerResponse>();
@@ -114,6 +175,9 @@ const executeDevelopmentTool = async (tool: McpTool, args: unknown, ctx: Develop
 const diagnoseMcpServer = async (args: unknown, ctx: DevelopmentContext): Promise<McpToolResult> => {
     const { endpoint, suites = [], full = false } = args as { endpoint: string; suites?: string[]; full?: boolean };
 
+    // Track diagnostic run
+    recordDiagnostic();
+
     // Broadcast diagnostic start event
     broadcastEvent('diagnostic_start', { endpoint, suites, full });
 
@@ -139,6 +203,7 @@ const diagnoseMcpServer = async (args: unknown, ctx: DevelopmentContext): Promis
 const startConversation = async (args: unknown, ctx: DevelopmentContext): Promise<McpToolResult> => {
     const { intent, context } = args as { intent: string; context?: string };
 
+    updateConversations(1);
     const session = await conversationManager.startConversation(ctx, intent, context);
 
     return {
@@ -153,6 +218,11 @@ const continueConversation = async (args: unknown, ctx: DevelopmentContext): Pro
     const { sessionId, userInput } = args as { sessionId: string; userInput: string };
 
     const response = await conversationManager.continueConversation(sessionId, userInput);
+
+    // If conversation completed, decrement counter
+    if (response.completed) {
+        updateConversations(-1);
+    }
 
     return {
         content: [{
@@ -235,7 +305,349 @@ const allMcpTools = getAllMcpToolsFlat();
 const conversationManager = new ConversationManager();
 const llmOrchestrator = createLlmOrchestrator();
 
+// Initialize Auth0 middleware
+const authMiddlewareConfig: AuthMiddlewareConfig = {
+    auth0: {
+        domain: AUTH0_DOMAIN,
+        clientId: AUTH0_CLIENT_ID,
+        audience: AUTH0_AUDIENCE,
+    },
+    requireAuth: REQUIRE_AUTH,
+    publicEndpoints: ["/", "/web/", "/health", "/events", "/providers"],
+};
+
+const authMiddleware = createAuthMiddleware(authMiddlewareConfig);
+const toolAccessMiddleware = createToolAccessMiddleware();
+
+// Initialize license enforcement middleware
+const licenseEnforcementConfig: LicenseEnforcementConfig = {
+    licenseDatabase,
+    requireLicense: REQUIRE_LICENSE,
+    defaultTier: DEFAULT_TIER,
+};
+
+const licenseEnforcementMiddleware = createLicenseEnforcementMiddleware(licenseEnforcementConfig);
+const featureAccessMiddleware = createFeatureAccessMiddleware();
+
+// Global scheduler for background monitoring
+const monitoringScheduler = new MonitoringScheduler({
+    endpoint: `http://${HOST}:${PORT}`,
+    logger: (...args) => console.log('[Monitoring]', ...args),
+    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+        const response = await fetch(input, init);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json() as T;
+    },
+    jsonrpc: async <T>(method: string, params?: unknown): Promise<T> => {
+        // Simple JSON-RPC implementation
+        return {} as T;
+    },
+    sseProbe: async () => ({ ok: true }),
+    evidence: () => undefined,
+    deterministic: true,
+    sessionId: `server-${Date.now()}`,
+    userExpertiseLevel: 'expert',
+    conversationHistory: [],
+});
+
+// Initialize global monitoring system
+const monitoring = getGlobalMonitoring();
+const ENABLE_MONITORING = process.env.ENABLE_MONITORING !== "false";
+const MONITORING_INTERVAL_MS = process.env.MONITORING_INTERVAL_MS
+    ? Number.parseInt(process.env.MONITORING_INTERVAL_MS)
+    : 60000; // 1 minute default
+
+if (ENABLE_MONITORING) {
+    monitoring.onAlert((alert) => {
+        console.warn(`[ALERT] ${alert.severity.toUpperCase()}: ${alert.component} - ${alert.message}`);
+        // Broadcast alert to SSE clients
+        broadcastEvent('alert', alert);
+    });
+}
+
+// Handle self-healing API requests
+async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
+    try {
+        const url = new URL(req.url || '/', `http://${req.headers.host}`);
+        const method = req.method;
+
+        // Set JSON response headers
+        res.setHeader('Content-Type', 'application/json');
+
+        // Create development context for operations
+        const createDevContext = (): DevelopmentContext => ({
+            endpoint: `http://${req.headers.host || 'localhost'}${req.url || '/'}`,
+            logger: (...args) => console.log('[SelfHealingAPI]', ...args),
+            request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+                const response = await fetch(input, init);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json() as T;
+            },
+            jsonrpc: async <T>(method: string, params?: unknown): Promise<T> => {
+                return {} as T;
+            },
+            sseProbe: async () => ({ ok: true }),
+            evidence: () => undefined,
+            deterministic: true,
+            sessionId: `api-${Date.now()}`,
+            userExpertiseLevel: 'expert',
+            conversationHistory: [],
+        });
+
+        // Route handling
+        if (path === '/api/v1/self-diagnose' && method === 'POST') {
+            // Self-diagnosis endpoint
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', async () => {
+                try {
+                    const options = body ? JSON.parse(body) : {};
+                    const ctx = createDevContext();
+                    const healer = new AutoHealer(ctx);
+
+                    const report = await healer.healSelf({
+                        autoFix: options.autoFix || false,
+                        dryRun: options.dryRun || false,
+                        severityThreshold: options.severity || 'major',
+                    });
+
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        report,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } catch (error) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: String(error),
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
+            return;
+        }
+
+        if (path === '/api/v1/health' && method === 'GET') {
+            // Quick health check endpoint
+            const ctx = createDevContext();
+            const healer = new AutoHealer(ctx);
+            const health = await healer.quickHealthCheck();
+
+            res.writeHead(200);
+            res.end(JSON.stringify({
+                success: true,
+                health,
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+
+        if (path === '/api/v1/templates' && method === 'GET') {
+            // List templates endpoint
+            const url = new URL(req.url || '/', `http://${req.headers.host}`);
+            const area = url.searchParams.get('area');
+            const severity = url.searchParams.get('severity');
+
+            let templates = Object.values(getTemplate);
+            if (area) templates = getTemplatesByArea(area);
+            if (severity) {
+                const severityValues: FixTemplate['severity'][] = ['blocker', 'major', 'minor', 'info'];
+                if (severityValues.includes(severity as FixTemplate['severity'])) {
+                    templates = getTemplatesBySeverity(severity as FixTemplate['severity']);
+                }
+            }
+
+            res.writeHead(200);
+            res.end(JSON.stringify({
+                success: true,
+                templates: templates.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    description: t.description,
+                    area: t.area,
+                    severity: t.severity,
+                    riskLevel: t.riskLevel,
+                    estimatedTime: t.estimatedTime,
+                    filesAffected: t.filesAffected,
+                })),
+                count: templates.length,
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+
+        if (path.startsWith('/api/v1/templates/') && method === 'POST') {
+            // Apply template endpoint
+            const templateId = path.split('/').pop();
+            if (!templateId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Template ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', async () => {
+                try {
+                    const options = body ? JSON.parse(body) : {};
+                    const ctx = createDevContext();
+                    const templateEngine = new TemplateEngine();
+
+                    // Create a mock finding for the template application
+                    const template = getTemplate(templateId);
+                    if (!template) {
+                        res.writeHead(404);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: `Template '${templateId}' not found`,
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    const mockFinding = {
+                        id: `api_${templateId}_${Date.now()}`,
+                        area: template.area,
+                        severity: template.severity,
+                        title: `API template application: ${template.name}`,
+                        description: `Applying fix template ${templateId} via API`,
+                        evidence: [],
+                        tags: ['api-applied'],
+                        templateId,
+                        canAutoFix: true,
+                    };
+
+                    const result = await templateEngine.applyTemplate(
+                        templateId,
+                        mockFinding,
+                        ctx,
+                        {
+                            dryRun: options.dryRun || false,
+                            backupEnabled: options.backup !== false,
+                            skipValidation: !options.validate,
+                        }
+                    );
+
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: result.success,
+                        result,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } catch (error) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: String(error),
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
+            return;
+        }
+
+        if (path === '/api/v1/monitor' && method === 'POST') {
+            // Monitoring control endpoint
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', async () => {
+                try {
+                    const options = body ? JSON.parse(body) : {};
+
+                    if (options.action === 'start') {
+                        monitoringScheduler.start({
+                            checkIntervalMs: (options.intervalSeconds || 300) * 1000,
+                            configs: options.configs,
+                        });
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            message: 'Monitoring started',
+                            status: monitoringScheduler.getStatus(),
+                            timestamp: new Date().toISOString(),
+                        }));
+                    } else if (options.action === 'stop') {
+                        monitoringScheduler.stop();
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            message: 'Monitoring stopped',
+                            timestamp: new Date().toISOString(),
+                        }));
+                    } else if (options.action === 'status') {
+                        const status = monitoringScheduler.getStatus();
+                        const jobs = monitoringScheduler.getJobs();
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            status,
+                            jobs,
+                            timestamp: new Date().toISOString(),
+                        }));
+                    } else {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Invalid action. Use: start, stop, or status',
+                            timestamp: new Date().toISOString(),
+                        }));
+                    }
+                } catch (error) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: String(error),
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
+            return;
+        }
+
+        // 404 for unknown API endpoints
+        res.writeHead(404);
+        res.end(JSON.stringify({
+            success: false,
+            error: 'API endpoint not found',
+            path,
+            method,
+            timestamp: new Date().toISOString(),
+        }));
+
+    } catch (error) {
+        console.error('Self-healing API error:', error);
+        res.writeHead(500);
+        res.end(JSON.stringify({
+            success: false,
+            error: 'Internal server error',
+            message: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString(),
+        }));
+    }
+}
+
 const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+    const requestStartTime = Date.now();
+
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -249,6 +661,36 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
     const url = new URL(req.url || '/', `http://${req.headers.host}`);
     const path = url.pathname;
+
+    // Track request metrics
+    const originalEnd = res.end.bind(res);
+    res.end = function (this: ServerResponse, chunk?: unknown, encoding?: unknown, callback?: unknown): ServerResponse {
+        const responseTime = Date.now() - requestStartTime;
+        const success = res.statusCode < 400;
+        recordRequest(responseTime, success);
+        // @ts-expect-error - Complex overload handling
+        return originalEnd(chunk, encoding, callback);
+    } as typeof res.end;
+
+    // Apply authentication middleware
+    let authPassed = false;
+    await authMiddleware(req, res, () => {
+        authPassed = true;
+    });
+
+    if (!authPassed) {
+        return; // Auth middleware already sent response
+    }
+
+    // Apply license enforcement middleware
+    let licensePassed = false;
+    await licenseEnforcementMiddleware(req, res, () => {
+        licensePassed = true;
+    });
+
+    if (!licensePassed) {
+        return; // License middleware already sent response
+    }
 
     try {
         // Serve web interface
@@ -274,6 +716,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             });
 
             sseClients.add(res);
+            updateActiveConnections(1);
 
             // Send initial connection event
             res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
@@ -281,6 +724,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             // Clean up on client disconnect
             req.on('close', () => {
                 sseClients.delete(res);
+                updateActiveConnections(-1);
             });
 
             return;
@@ -288,13 +732,101 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
         // Health check endpoint
         if (path === '/health') {
+            const detailed = url.searchParams.get('detailed') === 'true';
+            const startTime = Date.now();
+
+            try {
+                if (detailed) {
+                    // Comprehensive health check
+                    const ctx = createDiagnosticContext(req);
+                    const health = await performHealthCheck(ctx, {
+                        enableDetailedChecks: true,
+                        includeMetrics: true,
+                        timeout: 5000,
+                    });
+
+                    const responseTime = Date.now() - startTime;
+                    recordRequest(responseTime, true);
+
+                    res.writeHead(health.status === 'healthy' ? 200 : 503, {
+                        'Content-Type': 'application/json',
+                    });
+                    res.end(JSON.stringify(health));
+                } else {
+                    // Quick health check
+                    const responseTime = Date.now() - startTime;
+                    recordRequest(responseTime, true);
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        status: 'healthy',
+                        service: 'Insula MCP Server',
+                        version: '1.0.0',
+                        providers: Object.keys(registry.getAllProviders()),
+                        timestamp: new Date().toISOString(),
+                        responseTimeMs: responseTime,
+                    }));
+                }
+            } catch (error) {
+                const responseTime = Date.now() - startTime;
+                recordRequest(responseTime, false);
+
+                res.writeHead(503, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    status: 'unhealthy',
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        // Admin dashboard endpoint (requires admin role)
+        if (path === '/admin/dashboard') {
+            const authReq = req as AuthenticatedRequest;
+            const hasAdminRole = authReq.auth?.roles.includes('admin') ?? false;
+
+            if (!hasAdminRole && REQUIRE_AUTH) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    error: 'Forbidden',
+                    message: 'Admin role required for dashboard access'
+                }));
+                return;
+            }
+
+            const { getAdminDashboardImpl } = await import('./tools/commercial-feature-impl.js');
+            const result = await getAdminDashboardImpl();
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(result.content[0]?.text || '{}');
+            return;
+        }
+
+        // License management endpoint
+        if (path === '/admin/licenses') {
+            const authReq = req as AuthenticatedRequest;
+            const hasAdminRole = authReq.auth?.roles.includes('admin') ?? false;
+
+            if (!hasAdminRole && REQUIRE_AUTH) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    error: 'Forbidden',
+                    message: 'Admin role required for license management'
+                }));
+                return;
+            }
+
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
-                status: 'healthy',
-                service: 'Insula MCP Server',
-                version: '1.0.0',
-                providers: Object.keys(registry.getAllProviders()),
-                timestamp: new Date().toISOString()
+                licenses: Array.from(licenseDatabase.entries()).map(([key, license]) => ({
+                    key,
+                    tier: license.tier,
+                    features: license.features,
+                    expiresAt: license.expiresAt,
+                    organizationId: license.organizationId,
+                    maxUsers: license.maxUsers
+                }))
             }));
             return;
         }
@@ -322,6 +854,101 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             const healthResults = await registry.performHealthChecks(ctx);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(healthResults));
+            return;
+        }
+
+        // Monitoring endpoints
+        if (path === '/monitoring/status') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                monitoring: monitoring.getStatus(),
+                alerts: monitoring.getAlerts(),
+                timestamp: new Date().toISOString(),
+            }));
+            return;
+        }
+
+        if (path === '/monitoring/report') {
+            try {
+                const ctx = createDiagnosticContext(req);
+                monitoring.setContext(ctx);
+                const report = await monitoring.getReport();
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(report));
+            } catch (error) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (path === '/monitoring/alerts') {
+            if (req.method === 'GET') {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    alerts: monitoring.getAlerts(),
+                    count: monitoring.getAlerts().length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } else if (req.method === 'DELETE') {
+                monitoring.clearAlerts();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    message: 'Alerts cleared',
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (path === '/monitoring/control' && req.method === 'POST') {
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', () => {
+                try {
+                    const { action } = JSON.parse(body);
+
+                    if (action === 'start') {
+                        const ctx = createDiagnosticContext(req);
+                        monitoring.setContext(ctx);
+                        monitoring.start();
+
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            message: 'Monitoring started',
+                            status: monitoring.getStatus(),
+                            timestamp: new Date().toISOString(),
+                        }));
+                    } else if (action === 'stop') {
+                        monitoring.stop();
+
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            message: 'Monitoring stopped',
+                            status: monitoring.getStatus(),
+                            timestamp: new Date().toISOString(),
+                        }));
+                    } else {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            error: 'Invalid action. Use: start or stop',
+                            timestamp: new Date().toISOString(),
+                        }));
+                    }
+                } catch (error) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        error: error instanceof Error ? error.message : 'Invalid request',
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
             return;
         }
 
@@ -442,6 +1069,16 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                     if (request.method === 'tools/call') {
                         const { name, arguments: args } = request.params;
 
+                        // Check tool access authorization
+                        let toolAccessGranted = false;
+                        toolAccessMiddleware(req as AuthenticatedRequest, res, name, () => {
+                            toolAccessGranted = true;
+                        });
+
+                        if (!toolAccessGranted) {
+                            return; // Tool access middleware already sent response
+                        }
+
                         // Check if it's an MCP tool first
                         const mcpTool = findMcpTool(name);
                         if (mcpTool) {
@@ -522,6 +1159,12 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             return;
         }
 
+        // Self-healing API endpoints
+        if (path.startsWith('/api/v1/')) {
+            await handleSelfHealingAPI(req, res, path);
+            return;
+        }
+
         // 404 for unknown paths
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Not found' }));
@@ -542,7 +1185,7 @@ server.listen(PORT, HOST, () => {
     console.log(`🌐 Web Interface: http://${HOST}:${PORT}/`);
     console.log("\nEndpoints:");
     console.log("  GET  /              - Web Interface");
-    console.log("  GET  /health        - Health check");
+    console.log("  GET  /health        - Health check (add ?detailed=true for full report)");
     console.log("  GET  /events        - SSE real-time updates");
     console.log("  GET  /providers     - List all providers");
     console.log("  GET  /capabilities  - All provider capabilities");
@@ -550,11 +1193,49 @@ server.listen(PORT, HOST, () => {
     console.log("  POST /mcp           - MCP protocol endpoint");
     console.log("  GET  /providers/:id - Provider details");
     console.log("  POST /providers/:id/execute - Execute provider tool");
+    console.log("");
+    console.log("Monitoring API:");
+    console.log("  GET  /monitoring/status  - Monitoring system status");
+    console.log("  GET  /monitoring/report  - Comprehensive monitoring report");
+    console.log("  GET  /monitoring/alerts  - Current alerts");
+    console.log("  DELETE /monitoring/alerts - Clear alerts");
+    console.log("  POST /monitoring/control - Start/stop monitoring");
+    console.log("");
+    console.log("Self-Healing API:");
+    console.log("  POST /api/v1/self-diagnose - Run self-diagnosis with optional auto-fix");
+    console.log("  GET  /api/v1/health        - Quick health check");
+    console.log("  GET  /api/v1/templates      - List available fix templates");
+    console.log("  POST /api/v1/templates/:id - Apply a fix template");
+    console.log("  POST /api/v1/monitor       - Control background monitoring");
+
+    // Start monitoring if enabled
+    if (ENABLE_MONITORING) {
+        const ctx = {
+            endpoint: `http://${HOST}:${PORT}`,
+            logger: (...args: unknown[]) => console.log('[Monitoring]', ...args),
+            request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+                const response = await fetch(input, init);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json() as T;
+            },
+            jsonrpc: async <T>(): Promise<T> => ({} as T),
+            sseProbe: async () => ({ ok: true }),
+            evidence: () => undefined,
+            deterministic: true,
+        };
+
+        monitoring.setContext(ctx);
+        monitoring.start();
+        console.log(`\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`);
+    }
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('Received SIGTERM, shutting down gracefully');
+    monitoring.stop();
     server.close(() => {
         console.log('Server closed');
         process.exit(0);
@@ -563,6 +1244,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
     console.log('Received SIGINT, shutting down gracefully');
+    monitoring.stop();
     server.close(() => {
         console.log('Server closed');
         process.exit(0);

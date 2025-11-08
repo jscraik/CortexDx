@@ -1,0 +1,712 @@
+# Migration Guide to Insula MCP v1.0.0
+
+This guide helps you migrate from pre-1.0 versions of Insula MCP to the stable v1.0.0 release.
+
+## Overview
+
+Insula MCP v1.0.0 introduces significant enhancements including local LLM integration, academic research validation, commercial licensing tiers, and improved diagnostic capabilities. This guide covers breaking changes, new features, and step-by-step migration instructions.
+
+## Breaking Changes
+
+### 1. Package Name and Versioning
+
+**Before (v0.x):**
+
+```bash
+npm install insula-mcp
+```
+
+**After (v1.0.0):**
+
+```bash
+npm install @brainwav/insula-mcp
+```
+
+**Migration Steps:**
+
+1. Uninstall old package: `npm uninstall insula-mcp`
+2. Install new package: `npm install -g @brainwav/insula-mcp@1.0.0`
+3. Update any scripts or CI/CD configurations to use `@brainwav/insula-mcp`
+
+### 2. CLI Command Structure
+
+**Before (v0.x):**
+
+```bash
+insula diagnose <endpoint>
+```
+
+**After (v1.0.0):**
+
+```bash
+insula-mcp diagnose <endpoint>
+```
+
+**Migration Steps:**
+
+1. Update all CLI commands to use `insula-mcp` instead of `insula`
+2. Update shell scripts and automation tools
+3. Update CI/CD pipeline configurations
+
+### 3. Configuration File Format
+
+**Before (v0.x):**
+
+```json
+{
+  "endpoint": "https://mcp.example.com",
+  "suites": ["discovery", "protocol"]
+}
+```
+
+**After (v1.0.0):**
+
+```json
+{
+  "endpoint": "https://mcp.example.com",
+  "suites": ["discovery", "protocol"],
+  "tier": "community",
+  "llm": {
+    "backend": "ollama",
+    "model": "llama3:8b"
+  }
+}
+```
+
+**Migration Steps:**
+
+1. Add `tier` field to specify licensing tier (community/professional/enterprise)
+2. Add `llm` configuration if using Professional or Enterprise tier
+3. Update any custom configuration files
+
+### 4. Docker Image Names
+
+**Before (v0.x):**
+
+```bash
+docker pull brainwav/insula-mcp:latest
+```
+
+**After (v1.0.0):**
+
+```bash
+# Choose tier-specific image
+docker pull brainwav/insula-mcp:1.0.0-community
+docker pull brainwav/insula-mcp:1.0.0-professional
+docker pull brainwav/insula-mcp:1.0.0-enterprise
+```
+
+**Migration Steps:**
+
+1. Update docker-compose.yml to use tier-specific images
+2. Update Kubernetes manifests if applicable
+3. Update CI/CD deployment scripts
+
+### 5. Environment Variables
+
+**New Required Variables (Professional/Enterprise):**
+
+```bash
+# Professional Tier
+INSULA_MCP_TIER=professional
+INSULA_LICENSE_KEY=your-license-key
+OLLAMA_HOST=ollama:11434
+
+# Enterprise Tier (additional)
+AUTH0_DOMAIN=your-domain.auth0.com
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_CLIENT_SECRET=your-secret
+POSTGRES_PASSWORD=your-db-password
+```
+
+**Migration Steps:**
+
+1. Set `INSULA_MCP_TIER` environment variable
+2. Obtain and set license key for Professional/Enterprise tiers
+3. Configure Auth0 credentials for Enterprise tier
+4. Update deployment configurations with new variables
+
+## New Features
+
+### 1. Local LLM Integration (Professional/Enterprise)
+
+**Setup:**
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull recommended models
+ollama pull llama3:8b
+ollama pull codellama:7b
+
+# Configure Insula MCP
+export INSULA_MCP_LLM_BACKEND=ollama
+export OLLAMA_HOST=localhost:11434
+```
+
+**Usage:**
+
+```bash
+# Interactive development assistance
+insula-mcp interactive
+
+# Debug with AI assistance
+insula-mcp debug "SSE connection timeout"
+
+# Generate code from description
+insula-mcp generate
+```
+
+### 2. Academic Research Integration (Professional/Enterprise)
+
+**Configuration:**
+
+```bash
+# Enable academic providers
+export INSULA_ACADEMIC_PROVIDERS=context7,vibe-check,semantic-scholar
+
+# Configure license validation
+export INSULA_LICENSE_VALIDATION=strict
+```
+
+**Usage:**
+
+```bash
+# Get research-backed recommendations
+insula-mcp diagnose https://mcp.example.com --academic
+
+# Validate license compliance
+insula-mcp validate-licenses --report
+```
+
+### 3. Commercial Licensing
+
+**Obtaining a License:**
+
+1. Visit https://brainwav.io/insula-mcp/pricing
+2. Choose Professional or Enterprise tier
+3. Complete purchase and receive license key
+4. Set `INSULA_LICENSE_KEY` environment variable
+
+**Activating License:**
+
+```bash
+# Set license key
+export INSULA_LICENSE_KEY=your-license-key
+
+# Verify activation
+insula-mcp license verify
+
+# Check feature access
+insula-mcp license features
+```
+
+### 4. Pattern Storage and Learning
+
+**Configuration:**
+
+```bash
+# Enable pattern storage
+export INSULA_PATTERN_STORAGE=enabled
+export INSULA_PATTERN_DB=/app/data/patterns.db
+
+# Configure RAG system
+export INSULA_RAG_ENABLED=true
+export INSULA_EMBEDDING_MODEL=nomic-embed-text
+```
+
+**Usage:**
+
+```bash
+# View learned patterns
+insula-mcp patterns list
+
+# Export patterns
+insula-mcp patterns export --output patterns.json
+
+# Import patterns
+insula-mcp patterns import --input patterns.json
+```
+
+## Migration Paths
+
+### From v0.1.x to v1.0.0 (Community Tier)
+
+**Step 1: Update Package**
+
+```bash
+npm uninstall insula-mcp
+npm install -g @brainwav/insula-mcp@1.0.0
+```
+
+**Step 2: Update Scripts**
+
+```bash
+# Before
+insula diagnose https://mcp.example.com
+
+# After
+insula-mcp diagnose https://mcp.example.com
+```
+
+**Step 3: Update Docker Deployment**
+
+```yaml
+# docker-compose.yml
+services:
+  insula-mcp:
+    image: brainwav/insula-mcp:1.0.0-community
+    environment:
+      - INSULA_MCP_TIER=community
+```
+
+**Step 4: Test Migration**
+
+```bash
+# Run diagnostic to verify
+insula-mcp diagnose https://mcp.example.com --full
+
+# Check version
+insula-mcp --version
+```
+
+### From v0.1.x to v1.0.0 (Professional Tier)
+
+**Step 1: Obtain License**
+
+1. Purchase Professional license at https://brainwav.io/insula-mcp/pricing
+2. Receive license key via email
+3. Store license key securely
+
+**Step 2: Setup LLM Backend**
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull models
+ollama pull llama3:8b
+ollama pull codellama:7b
+ollama pull nomic-embed-text
+```
+
+**Step 3: Update Configuration**
+
+```bash
+# Set environment variables
+export INSULA_MCP_TIER=professional
+export INSULA_LICENSE_KEY=your-license-key
+export OLLAMA_HOST=localhost:11434
+export INSULA_MCP_LLM_BACKEND=ollama
+```
+
+**Step 4: Update Docker Deployment**
+
+```yaml
+# docker-compose.yml
+services:
+  insula-mcp:
+    image: brainwav/insula-mcp:1.0.0-professional
+    environment:
+      - INSULA_MCP_TIER=professional
+      - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - OLLAMA_HOST=ollama:11434
+    volumes:
+      - insula-models:/app/models
+      - insula-patterns:/app/patterns
+  
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-models:/root/.ollama
+```
+
+**Step 5: Verify Features**
+
+```bash
+# Verify license
+insula-mcp license verify
+
+# Test LLM integration
+insula-mcp interactive
+
+# Test code generation
+insula-mcp generate
+```
+
+### From v0.1.x to v1.0.0 (Enterprise Tier)
+
+**Step 1: Obtain Enterprise License**
+
+1. Contact enterprise@brainwav.io for Enterprise licensing
+2. Complete enterprise agreement
+3. Receive license key and Auth0 credentials
+
+**Step 2: Setup Auth0**
+
+1. Create Auth0 account or use existing
+2. Configure application in Auth0 dashboard
+3. Obtain domain, client ID, and client secret
+4. Configure callback URLs and permissions
+
+**Step 3: Setup Infrastructure**
+
+```bash
+# Install required services
+docker-compose -f docker-compose.enterprise.yml up -d postgres redis ollama
+```
+
+**Step 4: Configure Environment**
+
+```bash
+# Set all required variables
+export INSULA_MCP_TIER=enterprise
+export INSULA_LICENSE_KEY=your-license-key
+export OLLAMA_HOST=ollama:11434
+export AUTH0_DOMAIN=your-domain.auth0.com
+export AUTH0_CLIENT_ID=your-client-id
+export AUTH0_CLIENT_SECRET=your-secret
+export POSTGRES_PASSWORD=your-db-password
+export OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otel-collector.com
+```
+
+**Step 5: Deploy Enterprise Stack**
+
+```yaml
+# docker-compose.enterprise.yml
+services:
+  insula-mcp:
+    image: brainwav/insula-mcp:1.0.0-enterprise
+    environment:
+      - INSULA_MCP_TIER=enterprise
+      - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+    volumes:
+      - insula-data:/app/data
+      - insula-models:/app/models
+      - insula-analytics:/app/analytics
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+```
+
+**Step 6: Verify Enterprise Features**
+
+```bash
+# Verify license and features
+insula-mcp license verify
+insula-mcp license features
+
+# Test authentication
+insula-mcp auth login
+
+# Test analytics
+insula-mcp analytics dashboard
+```
+
+## Data Migration
+
+### Conversation History
+
+**Export from v0.x:**
+
+```bash
+# Not available in v0.x - no migration needed
+```
+
+**Import to v1.0.0:**
+
+```bash
+# Start fresh with v1.0.0 conversation storage
+# No action required
+```
+
+### Diagnostic Reports
+
+**Migrate Reports:**
+
+```bash
+# v0.x reports are compatible with v1.0.0
+# Copy reports directory
+cp -r old-reports/ new-reports/
+
+# Re-run diagnostics to update format
+insula-mcp diagnose https://mcp.example.com --out new-reports
+```
+
+### Pattern Storage
+
+**Initialize Pattern Storage:**
+
+```bash
+# Enable pattern storage
+export INSULA_PATTERN_STORAGE=enabled
+
+# Initialize database
+insula-mcp patterns init
+
+# System will learn patterns from new interactions
+```
+
+## CI/CD Migration
+
+### GitHub Actions
+
+**Before (v0.x):**
+
+```yaml
+- name: Run Diagnostics
+  run: npx insula diagnose ${{ secrets.MCP_ENDPOINT }}
+```
+
+**After (v1.0.0):**
+
+```yaml
+- name: Run Diagnostics
+  run: npx @brainwav/insula-mcp@1.0.0 diagnose ${{ secrets.MCP_ENDPOINT }}
+  env:
+    INSULA_MCP_TIER: community
+```
+
+### GitLab CI
+
+**Before (v0.x):**
+
+```yaml
+test:
+  script:
+    - npm install -g insula-mcp
+    - insula diagnose $MCP_ENDPOINT
+```
+
+**After (v1.0.0):**
+
+```yaml
+test:
+  script:
+    - npm install -g @brainwav/insula-mcp@1.0.0
+    - insula-mcp diagnose $MCP_ENDPOINT
+  variables:
+    INSULA_MCP_TIER: community
+```
+
+### Jenkins
+
+**Before (v0.x):**
+
+```groovy
+sh 'npm install -g insula-mcp'
+sh 'insula diagnose ${MCP_ENDPOINT}'
+```
+
+**After (v1.0.0):**
+
+```groovy
+sh 'npm install -g @brainwav/insula-mcp@1.0.0'
+withEnv(['INSULA_MCP_TIER=community']) {
+    sh 'insula-mcp diagnose ${MCP_ENDPOINT}'
+}
+```
+
+## Kubernetes Migration
+
+### Deployment Manifest
+
+**Before (v0.x):**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insula-mcp
+spec:
+  template:
+    spec:
+      containers:
+      - name: insula-mcp
+        image: brainwav/insula-mcp:latest
+```
+
+**After (v1.0.0):**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insula-mcp
+spec:
+  template:
+    spec:
+      containers:
+      - name: insula-mcp
+        image: brainwav/insula-mcp:1.0.0-professional
+        env:
+        - name: INSULA_MCP_TIER
+          value: "professional"
+        - name: INSULA_LICENSE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: insula-secrets
+              key: license-key
+        volumeMounts:
+        - name: models
+          mountPath: /app/models
+        - name: patterns
+          mountPath: /app/patterns
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: insula-models-pvc
+      - name: patterns
+        persistentVolumeClaim:
+          claimName: insula-patterns-pvc
+```
+
+## Troubleshooting
+
+### Common Migration Issues
+
+#### Issue: License Key Not Recognized
+
+**Symptoms:**
+
+```
+Error: Invalid license key for tier 'professional'
+```
+
+**Solution:**
+
+```bash
+# Verify license key format
+echo $INSULA_LICENSE_KEY
+
+# Re-verify license
+insula-mcp license verify
+
+# Contact support if issue persists
+```
+
+#### Issue: LLM Backend Connection Failed
+
+**Symptoms:**
+
+```
+Error: Failed to connect to Ollama at localhost:11434
+```
+
+**Solution:**
+
+```bash
+# Check Ollama is running
+curl http://localhost:11434/api/tags
+
+# Restart Ollama
+systemctl restart ollama
+
+# Verify host configuration
+export OLLAMA_HOST=localhost:11434
+```
+
+#### Issue: Auth0 Authentication Failed
+
+**Symptoms:**
+
+```
+Error: Auth0 authentication failed: Invalid credentials
+```
+
+**Solution:**
+
+```bash
+# Verify Auth0 configuration
+echo $AUTH0_DOMAIN
+echo $AUTH0_CLIENT_ID
+
+# Check Auth0 application settings
+# Verify callback URLs are configured
+# Ensure API permissions are granted
+```
+
+#### Issue: Docker Container Won't Start
+
+**Symptoms:**
+
+```
+Error: Container exits immediately after start
+```
+
+**Solution:**
+
+```bash
+# Check container logs
+docker logs insula-mcp
+
+# Verify environment variables
+docker inspect insula-mcp | grep -A 20 Env
+
+# Check volume permissions
+docker exec insula-mcp ls -la /app
+```
+
+## Rollback Procedure
+
+If you encounter issues with v1.0.0, you can rollback to v0.x:
+
+**Step 1: Uninstall v1.0.0**
+
+```bash
+npm uninstall -g @brainwav/insula-mcp
+```
+
+**Step 2: Reinstall v0.x**
+
+```bash
+npm install -g insula-mcp@0.1.0
+```
+
+**Step 3: Restore Configuration**
+
+```bash
+# Restore old configuration files
+cp backup/config.json config.json
+
+# Restore old scripts
+cp backup/scripts/* scripts/
+```
+
+**Step 4: Verify Rollback**
+
+```bash
+insula --version
+insula diagnose https://mcp.example.com
+```
+
+## Support
+
+### Community Support
+
+- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
+- Discussions: https://github.com/brainwav/insula-mcp/discussions
+- Documentation: https://docs.brainwav.io/insula-mcp
+
+### Commercial Support
+
+- Professional: support@brainwav.io
+- Enterprise: enterprise@brainwav.io
+- Migration Assistance: migration@brainwav.io
+
+## Additional Resources
+
+- [Release Notes](RELEASE_NOTES.md)
+- [Getting Started Guide](docs/GETTING_STARTED.md)
+- [Commercial Deployment Guide](docs/COMMERCIAL_DEPLOYMENT.md)
+- [API Reference](docs/API_REFERENCE.md)
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+
+---
+
+**Need Help?** Contact our support team or visit our community forums for assistance with your migration.

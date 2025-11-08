@@ -37,9 +37,11 @@ export async function runDiagnose({
     timeMs: coerceNumber(opts.budgetTime) ?? coerceNumber(opts["budget-time"]) ?? 5000,
     memMb: coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96
   };
+  const headers = parseAuthHeaders((opts as unknown as { auth?: string }).auth);
 
   const { findings } = await runPlugins({
     endpoint,
+    headers,
     suites,
     full: Boolean(opts.full),
     deterministic: Boolean(opts.deterministic),
@@ -79,4 +81,26 @@ function coerceNumber(value: number | string | undefined): number | undefined {
     if (!Number.isNaN(parsed)) return parsed;
   }
   return undefined;
+}
+
+function parseAuthHeaders(auth?: string): Record<string, string> | undefined {
+  if (!auth || auth.trim().length === 0) return undefined;
+  const [schemeRaw, ...restParts] = auth.split(":");
+  if (!schemeRaw || restParts.length === 0) return undefined;
+  const scheme = schemeRaw.toLowerCase();
+  if (scheme === "bearer") {
+    return { authorization: `Bearer ${restParts.join(":").trim()}` };
+  }
+  if (scheme === "basic") {
+    const [user, ...passwordParts] = restParts;
+    if (!user || passwordParts.length === 0) return undefined;
+    const credentials = Buffer.from(`${user}:${passwordParts.join(":")}`).toString("base64");
+    return { authorization: `Basic ${credentials}` };
+  }
+  if (scheme === "header") {
+    const [name, ...valueParts] = restParts;
+    if (!name || valueParts.length === 0) return undefined;
+    return { [name]: valueParts.join(":") };
+  }
+  return { authorization: `${schemeRaw} ${restParts.join(":")}` };
 }

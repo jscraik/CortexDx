@@ -45,3 +45,46 @@ export {
   type SecuritySummary
 } from "./security-monitoring.js";
 
+export {
+  ASVSComplianceEngine,
+  type ASVSFinding,
+  type ASVSLevel,
+  type ASVSMapping,
+  type ASVSReport,
+  type ASVSRequirement
+} from "./asvs-compliance.js";
+
+export {
+  ATLASThreatDetector,
+  type ATLASFinding,
+  type ATLASReport,
+  type ATLASTechnique,
+  type ExfiltrationDetection,
+  type PoisoningDetection,
+  type PromptInjectionResult
+} from "./atlas-threat-detector.js";
+
+export {
+  normalizeSemgrepResults, SemgrepIntegration, type NormalizedFinding,
+  type SemgrepFinding,
+  type SemgrepResults,
+  type SemgrepRule
+} from "./semgrep-integration.js";
+
+export {
+  GitleaksIntegration,
+  normalizeGitleaksResults,
+  type GitleaksConfig,
+  type GitleaksRule,
+  type NormalizedSecretFinding,
+  type Secret,
+  type SecretFindings
+} from "./gitleaks-integration.js";
+
+export {
+  normalizeZAPResults, ZAPIntegration, type NormalizedZAPFinding,
+  type ZAPConfig,
+  type ZAPFinding,
+  type ZAPResults
+} from "./zap-integration.js";
+

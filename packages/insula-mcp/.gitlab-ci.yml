@@ -1,0 +1,212 @@
+# GitLab CI/CD Pipeline for Insula MCP
+# Copy this file to your repository root as .gitlab-ci.yml
+
+variables:
+  NODE_VERSION: "20.11.1"
+  PNPM_VERSION: "9.12.2"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  # Set these in GitLab CI/CD variables
+  # DOCKER_REGISTRY: registry.gitlab.com
+  # DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+  # KUBECONFIG: (base64 encoded kubeconfig)
+  # INSULA_LICENSE_KEY: (your license key)
+
+stages:
+  - validate
+  - build
+  - test
+  - package
+  - deploy
+
+# Cache configuration
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+    - node_modules
+    - packages/insula-mcp/node_modules
+
+# Validate stage
+lint:
+  stage: validate
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - npm install -g pnpm@${PNPM_VERSION}
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm lint
+  only:
+    - merge_requests
+    - main
+    - tags
+
+# Build stage
+build:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - npm install -g pnpm@${PNPM_VERSION}
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm build
+  artifacts:
+    paths:
+      - packages/insula-mcp/dist
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - tags
+
+# Test stage
+test:
+  stage: test
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - npm install -g pnpm@${PNPM_VERSION}
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm test
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - tags
+
+# Package stage - Docker images
+.docker_build_template: &docker_build
+  stage: package
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      docker build \
+        -f packages/insula-mcp/Dockerfile.${TIER} \
+        -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-${TIER} \
+        -t ${CI_REGISTRY_IMAGE}:latest-${TIER} \
+        --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+        --build-arg VCS_REF=${CI_COMMIT_SHA} \
+        --build-arg VERSION=${CI_COMMIT_TAG} \
+        .
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-${TIER}
+    - docker push ${CI_REGISTRY_IMAGE}:latest-${TIER}
+  only:
+    - tags
+
+docker:community:
+  <<: *docker_build
+  variables:
+    TIER: community
+
+docker:professional:
+  <<: *docker_build
+  variables:
+    TIER: professional
+
+docker:enterprise:
+  <<: *docker_build
+  variables:
+    TIER: enterprise
+
+# Deploy stage - Kubernetes
+.deploy_template: &deploy
+  stage: deploy
+  image: alpine/k8s:1.28.3
+  before_script:
+    - echo "$KUBECONFIG" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+    - kubectl version --client
+    - helm version
+  script:
+    - |
+      helm upgrade --install insula-mcp-${TIER} \
+        ./packages/insula-mcp/kubernetes/helm/insula-mcp \
+        --namespace insula-mcp \
+        --create-namespace \
+        --set tier=${TIER} \
+        --set image.repository=${CI_REGISTRY_IMAGE} \
+        --set image.tag=${CI_COMMIT_TAG}-${TIER} \
+        --set secrets.licenseKey="${INSULA_LICENSE_KEY}" \
+        --set secrets.auth0Domain="${AUTH0_DOMAIN}" \
+        --set secrets.auth0ClientId="${AUTH0_CLIENT_ID}" \
+        --set secrets.auth0ClientSecret="${AUTH0_CLIENT_SECRET}" \
+        --wait \
+        --timeout 10m
+    - kubectl rollout status deployment/insula-mcp-${TIER} -n insula-mcp --timeout=5m
+  only:
+    - tags
+  when: manual
+
+deploy:staging:community:
+  <<: *deploy
+  variables:
+    TIER: community
+  environment:
+    name: staging/community
+    url: https://staging-community.insula-mcp.example.com
+
+deploy:staging:professional:
+  <<: *deploy
+  variables:
+    TIER: professional
+  environment:
+    name: staging/professional
+    url: https://staging-professional.insula-mcp.example.com
+
+deploy:staging:enterprise:
+  <<: *deploy
+  variables:
+    TIER: enterprise
+  environment:
+    name: staging/enterprise
+    url: https://staging-enterprise.insula-mcp.example.com
+
+deploy:production:community:
+  <<: *deploy
+  variables:
+    TIER: community
+  environment:
+    name: production/community
+    url: https://community.insula-mcp.example.com
+  only:
+    - tags
+  when: manual
+
+deploy:production:professional:
+  <<: *deploy
+  variables:
+    TIER: professional
+  environment:
+    name: production/professional
+    url: https://professional.insula-mcp.example.com
+  only:
+    - tags
+  when: manual
+
+deploy:production:enterprise:
+  <<: *deploy
+  variables:
+    TIER: enterprise
+  environment:
+    name: production/enterprise
+    url: https://enterprise.insula-mcp.example.com
+  only:
+    - tags
+  when: manual
