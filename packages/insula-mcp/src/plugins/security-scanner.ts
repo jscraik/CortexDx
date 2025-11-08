@@ -56,7 +56,7 @@ export const SecurityScannerPlugin: DiagnosticPlugin = {
       area: "security",
       severity: securityScore >= 70 ? "info" : "major",
       title: `Combined Security Score: ${securityScore}/100`,
-      description: `Comprehensive security assessment completed. Score based on ASVS compliance, ATLAS threat detection, SAST, secrets scanning, and DAST results.`,
+      description: "Comprehensive security assessment completed. Score based on ASVS compliance, ATLAS threat detection, SAST, secrets scanning, and DAST results.",
       evidence: [{ type: "url", ref: ctx.endpoint }],
       tags: ["security-score", "combined-assessment"],
       confidence: 0.95,

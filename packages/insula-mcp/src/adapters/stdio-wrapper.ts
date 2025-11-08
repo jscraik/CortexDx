@@ -118,7 +118,7 @@ class StudioWrapper {
       }
 
       // Write response to stdout
-      process.stdout.write(JSON.stringify(response) + '\n');
+      process.stdout.write(`${JSON.stringify(response)}\n`);
 
     } catch (error) {
       const errorResponse: JsonRpcResponse = {
@@ -135,7 +135,7 @@ class StudioWrapper {
         console.error(`[StudioWrapper] Parse error: ${error}`);
       }
 
-      process.stdout.write(JSON.stringify(errorResponse) + '\n');
+      process.stdout.write(`${JSON.stringify(errorResponse)}\n`);
     }
   }
 
@@ -314,20 +314,27 @@ function parseArgs(): StdioWrapperConfig {
 
     switch (arg) {
       case '--endpoint':
-      case '-e':
+      case '-e': {
         const endpoint = args[++i];
         if (endpoint) {
           config.endpoint = endpoint;
         }
         break;
+      }
 
       case '--timeout':
-      case '-t':
+      case '-t': {
         const timeoutArg = args[++i];
         if (timeoutArg) {
-          config.timeout = parseInt(timeoutArg, 10) * 1000;
+          const timeoutSec = +timeoutArg;
+          if (!Number.isNaN(timeoutSec) && timeoutSec > 0) {
+            config.timeout = timeoutSec * 1000;
+          } else {
+            console.warn(`Invalid timeout value: "${timeoutArg}". Timeout must be a positive integer.`);
+          }
         }
         break;
+      }
 
       case '--verbose':
       case '-v':
@@ -335,7 +342,7 @@ function parseArgs(): StdioWrapperConfig {
         break;
 
       case '--header':
-      case '-H':
+      case '-H': {
         const headerArg = args[++i];
         if (headerArg) {
           const headerParts = headerArg.split(':', 2);
@@ -345,6 +352,7 @@ function parseArgs(): StdioWrapperConfig {
           }
         }
         break;
+      }
 
       case '--help':
       case '-h':

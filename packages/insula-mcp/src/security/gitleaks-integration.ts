@@ -303,7 +303,7 @@ export class GitleaksIntegration {
             return "***";
         }
         const visible = 4;
-        return secret.substring(0, visible) + "***" + secret.substring(secret.length - visible);
+        return `${secret.substring(0, visible)}***${secret.substring(secret.length - visible)}`;
     }
 
     /**

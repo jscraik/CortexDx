@@ -71,8 +71,8 @@ export interface RepeatedConstraints {
 export class ProtovalidateAdapter {
     private compiledRules: Map<string, CompiledCELRule> = new Map();
     private validationCache: Map<string, ValidationResult> = new Map();
-    private cacheEnabled: boolean = true;
-    private maxCacheSize: number = 1000;
+    private cacheEnabled = true;
+    private maxCacheSize = 1000;
 
     /**
      * Enable or disable validation caching
@@ -364,7 +364,7 @@ export class ProtovalidateAdapter {
             });
         }
 
-        if (constraints.notIn && constraints.notIn.includes(value)) {
+        if (constraints.notIn?.includes(value)) {
             violations.push({
                 fieldPath,
                 constraintId: 'string.notIn',
@@ -478,7 +478,7 @@ export class ProtovalidateAdapter {
             });
         }
 
-        if (constraints.notIn && constraints.notIn.includes(value)) {
+        if (constraints.notIn?.includes(value)) {
             violations.push({
                 fieldPath,
                 constraintId: 'number.notIn',
@@ -556,13 +556,13 @@ export class ProtovalidateAdapter {
         }
 
         const parts = fieldPath.split('.');
-        let current: any = obj;
+        let current: unknown = obj;
 
         for (const part of parts) {
-            if (current === null || current === undefined) {
+            if (current === null || typeof current !== 'object') {
                 return undefined;
             }
-            current = current[part];
+            current = (current as Record<string, unknown>)[part];
         }
 
         return current;
@@ -707,7 +707,7 @@ class CompiledCELRule {
         if (!match) return false;
 
         const [, target, operator, sizeStr] = match;
-        const expectedSize = parseInt(sizeStr, 10);
+        const expectedSize = Number.parseInt(sizeStr, 10);
 
         let actualSize = 0;
         if (target === 'this') {
@@ -796,42 +796,42 @@ class CompiledCELRule {
     }
 
     private parseValue(str: string, context: unknown): unknown {
-        str = str.trim();
+        const normalized = str.trim();
 
         // String literal
-        if (str.startsWith('"') && str.endsWith('"')) {
-            return str.slice(1, -1);
+        if (normalized.startsWith('"') && normalized.endsWith('"')) {
+            return normalized.slice(1, -1);
         }
 
         // Number literal
-        if (/^-?\d+(\.\d+)?$/.test(str)) {
-            return parseFloat(str);
+        if (/^-?\d+(\.\d+)?$/.test(normalized)) {
+            return Number.parseFloat(normalized);
         }
 
         // Boolean literal
-        if (str === 'true') return true;
-        if (str === 'false') return false;
+        if (normalized === 'true') return true;
+        if (normalized === 'false') return false;
 
         // Null literal
-        if (str === 'null') return null;
+        if (normalized === 'null') return null;
 
         // Field reference
-        if (str.startsWith('this.')) {
-            return this.getNestedValue(context, str.replace(/^this\./, ''));
+        if (normalized.startsWith('this.')) {
+            return this.getNestedValue(context, normalized.replace(/^this\./, ''));
         }
 
-        return this.getNestedValue(context, str);
+        return this.getNestedValue(context, normalized);
     }
 
     private getNestedValue(obj: unknown, path: string): unknown {
         if (!obj || typeof obj !== 'object') return undefined;
 
         const parts = path.split('.');
-        let current: any = obj;
+        let current: unknown = obj;
 
         for (const part of parts) {
-            if (current === null || current === undefined) return undefined;
-            current = current[part];
+            if (current === null || current === undefined || typeof current !== 'object') return undefined;
+            current = (current as Record<string, unknown>)[part];
         }
 
         return current;

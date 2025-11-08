@@ -227,8 +227,15 @@ export class InspectorAdapter {
       let stdout = '';
       let stderr = '';
 
-      // Connect inspector stdout to wrapper stdin
-      inspector.stdout?.pipe(wrapper.stdin!);
+      // Connect inspector stdout to wrapper stdin, ensuring streams exist
+      if (inspector.stdout && wrapper.stdin) {
+        inspector.stdout.pipe(wrapper.stdin);
+      } else {
+        inspector.kill('SIGTERM');
+        wrapper.kill('SIGTERM');
+        reject(new Error('Inspector stdout or wrapper stdin unavailable'));
+        return;
+      }
 
       // Capture wrapper output
       wrapper.stdout?.on('data', (data) => {
@@ -254,24 +261,6 @@ export class InspectorAdapter {
       let inspectorExited = false;
       let wrapperExited = false;
 
-      inspector.on('close', (code) => {
-        inspectorExited = true;
-        this.ctx.logger?.(`[InspectorAdapter] MCP Inspector exited with code ${code}`);
-
-        if (wrapperExited) {
-          this.handleCompletion(code, stdout, stderr, resolve, reject);
-        }
-      });
-
-      wrapper.on('close', (code) => {
-        wrapperExited = true;
-        this.ctx.logger?.(`[InspectorAdapter] Stdio wrapper exited with code ${code}`);
-
-        if (inspectorExited) {
-          this.handleCompletion(code, stdout, stderr, resolve, reject);
-        }
-      });
-
       // Handle process errors
       inspector.on('error', (error) => {
         this.ctx.logger?.(`[InspectorAdapter] Inspector process error: ${error}`);
@@ -291,11 +280,28 @@ export class InspectorAdapter {
       }, 35000);
 
       // Clean up timeout on completion
-      const originalHandleCompletion = this.handleCompletion.bind(this);
-      this.handleCompletion = (code: number | null, stdout: string, stderr: string, resolve: Function, reject: Function) => {
+      const finalizeRun = (code: number | null) => {
         clearTimeout(timeout);
-        originalHandleCompletion(code, stdout, stderr, resolve, reject);
+        this.handleCompletion(code, stdout, stderr, resolve);
       };
+
+      inspector.on('close', (code) => {
+        inspectorExited = true;
+        this.ctx.logger?.(`[InspectorAdapter] MCP Inspector exited with code ${code}`);
+
+        if (wrapperExited) {
+          finalizeRun(code);
+        }
+      });
+
+      wrapper.on('close', (code) => {
+        wrapperExited = true;
+        this.ctx.logger?.(`[InspectorAdapter] Stdio wrapper exited with code ${code}`);
+
+        if (inspectorExited) {
+          finalizeRun(code);
+        }
+      });
     });
   }
 
@@ -303,8 +309,7 @@ export class InspectorAdapter {
     code: number | null,
     stdout: string,
     stderr: string,
-    resolve: (value: InspectorFinding[]) => void,
-    reject: (reason?: any) => void
+    resolve: (value: InspectorFinding[]) => void
   ): void {
     try {
       if (code === 0) {

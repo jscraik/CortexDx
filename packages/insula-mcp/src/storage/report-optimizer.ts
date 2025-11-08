@@ -50,7 +50,7 @@ export class ReportOptimizer {
         report: DiagnosticReport,
         metadata: ReportMetadata
     ): OptimizedResponse {
-        const findingsSummary = this.summarizeFindings(report.findings);
+        const findingsSummary = ReportOptimizer.summarizeFindings(report.findings);
 
         // Only include critical findings (blocker/major) in response
         const criticalFindings = report.findings
@@ -60,12 +60,12 @@ export class ReportOptimizer {
                 ...f,
                 // Truncate long descriptions
                 description: f.description.length > 200
-                    ? f.description.substring(0, 200) + "..."
+                    ? `${f.description.substring(0, 200)}...`
                     : f.description,
             }));
 
         return {
-            summary: this.generateSummary(report, findingsSummary),
+            summary: ReportOptimizer.generateSummary(report, findingsSummary),
             reportUrl: metadata.url,
             findingsSummary,
             criticalFindings: criticalFindings.length > 0 ? criticalFindings : undefined,
@@ -175,7 +175,7 @@ export class ReportOptimizer {
      */
     static optimizeSearchResults(
         reports: ReportMetadata[],
-        limit: number = 10
+        limit = 10
     ): ReportSearchResult {
         const limitedReports = reports.slice(0, limit);
 
@@ -206,9 +206,9 @@ export class ReportOptimizer {
 
         // Optimized response includes only summary + URL + top findings
         const optimizedJson = JSON.stringify({
-            summary: this.generateSummary(report, this.summarizeFindings(report.findings)),
+            summary: ReportOptimizer.generateSummary(report, ReportOptimizer.summarizeFindings(report.findings)),
             reportUrl: "http://localhost:5001/reports/example",
-            findingsSummary: this.summarizeFindings(report.findings),
+            findingsSummary: ReportOptimizer.summarizeFindings(report.findings),
             criticalFindings: report.findings
                 .filter(f => f.severity === "blocker" || f.severity === "major")
                 .slice(0, 3),

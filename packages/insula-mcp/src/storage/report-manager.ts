@@ -143,7 +143,7 @@ export class ReportManager {
             tags: report.tags || [],
         };
 
-        this.db!.prepare(`
+        this.db?.prepare(`
       INSERT INTO reports (
         id, session_id, diagnostic_type, created_at, size, formats, path, tags, endpoint, duration_ms
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -168,7 +168,7 @@ export class ReportManager {
             await this.initialize();
         }
 
-        const row = this.db!.prepare("SELECT path FROM reports WHERE id = ?").get(reportId) as { path: string } | undefined;
+        const row = this.db?.prepare("SELECT path FROM reports WHERE id = ?").get(reportId) as { path: string } | undefined;
 
         if (!row?.path) {
             throw new Error(`Report not found: ${reportId}`);
@@ -188,7 +188,7 @@ export class ReportManager {
             await this.initialize();
         }
 
-        const row = this.db!.prepare("SELECT path, formats FROM reports WHERE id = ?").get(reportId) as
+        const row = this.db?.prepare("SELECT path, formats FROM reports WHERE id = ?").get(reportId) as
             { path: string; formats: string } | undefined;
 
         if (!row) {
@@ -205,7 +205,7 @@ export class ReportManager {
         }
 
         // Remove from index
-        this.db!.prepare("DELETE FROM reports WHERE id = ?").run(reportId);
+        this.db?.prepare("DELETE FROM reports WHERE id = ?").run(reportId);
     }
 
     generateUrl(reportId: string): string {
@@ -250,7 +250,7 @@ export class ReportManager {
 
         query += " ORDER BY created_at DESC";
 
-        const rows = this.db!.prepare(query).all(...params) as Array<{
+        const rows = this.db?.prepare(query).all(...params) as Array<{
             id: string;
             session_id: string;
             diagnostic_type: string;
@@ -279,7 +279,7 @@ export class ReportManager {
             await this.initialize();
         }
 
-        const rows = this.db!.prepare(`
+        const rows = this.db?.prepare(`
       SELECT * FROM reports 
       WHERE diagnostic_type LIKE ? OR tags LIKE ?
       ORDER BY created_at DESC
@@ -336,7 +336,7 @@ export class ReportManager {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
-        const rows = this.db!.prepare("SELECT id FROM reports WHERE created_at < ?")
+        const rows = this.db?.prepare("SELECT id FROM reports WHERE created_at < ?")
             .all(cutoffDate.getTime()) as Array<{ id: string }>;
 
         for (const row of rows) {

@@ -38,13 +38,18 @@ export class ReportServer {
             void this.handleRequest(req, res);
         });
 
+        const server = this.server;
+        if (!server) {
+            throw new Error("Failed to initialize report server");
+        }
+
         return new Promise((resolve, reject) => {
-            this.server!.listen(this.options.port, this.options.host, () => {
+            server.listen(this.options.port, this.options.host, () => {
                 console.log(`Report server listening on http://${this.options.host}:${this.options.port}`);
                 resolve();
             });
 
-            this.server!.on("error", reject);
+            server.on("error", reject);
         });
     }
 
@@ -53,8 +58,10 @@ export class ReportServer {
             return;
         }
 
+        const server = this.server;
+
         return new Promise((resolve, reject) => {
-            this.server!.close((err) => {
+            server.close((err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -100,14 +107,15 @@ export class ReportServer {
 
             // Check cache
             const cacheKey = `${reportId}:${format}`;
-            if (this.options.enableCaching && this.cache.has(cacheKey)) {
-                const cached = this.cache.get(cacheKey)!;
-                const age = Date.now() - cached.timestamp;
+            if (this.options.enableCaching) {
+                const cached = this.cache.get(cacheKey);
+                if (cached) {
+                    const age = Date.now() - cached.timestamp;
 
-                if (age < this.options.cacheMaxAge * 1000) {
-                    this.sendCachedResponse(res, cached, format, req);
-                    return;
-                } else {
+                    if (age < this.options.cacheMaxAge * 1000) {
+                        this.sendCachedResponse(res, cached, format, req);
+                        return;
+                    }
                     this.cache.delete(cacheKey);
                 }
             }
@@ -158,9 +166,11 @@ export class ReportServer {
 
         if (accept.includes("application/json")) {
             return "json";
-        } else if (accept.includes("text/html")) {
+        }
+        if (accept.includes("text/html")) {
             return "html";
-        } else if (accept.includes("text/markdown")) {
+        }
+        if (accept.includes("text/markdown")) {
             return "markdown";
         }
 

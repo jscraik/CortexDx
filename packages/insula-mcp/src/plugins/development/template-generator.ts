@@ -514,11 +514,12 @@ class TemplateMarketplaceManager {
       }
       if (filters.tags && filters.tags.length > 0) {
         results = results.filter(t =>
-          filters.tags!.some(tag => t.tags.includes(tag))
+          filters.tags?.some(tag => t.tags.includes(tag))
         );
       }
       if (filters.minRating) {
-        results = results.filter(t => t.rating >= filters.minRating!);
+        const minRating = filters.minRating;
+        results = results.filter(t => t.rating >= minRating);
       }
       if (filters.verifiedOnly) {
         results = results.filter(t => t.verified);
@@ -646,7 +647,7 @@ async function generateLivePreview(
   let totalDeletions = 0;
   let filesCreated = 0;
   let filesUpdated = 0;
-  let filesDeleted = 0;
+  const filesDeleted = 0;
 
   // Build file tree and diffs
   for (const file of template.files) {

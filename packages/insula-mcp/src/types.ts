@@ -299,6 +299,7 @@ export interface ValidationCriteria {
 export interface CodeChange {
   file: string;
   operation: 'create' | 'update' | 'delete';
+  description?: string;
   content?: string;
   patch?: string;
   backup: boolean;
@@ -480,6 +481,7 @@ export interface ProjectContext {
   name: string;
   type: "mcp-server" | "mcp-client" | "mcp-connector";
   language: string;
+  environment?: string;
   framework?: string;
   dependencies: string[];
   configFiles: string[];
