@@ -329,8 +329,8 @@ function getServerInfoRules(): CELRule[] {
         new CELRuleBuilder()
             .forField('serverInfo.name')
             .stringLength(3, 100)
-            .withMessage('Server name must be between 3 and 100 characters')
-            .withSeverity('error')
+            .withMessage('Server name should be between 3 and 100 characters')
+            .withSeverity('warning')
             .build(),
 
         new CELRuleBuilder()
