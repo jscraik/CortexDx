@@ -209,21 +209,21 @@ export class StateManager {
         const params: (string | number)[] = [options.workflowId];
 
         if (options.threadId) {
-            query += ` AND thread_id = ?`;
+            query += " AND thread_id = ?";
             params.push(options.threadId);
         }
 
         if (options.checkpointId) {
-            query += ` AND checkpoint_id = ?`;
+            query += " AND checkpoint_id = ?";
             params.push(options.checkpointId);
         }
 
         if (options.beforeTimestamp) {
-            query += ` AND timestamp <= ?`;
+            query += " AND timestamp <= ?";
             params.push(options.beforeTimestamp);
         }
 
-        query += ` ORDER BY timestamp DESC LIMIT 1`;
+        query += " ORDER BY timestamp DESC LIMIT 1";
 
         const stmt = this.db.prepare(query);
         const row = stmt.get(...params) as {
@@ -328,11 +328,11 @@ export class StateManager {
         const params: (string | number)[] = [workflowId];
 
         if (status) {
-            query += ` AND status = ?`;
+            query += " AND status = ?";
             params.push(status);
         }
 
-        query += ` ORDER BY updated_at DESC`;
+        query += " ORDER BY updated_at DESC";
 
         const stmt = this.db.prepare(query);
         const rows = stmt.all(...params) as Array<{
@@ -422,11 +422,11 @@ export class StateManager {
         const params: (string | number)[] = [workflowId];
 
         if (threadId) {
-            query += ` AND thread_id = ?`;
+            query += " AND thread_id = ?";
             params.push(threadId);
         }
 
-        query += ` ORDER BY timestamp ASC`;
+        query += " ORDER BY timestamp ASC";
 
         const stmt = this.db.prepare(query);
         const rows = stmt.all(...params) as Array<{

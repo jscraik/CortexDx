@@ -15,9 +15,9 @@ import type { CELRule } from "./protovalidate.js";
  * Fluent API for building CEL validation rules
  */
 export class CELRuleBuilder {
-    private field: string = '';
-    private expression: string = '';
-    private message: string = '';
+    private field = '';
+    private expression = '';
+    private message = '';
     private severity: 'error' | 'warning' = 'error';
 
     /**
@@ -248,258 +248,221 @@ export class CELRuleBuilder {
     }
 }
 
+
 /**
  * MCP-Specific CEL Rule Library
  * 
  * Pre-defined validation rules for common MCP protocol patterns
  */
-export class MCPCELRuleLibrary {
-    /**
-     * Get all MCP-specific validation rules
-     */
-    static getAllRules(): CELRule[] {
-        return [
-            ...this.getProtocolVersionRules(),
-            ...this.getCapabilityRules(),
-            ...this.getToolDefinitionRules(),
-            ...this.getResourceRules(),
-            ...this.getServerInfoRules()
-        ];
-    }
+function getProtocolVersionRules(): CELRule[] {
+    return [
+        new CELRuleBuilder()
+            .forField('protocolVersion')
+            .matchesPattern('^\\d{4}-\\d{2}-\\d{2}$')
+            .withMessage('Protocol version must be in YYYY-MM-DD format (e.g., "2024-11-05")')
+            .withSeverity('error')
+            .build(),
 
-    /**
-     * Protocol version validation rules
-     */
-    static getProtocolVersionRules(): CELRule[] {
-        return [
-            new CELRuleBuilder()
-                .forField('protocolVersion')
-                .matchesPattern('^\\d{4}-\\d{2}-\\d{2}$')
-                .withMessage('Protocol version must be in YYYY-MM-DD format (e.g., "2024-11-05")')
-                .withSeverity('error')
-                .build(),
+        new CELRuleBuilder()
+            .forField('protocolVersion')
+            .startsWith('2024-')
+            .withMessage('Protocol version should be from 2024 specification')
+            .withSeverity('warning')
+            .build()
+    ];
+}
 
-            new CELRuleBuilder()
-                .forField('protocolVersion')
-                .startsWith('2024-')
-                .withMessage('Protocol version should be from 2024 specification')
-                .withSeverity('warning')
-                .build()
-        ];
-    }
-
-    /**
-     * Capability validation rules
-     */
-    static getCapabilityRules(): CELRule[] {
-        return [
-            {
-                field: 'capabilities',
-                expression: 'has(this.tools) || has(this.resources) || has(this.prompts)',
-                message: 'Server must declare at least one capability (tools, resources, or prompts)',
-                severity: 'warning'
-            },
-            {
-                field: 'capabilities.tools',
-                expression: 'size(this) > 0',
-                message: 'If tools capability is declared, at least one tool should be available',
-                severity: 'warning'
-            }
-        ];
-    }
-
-    /**
-     * Tool definition validation rules
-     */
-    static getToolDefinitionRules(): CELRule[] {
-        return [
-            new CELRuleBuilder()
-                .forField('tool.name')
-                .stringLength(1, 100)
-                .withMessage('Tool name must be between 1 and 100 characters')
-                .withSeverity('error')
-                .build(),
-
-            {
-                field: 'tool.inputSchema',
-                expression: 'has(this.type) && this.type == "object"',
-                message: 'Tool input schema must be a JSON Schema object',
-                severity: 'error'
-            },
-
-            new CELRuleBuilder()
-                .forField('tool.description')
-                .stringLength(10, 1000)
-                .withMessage('Tool description should be between 10 and 1000 characters')
-                .withSeverity('warning')
-                .build()
-        ];
-    }
-
-    /**
-     * Resource validation rules
-     */
-    static getResourceRules(): CELRule[] {
-        return [
-            {
-                field: 'resource.uri',
-                expression: 'this.startsWith("file://") || this.startsWith("http://") || this.startsWith("https://")',
-                message: 'Resource URI must use a valid scheme (file://, http://, or https://)',
-                severity: 'error'
-            },
-
-            new CELRuleBuilder()
-                .forField('resource.name')
-                .stringLength(1, 200)
-                .withMessage('Resource name must be between 1 and 200 characters')
-                .withSeverity('error')
-                .build(),
-
-            {
-                field: 'resource.mimeType',
-                expression: 'this.contains("/")',
-                message: 'MIME type must contain a forward slash (e.g., "text/plain")',
-                severity: 'warning'
-            }
-        ];
-    }
-
-    /**
-     * Server info validation rules
-     */
-    static getServerInfoRules(): CELRule[] {
-        return [
-            new CELRuleBuilder()
-                .forField('serverInfo.name')
-                .stringLength(3, 100)
-                .withMessage('Server name should be between 3 and 100 characters')
-                .withSeverity('warning')
-                .build(),
-
-            {
-                field: 'serverInfo.version',
-                expression: 'this.matches("^\\\\d+\\\\.\\\\d+\\\\.\\\\d+") || this.matches("^\\\\d+\\\\.\\\\d+")',
-                message: 'Server version should follow semantic versioning (e.g., "1.0.0")',
-                severity: 'warning'
-            }
-        ];
-    }
-
-    /**
-     * Get rules for specific MCP feature
-     */
-    static getRulesForFeature(feature: 'protocol' | 'capabilities' | 'tools' | 'resources' | 'serverInfo'): CELRule[] {
-        switch (feature) {
-            case 'protocol':
-                return this.getProtocolVersionRules();
-            case 'capabilities':
-                return this.getCapabilityRules();
-            case 'tools':
-                return this.getToolDefinitionRules();
-            case 'resources':
-                return this.getResourceRules();
-            case 'serverInfo':
-                return this.getServerInfoRules();
-            default:
-                return [];
+function getCapabilityRules(): CELRule[] {
+    return [
+        {
+            field: 'capabilities',
+            expression: 'has(this.tools) || has(this.resources) || has(this.prompts)',
+            message: 'Server must declare at least one capability (tools, resources, or prompts)',
+            severity: 'warning'
+        },
+        {
+            field: 'capabilities.tools',
+            expression: 'size(this) > 0',
+            message: 'If tools capability is declared, at least one tool should be available',
+            severity: 'warning'
         }
+    ];
+}
+
+function getToolDefinitionRules(): CELRule[] {
+    return [
+        new CELRuleBuilder()
+            .forField('tool.name')
+            .stringLength(1, 100)
+            .withMessage('Tool name must be between 1 and 100 characters')
+            .withSeverity('error')
+            .build(),
+
+        {
+            field: 'tool.inputSchema',
+            expression: 'has(this.type) && this.type == "object"',
+            message: 'Tool input schema must be a JSON Schema object',
+            severity: 'error'
+        }
+    ];
+}
+
+function getResourceRules(): CELRule[] {
+    return [
+        {
+            field: 'resource.uri',
+            expression: 'this.startsWith("file://") || this.startsWith("http://") || this.startsWith("https://")',
+            message: 'Resource URI must use file://, http://, or https:// scheme',
+            severity: 'error'
+        },
+        new CELRuleBuilder()
+            .forField('resource.name')
+            .stringLength(1, 200)
+            .withMessage('Resource name must be between 1 and 200 characters')
+            .withSeverity('warning')
+            .build()
+    ];
+}
+
+function getServerInfoRules(): CELRule[] {
+    return [
+        new CELRuleBuilder()
+            .forField('serverInfo.name')
+            .stringLength(3, 100)
+            .withMessage('Server name must be between 3 and 100 characters')
+            .withSeverity('error')
+            .build(),
+
+        new CELRuleBuilder()
+            .forField('serverInfo.version')
+            .matchesPattern('^\\d+\\.\\d+(\\.\\d+)?$')
+            .withMessage('Server version must follow semantic versioning (e.g., 1.0.0 or 1.0)')
+            .withSeverity('warning')
+            .build()
+    ];
+}
+
+function getAllRules(): CELRule[] {
+    return [
+        ...getProtocolVersionRules(),
+        ...getCapabilityRules(),
+        ...getToolDefinitionRules(),
+        ...getResourceRules(),
+        ...getServerInfoRules()
+    ];
+}
+
+function getRulesByCategory(
+    category: 'protocol' | 'capabilities' | 'tools' | 'resources' | 'serverInfo'
+): CELRule[] {
+    switch (category) {
+        case 'protocol':
+            return getProtocolVersionRules();
+        case 'capabilities':
+            return getCapabilityRules();
+        case 'tools':
+            return getToolDefinitionRules();
+        case 'resources':
+            return getResourceRules();
+        case 'serverInfo':
+            return getServerInfoRules();
+        default:
+            return [];
     }
 }
+
+export const MCPCELRuleLibrary = {
+    getAllRules,
+    getProtocolVersionRules,
+    getCapabilityRules,
+    getToolDefinitionRules,
+    getResourceRules,
+    getServerInfoRules,
+    getRulesByCategory,
+};
 
 /**
  * CEL Rule Configuration Loader
  * 
  * Loads custom CEL rules from configuration files
  */
-export class CELRuleConfigLoader {
-    /**
-     * Load rules from JSON configuration
-     */
-    static loadFromJSON(json: string): CELRule[] {
-        try {
-            const config = JSON.parse(json);
-            return this.parseRulesConfig(config);
-        } catch (error) {
-            throw new Error(`Failed to parse CEL rules JSON: ${String(error)}`);
-        }
+
+export function loadCELRulesFromJSON(json: string): CELRule[] {
+    try {
+        const config = JSON.parse(json);
+        return parseRulesConfig(config);
+    } catch (error) {
+        throw new Error(`Failed to parse CEL rules JSON: ${String(error)}`);
     }
+}
 
-    /**
-     * Load rules from configuration object
-     */
-    static loadFromConfig(config: CELRulesConfig): CELRule[] {
-        return this.parseRulesConfig(config);
-    }
+export function loadCELRulesFromConfig(config: CELRulesConfig): CELRule[] {
+    return parseRulesConfig(config);
+}
 
-    /**
-     * Parse rules configuration
-     */
-    private static parseRulesConfig(config: CELRulesConfig): CELRule[] {
-        const rules: CELRule[] = [];
+export function mergeCELRuleSets(...ruleSets: CELRule[][]): CELRule[] {
+    const merged: CELRule[] = [];
+    const seen = new Set<string>();
 
-        if (config.rules) {
-            for (const rule of config.rules) {
-                if (this.isValidRule(rule)) {
-                    rules.push({
-                        field: rule.field,
-                        expression: rule.expression,
-                        message: rule.message,
-                        severity: rule.severity || 'error'
-                    });
-                }
+    for (const ruleSet of ruleSets) {
+        for (const rule of ruleSet) {
+            const key = `${rule.field}:${rule.expression}`;
+            if (!seen.has(key)) {
+                merged.push(rule);
+                seen.add(key);
             }
         }
-
-        return rules;
     }
 
-    /**
-     * Validate rule configuration
-     */
-    private static isValidRule(rule: unknown): rule is CELRule {
-        if (!rule || typeof rule !== 'object') {
-            return false;
-        }
+    return merged;
+}
 
-        const r = rule as Record<string, unknown>;
+export function createDefaultCELRulesConfig(): CELRulesConfig {
+    return {
+        version: '1.0',
+        rules: MCPCELRuleLibrary.getAllRules()
+    };
+}
 
-        return (
-            typeof r.field === 'string' &&
-            typeof r.expression === 'string' &&
-            typeof r.message === 'string' &&
-            (!r.severity || r.severity === 'error' || r.severity === 'warning')
-        );
-    }
+export const CELRuleConfigLoader = {
+    loadFromJSON: loadCELRulesFromJSON,
+    loadFromConfig: loadCELRulesFromConfig,
+    mergeRuleSets: mergeCELRuleSets,
+    createDefaultConfig: createDefaultCELRulesConfig,
+};
 
-    /**
-     * Merge multiple rule sets
-     */
-    static mergeRuleSets(...ruleSets: CELRule[][]): CELRule[] {
-        const merged: CELRule[] = [];
-        const seen = new Set<string>();
+function parseRulesConfig(config: CELRulesConfig): CELRule[] {
+    const rules: CELRule[] = [];
 
-        for (const ruleSet of ruleSets) {
-            for (const rule of ruleSet) {
-                const key = `${rule.field}:${rule.expression}`;
-                if (!seen.has(key)) {
-                    merged.push(rule);
-                    seen.add(key);
-                }
+    if (config.rules) {
+        for (const rule of config.rules) {
+            if (isValidRule(rule)) {
+                rules.push({
+                    field: rule.field,
+                    expression: rule.expression,
+                    message: rule.message,
+                    severity: rule.severity || 'error'
+                });
             }
         }
-
-        return merged;
     }
 
-    /**
-     * Create default MCP rules configuration
-     */
-    static createDefaultConfig(): CELRulesConfig {
-        return {
-            version: '1.0',
-            rules: MCPCELRuleLibrary.getAllRules()
-        };
+    return rules;
+}
+
+function isValidRule(rule: unknown): rule is CELRule {
+    if (!rule || typeof rule !== 'object') {
+        return false;
     }
+
+    const r = rule as Record<string, unknown>;
+
+    return (
+        typeof r.field === 'string' &&
+        typeof r.expression === 'string' &&
+        typeof r.message === 'string' &&
+        (!r.severity || r.severity === 'error' || r.severity === 'warning')
+    );
 }
 
 /**
@@ -514,94 +477,84 @@ export interface CELRulesConfig {
 /**
  * Rule Validation and Testing
  */
-export class CELRuleValidator {
-    /**
-     * Validate a CEL rule syntax
-     */
-    static validateRule(rule: CELRule): { valid: boolean; errors: string[] } {
-        const errors: string[] = [];
 
-        // Check required fields
-        if (!rule.field) {
-            errors.push('Rule must have a field path');
-        }
+export function validateCELRule(rule: CELRule): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
 
-        if (!rule.expression) {
-            errors.push('Rule must have an expression');
-        }
+    if (!rule.field) {
+        errors.push('Rule must have a field path');
+    }
 
-        if (!rule.message) {
-            errors.push('Rule must have a message');
-        }
+    if (!rule.expression) {
+        errors.push('Rule must have an expression');
+    }
 
-        // Check expression syntax (basic validation)
-        if (rule.expression) {
-            try {
-                this.validateExpressionSyntax(rule.expression);
-            } catch (error) {
-                errors.push(`Invalid expression syntax: ${String(error)}`);
-            }
+    if (!rule.message) {
+        errors.push('Rule must have a message');
+    }
+
+    if (rule.expression) {
+        try {
+            validateExpressionSyntax(rule.expression);
+        } catch (error) {
+            errors.push(`Invalid expression syntax: ${String(error)}`);
         }
+    }
+
+    return {
+        valid: errors.length === 0,
+        errors
+    };
+}
+
+export async function testCELRule(
+    rule: CELRule,
+    sampleData: unknown
+): Promise<{ passed: boolean; error?: string }> {
+    try {
+        const { ProtovalidateAdapter } = await import('./protovalidate.js');
+        const adapter = new ProtovalidateAdapter();
+
+        const result = await adapter.validate(sampleData, [rule]);
 
         return {
-            valid: errors.length === 0,
-            errors
+            passed: result.valid,
+            error: result.violations.length > 0 ? result.violations[0].message : undefined
+        };
+    } catch (error) {
+        return {
+            passed: false,
+            error: String(error)
         };
     }
+}
 
-    /**
-     * Validate expression syntax
-     */
-    private static validateExpressionSyntax(expression: string): void {
-        // Check for balanced parentheses
-        let depth = 0;
-        for (const char of expression) {
-            if (char === '(') depth++;
-            if (char === ')') depth--;
-            if (depth < 0) {
-                throw new Error('Unbalanced parentheses');
-            }
-        }
-        if (depth !== 0) {
+export const CELRuleValidator = {
+    validateRule: validateCELRule,
+    testRule: testCELRule,
+};
+
+function validateExpressionSyntax(expression: string): void {
+    let depth = 0;
+    for (const char of expression) {
+        if (char === '(') depth++;
+        if (char === ')') depth--;
+        if (depth < 0) {
             throw new Error('Unbalanced parentheses');
         }
-
-        // Check for balanced quotes
-        const quotes = expression.match(/"/g);
-        if (quotes && quotes.length % 2 !== 0) {
-            throw new Error('Unbalanced quotes');
-        }
-
-        // Check for valid operators
-        const invalidOperators = /[^a-zA-Z0-9_.\s()[\]{},"'<>=!&|+-/*]/g;
-        const invalid = expression.match(invalidOperators);
-        if (invalid) {
-            throw new Error(`Invalid characters in expression: ${invalid.join(', ')}`);
-        }
+    }
+    if (depth !== 0) {
+        throw new Error('Unbalanced parentheses');
     }
 
-    /**
-     * Test a rule against sample data
-     */
-    static async testRule(
-        rule: CELRule,
-        sampleData: unknown
-    ): Promise<{ passed: boolean; error?: string }> {
-        try {
-            const { ProtovalidateAdapter } = await import('./protovalidate.js');
-            const adapter = new ProtovalidateAdapter();
+    const quotes = expression.match(/"/g);
+    if (quotes && quotes.length % 2 !== 0) {
+        throw new Error('Unbalanced quotes');
+    }
 
-            const result = await adapter.validate(sampleData, [rule]);
-
-            return {
-                passed: result.valid,
-                error: result.violations.length > 0 ? result.violations[0].message : undefined
-            };
-        } catch (error) {
-            return {
-                passed: false,
-                error: String(error)
-            };
-        }
+    const invalidOperators = /[^a-zA-Z0-9_.\s()[\]{},"'<>=!&|+-\/*]/g;
+    const invalid = expression.match(invalidOperators);
+    if (invalid) {
+        throw new Error(`Invalid characters in expression: ${invalid.join(', ')}`);
     }
 }

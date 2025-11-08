@@ -257,20 +257,23 @@ function extractValidationSteps(text: string): string[] {
 
   // Look for numbered lists
   const numberedPattern = /\d+\.\s+([^\n]+)/g;
-  let match: RegExpExecArray | null;
-  while ((match = numberedPattern.exec(text)) !== null) {
+  let match: RegExpExecArray | null = numberedPattern.exec(text);
+  while (match) {
     if (match[1]) {
       steps.push(match[1].trim());
     }
+    match = numberedPattern.exec(text);
   }
 
   // Look for bullet points if no numbered list found
   if (steps.length === 0) {
     const bulletPattern = /[-*]\s+([^\n]+)/g;
-    while ((match = bulletPattern.exec(text)) !== null) {
+    match = bulletPattern.exec(text);
+    while (match) {
       if (match[1]) {
         steps.push(match[1].trim());
       }
+      match = bulletPattern.exec(text);
     }
   }
 

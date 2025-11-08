@@ -103,8 +103,8 @@ export class WorkflowVisualizationEngine {
         }
 
         // Add START and END nodes
-        lines.push(`    START([START])`);
-        lines.push(`    END([END])`);
+        lines.push("    START([START])");
+        lines.push("    END([END])");
         lines.push(`    START --> ${definition.entryPoint}`);
 
         // Add styling for special nodes
@@ -402,7 +402,7 @@ export class WorkflowVisualizationEngine {
                     2
                 );
 
-            case "markdown":
+            case "markdown": {
                 const lines: string[] = [];
                 lines.push("# Workflow Visualization\n");
                 lines.push("## Diagram\n");
@@ -416,6 +416,7 @@ export class WorkflowVisualizationEngine {
                     lines.push(`\n**Current Node:** ${visualization.currentNode}`);
                 }
                 return lines.join("\n");
+            }
 
             default:
                 return visualization.mermaidDiagram;

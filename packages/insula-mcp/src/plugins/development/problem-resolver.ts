@@ -760,7 +760,7 @@ function generateDetailedExplanation(
   explanation += `**How it works:**\n${strategy.explanation.howItWorks}\n\n`;
 
   if (strategy.explanation.sideEffects.length > 0) {
-    explanation += `**Potential side effects:**\n`;
+    explanation += "**Potential side effects:**\n";
     for (const effect of strategy.explanation.sideEffects) {
       explanation += `- ${effect}\n`;
     }
@@ -768,7 +768,7 @@ function generateDetailedExplanation(
   }
 
   if (strategy.explanation.prerequisites.length > 0) {
-    explanation += `**Prerequisites:**\n`;
+    explanation += "**Prerequisites:**\n";
     for (const prereq of strategy.explanation.prerequisites) {
       explanation += `- ${prereq}\n`;
     }

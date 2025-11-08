@@ -203,8 +203,9 @@ export class WorkflowEngine {
 
             case "custom": {
                 if (condition.field) {
+                    const fieldName = condition.field;
                     const fieldValues = allFindings
-                        .map((f) => (f as Record<string, unknown>)[condition.field!])
+                        .map((f) => (f as Record<string, unknown>)[fieldName])
                         .filter((v) => v !== undefined);
 
                     shouldExecute = fieldValues.some((v) =>

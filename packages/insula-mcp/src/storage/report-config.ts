@@ -274,9 +274,9 @@ export class ReportConfigManager {
         if (platform === "linux") {
             const xdgDataHome = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share");
             return join(xdgDataHome, "insula-mcp", "reports");
-        } else if (platform === "darwin") {
+        }if (platform === "darwin") {
             return join(homedir(), "Library", "Application Support", "insula-mcp", "reports");
-        } else if (platform === "win32") {
+        }if (platform === "win32") {
             const localAppData = process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
             return join(localAppData, "insula-mcp", "reports");
         }

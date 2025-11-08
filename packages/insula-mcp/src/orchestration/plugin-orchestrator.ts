@@ -558,9 +558,10 @@ export class PluginOrchestrator {
             }
             case "custom": {
                 if (!condition.field) return true;
+                const fieldName = condition.field;
                 // Custom field evaluation (simplified)
                 const fieldValues = allFindings
-                    .map((f) => (f as Record<string, unknown>)[condition.field!])
+                    .map((f) => (f as Record<string, unknown>)[fieldName])
                     .filter((v) => v !== undefined);
                 return fieldValues.some((v) =>
                     this.compareValues(v, condition.operator, condition.value),

@@ -154,9 +154,10 @@ export class OAuthAuthenticator {
     ): Promise<TokenResult> {
         const maxAttempts = 60; // 5 minutes with 5s intervals
         let attempts = 0;
+        let currentInterval = interval;
 
         while (attempts < maxAttempts) {
-            await this.sleep(interval * 1000);
+            await this.sleep(currentInterval * 1000);
             attempts++;
 
             try {
@@ -184,7 +185,7 @@ export class OAuthAuthenticator {
                         continue; // Keep polling
                     }
                     if (response.error === "slow_down") {
-                        interval += 5; // Increase interval
+                        currentInterval += 5; // Increase interval without mutating parameter
                         continue;
                     }
                     throw new Error(`Device code polling failed: ${response.error}`);

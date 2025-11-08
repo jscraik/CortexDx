@@ -192,7 +192,7 @@ export class EnhancedPatternMatcher {
     /**
      * Calculate Jaccard similarity between two text strings
      */
-    private calculateJaccardSimilarity(text1: string, text2: string): number {
+    calculateJaccardSimilarity(text1: string, text2: string): number {
         const tokens1 = new Set(text1.toLowerCase().split(/\s+/));
         const tokens2 = new Set(text2.toLowerCase().split(/\s+/));
 

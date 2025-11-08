@@ -964,20 +964,19 @@ function generateAdaptiveQuestion(state: DebuggingState, ctx: DevelopmentContext
   if (currentPhase === 'analysis') {
     if (userLevel === 'beginner') {
       return "Can you describe what you expected to happen versus what actually happened?";
-    } else if (userLevel === 'intermediate') {
-      return "What error message or unexpected behavior are you seeing? Please include any relevant logs.";
-    } else {
-      return "What's the failure mode? Include stack traces, error codes, and reproduction steps.";
     }
+    if (userLevel === 'intermediate') {
+      return "What error message or unexpected behavior are you seeing? Please include any relevant logs.";
+    }
+    return "What's the failure mode? Include stack traces, error codes, and reproduction steps.";
   }
 
   if (currentPhase === 'diagnosis' && hypotheses.length > 0) {
     const topHypothesis = hypotheses[0];
     if (userLevel === 'beginner') {
       return `I think the issue might be: ${topHypothesis.description}. Have you checked ${topHypothesis.nextSteps[0]}?`;
-    } else {
-      return `Based on the evidence, the most likely cause is ${topHypothesis.description} (${(topHypothesis.probability * 100).toFixed(0)}% confidence). Can you verify: ${topHypothesis.nextSteps.join(', ')}?`;
     }
+    return `Based on the evidence, the most likely cause is ${topHypothesis.description} (${(topHypothesis.probability * 100).toFixed(0)}% confidence). Can you verify: ${topHypothesis.nextSteps.join(', ')}?`;
   }
 
   // Use academic context for more targeted questions

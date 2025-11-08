@@ -58,7 +58,7 @@ export async function authenticateWithOAuth(
                 config,
                 "device-code",
                 (userCode, verificationUri) => {
-                    logger("\n" + "=".repeat(60));
+                    logger(`\n${"=".repeat(60)}`);
                     logger("  AUTHENTICATION REQUIRED");
                     logger("=".repeat(60));
                     logger("");
@@ -136,7 +136,7 @@ export async function detectAuthRequirements(
         return;
     }
 
-    logger("\n" + "=".repeat(60));
+    logger(`\n${"=".repeat(60)}`);
     logger("  AUTHENTICATION REQUIRED");
     logger("=".repeat(60));
     logger("");

@@ -255,7 +255,8 @@ export class ASVSComplianceEngine {
         ]);
 
         // L2 - Standard (Professional Edition)
-        const l2Requirements = [...requirements.get("L1")!];
+        const l1Base = requirements.get("L1") ?? [];
+        const l2Requirements = [...l1Base];
         l2Requirements.push(
             {
                 id: "V2.2.1",
@@ -333,7 +334,8 @@ export class ASVSComplianceEngine {
         requirements.set("L2", l2Requirements);
 
         // L3 - Advanced (Enterprise Edition)
-        const l3Requirements = [...requirements.get("L2")!];
+        const l2Base = requirements.get("L2") ?? [];
+        const l3Requirements = [...l2Base];
         l3Requirements.push(
             {
                 id: "V2.8.1",

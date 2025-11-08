@@ -121,10 +121,10 @@ export class FlameGraphGenerator {
                 svg += `    <title>${frame.name}\n${frame.value} samples (${((frame.value / data.metadata.totalSamples) * 100).toFixed(2)}%)</title>\n`;
             }
 
-            svg += `  </g>\n`;
+            svg += "  </g>\n";
         }
 
-        svg += `</svg>`;
+        svg += "</svg>";
 
         return svg;
     }
@@ -336,7 +336,7 @@ export class FlameGraphGenerator {
      * Generate SVG styles
      */
     private generateSVGStyles(interactive: boolean): string {
-        let styles = `  <defs>
+        const styles = `  <defs>
     <style type="text/css">
       text { font-family: Verdana; }
       .frame { cursor: ${interactive ? "pointer" : "default"}; }
@@ -446,7 +446,7 @@ export class FlameGraphGenerator {
             return text;
         }
 
-        return text.substring(0, maxChars - 3) + "...";
+        return `${text.substring(0, maxChars - 3)}...`;
     }
 
     /**

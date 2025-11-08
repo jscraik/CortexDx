@@ -157,9 +157,10 @@ export class AgentOrchestrator {
         for (const edge of definition.edges) {
             if (edge.condition) {
                 // Conditional edge
+                const condition = edge.condition;
                 graphBuilder.addConditionalEdges(
                     edge.from as "__start__",
-                    (state: WorkflowState) => edge.condition!(state) ? edge.to : END,
+                    (state: WorkflowState) => (condition(state) ? edge.to : END),
                 );
             } else {
                 // Regular edge
@@ -222,6 +223,10 @@ export class AgentOrchestrator {
         }
 
         const startTime = Date.now();
+        if (!initialState.context) {
+            throw new Error("Workflow execution requires an initial diagnostic context");
+        }
+        const initialContext = initialState.context;
 
         // Prepare initial state
         const state: WorkflowState = {
@@ -236,7 +241,7 @@ export class AgentOrchestrator {
             hasBlockers: false,
             hasMajor: false,
             awaitingUserInput: false,
-            context: initialState.context!,
+            context: initialContext,
             config: workflow.config,
             startTime,
             nodeTimings: {},

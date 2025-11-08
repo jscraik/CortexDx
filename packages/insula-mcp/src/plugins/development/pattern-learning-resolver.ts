@@ -12,6 +12,8 @@ import type {
     CodeSample,
     DevelopmentContext,
     DevelopmentPlugin,
+    Evidence,
+    EvidencePointer,
     Finding,
     Problem,
     Solution,
@@ -100,7 +102,7 @@ export function createPatternLearningResolver(
                             severity: "info",
                             title: `No pattern match for: ${problem.description}`,
                             description: `No learned patterns match this problem with sufficient confidence (min: ${minConfidence})`,
-                            evidence: problem.evidence,
+                            evidence: convertEvidenceToPointers(problem.evidence),
                             recommendation:
                                 "This appears to be a new type of problem. Once resolved, the solution will be learned for future use.",
                         });
@@ -109,7 +111,10 @@ export function createPatternLearningResolver(
 
                     // Process matches
                     for (let i = 0; i < Math.min(matches.length, 3); i++) {
-                        const match = matches[i]!;
+                        const match = matches[i];
+                        if (!match) {
+                            continue;
+                        }
                         const finding = await createFindingFromMatch(
                             problem,
                             match,
@@ -190,7 +195,7 @@ export async function learnFromSuccess(
     const allPatterns = await patternStorage.loadAllPatterns();
     const existingPattern = allPatterns.find(
         (p) =>
-            patternMatcher["calculateJaccardSimilarity"](p.problemSignature, problemSignature) >
+            patternMatcher.calculateJaccardSimilarity(p.problemSignature, problemSignature) >
             0.9,
     );
 
@@ -233,7 +238,7 @@ export async function learnFromFailure(
     const allPatterns = await patternStorage.loadAllPatterns();
     const existingPattern = allPatterns.find(
         (p) =>
-            patternMatcher["calculateJaccardSimilarity"](p.problemSignature, problemSignature) >
+            patternMatcher.calculateJaccardSimilarity(p.problemSignature, problemSignature) >
             0.9 && p.solution.id === solution.id,
     );
 
@@ -260,15 +265,17 @@ export async function exportPatterns(
     // Apply filters
     if (filters) {
         if (filters.minConfidence !== undefined) {
-            patterns = patterns.filter((p) => p.confidence >= filters.minConfidence!);
+            const minConfidence = filters.minConfidence;
+            patterns = patterns.filter((p) => p.confidence >= minConfidence);
         }
 
         if (filters.minSuccessCount !== undefined) {
-            patterns = patterns.filter((p) => p.successCount >= filters.minSuccessCount!);
+            const minSuccessCount = filters.minSuccessCount;
+            patterns = patterns.filter((p) => p.successCount >= minSuccessCount);
         }
 
         if (filters.problemTypes && filters.problemTypes.length > 0) {
-            patterns = patterns.filter((p) => filters.problemTypes!.includes(p.problemType));
+            patterns = patterns.filter((p) => filters.problemTypes?.includes(p.problemType));
         }
     }
 
@@ -295,7 +302,7 @@ export async function importPatterns(
         // Check if similar pattern exists
         const similar = existingPatterns.find(
             (p) =>
-                patternMatcher["calculateJaccardSimilarity"](
+                patternMatcher.calculateJaccardSimilarity(
                     p.problemSignature,
                     pattern.problemSignature,
                 ) > 0.9,
@@ -342,23 +349,24 @@ export async function importPatterns(
 async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
     const problems: Problem[] = [];
     const conversation = ctx.conversationHistory.map((m) => m.content.toLowerCase()).join(" ");
+    const environment = ctx.projectContext?.environment || "development";
 
     // Detect error mentions
     if (conversation.includes("error") || conversation.includes("fail")) {
         problems.push({
             id: "error_detected",
-            type: "code",
-            severity: "high",
+            type: "development",
+            severity: "major",
             description: "Error condition detected in conversation",
             userFriendlyDescription: "An error was reported that may need fixing",
             context: {
                 mcpVersion: "2024-11-05",
                 serverType: "unknown",
-                environment: ctx.projectContext?.environment || "development",
+                environment,
                 configuration: {},
                 errorLogs: ctx.conversationHistory.map((m) => m.content),
             },
-            evidence: [{ type: "log", ref: "conversation-history", data: conversation }],
+            evidence: [createConversationEvidence(ctx, conversation)],
             affectedComponents: [],
             suggestedSolutions: [],
             userLevel: "intermediate",
@@ -372,18 +380,18 @@ async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
     ) {
         problems.push({
             id: "connection_failure",
-            type: "connection",
-            severity: "high",
+            type: "integration",
+            severity: "major",
             description: "Connection failure detected",
             userFriendlyDescription: "MCP connection issues reported",
             context: {
                 mcpVersion: "2024-11-05",
                 serverType: "unknown",
-                environment: ctx.projectContext?.environment || "development",
+                environment,
                 configuration: {},
                 errorLogs: ctx.conversationHistory.map((m) => m.content),
             },
-            evidence: [{ type: "log", ref: "conversation-history", data: conversation }],
+            evidence: [createConversationEvidence(ctx, conversation, 0.9)],
             affectedComponents: ["connection", "network"],
             suggestedSolutions: [],
             userLevel: "intermediate",
@@ -395,17 +403,17 @@ async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
         problems.push({
             id: "protocol_issue",
             type: "protocol",
-            severity: "high",
+            severity: "major",
             description: "Protocol-related issue detected",
             userFriendlyDescription: "MCP protocol compliance or communication issue",
             context: {
                 mcpVersion: "2024-11-05",
                 serverType: "unknown",
-                environment: ctx.projectContext?.environment || "development",
+                environment,
                 configuration: {},
                 errorLogs: ctx.conversationHistory.map((m) => m.content),
             },
-            evidence: [{ type: "log", ref: "conversation-history", data: conversation }],
+            evidence: [createConversationEvidence(ctx, conversation, 0.95)],
             affectedComponents: ["protocol", "json-rpc"],
             suggestedSolutions: [],
             userLevel: "intermediate",
@@ -413,6 +421,43 @@ async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
     }
 
     return problems;
+}
+
+function createConversationEvidence(
+    ctx: DevelopmentContext,
+    conversation: string,
+    relevance = 1,
+): Evidence {
+    return {
+        type: "log",
+        source: "conversation-history",
+        data: {
+            transcript: ctx.conversationHistory.map((message) => ({
+                role: message.role,
+                content: message.content,
+            })),
+            aggregated: conversation,
+        },
+        timestamp: Date.now(),
+        relevance,
+    };
+}
+
+function convertEvidenceToPointers(evidence: Evidence[]): EvidencePointer[] {
+    return evidence.map((entry) => ({
+        type: evidenceTypeToPointer(entry.type),
+        ref: entry.source,
+    }));
+}
+
+function evidenceTypeToPointer(type: Evidence["type"]): EvidencePointer["type"] {
+    if (type === "code" || type === "configuration") {
+        return "file";
+    }
+    if (type === "log" || type === "metric" || type === "network") {
+        return "log";
+    }
+    return "log";
 }
 
 /**
@@ -451,7 +496,7 @@ async function createFindingFromMatch(
         severity: rank === 0 ? "info" : "minor",
         title,
         description,
-        evidence: problem.evidence,
+        evidence: convertEvidenceToPointers(problem.evidence),
         recommendation: pattern.solution.description,
         confidence,
         remediation: {

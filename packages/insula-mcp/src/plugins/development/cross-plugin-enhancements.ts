@@ -147,12 +147,12 @@ export class ConversationalUXManager {
 
         // Add code examples if preferred
         if (profile.preferences.codeExamples && options?.includeCodeExample) {
-            formatted += '\n\n' + this.generateCodeExample(context);
+            formatted += `\n\n${this.generateCodeExample(context)}`;
         }
 
         // Add step-by-step guidance if preferred
         if (profile.preferences.stepByStepGuidance && options?.includeSteps) {
-            formatted += '\n\n' + this.generateStepByStep(context);
+            formatted += `\n\n${this.generateStepByStep(context)}`;
         }
 
         return formatted;
@@ -168,7 +168,7 @@ export class ConversationalUXManager {
 
     private makeDetailed(content: string, _context: DevelopmentContext): string {
         // Add more context and explanations
-        return content + '\n\nFor more details, see the MCP specification documentation.';
+        return `${content}\n\nFor more details, see the MCP specification documentation.`;
     }
 
     private generateCodeExample(_context: DevelopmentContext): string {

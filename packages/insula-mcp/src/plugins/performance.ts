@@ -108,7 +108,7 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
           area: "performance-recommendations",
           severity: "info",
           title: `Generated ${criticalRecommendations.length} optimization recommendations`,
-          description: `Review recommendations for actionable performance improvements with code examples and impact estimates`,
+          description: "Review recommendations for actionable performance improvements with code examples and impact estimates",
           evidence: [{ type: "url", ref: ctx.endpoint }],
           confidence: 1.0,
         });

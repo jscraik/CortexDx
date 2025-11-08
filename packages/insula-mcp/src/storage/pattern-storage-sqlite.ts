@@ -78,11 +78,11 @@ export class PatternAnonymizer {
      */
     static anonymizeSolution(solution: unknown): unknown {
         if (typeof solution === "string") {
-            return this.anonymizeProblemSignature(solution);
+            return PatternAnonymizer.anonymizeProblemSignature(solution);
         }
 
         if (Array.isArray(solution)) {
-            return solution.map((item) => this.anonymizeSolution(item));
+            return solution.map((item) => PatternAnonymizer.anonymizeSolution(item));
         }
 
         if (solution && typeof solution === "object") {
@@ -98,7 +98,7 @@ export class PatternAnonymizer {
                 ) {
                     anonymized[key] = "[REDACTED]";
                 } else {
-                    anonymized[key] = this.anonymizeSolution(value);
+                    anonymized[key] = PatternAnonymizer.anonymizeSolution(value);
                 }
             }
             return anonymized;
