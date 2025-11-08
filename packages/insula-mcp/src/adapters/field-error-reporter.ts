@@ -257,7 +257,7 @@ function formatErrorReport(errors: DetailedError[]): string {
     const lines: string[] = [];
     const summary = createValidationSummary(errors);
     lines.push('MCP Protocol Validation Report');
-    lines.push('Summary');
+    lines.push('## Summary');
     lines.push(`Total issues: ${summary.totalIssues}`);
     lines.push(`Errors: ${summary.errors}`);
     lines.push(`Warnings: ${summary.warnings}`);
