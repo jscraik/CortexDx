@@ -319,7 +319,7 @@ function getResourceRules(): CELRule[] {
             .forField('resource.name')
             .stringLength(1, 200)
             .withMessage('Resource name must be between 1 and 200 characters')
-            .withSeverity('warning')
+            .withSeverity('error')
             .build()
     ];
 }
