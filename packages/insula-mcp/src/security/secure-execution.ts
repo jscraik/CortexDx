@@ -219,7 +219,7 @@ export class SecureLlmAdapter implements EnhancedLlmAdapter {
         this.storage = new SecureModelStorage(storageConfig);
     }
 
-    get backend(): "ollama" | "mlx" {
+    get backend(): "ollama" {
         return this.adapter.backend;
     }
 

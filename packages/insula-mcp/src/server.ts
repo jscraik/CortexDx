@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Insula MCP Server
  * HTTP server that exposes the academic research providers as MCP endpoints
@@ -28,7 +26,16 @@ import { createFeatureAccessMiddleware, createLicenseEnforcementMiddleware, type
 import { getAcademicRegistry } from "./registry/index.js";
 import { TemplateEngine } from "./template-engine/engine.js";
 import type { FixTemplate } from "./templates/fix-templates.js";
-import { getTemplate, getTemplatesByArea, getTemplatesBySeverity } from "./templates/fix-templates.js";
+import * as FixTemplateModule from "./templates/fix-templates.js";
+const { getTemplate, getTemplatesByArea, getTemplatesBySeverity } = FixTemplateModule;
+
+const listAllTemplates = (): FixTemplate[] => {
+    if (Object.prototype.hasOwnProperty.call(FixTemplateModule, "FixTemplates")) {
+        const registry = (FixTemplateModule as { FixTemplates?: Record<string, FixTemplate> }).FixTemplates;
+        return registry ? Object.values(registry) : [];
+    }
+    return [];
+};
 import { findMcpTool, getAllMcpToolsFlat } from "./tools/index.js";
 import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "./types.js";
 
@@ -330,27 +337,29 @@ const licenseEnforcementMiddleware = createLicenseEnforcementMiddleware(licenseE
 const featureAccessMiddleware = createFeatureAccessMiddleware();
 
 // Global scheduler for background monitoring
-const monitoringScheduler = new MonitoringScheduler({
-    endpoint: `http://${HOST}:${PORT}`,
-    logger: (...args) => console.log('[Monitoring]', ...args),
-    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
-        const response = await fetch(input, init);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        return response.json() as T;
-    },
-    jsonrpc: async <T>(method: string, params?: unknown): Promise<T> => {
-        // Simple JSON-RPC implementation
-        return {} as T;
-    },
-    sseProbe: async () => ({ ok: true }),
-    evidence: () => undefined,
-    deterministic: true,
-    sessionId: `server-${Date.now()}`,
-    userExpertiseLevel: 'expert',
-    conversationHistory: [],
-});
+const createMonitoringSchedulerInstance = () =>
+    new MonitoringScheduler({
+        endpoint: `http://${HOST}:${PORT}`,
+        logger: (...args) => console.log('[Monitoring]', ...args),
+        request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+            const response = await fetch(input, init);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json() as T;
+        },
+        jsonrpc: async <T>(): Promise<T> => {
+            return {} as T;
+        },
+        sseProbe: async () => ({ ok: true }),
+        evidence: () => undefined,
+        deterministic: true,
+        sessionId: `server-${Date.now()}`,
+        userExpertiseLevel: 'expert',
+        conversationHistory: [],
+    });
+
+let monitoringScheduler = createMonitoringSchedulerInstance();
 
 // Initialize global monitoring system
 const monitoring = getGlobalMonitoring();
@@ -368,10 +377,11 @@ if (ENABLE_MONITORING) {
 }
 
 // Handle self-healing API requests
-async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
+export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
     try {
         const url = new URL(req.url || '/', `http://${req.headers.host}`);
         const method = req.method;
+        const route = url.pathname;
 
         // Set JSON response headers
         res.setHeader('Content-Type', 'application/json');
@@ -399,7 +409,7 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
         });
 
         // Route handling
-        if (path === '/api/v1/self-diagnose' && method === 'POST') {
+        if (route === '/api/v1/self-diagnose' && method === 'POST') {
             // Self-diagnosis endpoint
             let body = '';
             req.on('data', (chunk) => {
@@ -435,7 +445,7 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
             return;
         }
 
-        if (path === '/api/v1/health' && method === 'GET') {
+        if (route === '/api/v1/health' && method === 'GET') {
             // Quick health check endpoint
             const ctx = createDevContext();
             const healer = new AutoHealer(ctx);
@@ -450,25 +460,28 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
             return;
         }
 
-        if (path === '/api/v1/templates' && method === 'GET') {
-            // List templates endpoint
-            const url = new URL(req.url || '/', `http://${req.headers.host}`);
+        if (route === '/api/v1/templates' && method === 'GET') {
             const area = url.searchParams.get('area');
             const severity = url.searchParams.get('severity');
 
-            let templates = Object.values(getTemplate);
-            if (area) templates = getTemplatesByArea(area);
+            const baseTemplates = listAllTemplates();
+            let templates: FixTemplate[] = baseTemplates;
+
+            if (area) {
+                templates = getTemplatesByArea?.(area) ?? [];
+            }
+
             if (severity) {
                 const severityValues: FixTemplate['severity'][] = ['blocker', 'major', 'minor', 'info'];
                 if (severityValues.includes(severity as FixTemplate['severity'])) {
-                    templates = getTemplatesBySeverity(severity as FixTemplate['severity']);
+                    templates = getTemplatesBySeverity?.(severity as FixTemplate['severity']) ?? [];
                 }
             }
 
             res.writeHead(200);
             res.end(JSON.stringify({
                 success: true,
-                templates: templates.map(t => ({
+                templates: templates.map((t) => ({
                     id: t.id,
                     name: t.name,
                     description: t.description,
@@ -484,11 +497,11 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
             return;
         }
 
-        if (path.startsWith('/api/v1/templates/') && method === 'POST') {
+        if (route.startsWith('/api/v1/templates/') && method === 'POST') {
             // Apply template endpoint
-            const templateId = path.split('/').pop();
+            const templateId = route.split('/').pop();
             if (!templateId) {
-                res.writeHead(400);
+                res.writeHead(404);
                 res.end(JSON.stringify({
                     success: false,
                     error: 'Template ID required',
@@ -508,8 +521,8 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
                     const templateEngine = new TemplateEngine();
 
                     // Create a mock finding for the template application
-                    const template = getTemplate(templateId);
-                    if (!template) {
+                    const template = getTemplate?.(templateId);
+                    if (!template || template.id !== templateId) {
                         res.writeHead(404);
                         res.end(JSON.stringify({
                             success: false,
@@ -560,7 +573,7 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
             return;
         }
 
-        if (path === '/api/v1/monitor' && method === 'POST') {
+        if (route === '/api/v1/monitor' && method === 'POST') {
             // Monitoring control endpoint
             let body = '';
             req.on('data', (chunk) => {
@@ -571,6 +584,7 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
                     const options = body ? JSON.parse(body) : {};
 
                     if (options.action === 'start') {
+                        monitoringScheduler = createMonitoringSchedulerInstance();
                         monitoringScheduler.start({
                             checkIntervalMs: (options.intervalSeconds || 300) * 1000,
                             configs: options.configs,
@@ -628,7 +642,7 @@ async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResponse, p
         res.end(JSON.stringify({
             success: false,
             error: 'API endpoint not found',
-            path,
+            path: route,
             method,
             timestamp: new Date().toISOString(),
         }));
@@ -1179,58 +1193,62 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
     }
 });
 
-server.listen(PORT, HOST, () => {
-    console.log(`🚀 Insula MCP Server running on http://${HOST}:${PORT}`);
-    console.log(`📚 Academic providers available: ${Object.keys(registry.getAllProviders()).join(', ')}`);
-    console.log(`🌐 Web Interface: http://${HOST}:${PORT}/`);
-    console.log("\nEndpoints:");
-    console.log("  GET  /              - Web Interface");
-    console.log("  GET  /health        - Health check (add ?detailed=true for full report)");
-    console.log("  GET  /events        - SSE real-time updates");
-    console.log("  GET  /providers     - List all providers");
-    console.log("  GET  /capabilities  - All provider capabilities");
-    console.log("  GET  /health-checks - Provider health status");
-    console.log("  POST /mcp           - MCP protocol endpoint");
-    console.log("  GET  /providers/:id - Provider details");
-    console.log("  POST /providers/:id/execute - Execute provider tool");
-    console.log("");
-    console.log("Monitoring API:");
-    console.log("  GET  /monitoring/status  - Monitoring system status");
-    console.log("  GET  /monitoring/report  - Comprehensive monitoring report");
-    console.log("  GET  /monitoring/alerts  - Current alerts");
-    console.log("  DELETE /monitoring/alerts - Clear alerts");
-    console.log("  POST /monitoring/control - Start/stop monitoring");
-    console.log("");
-    console.log("Self-Healing API:");
-    console.log("  POST /api/v1/self-diagnose - Run self-diagnosis with optional auto-fix");
-    console.log("  GET  /api/v1/health        - Quick health check");
-    console.log("  GET  /api/v1/templates      - List available fix templates");
-    console.log("  POST /api/v1/templates/:id - Apply a fix template");
-    console.log("  POST /api/v1/monitor       - Control background monitoring");
+const SHOULD_LISTEN = process.env.VITEST !== "true" && process.env.NODE_ENV !== "test";
 
-    // Start monitoring if enabled
-    if (ENABLE_MONITORING) {
-        const ctx = {
-            endpoint: `http://${HOST}:${PORT}`,
-            logger: (...args: unknown[]) => console.log('[Monitoring]', ...args),
-            request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
-                const response = await fetch(input, init);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                return response.json() as T;
-            },
-            jsonrpc: async <T>(): Promise<T> => ({} as T),
-            sseProbe: async () => ({ ok: true }),
-            evidence: () => undefined,
-            deterministic: true,
-        };
+if (SHOULD_LISTEN) {
+    server.listen(PORT, HOST, () => {
+        console.log(`🚀 Insula MCP Server running on http://${HOST}:${PORT}`);
+        console.log(`📚 Academic providers available: ${Object.keys(registry.getAllProviders()).join(', ')}`);
+        console.log(`🌐 Web Interface: http://${HOST}:${PORT}/`);
+        console.log("\nEndpoints:");
+        console.log("  GET  /              - Web Interface");
+        console.log("  GET  /health        - Health check (add ?detailed=true for full report)");
+        console.log("  GET  /events        - SSE real-time updates");
+        console.log("  GET  /providers     - List all providers");
+        console.log("  GET  /capabilities  - All provider capabilities");
+        console.log("  GET  /health-checks - Provider health status");
+        console.log("  POST /mcp           - MCP protocol endpoint");
+        console.log("  GET  /providers/:id - Provider details");
+        console.log("  POST /providers/:id/execute - Execute provider tool");
+        console.log("");
+        console.log("Monitoring API:");
+        console.log("  GET  /monitoring/status  - Monitoring system status");
+        console.log("  GET  /monitoring/report  - Comprehensive monitoring report");
+        console.log("  GET  /monitoring/alerts  - Current alerts");
+        console.log("  DELETE /monitoring/alerts - Clear alerts");
+        console.log("  POST /monitoring/control - Start/stop monitoring");
+        console.log("");
+        console.log("Self-Healing API:");
+        console.log("  POST /api/v1/self-diagnose - Run self-diagnosis with optional auto-fix");
+        console.log("  GET  /api/v1/health        - Quick health check");
+        console.log("  GET  /api/v1/templates      - List available fix templates");
+        console.log("  POST /api/v1/templates/:id - Apply a fix template");
+        console.log("  POST /api/v1/monitor       - Control background monitoring");
 
-        monitoring.setContext(ctx);
-        monitoring.start();
-        console.log(`\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`);
-    }
-});
+        // Start monitoring if enabled
+        if (ENABLE_MONITORING) {
+            const ctx = {
+                endpoint: `http://${HOST}:${PORT}`,
+                logger: (...args: unknown[]) => console.log('[Monitoring]', ...args),
+                request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+                    const response = await fetch(input, init);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json() as T;
+                },
+                jsonrpc: async <T>(): Promise<T> => ({} as T),
+                sseProbe: async () => ({ ok: true }),
+                evidence: () => undefined,
+                deterministic: true,
+            };
+
+            monitoring.setContext(ctx);
+            monitoring.start();
+            console.log(`\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`);
+        }
+    });
+}
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
@@ -1250,3 +1268,6 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
+
+export { server };
+export default server;

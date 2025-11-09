@@ -7,14 +7,6 @@ export function hasOllama(): boolean {
   return result.status === 0;
 }
 
-export function hasMlx(): boolean {
-  if (process.platform !== "darwin") return false;
-  const result = spawnSync("python3", ["-c", "import mlx.core"], {
-    stdio: "ignore",
-  });
-  return result.status === 0;
-}
-
 export async function isOllamaReachable(url: string = DEFAULT_OLLAMA_URL): Promise<boolean> {
   const target = `${url.replace(/\/$/, "")}/api/tags`;
   const controller = new AbortController();

@@ -854,13 +854,6 @@ class RollbackManager {
       }
     }
 
-    // Restore configuration
-    try {
-      // Simulate config restoration
-    } catch (error) {
-      errors.push(`Failed to restore configuration: ${error}`);
-    }
-
     const success = errors.length === 0;
     const message = success
       ? `Successfully rolled back to snapshot from ${new Date(snapshot.timestamp).toISOString()}`

@@ -1,0 +1,50 @@
+{
+  "$id": "https://insula.local/schemas/finding.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["id", "source", "severity", "title", "precision"],
+  "properties": {
+    "id": { "type": "string" },
+    "source": { "type": "string" },
+    "ruleId": { "type": "string" },
+    "severity": { "enum": ["info", "minor", "major", "critical"] },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "precision": { "enum": ["file", "line", "range"] },
+    "location": {
+      "type": "object",
+      "properties": {
+        "file": { "type": "string" },
+        "start": {
+          "type": "object",
+          "properties": {
+            "line": { "type": "integer", "minimum": 1 },
+            "col": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "end": {
+          "type": "object",
+          "properties": {
+            "line": { "type": "integer", "minimum": 1 },
+            "col": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "recommendation": { "type": "string" },
+    "originalId": { "type": "string" },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "pointers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -427,16 +427,6 @@ ollama pull llama3
 insula-mcp interactive
 ```
 
-#### Option 2: MLX (Apple Silicon)
-
-```bash
-# Install MLX
-pip install mlx-lm
-
-# Insula MCP will auto-detect MLX
-insula-mcp interactive
-```
-
 ## Common Workflows
 
 ### Building Your First MCP Server

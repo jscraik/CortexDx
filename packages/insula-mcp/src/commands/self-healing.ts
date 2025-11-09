@@ -71,7 +71,7 @@ export async function runSelfDiagnose(options: {
 
     // Save report if requested
     if (options.out) {
-      await fs.writeFile(options.out, JSON.stringify(report, null, 2));
+      await fs.writeFile(options.out, JSON.stringify(report, null, 2), "utf-8");
       console.log(`\n[Self-Healing] Report saved to ${options.out}`);
     }
 
@@ -145,7 +145,7 @@ export async function runHealEndpoint(
         findings,
         inspectorReport: report,
       };
-      await fs.writeFile(options.out, JSON.stringify(fullReport, null, 2));
+      await fs.writeFile(options.out, JSON.stringify(fullReport, null, 2), "utf-8");
       console.log(`\n[Self-Healing] Report saved to ${options.out}`);
     }
 
@@ -242,7 +242,7 @@ export async function runMonitoring(options: {
 
     if (options.export) {
       const config = scheduler.exportConfig();
-      await fs.writeFile(options.export, JSON.stringify(config, null, 2));
+      await fs.writeFile(options.export, JSON.stringify(config, null, 2), "utf-8");
       console.log(`[Monitoring] Configuration exported to ${options.export}`);
       return 0;
     }

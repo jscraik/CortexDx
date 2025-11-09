@@ -10,7 +10,6 @@ export {
   type IdeAdapterConfig,
   type IdeCapabilities,
 } from "./ide-adapter.js";
-export { createMlxAdapter, type MlxConfig } from "./mlx.js";
 export { createOllamaAdapter, type OllamaConfig } from "./ollama.js";
 
 // Embedding adapters
@@ -22,11 +21,6 @@ export type {
   EmbeddingRequest,
   EmbeddingVector,
 } from "./embedding.js";
-export {
-  createMlxEmbeddingAdapter,
-  MlxEmbeddingAdapter,
-  type MlxEmbeddingConfig,
-} from "./mlx-embedding.js";
 export {
   createOllamaEmbeddingAdapter,
   OllamaEmbeddingAdapter,

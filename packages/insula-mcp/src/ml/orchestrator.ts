@@ -3,7 +3,6 @@
  * Manages conversation context, session handling, and prompt engineering with <2s response time requirement
  */
 
-import { createMlxAdapter } from "../adapters/mlx.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import {
   type ModelManager,
@@ -26,10 +25,10 @@ import type {
   Problem,
   Solution,
 } from "../types.js";
-import { hasMlx, hasOllama } from "./detect.js";
+import { hasOllama } from "./detect.js";
 
 export interface OrchestratorConfig {
-  preferredBackend?: "ollama" | "mlx" | "auto";
+  preferredBackend?: "ollama" | "auto";
   maxConcurrentSessions?: number;
   sessionTimeoutMs?: number;
   responseTimeoutMs?: number;
@@ -303,7 +302,7 @@ export class LlmOrchestrator {
       if (metrics) {
         const perfMetric: ModelPerformanceMetrics = {
           modelId: metrics.backend,
-          backend: metrics.backend as "ollama" | "mlx",
+          backend: metrics.backend as "ollama",
           taskType: "conversation",
           inferenceTimeMs: inferenceTime,
           tokensGenerated: response.length / 4, // Rough estimate
@@ -424,39 +423,17 @@ export class LlmOrchestrator {
       console.warn("Failed to initialize Ollama adapter:", error);
     }
 
-    try {
-      if (hasMlx()) {
-        const mlxAdapter = createMlxAdapter();
-        this.adapters.set("mlx", mlxAdapter);
-      }
-    } catch (error) {
-      console.warn("Failed to initialize MLX adapter:", error);
-    }
-
     if (this.adapters.size === 0) {
       throw new Error("No LLM adapters available");
     }
   }
 
   private async selectBestAdapter(): Promise<EnhancedLlmAdapter> {
-    if (this.config.preferredBackend !== "auto") {
-      const adapter = this.adapters.get(this.config.preferredBackend);
-      if (adapter) {
-        return adapter;
-      }
+    const preferred = this.config.preferredBackend === "auto" ? "ollama" : this.config.preferredBackend;
+    const adapter = this.adapters.get(preferred);
+    if (adapter) {
+      return adapter;
     }
-
-    // Auto-select based on availability and performance
-    if (this.adapters.has("mlx")) {
-      const mlxAdapter = this.adapters.get("mlx");
-      if (mlxAdapter) return mlxAdapter; // Prefer MLX on Apple Silicon for speed
-    }
-
-    if (this.adapters.has("ollama")) {
-      const ollamaAdapter = this.adapters.get("ollama");
-      if (ollamaAdapter) return ollamaAdapter;
-    }
-
     throw new Error("No suitable LLM adapter available");
   }
 

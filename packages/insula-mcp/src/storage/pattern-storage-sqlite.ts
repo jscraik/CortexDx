@@ -7,7 +7,7 @@
  */
 
 import Database from "better-sqlite3";
-import { createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import type {
     CommonIssuePattern,
     EnhancedPatternStorage,
@@ -17,103 +17,131 @@ import type {
     ResolutionPattern,
 } from "./pattern-storage.js";
 
+type PatternRow = {
+    id: string;
+    problem_type: string;
+    problem_signature: string;
+    solution_data: string;
+    success_count: number;
+    failure_count: number;
+    average_resolution_time: number;
+    last_used: number;
+    confidence: number;
+    created_at: number;
+    updated_at: number;
+};
+
+type FeedbackRow = {
+    id: number;
+    pattern_id: string;
+    timestamp: number;
+    user_id: string | null;
+    rating: number;
+    successful: number;
+    comments: string | null;
+    context: string | null;
+};
+
+type CommonIssueRow = {
+    signature: string;
+    occurrences: number;
+    solutions: string;
+    contexts: string;
+    first_seen: number;
+    last_seen: number;
+};
+
+type PatternStatsRow = {
+    total: number;
+    successes: number | null;
+    failures: number | null;
+    avg_confidence: number | null;
+};
+
 /**
  * Anonymization utilities for removing sensitive data from patterns
  */
-export class PatternAnonymizer {
-    /**
-     * Anonymize a problem signature by removing sensitive data
-     * Removes: URLs, API keys, credentials, user-specific identifiers
-     */
-    static anonymizeProblemSignature(signature: string): string {
-        let anonymized = signature;
+export function anonymizeProblemSignature(signature: string): string {
+    let anonymized = signature;
 
-        // Remove URLs (replace with generic placeholder)
-        anonymized = anonymized.replace(
-            /https?:\/\/[^\s]+/gi,
-            "https://example.com/mcp",
-        );
+    anonymized = anonymized.replace(
+        /https?:\/\/[^\s]+/gi,
+        "https://example.com/mcp",
+    );
 
-        // Remove bearer tokens (before API keys to avoid double replacement)
-        anonymized = anonymized.replace(
-            /bearer\s+[A-Za-z0-9._-]+/gi,
-            "bearer [TOKEN_REMOVED]",
-        );
+    anonymized = anonymized.replace(
+        /bearer\s+[A-Za-z0-9._-]+/gi,
+        "bearer [TOKEN_REMOVED]",
+    );
 
-        // Remove API keys (common patterns - sk_, pk_, etc.)
-        anonymized = anonymized.replace(
-            /\b(sk|pk|api)_[a-z]+_[A-Za-z0-9]{20,}\b/gi,
-            "[API_KEY_REMOVED]",
-        );
+    anonymized = anonymized.replace(
+        /\b(sk|pk|api)_[a-z]+_[A-Za-z0-9]{20,}\b/gi,
+        "[API_KEY_REMOVED]",
+    );
 
-        // Remove email addresses
-        anonymized = anonymized.replace(
-            /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-            "[EMAIL_REMOVED]",
-        );
+    anonymized = anonymized.replace(
+        /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+        "[EMAIL_REMOVED]",
+    );
 
-        // Remove IP addresses
-        anonymized = anonymized.replace(
-            /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
-            "[IP_REMOVED]",
-        );
+    anonymized = anonymized.replace(
+        /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
+        "[IP_REMOVED]",
+    );
 
-        // Remove custom domain names (keep generic patterns)
-        anonymized = anonymized.replace(
-            /\b(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+\.)+[a-z]{2,}\b/gi,
-            "example.com",
-        );
+    anonymized = anonymized.replace(
+        /\b(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+\.)+[a-z]{2,}\b/gi,
+        "example.com",
+    );
 
-        // Remove potential credentials in connection strings
-        anonymized = anonymized.replace(
-            /(?:password|pwd|pass|secret|token|key)[:=]\s*[^\s;]+/gi,
-            "$1=[REDACTED]",
-        );
+    anonymized = anonymized.replace(
+        /(?:password|pwd|pass|secret|token|key)[:=]\s*[^\s;]+/gi,
+        "$1=[REDACTED]",
+    );
 
+    return anonymized;
+}
+
+export function anonymizeSolution(solution: unknown): unknown {
+    if (typeof solution === "string") {
+        return anonymizeProblemSignature(solution);
+    }
+
+    if (Array.isArray(solution)) {
+        return solution.map((item) => anonymizeSolution(item));
+    }
+
+    if (solution && typeof solution === "object") {
+        const anonymized: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(solution)) {
+            const lowered = key.toLowerCase();
+            if (
+                lowered.includes("password") ||
+                lowered.includes("secret") ||
+                lowered.includes("token") ||
+                lowered.includes("key") ||
+                lowered.includes("credential")
+            ) {
+                anonymized[key] = "[REDACTED]";
+            } else {
+                anonymized[key] = anonymizeSolution(value);
+            }
+        }
         return anonymized;
     }
 
-    /**
-     * Anonymize solution data by removing sensitive information
-     */
-    static anonymizeSolution(solution: unknown): unknown {
-        if (typeof solution === "string") {
-            return PatternAnonymizer.anonymizeProblemSignature(solution);
-        }
-
-        if (Array.isArray(solution)) {
-            return solution.map((item) => PatternAnonymizer.anonymizeSolution(item));
-        }
-
-        if (solution && typeof solution === "object") {
-            const anonymized: Record<string, unknown> = {};
-            for (const [key, value] of Object.entries(solution)) {
-                // Skip sensitive fields entirely
-                if (
-                    key.toLowerCase().includes("password") ||
-                    key.toLowerCase().includes("secret") ||
-                    key.toLowerCase().includes("token") ||
-                    key.toLowerCase().includes("key") ||
-                    key.toLowerCase().includes("credential")
-                ) {
-                    anonymized[key] = "[REDACTED]";
-                } else {
-                    anonymized[key] = PatternAnonymizer.anonymizeSolution(value);
-                }
-            }
-            return anonymized;
-        }
-
-        return solution;
-    }
-
-    /**
-     * Hash user-specific identifiers for privacy
-     */
-    static hashIdentifier(identifier: string): string {
-        return createHash("sha256").update(identifier).digest("hex").substring(0, 16);
-    }
+    return solution;
 }
+
+export function hashIdentifier(identifier: string): string {
+    return createHash("sha256").update(identifier).digest("hex").substring(0, 16);
+}
+
+export const PatternAnonymizer = {
+    anonymizeProblemSignature,
+    anonymizeSolution,
+    hashIdentifier,
+};
 
 /**
  * Simple encryption for pattern data at rest
@@ -141,7 +169,6 @@ export class PatternEncryption {
      * Encrypt data using AES-256-GCM
      */
     encrypt(data: string): string {
-        const { createCipheriv } = require("node:crypto");
         const iv = randomBytes(16);
         const cipher = createCipheriv("aes-256-gcm", this.key, iv);
 
@@ -158,15 +185,18 @@ export class PatternEncryption {
      * Decrypt data using AES-256-GCM
      */
     decrypt(encryptedData: string): string {
-        const { createDecipheriv } = require("node:crypto");
         const parts = encryptedData.split(":");
         if (parts.length !== 3) {
             throw new Error("Invalid encrypted data format");
         }
 
-        const iv = Buffer.from(parts[0]!, "hex");
-        const authTag = Buffer.from(parts[1]!, "hex");
-        const encrypted = parts[2]!;
+        const [ivHex, authTagHex, encrypted] = parts;
+        if (!ivHex || !authTagHex || !encrypted) {
+            throw new Error("Invalid encrypted data format");
+        }
+
+        const iv = Buffer.from(ivHex, "hex");
+        const authTag = Buffer.from(authTagHex, "hex");
 
         const decipher = createDecipheriv("aes-256-gcm", this.key, iv);
         decipher.setAuthTag(authTag);
@@ -337,7 +367,7 @@ export function createSQLitePatternStorage(
         },
 
         async loadPattern(id: string): Promise<ResolutionPattern | null> {
-            const row = selectPattern.get(id) as any;
+            const row = selectPattern.get(id) as PatternRow | undefined;
             if (!row) return null;
 
             const pattern = deserializePattern(row.solution_data);
@@ -354,7 +384,7 @@ export function createSQLitePatternStorage(
         },
 
         async loadAllPatterns(): Promise<ResolutionPattern[]> {
-            const rows = selectAllPatterns.all() as any[];
+            const rows = selectAllPatterns.all() as PatternRow[];
             return rows.map((row) => {
                 const pattern = deserializePattern(row.solution_data);
                 return {
@@ -398,7 +428,7 @@ export function createSQLitePatternStorage(
             // Update pattern confidence based on feedback
             const pattern = await this.loadPattern(id);
             if (pattern) {
-                const feedbackRows = selectFeedback.all(id) as any[];
+                const feedbackRows = selectFeedback.all(id) as FeedbackRow[];
                 const recentFeedback = feedbackRows
                     .filter((f) => Date.now() - f.timestamp < 30 * 24 * 60 * 60 * 1000)
                     .map((f) => f.rating);
@@ -433,7 +463,7 @@ export function createSQLitePatternStorage(
         },
 
         async loadCommonIssues(): Promise<CommonIssuePattern[]> {
-            const rows = selectCommonIssues.all() as any[];
+            const rows = selectCommonIssues.all() as CommonIssueRow[];
             return rows.map((row) => ({
                 signature: row.signature,
                 occurrences: row.occurrences,
@@ -446,7 +476,7 @@ export function createSQLitePatternStorage(
 
         async updateCommonIssue(signature: string, context: string): Promise<void> {
             const anonymizedSig = PatternAnonymizer.anonymizeProblemSignature(signature);
-            const existing = selectCommonIssue.get(anonymizedSig) as any;
+            const existing = selectCommonIssue.get(anonymizedSig) as CommonIssueRow | undefined;
 
             if (existing) {
                 const contexts = JSON.parse(existing.contexts) as string[];
@@ -485,7 +515,7 @@ export function createSQLitePatternStorage(
             } = options;
 
             let query = "SELECT * FROM patterns WHERE confidence >= ? AND success_count >= ?";
-            const params: any[] = [minConfidence, minSuccessCount];
+            const params: number[] = [minConfidence, minSuccessCount];
 
             if (maxAge) {
                 query += " AND last_used >= ?";
@@ -513,7 +543,7 @@ export function createSQLitePatternStorage(
                 params.push(limit);
             }
 
-            const rows = db.prepare(query).all(...params) as any[];
+            const rows = db.prepare(query).all(...params) as PatternRow[];
             return rows.map((row) => {
                 const pattern = deserializePattern(row.solution_data);
                 return {
@@ -541,9 +571,9 @@ export function createSQLitePatternStorage(
                 FROM patterns
             `,
                 )
-                .get() as any;
+                .get() as PatternStatsRow | undefined;
 
-            if (stats.total === 0) {
+            if (!stats || stats.total === 0) {
                 return {
                     totalPatterns: 0,
                     totalSuccesses: 0,
@@ -557,17 +587,17 @@ export function createSQLitePatternStorage(
 
             const mostSuccessful = db
                 .prepare("SELECT * FROM patterns ORDER BY success_count DESC LIMIT 1")
-                .get() as any;
+                .get() as PatternRow | undefined;
 
             const recentRows = db
                 .prepare("SELECT * FROM patterns ORDER BY last_used DESC LIMIT 10")
-                .all() as any[];
+                .all() as PatternRow[];
 
             const typeRows = db
                 .prepare(
                     "SELECT problem_type, COUNT(*) as count FROM patterns GROUP BY problem_type",
                 )
-                .all() as any[];
+                .all() as Array<{ problem_type: string; count: number }>;
 
             const patternsByType: Record<string, number> = {};
             for (const row of typeRows) {
@@ -576,9 +606,9 @@ export function createSQLitePatternStorage(
 
             return {
                 totalPatterns: stats.total,
-                totalSuccesses: stats.successes || 0,
-                totalFailures: stats.failures || 0,
-                averageConfidence: stats.avg_confidence || 0,
+                totalSuccesses: stats.successes ?? 0,
+                totalFailures: stats.failures ?? 0,
+                averageConfidence: stats.avg_confidence ?? 0,
                 mostSuccessfulPattern: mostSuccessful
                     ? deserializePattern(mostSuccessful.solution_data)
                     : null,

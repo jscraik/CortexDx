@@ -585,11 +585,11 @@ data:
 
 #### LLM Backend Configuration
 
-- `INSULA_MCP_LLM_BACKEND`: `ollama`, `mlx`, `llamacpp` (default: `ollama`)
+- `INSULA_MCP_LLM_BACKEND`: `ollama` (default: `ollama`)
 - `OLLAMA_HOST`: Ollama endpoint (default: `http://localhost:11434`)
 - `OLLAMA_TIMEOUT`: Ollama request timeout (default: `60000`)
-- `MLX_MODEL_PATH`: Path to MLX models (Enterprise only)
-- `LLAMACPP_ENDPOINT`: LlamaCpp server endpoint (Enterprise only)
+
+> **Note:** MLX and llama.cpp backends have been removed. Deployments must route all LLM traffic through Ollama.
 
 #### Authentication & Security (Enterprise)
 

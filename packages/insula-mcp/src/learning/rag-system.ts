@@ -5,7 +5,6 @@
  */
 
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
-import { createMlxEmbeddingAdapter } from "../adapters/mlx-embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import type {
   PatternStorage,
@@ -23,13 +22,23 @@ import type { Problem, Solution } from "../types.js";
 import type { PatternMatcher } from "./pattern-recognition.js";
 
 export interface RagConfig {
-  embeddingBackend?: "ollama" | "mlx" | "auto";
+  embeddingBackend?: "ollama" | "auto";
   embeddingModel?: string;
   vectorStoragePath?: string;
   minSimilarity?: number;
   topK?: number;
   enableHybridSearch?: boolean;
+  embeddingAdapter?: EmbeddingAdapter;
 }
+
+type RagResolvedConfig = {
+  embeddingBackend: "ollama" | "auto";
+  embeddingModel: string;
+  vectorStoragePath?: string;
+  minSimilarity: number;
+  topK: number;
+  enableHybridSearch: boolean;
+};
 
 export interface RagSearchResult {
   problem?: Problem;
@@ -56,7 +65,7 @@ export interface RagStats {
  * RAG System for semantic search and learning
  */
 export class RagSystem {
-  private readonly config: Required<RagConfig>;
+  private readonly config: RagResolvedConfig;
   private embeddingAdapter: EmbeddingAdapter | null = null;
   private vectorStorage: VectorStorage;
   private patternStorage: PatternStorage;
@@ -70,7 +79,7 @@ export class RagSystem {
     config: RagConfig = {},
   ) {
     this.config = {
-      embeddingBackend: config.embeddingBackend || "auto",
+      embeddingBackend: config.embeddingBackend || "ollama",
       embeddingModel: config.embeddingModel || "qwen3-embed",
       vectorStoragePath: config.vectorStoragePath,
       minSimilarity: config.minSimilarity || 0.6,
@@ -78,6 +87,7 @@ export class RagSystem {
       enableHybridSearch: config.enableHybridSearch ?? true,
     };
 
+    this.embeddingAdapter = config.embeddingAdapter ?? null;
     this.vectorStorage = vectorStorage;
     this.patternStorage = patternStorage;
     this.patternMatcher = patternMatcher;
@@ -92,7 +102,13 @@ export class RagSystem {
     }
 
     // Initialize embedding adapter
-    this.embeddingAdapter = await this.createEmbeddingAdapter();
+    if (!this.embeddingAdapter) {
+      this.embeddingAdapter = await this.createEmbeddingAdapter();
+    }
+
+    if (!this.embeddingAdapter) {
+      throw new Error("Failed to initialize embedding adapter");
+    }
 
     // Restore vector storage from disk if configured
     if (this.config.vectorStoragePath) {
@@ -355,28 +371,9 @@ export class RagSystem {
   // Private helper methods
 
   private async createEmbeddingAdapter(): Promise<EmbeddingAdapter> {
-    if (this.config.embeddingBackend === "ollama") {
-      return createOllamaEmbeddingAdapter({
-        defaultModel: this.config.embeddingModel,
-      });
-    }
-
-    if (this.config.embeddingBackend === "mlx") {
-      return createMlxEmbeddingAdapter({
-        defaultModel: this.config.embeddingModel,
-      });
-    }
-
-    // Auto-select based on availability
-    try {
-      return createOllamaEmbeddingAdapter({
-        defaultModel: this.config.embeddingModel,
-      });
-    } catch {
-      return createMlxEmbeddingAdapter({
-        defaultModel: this.config.embeddingModel,
-      });
-    }
+    return createOllamaEmbeddingAdapter({
+      defaultModel: this.config.embeddingModel,
+    });
   }
 
   private extractProblemText(problem: Problem): string {

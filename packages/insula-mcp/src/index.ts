@@ -3,9 +3,8 @@ export type { EnhancedLlmAdapter, FilePlan, Finding, LlmAdapter } from "./types.
 
 // ML and LLM exports
 export {
-    LlmOrchestrator, createLlmAdapter, createLlmOrchestrator, getEnhancedLlmAdapter, getLlmAdapter, hasMlx, hasOllama, pickLocalLLM
+    LlmOrchestrator, createLlmAdapter, createLlmOrchestrator, getEnhancedLlmAdapter, getLlmAdapter, hasOllama, pickLocalLLM
 } from "./ml/index.js";
 
 // Adapter exports
-export { createMlxAdapter, createOllamaAdapter } from "./adapters/index.js";
-
+export { createOllamaAdapter } from "./adapters/index.js";

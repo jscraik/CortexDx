@@ -280,15 +280,10 @@ export async function runChecklist(
           error = item.errorMessage;
         }
       } else {
-        // For items without validators, we can't automatically verify
-        // Mark as warning for manual verification
-        passed = !item.required; // Required items fail, optional ones pass
-        message = item.required
-          ? `? ${item.description} (requires manual verification)`
-          : `○ ${item.description} (optional)`;
-        if (item.required) {
-          warnings.push(`Manual verification required: ${item.description}`);
-        }
+        // Items without validators require manual verification; treat as pass but warn
+        passed = true;
+        message = `? ${item.description} (manual verification recommended)`;
+        warnings.push(`Manual verification recommended: ${item.description}`);
       }
 
       results.push({

@@ -1,13 +1,11 @@
-import { createMlxAdapter } from "../adapters/mlx.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import type { EnhancedLlmAdapter, LlmAdapter } from "../types.js";
-import { hasMlx, hasOllama, isOllamaReachable } from "./detect.js";
+import { hasOllama, isOllamaReachable } from "./detect.js";
 
 const ENABLE_LOCAL_LLM = process.env.INSULA_ENABLE_LOCAL_LLM === "true";
 
-export async function pickLocalLLM(): Promise<"mlx" | "ollama" | "none"> {
+export async function pickLocalLLM(): Promise<"ollama" | "none"> {
   if (!ENABLE_LOCAL_LLM) return "none";
-  if (hasMlx()) return "mlx";
   if (hasOllama() && (await isOllamaReachable())) return "ollama";
   return "none";
 }
@@ -24,28 +22,14 @@ export async function getLlmAdapter(): Promise<LlmAdapter | null> {
 // Enhanced adapter factory function
 export async function getEnhancedLlmAdapter(): Promise<EnhancedLlmAdapter | null> {
   const kind = await pickLocalLLM();
-
-  switch (kind) {
-    case "mlx":
-      try {
-        return createMlxAdapter();
-      } catch (error) {
-        console.warn("Failed to create MLX adapter:", error);
-        // Fallback to Ollama if available
-        if (hasOllama()) {
-          return createOllamaAdapter();
-        }
-        return null;
-      }
-    case "ollama":
-      try {
-        return createOllamaAdapter();
-      } catch (error) {
-        console.warn("Failed to create Ollama adapter:", error);
-        return null;
-      }
-    default:
-      return null;
+  if (kind !== "ollama") {
+    return null;
+  }
+  try {
+    return createOllamaAdapter();
+  } catch (error) {
+    console.warn("Failed to create Ollama adapter:", error);
+    return null;
   }
 }
 
@@ -53,23 +37,11 @@ export async function getEnhancedLlmAdapter(): Promise<EnhancedLlmAdapter | null
 export function createLlmAdapter(
   backend: "ollama",
   config?: import("../adapters/ollama.js").OllamaConfig,
-): EnhancedLlmAdapter;
-export function createLlmAdapter(
-  backend: "mlx",
-  config?: import("../adapters/mlx.js").MlxConfig,
-): EnhancedLlmAdapter;
-export function createLlmAdapter(
-  backend: "ollama" | "mlx",
-  config?: unknown,
 ): EnhancedLlmAdapter {
-  switch (backend) {
-    case "ollama":
-      return createOllamaAdapter(
-        config as import("../adapters/ollama.js").OllamaConfig,
-      );
-    case "mlx":
-      return createMlxAdapter(config as import("../adapters/mlx.js").MlxConfig);
-    default:
-      throw new Error(`Unsupported LLM backend: ${backend}`);
+  if (backend !== "ollama") {
+    throw new Error(`Unsupported LLM backend: ${backend}`);
   }
+  return createOllamaAdapter(
+    config as import("../adapters/ollama.js").OllamaConfig,
+  );
 }

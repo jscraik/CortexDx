@@ -12,7 +12,7 @@ import type {
 
 export interface ModelPerformanceMetrics {
   modelId: string;
-  backend: "ollama" | "mlx";
+  backend: "ollama";
   taskType: string;
   inferenceTimeMs: number;
   tokensGenerated: number;

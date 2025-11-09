@@ -355,7 +355,7 @@ async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
     if (conversation.includes("error") || conversation.includes("fail")) {
         problems.push({
             id: "error_detected",
-            type: "development",
+            type: "code",
             severity: "major",
             description: "Error condition detected in conversation",
             userFriendlyDescription: "An error was reported that may need fixing",
@@ -380,7 +380,7 @@ async function extractProblems(ctx: DevelopmentContext): Promise<Problem[]> {
     ) {
         problems.push({
             id: "connection_failure",
-            type: "integration",
+            type: "connection",
             severity: "major",
             description: "Connection failure detected",
             userFriendlyDescription: "MCP connection issues reported",

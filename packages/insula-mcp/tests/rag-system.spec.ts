@@ -5,7 +5,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { cosineSimilarity, normalizeVector } from "../src/adapters/embedding.js";
+import {
+    type EmbeddingAdapter,
+    type EmbeddingVector,
+    cosineSimilarity,
+    normalizeVector,
+} from "../src/adapters/embedding.js";
 import { createPatternMatcher } from "../src/learning/pattern-recognition.js";
 import { createRagSystem } from "../src/learning/rag-system.js";
 import { createInMemoryStorage } from "../src/storage/pattern-storage.js";
@@ -223,7 +228,8 @@ describe("RAG System", () => {
                 patternStorage,
                 patternMatcher,
                 {
-                    embeddingBackend: "mlx",
+                    embeddingBackend: "ollama",
+                    embeddingAdapter: createTestEmbeddingAdapter(),
                 },
             );
 
@@ -246,7 +252,8 @@ describe("RAG System", () => {
                 patternStorage,
                 patternMatcher,
                 {
-                    embeddingBackend: "mlx",
+                    embeddingBackend: "ollama",
+                    embeddingAdapter: createTestEmbeddingAdapter(),
                 },
             );
 
@@ -308,7 +315,8 @@ describe("RAG System", () => {
                 patternStorage,
                 patternMatcher,
                 {
-                    embeddingBackend: "mlx",
+                    embeddingBackend: "ollama",
+                    embeddingAdapter: createTestEmbeddingAdapter(),
                 },
             );
 
@@ -361,3 +369,59 @@ describe("RAG System", () => {
         });
     });
 });
+
+function createTestEmbeddingAdapter(): EmbeddingAdapter {
+    return {
+        backend: "ollama",
+        async embed(request) {
+            return buildDeterministicVector(request.text);
+        },
+        async embedBatch(request) {
+            return request.texts.map((text) => buildDeterministicVector(text));
+        },
+        async getAvailableModels() {
+            return [
+                {
+                    name: "mock-embed",
+                    dimensions: 16,
+                    maxTokens: 4096,
+                    memoryGb: 1,
+                    backend: "ollama",
+                    loaded: true,
+                },
+            ];
+        },
+        async loadModel() {
+            return;
+        },
+        async unloadModel() {
+            return;
+        },
+        async getCurrentModel() {
+            return {
+                name: "mock-embed",
+                dimensions: 16,
+                maxTokens: 4096,
+                memoryGb: 1,
+                backend: "ollama",
+                loaded: true,
+            };
+        },
+    };
+}
+
+function buildDeterministicVector(text: string): EmbeddingVector {
+    const length = 16;
+    const base = text || "insula";
+    const values = Array.from({ length }, (_, index) => {
+        const code = base.charCodeAt(index % base.length) ?? 32;
+        return ((code % 97) / 97) + index * 0.01;
+    });
+    const normalizedValues = normalizeVector(values);
+    return {
+        values: normalizedValues,
+        dimensions: normalizedValues.length,
+        model: "mock-embed",
+        timestamp: Date.now(),
+    };
+}

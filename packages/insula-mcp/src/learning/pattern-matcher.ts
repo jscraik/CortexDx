@@ -61,7 +61,7 @@ export class EnhancedPatternMatcher {
             // Calculate confidence based on pattern history and match score
             const patternSuccessRate =
                 pattern.successCount / (pattern.successCount + pattern.failureCount || 1);
-            const confidence = weightedScore * 0.7 + patternSuccessRate * 0.3;
+            const confidence = weightedScore * 0.4 + patternSuccessRate * 0.6;
 
             if (confidence >= minConfidence) {
                 const matchType = this.determineMatchType(scores);

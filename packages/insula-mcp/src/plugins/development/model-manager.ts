@@ -4,9 +4,8 @@
  * Requirements: 12.4, 5.3
  */
 
-import { createMlxAdapter } from "../../adapters/mlx.js";
 import { createOllamaAdapter } from "../../adapters/ollama.js";
-import { hasMlx, hasOllama } from "../../ml/detect.js";
+import { hasOllama } from "../../ml/detect.js";
 import type {
   DiagnosticContext,
   DiagnosticPlugin,
@@ -20,7 +19,7 @@ export interface ModelManagerConfig {
   warmUpOnStart?: boolean;
   memoryThresholdMb?: number;
   maxLoadedModels?: number;
-  preferredBackend?: "ollama" | "mlx" | "auto";
+  preferredBackend?: "ollama" | "auto";
   modelPreferences?: ModelPreferences;
 }
 
@@ -34,7 +33,7 @@ export interface ModelPreferences {
 
 export interface LoadedModel {
   id: string;
-  backend: "ollama" | "mlx";
+  backend: "ollama";
   info: ModelInfo;
   loadedAt: number;
   lastUsed: number;
@@ -176,7 +175,7 @@ export class ModelManager implements DiagnosticPlugin {
   // Model loading and unloading
   async loadModel(
     modelId: string,
-    backend?: "ollama" | "mlx",
+    backend?: "ollama",
   ): Promise<LoadedModel> {
     // Check if already loaded
     const existingModel = this.loadedModels.get(modelId);
@@ -354,14 +353,6 @@ export class ModelManager implements DiagnosticPlugin {
       console.warn("Failed to initialize Ollama adapter:", error);
     }
 
-    try {
-      if (hasMlx()) {
-        const mlxAdapter = createMlxAdapter();
-        this.adapters.set("mlx", mlxAdapter);
-      }
-    } catch (error) {
-      console.warn("Failed to initialize MLX adapter:", error);
-    }
   }
 
   private async getAvailableBackends(): Promise<string[]> {
@@ -370,21 +361,11 @@ export class ModelManager implements DiagnosticPlugin {
 
   private async selectBackendForModel(
     modelId: string,
-  ): Promise<"ollama" | "mlx"> {
-    if (this.config.preferredBackend !== "auto") {
-      return this.config.preferredBackend;
+  ): Promise<"ollama"> {
+    if (!this.adapters.has("ollama")) {
+      throw new Error("Ollama backend is not available");
     }
-
-    // Prefer MLX on Apple Silicon for performance
-    if (this.adapters.has("mlx")) {
-      return "mlx";
-    }
-
-    if (this.adapters.has("ollama")) {
-      return "ollama";
-    }
-
-    throw new Error("No backends available");
+    return "ollama";
   }
 
   private async isModelAvailable(modelId: string): Promise<boolean> {
