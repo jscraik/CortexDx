@@ -396,16 +396,10 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
 **Platform-Specific Installation**:
 
-#### macOS (Apple Silicon - MLX Recommended)
+#### macOS (Apple Silicon)
 
 ```bash
-# Install MLX (optimized for Apple Silicon)
-pip3 install mlx-lm
-
-# Verify MLX installation
-python3 -c "import mlx.core; print('MLX available')"
-
-# Install Ollama as alternative
+# Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
 ollama pull llama3.2:3b
 ```
@@ -476,17 +470,7 @@ ollama pull llama3.2:3b
    }
    ```
 
-3. **Alternative configuration for MLX**:
-
-   ```json
-   {
-     "llm": {
-       "backend": "mlx",
-       "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
-       "maxTokens": 2048
-     }
-   }
-   ```
+   > **Note:** Insula MCP now supports the Ollama backend exclusively. Remove any legacy MLX configuration blocks to avoid startup failures.
 
 ### Slow LLM Responses
 
@@ -514,20 +498,12 @@ ollama pull llama3.2:3b
 
 2. **Platform-specific optimizations**:
 
-   #### Apple Silicon (MLX)
+   #### Apple Silicon
 
    ```bash
-   # Use quantized models for better performance
-   pip3 install mlx-lm
-   
-   # Configuration for Apple Silicon
-   {
-     "llm": {
-       "backend": "mlx",
-       "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
-       "maxTokens": 1024
-     }
-   }
+   # Use quantized Ollama models for better performance
+   ollama pull llama3.2:1b
+   ollama pull llama3.2:3b
    ```
 
    #### NVIDIA GPU
@@ -684,19 +660,7 @@ ollama pull llama3.2:3b
 
 6. **Alternative model sources**:
 
-   ```bash
-   # Use Hugging Face models with MLX (Apple Silicon)
-   pip3 install huggingface-hub
-   
-   # Configuration for Hugging Face models
-   {
-     "llm": {
-       "backend": "mlx",
-       "model": "microsoft/Phi-3-mini-4k-instruct",
-       "source": "huggingface"
-     }
-   }
-   ```
+   Use `ollama pull <model>` with community catalogs or build custom Modelfiles as described in the Ollama documentation.
 
 ## Plugin Issues
 
@@ -1334,10 +1298,7 @@ insula-mcp diagnose https://api.example.com/mcp --deterministic
 
    ```bash
    # Update Ollama models
-   ollama pull llama3.2:3b
-   
-   # Update MLX models
-   pip3 install --upgrade mlx-lm
+   ollama pull llama3.2:3b --force
    ```
 
 3. **Clean up old data**:
@@ -1358,8 +1319,7 @@ insula-mcp diagnose https://api.example.com/mcp --deterministic
    - **Full audit**: `--full` (use sparingly)
 
 2. **Optimize for your platform**:
-   - **Apple Silicon**: Use MLX backend with quantized models
-   - **NVIDIA GPU**: Use Ollama with GPU acceleration
+   - **Apple Silicon / NVIDIA GPU**: Use Ollama with quantized or GPU-accelerated models
    - **CPU-only**: Use smallest viable models (1B-3B parameters)
 
 3. **Monitor resource usage**:

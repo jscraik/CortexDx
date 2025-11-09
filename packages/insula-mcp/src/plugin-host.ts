@@ -1,4 +1,6 @@
 import { Worker } from "node:worker_threads";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { httpAdapter } from "./adapters/http.js";
 import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
 import { createInspectorSession, type SharedSessionState } from "./context/inspector-session.js";
@@ -51,7 +53,11 @@ export async function runPlugins({
         authHeaders,
         sharedSession,
       );
-      findings.push(...results);
+      const annotated = results.map((finding) => ({
+        ...finding,
+        source: finding.source ?? plugin.id,
+      }));
+      findings.push(...annotated);
     } catch (error) {
       findings.push({
         id: `plugin.${plugin.id}.error`,
@@ -59,7 +65,8 @@ export async function runPlugins({
         severity: "major",
         title: `Plugin failed: ${plugin.title}`,
         description: String(error),
-        evidence: [{ type: "log", ref: `plugin:${plugin.id}` }]
+        evidence: [{ type: "log", ref: `plugin:${plugin.id}` }],
+        source: plugin.id,
       });
     }
   }
@@ -87,7 +94,11 @@ export async function runDevelopmentPlugins({
   for (const plugin of plugins) {
     try {
       const results = await runDevelopmentPlugin(plugin, developmentContext, budgets);
-      findings.push(...results);
+      const annotated = results.map((finding) => ({
+        ...finding,
+        source: finding.source ?? plugin.id,
+      }));
+      findings.push(...annotated);
     } catch (error) {
       findings.push({
         id: `dev-plugin.${plugin.id}.error`,
@@ -95,7 +106,8 @@ export async function runDevelopmentPlugins({
         severity: "major",
         title: `Development plugin failed: ${plugin.title}`,
         description: String(error),
-        evidence: [{ type: "log", ref: `dev-plugin:${plugin.id}` }]
+        evidence: [{ type: "log", ref: `dev-plugin:${plugin.id}` }],
+        source: plugin.id,
       });
     }
   }
@@ -183,8 +195,10 @@ async function runWithSandbox(
   headers: Record<string, string>,
   sharedSession: SharedSessionState,
 ): Promise<Finding[]> {
-  const workerUrl = new URL("./workers/sandbox.js", import.meta.url);
+  const workerUrl = resolveWorkerUrl("sandbox");
   try {
+    const workerExecArgv = workerUrl.pathname.endsWith(".ts") ? ["--import", "tsx"] : [];
+
     return await launchWorker(
       pluginId,
       endpoint,
@@ -193,6 +207,7 @@ async function runWithSandbox(
       workerUrl,
       headers,
       sharedSession,
+      workerExecArgv,
     );
   } catch (error) {
     console.warn("[brAInwav] Sandbox boot failed; running in-process:", error);
@@ -212,6 +227,7 @@ function launchWorker(
   workerUrl: URL,
   headers: Record<string, string>,
   sharedSession: SharedSessionState,
+  execArgv: string[],
 ): Promise<Finding[]> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(workerUrl, {
@@ -227,6 +243,7 @@ function launchWorker(
             : undefined,
         },
       },
+      execArgv: execArgv.length > 0 ? execArgv : undefined,
       resourceLimits: { maxOldGenerationSizeMb: Math.max(32, Math.floor(budgets.memMb)) }
     });
 
@@ -346,4 +363,17 @@ export function getDevelopmentPluginsByCategory(category: "diagnostic" | "develo
 
 export function getConversationalPlugins(): ConversationalPlugin[] {
   return DEVELOPMENT_PLUGINS.filter(p => p.category === "conversational") as ConversationalPlugin[];
+}
+
+function resolveWorkerUrl(name: string): URL {
+  const distJs = new URL(`../../dist/workers/${name}.js`, import.meta.url);
+  if (existsSync(fileURLToPath(distJs))) {
+    return distJs;
+  }
+  const srcJs = new URL(`./workers/${name}.js`, import.meta.url);
+  if (existsSync(fileURLToPath(srcJs))) {
+    return srcJs;
+  }
+  const srcTs = new URL(`./workers/${name}.ts`, import.meta.url);
+  return srcTs;
 }

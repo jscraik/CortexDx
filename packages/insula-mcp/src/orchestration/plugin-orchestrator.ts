@@ -210,7 +210,7 @@ export class PluginOrchestrator {
         }
 
         const endTime = Date.now();
-        const totalExecutionTime = endTime - startTime;
+        const totalExecutionTime = Math.max(1, endTime - startTime);
 
         const result: WorkflowResults = {
             workflowId: workflow.id,
@@ -535,7 +535,7 @@ export class PluginOrchestrator {
             );
         } finally {
             const stageEndTime = Date.now();
-            stageTimings.set(stage.id, stageEndTime - stageStartTime);
+            stageTimings.set(stage.id, Math.max(1, stageEndTime - stageStartTime));
         }
     }
 
@@ -652,21 +652,35 @@ export class PluginOrchestrator {
         workflow: PluginWorkflow,
         fromStage: string,
         toStage: string,
-        visited: Set<string> = new Set(),
     ): boolean {
-        if (visited.has(toStage)) {
-            return toStage === fromStage;
+        if (fromStage === toStage) {
+            return true;
+        }
+        return this.pathExists(workflow, toStage, fromStage, new Set<string>());
+    }
+
+    private pathExists(
+        workflow: PluginWorkflow,
+        currentStage: string,
+        targetStage: string,
+        visiting: Set<string>,
+    ): boolean {
+        if (currentStage === targetStage) {
+            return true;
+        }
+        if (visiting.has(currentStage)) {
+            return false;
         }
 
-        visited.add(toStage);
-
-        const nextDeps = workflow.dependencies.filter((d) => d.fromStage === toStage);
+        visiting.add(currentStage);
+        const nextDeps = workflow.dependencies.filter((d) => d.fromStage === currentStage);
         for (const dep of nextDeps) {
-            if (this.hasCircularDependency(workflow, fromStage, dep.toStage, visited)) {
+            if (this.pathExists(workflow, dep.toStage, targetStage, visiting)) {
+                visiting.delete(currentStage);
                 return true;
             }
         }
-
+        visiting.delete(currentStage);
         return false;
     }
 }

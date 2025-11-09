@@ -4,7 +4,7 @@ This module provides enhanced LLM integration for the Insula MCP diagnostic syst
 
 ## Features
 
-- **Multi-Backend Support**: Ollama and MLX adapters for different deployment scenarios
+- **Ollama-First Support**: Optimized local adapter for Apple Silicon and Linux hosts
 - **Conversation Management**: Persistent sessions with context awareness
 - **Performance Optimization**: <2s response time targeting with caching
 - **Specialized Methods**: Code analysis, solution generation, and error explanation
@@ -17,7 +17,7 @@ import { createLlmOrchestrator, getEnhancedLlmAdapter } from '@brainwav/insula-m
 
 // Create an orchestrator for managing LLM interactions
 const orchestrator = createLlmOrchestrator({
-  preferredBackend: 'auto', // or 'ollama' | 'mlx'
+  preferredBackend: 'auto', // or 'ollama'
   maxConcurrentSessions: 10,
   responseTimeoutMs: 2000
 });
@@ -49,19 +49,13 @@ const solution = await orchestrator.generateSolution(
 - **Models**: Supports Llama, CodeLlama, Mistral, and other Ollama-compatible models
 - **Features**: Model management, conversation context, streaming support
 
-### MLX Adapter  
-
-- **Use Case**: Apple Silicon optimized inference
-- **Models**: MLX-compatible quantized models
-- **Features**: <2s response times, memory optimization, quantization support
-
 ## Configuration
 
 ### Orchestrator Configuration
 
 ```typescript
 interface OrchestratorConfig {
-  preferredBackend?: 'ollama' | 'mlx' | 'auto';
+  preferredBackend?: 'ollama' | 'auto';
   maxConcurrentSessions?: number;
   sessionTimeoutMs?: number;
   responseTimeoutMs?: number;

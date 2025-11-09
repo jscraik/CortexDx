@@ -108,7 +108,9 @@ export class ATLASThreatDetector {
 
         const allMitigations = new Set<string>();
         for (const finding of findings) {
-            finding.mitigations.forEach((m) => allMitigations.add(m));
+            for (const mitigation of finding.mitigations) {
+                allMitigations.add(mitigation);
+            }
         }
 
         return {

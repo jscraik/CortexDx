@@ -28,12 +28,12 @@ export interface EmbeddingModelInfo {
   dimensions: number;
   maxTokens: number;
   memoryGb: number;
-  backend: "ollama" | "mlx";
+  backend: "ollama";
   loaded: boolean;
 }
 
 export interface EmbeddingAdapter {
-  backend: "ollama" | "mlx";
+  backend: "ollama";
 
   /**
    * Generate embedding for a single text

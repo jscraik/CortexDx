@@ -7,6 +7,7 @@ import { InspectorAdapter } from "../adapters/inspector-adapter.js";
 import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
 import { TemplateEngine } from "../template-engine/engine.js";
 import { getTemplateRecommendations } from "../templates/fix-templates.js";
+import type { FixTemplate } from "../templates/fix-templates.js";
 import { analyzeWithLLM } from "../plugins/development/self-improvement.js";
 
 export interface HealingReport {
@@ -90,7 +91,7 @@ export class AutoHealer {
       const validation = await this.validateFixes(analyzedFindings, fixes);
 
       // 5. Generate summary and recommendations
-      const summary = this.generateSummary(validation, analyzedFindings, fixes);
+      const summary = await this.generateSummary(validation, analyzedFindings, fixes);
 
       const finishedAt = new Date().toISOString();
 
@@ -430,13 +431,11 @@ export class AutoHealer {
     const analyzedFindings = await this.analyzeFindings(findings);
     const templates = getTemplateRecommendations(analyzedFindings);
 
-    const recommendations = templates.map(template =>
-      `Apply ${template.name} (${template.estimatedTime})`
+    const recommendations = templates.map((template) =>
+      `Apply ${template.name} (${template.estimatedTime})`,
     );
 
-    const totalEstimatedTime = templates
-      .map((t) => Number.parseInt(t.estimatedTime, 10) || 0)
-      .reduce((sum, time) => sum + time, 0);
+    const estimatedTime = this.summarizeEstimatedTime(templates);
 
     const highRiskFindings = analyzedFindings.filter(f => f.riskLevel === 'high').length;
     const riskLevel = highRiskFindings > 0 ? 'high' : highRiskFindings > 2 ? 'medium' : 'low';
@@ -444,10 +443,40 @@ export class AutoHealer {
     return {
       findings: analyzedFindings,
       recommendations,
-      estimatedTime: totalEstimatedTime > 60
-        ? `${Math.round(totalEstimatedTime / 60)} hours`
-        : `${totalEstimatedTime} minutes`,
+      estimatedTime,
       riskLevel,
     };
+  }
+
+  private summarizeEstimatedTime(templates: FixTemplate[]): string {
+    if (templates.length === 0) {
+      return "0 minutes";
+    }
+    if (templates.length === 1) {
+      return templates[0]?.estimatedTime ?? "0 minutes";
+    }
+
+    const minutes = templates
+      .map((template) => this.estimateMinutes(template.estimatedTime))
+      .filter((value): value is number => typeof value === "number")
+      .reduce((sum, value) => sum + value, 0);
+
+    if (minutes <= 0) {
+      return `${templates.length} tasks`;
+    }
+    return minutes >= 60 ? `${Math.round(minutes / 60)} hours` : `${minutes} minutes`;
+  }
+
+  private estimateMinutes(value: string): number | null {
+    const matches = value.match(/\d+/g);
+    if (!matches || matches.length === 0) {
+      return null;
+    }
+    const numbers = matches.map((entry) => Number.parseInt(entry, 10)).filter((n) => !Number.isNaN(n));
+    if (numbers.length === 0) {
+      return null;
+    }
+    const average = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
+    return Math.round(average);
   }
 }

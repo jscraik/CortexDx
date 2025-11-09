@@ -17,6 +17,7 @@ import {
 import {
     createPatternLearningResolver,
     exportPatterns,
+    importPatterns,
     learnFromFailure,
     learnFromSuccess,
     type PatternLearningConfig

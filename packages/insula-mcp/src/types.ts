@@ -24,6 +24,7 @@ export interface CodeSample {
 export interface Finding {
   id: string;
   area: string;
+  source?: string;
   severity: Severity;
   title: string;
   description: string;
@@ -97,7 +98,7 @@ export interface LlmAdapter {
 
 // Enhanced LLM adapter interface with multi-backend support
 export interface EnhancedLlmAdapter extends LlmAdapter {
-  backend: 'ollama' | 'mlx';
+  backend: 'ollama';
   loadModel: (modelId: string) => Promise<void>;
   unloadModel: (modelId: string) => Promise<void>;
   getSupportedModels: () => Promise<string[]>;
@@ -174,7 +175,16 @@ export interface Problem {
   userLevel: 'beginner' | 'intermediate' | 'expert';
 }
 
-export type ProblemType = 'protocol' | 'configuration' | 'security' | 'performance' | 'integration' | 'development';
+export type ProblemType =
+  | 'protocol'
+  | 'configuration'
+  | 'security'
+  | 'performance'
+  | 'integration'
+  | 'development'
+  | 'connection'
+  | 'authentication'
+  | 'code';
 
 export interface ProblemContext {
   mcpVersion: string;

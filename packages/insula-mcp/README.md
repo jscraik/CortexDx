@@ -201,6 +201,23 @@ Insula MCP includes comprehensive diagnostic suites covering all aspects of MCP 
 - **`code-generation`**: Research-validated code generation with quality scoring
 - **`performance-analysis`**: Academic research-backed performance optimization
 
+### Narrative Stories (Preview)
+
+Set `INSULA_STORIES_ENABLED=true` to expose the experimental narrative diagnostics stack:
+
+- `story.list` returns normalized story payloads validated against `schemas/story.schema.yaml` and `src/story/story-schema.ts`.
+- `story.get` fetches a single story by id for UI consumers or MCP clients.
+- `story.reprobe` executes a dry-run remediation from `src/actions/library.ts` (no remote mutations).
+
+Before opening a PR, run the new validation gates:
+
+```bash
+pnpm -w nx run insula-mcp:schema:check
+pnpm -w nx run insula-mcp:test
+```
+
+Vitest now enforces ≥70% line coverage for the story/anomaly/graph modules, ensuring the conversational diagnostics layer remains deterministic and well-tested.
+
 ## 📊 Output Formats
 
 ### 1. Markdown Report (`insula-report.md`)

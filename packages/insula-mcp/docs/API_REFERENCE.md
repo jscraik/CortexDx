@@ -428,7 +428,7 @@ Extended LLM adapter with conversational capabilities.
 
 ```typescript
 interface EnhancedLlmAdapter extends LlmAdapter {
-    backend: 'ollama' | 'mlx' | 'llamacpp';
+    backend: 'ollama';
     loadModel: (modelId: string) => Promise<void>;
     unloadModel: (modelId: string) => Promise<void>;
     getSupportedModels: () => Promise<string[]>;
@@ -458,7 +458,7 @@ interface EnhancedLlmAdapter extends LlmAdapter {
 ### Creating LLM Adapters
 
 ```typescript
-import { createOllamaAdapter, createMlxAdapter } from '@brainwav/insula-mcp';
+import { createOllamaAdapter } from '@brainwav/insula-mcp';
 
 // Ollama adapter
 const ollama = createOllamaAdapter({
@@ -466,13 +466,10 @@ const ollama = createOllamaAdapter({
     model: 'llama3'
 });
 
-// MLX adapter (Apple Silicon)
-const mlx = createMlxAdapter({
-    model: 'mlx-community/Llama-3-8B-Instruct-4bit'
-});
-
 // Use adapter
 const response = await ollama.complete('Explain MCP protocol');
+
+// Insula MCP supports the Ollama backend exclusively. Remove any legacy MLX integrations to avoid runtime errors.
 ```
 
 ## Plugin Development
@@ -1467,8 +1464,8 @@ Insula MCP supports configuration via `.insula-mcp.json` file in your project ro
 
 #### LLM Configuration
 
-- `backend`: LLM backend (`ollama`, `mlx`)
-- `model`: Model name (e.g., `llama3.1`, `mlx-community/Llama-3-8B-Instruct-4bit`)
+- `backend`: LLM backend (`ollama` only)
+- `model`: Model name (e.g., `gpt-oss-safeguard:latest`)
 - `endpoint`: Backend endpoint URL
 - `quantization`: Model quantization level
 - `maxHistoryLength`: Maximum conversation history length
@@ -1529,7 +1526,7 @@ Environment variables override configuration file settings and support variable 
 
 #### LLM Variables
 
-- `INSULA_MCP_LLM_BACKEND`: LLM backend (`ollama`, `mlx`)
+- `INSULA_MCP_LLM_BACKEND`: LLM backend (must be `ollama`)
 - `INSULA_MCP_LLM_MODEL`: LLM model name
 - `INSULA_MCP_LLM_ENDPOINT`: LLM endpoint URL
 - `INSULA_MCP_LLM_TIMEOUT`: LLM request timeout
@@ -2166,7 +2163,7 @@ type PluginCategory = "diagnostic" | "development" | "conversational";
 #### LLM Backends
 
 ```typescript
-type LlmBackend = 'ollama' | 'mlx';
+type LlmBackend = 'ollama';
 ```
 
 #### Authentication Schemes

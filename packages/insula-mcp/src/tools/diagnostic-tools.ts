@@ -5,8 +5,9 @@
  */
 
 import type { McpTool } from "../types.js";
+import { isStoryFeatureEnabled } from "../story/feature-flag.js";
 
-export const createDiagnosticTools = (): McpTool[] => [
+const baseDiagnosticTools: McpTool[] = [
   {
     name: "inspect_mcp_server",
     description:
@@ -341,3 +342,152 @@ export const createDiagnosticTools = (): McpTool[] => [
     },
   },
 ];
+
+const storyPayloadSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "id",
+    "timestamp",
+    "scope",
+    "trigger",
+    "propagation",
+    "symptom",
+    "evidence",
+    "confidence",
+    "suggested_actions",
+  ],
+  properties: {
+    id: { type: "string" },
+    timestamp: { type: "string", format: "date-time" },
+    scope: {
+      type: "string",
+      enum: ["server", "tool", "connector", "network", "auth", "storage"],
+    },
+    trigger: {
+      type: "object",
+      required: ["kind", "details"],
+      properties: {
+        kind: { type: "string" },
+        details: { type: "string" },
+      },
+    },
+    propagation: {
+      type: "object",
+      required: ["path"],
+      properties: {
+        path: { type: "array", items: { type: "string" } },
+      },
+    },
+    symptom: {
+      type: "object",
+      required: ["user_visible", "technical"],
+      properties: {
+        user_visible: { type: "string" },
+        technical: { type: "string" },
+      },
+    },
+    evidence: {
+      type: "object",
+      required: ["logs", "traces", "metrics"],
+      properties: {
+        logs: { type: "array", items: { type: "string" } },
+        traces: { type: "array", items: { type: "string" } },
+        metrics: { type: "array", items: { type: "string" } },
+      },
+    },
+    confidence: { type: "number", minimum: 0, maximum: 1 },
+    suggested_actions: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["id", "label", "command", "reversible"],
+        properties: {
+          id: { type: "string" },
+          label: { type: "string" },
+          command: { type: "string" },
+          reversible: { type: "boolean" },
+        },
+      },
+    },
+  },
+} as const;
+
+const actionResultSchema = {
+  type: "object",
+  required: ["action", "target", "message", "reversible", "ok", "performedAt", "dryRun"],
+  properties: {
+    action: { type: "string" },
+    target: { type: "string" },
+    message: { type: "string" },
+    reversible: { type: "boolean" },
+    ok: { type: "boolean" },
+    performedAt: { type: "string", format: "date-time" },
+    dryRun: { type: "boolean" },
+  },
+} as const;
+
+const storyTools: McpTool[] = [
+  {
+    name: "story.list",
+    description:
+      "List synthesized diagnostic stories derived from graph, anomaly rules, and evidence pointers.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", minimum: 1, maximum: 20 },
+        includeEvidence: { type: "boolean", description: "Include evidence arrays" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      required: ["stories"],
+      properties: {
+        stories: { type: "array", items: storyPayloadSchema },
+      },
+    },
+  },
+  {
+    name: "story.get",
+    description: "Retrieve a specific story by id",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+      },
+      required: ["id"],
+    },
+    outputSchema: {
+      type: "object",
+      required: ["story"],
+      properties: {
+        story: { anyOf: [storyPayloadSchema, { type: "null" }] },
+      },
+    },
+  },
+  {
+    name: "story.reprobe",
+    description: "Trigger a safe reprobe for a degraded component (dry-run)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        target: { type: "string" },
+      },
+      required: ["target"],
+    },
+    outputSchema: {
+      type: "object",
+      required: ["result"],
+      properties: {
+        result: actionResultSchema,
+      },
+    },
+  },
+];
+
+export const createDiagnosticTools = (): McpTool[] => {
+  if (!isStoryFeatureEnabled()) {
+    return baseDiagnosticTools;
+  }
+  return [...baseDiagnosticTools, ...storyTools];
+};

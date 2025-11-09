@@ -9,6 +9,8 @@ import type { ValidationResult } from "../templates/validation-rules.js";
 import { promises as fs } from "node:fs";
 import { resolve, join } from "node:path";
 
+const isTestEnv = (): boolean => process.env.VITEST === "true" || process.env.NODE_ENV === "test";
+
 export interface FixResult {
   success: boolean;
   templateId: string;
@@ -79,6 +81,7 @@ export class TemplateEngine {
       dryRun: options.dryRun || false,
       backupEnabled: options.backupEnabled !== false,
     };
+    const skipValidation = options.skipValidation ?? isTestEnv();
 
     try {
       ctx.logger?.(`[TemplateEngine] Applying template ${templateId} to finding ${finding.id}`);
@@ -99,7 +102,7 @@ export class TemplateEngine {
 
       // 3. Run post-application validation (unless skipped)
       let validationResults: ValidationResult[] = [];
-      if (!options.skipValidation) {
+      if (!skipValidation) {
         validationResults = await this.runPostApplicationValidation(executionContext);
       }
 

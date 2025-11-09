@@ -1,0 +1,111 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/jscraik/insula-mcp-diagnostic/schemas/story
+$comment: Narrative diagnostic story payload exchanged between resources, tools, and UI surfaces.
+title: Narrative Diagnostic Story
+type: object
+additionalProperties: false
+required:
+  - id
+  - timestamp
+  - scope
+  - trigger
+  - propagation
+  - symptom
+  - evidence
+  - confidence
+  - suggested_actions
+properties:
+  id:
+    type: string
+    pattern: "^[a-z0-9:_-]{3,64}$"
+    description: Stable identifier for the story instance.
+  timestamp:
+    type: string
+    format: date-time
+    description: ISO8601 timestamp when the story snapshot was created.
+  scope:
+    type: string
+    enum: [server, tool, connector, network, auth, storage]
+    description: Highest-impact surface or component family.
+  trigger:
+    type: object
+    additionalProperties: false
+    required: [kind, details]
+    properties:
+      kind:
+        type: string
+        enum: [deploy, config, network, auth, rate_limit, dependency, latency, health, errors, fallback]
+        description: Root trigger category.
+      details:
+        type: string
+        minLength: 3
+        description: Short sentence describing the triggering condition.
+  propagation:
+    type: object
+    additionalProperties: false
+    required: [path]
+    properties:
+      path:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+        description: Ordered dependency path from origin to affected surface.
+  symptom:
+    type: object
+    additionalProperties: false
+    required: [user_visible, technical]
+    properties:
+      user_visible:
+        type: string
+        minLength: 3
+        description: Plain-language statement for user impact.
+      technical:
+        type: string
+        minLength: 3
+        description: Engineering-focused explanation of the symptom.
+  evidence:
+    type: object
+    additionalProperties: false
+    required: [logs, traces, metrics]
+    properties:
+      logs:
+        type: array
+        items:
+          type: string
+        description: Log pointers (file path, log://, etc.).
+      traces:
+        type: array
+        items:
+          type: string
+        description: Trace identifiers or URLs.
+      metrics:
+        type: array
+        items:
+          type: string
+        description: Metric series identifiers.
+  confidence:
+    type: number
+    minimum: 0
+    maximum: 1
+    description: Normalized confidence score between 0 and 1.
+  suggested_actions:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, label, command, reversible]
+      properties:
+        id:
+          type: string
+          pattern: "^[a-z0-9:_-]{3,64}$"
+        label:
+          type: string
+          minLength: 3
+        command:
+          type: string
+          minLength: 3
+        reversible:
+          type: boolean
+    description: Ordered list of guided mitigations.

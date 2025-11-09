@@ -29,6 +29,18 @@
         "command": "pnpm --dir packages/insula-mcp exec biome format src"
       }
     },
+    "schema:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp run schema:check"
+      }
+    },
+    "axe:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/insula-mcp run axe:check"
+      }
+    },
     "doctor": {
       "executor": "nx:run-commands",
       "options": {

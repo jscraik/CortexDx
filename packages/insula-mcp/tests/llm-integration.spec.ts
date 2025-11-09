@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMlxAdapter, createOllamaAdapter } from '../src/adapters/index.js';
+import { createOllamaAdapter } from '../src/adapters/index.js';
 import { createLlmOrchestrator } from '../src/ml/orchestrator.js';
 import { getEnhancedLlmAdapter, pickLocalLLM } from '../src/ml/router.js';
 import type { Constraints, ConversationContext, DiagnosticContext, Problem } from '../src/types.js';
@@ -8,14 +8,6 @@ describe('LLM Integration', () => {
     it('should create Ollama adapter with default config', () => {
         const adapter = createOllamaAdapter();
         expect(adapter.backend).toBe('ollama');
-        expect(typeof adapter.complete).toBe('function');
-        expect(typeof adapter.loadModel).toBe('function');
-        expect(typeof adapter.startConversation).toBe('function');
-    });
-
-    it('should create MLX adapter with default config', () => {
-        const adapter = createMlxAdapter();
-        expect(adapter.backend).toBe('mlx');
         expect(typeof adapter.complete).toBe('function');
         expect(typeof adapter.loadModel).toBe('function');
         expect(typeof adapter.startConversation).toBe('function');
@@ -31,7 +23,7 @@ describe('LLM Integration', () => {
 
     it('should detect available LLM backends', async () => {
         const backend = await pickLocalLLM();
-        expect(['mlx', 'ollama', 'none']).toContain(backend);
+        expect(['ollama', 'none']).toContain(backend);
     });
 
     it('should handle no available adapters gracefully', async () => {
@@ -291,7 +283,7 @@ describe('LLM Performance Validation', () => {
 
         it('should route to available backend automatically', async () => {
             const backend = await pickLocalLLM();
-            expect(['mlx', 'ollama', 'none']).toContain(backend);
+            expect(['ollama', 'none']).toContain(backend);
 
             if (backend !== 'none') {
                 const adapter = await getEnhancedLlmAdapter();

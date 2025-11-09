@@ -2,7 +2,7 @@
  * ML module exports for Insula MCP
  */
 
-export { hasMlx, hasOllama } from "./detect.js";
+export { hasOllama } from "./detect.js";
 export {
   LlmOrchestrator,
   createLlmOrchestrator,

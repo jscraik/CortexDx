@@ -80,17 +80,15 @@
                 <div class="config-section">
                     <h3>LLM Backend</h3>
                     <select id="llm-backend">
-                        <option value="ollama">Ollama</option>
-                        <option value="mlx">MLX (Apple Silicon)</option>
-                        <option value="llamacpp">llama.cpp</option>
+                        <option value="ollama" selected>Ollama</option>
                     </select>
                 </div>
                 <div class="config-section">
                     <h3>Model Selection</h3>
                     <select id="llm-model">
-                        <option value="llama3">Llama 3 Instruct</option>
-                        <option value="codellama">CodeLlama</option>
-                        <option value="mistral">Mistral 7B</option>
+                        <option value="gpt-oss-safeguard:latest" selected>gpt-oss-safeguard</option>
+                        <option value="deepseek-coder:6.7b">DeepSeek Coder 6.7B</option>
+                        <option value="phi4-mini-reasoning:latest">Phi-4 Mini Reasoning</option>
                     </select>
                 </div>
                 <div class="config-section">
