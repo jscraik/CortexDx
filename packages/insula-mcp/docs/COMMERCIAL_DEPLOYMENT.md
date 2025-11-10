@@ -378,6 +378,12 @@ AUTH0_CLIENT_ID=prod-client-id
 AUTH0_AUDIENCE=https://api.cortexdx.com
 REQUIRE_AUTH=true
 
+# CortexDx Client (diagnose CLI) Auth0 configuration
+CORTEXDX_AUTH0_DOMAIN=production.auth0.com
+CORTEXDX_AUTH0_CLIENT_ID=diagnostics-client-id
+CORTEXDX_AUTH0_CLIENT_SECRET=super-secret
+CORTEXDX_AUTH0_AUDIENCE=https://api.cortexdx.com
+
 # License Configuration
 REQUIRE_LICENSE=true
 DEFAULT_TIER=community

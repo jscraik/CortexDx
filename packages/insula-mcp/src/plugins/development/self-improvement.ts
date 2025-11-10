@@ -8,15 +8,9 @@ import type {
   ProjectContext,
 } from "../../types.js";
 
-const HANDSHAKE_FILE_OPTIONS: Array<readonly [string, ...string[]]> = [
-  [
-    "packages/insula-mcp/src/adapters/jsonrpc.ts",
-    "packages/cortexdx/src/adapters/jsonrpc.ts",
-  ],
-  [
-    "packages/insula-mcp/src/adapters/sse.ts",
-    "packages/cortexdx/src/adapters/sse.ts",
-  ],
+const HANDSHAKE_FILES = [
+  { name: "jsonrpc.ts", matcher: /(?:^|\/)jsonrpc\.ts$/ },
+  { name: "sse.ts", matcher: /(?:^|\/)sse\.ts$/ },
 ];
 
 const REQUIRED_DEPENDENCIES = [
@@ -33,10 +27,10 @@ const SIGNAL_KEYWORDS = [
 function evaluateHandshake(project?: ProjectContext): Finding | null {
   const files = project?.sourceFiles ?? [];
   if (files.length === 0) return null;
-  const fileSet = new Set(files);
-  const missing = HANDSHAKE_FILE_OPTIONS.flatMap((options) =>
-    options.some((candidate) => fileSet.has(candidate)) ? [] : [options[0]]
-  );
+  const adapterBase = determineAdapterBase(files, project);
+  const missing = HANDSHAKE_FILES.filter(
+    (file) => !files.some((source) => file.matcher.test(source)),
+  ).map((file) => `${adapterBase}${file.name}`);
   if (missing.length === 0) return null;
   return {
     id: "self_improvement.handshake_gaps",
@@ -49,6 +43,27 @@ function evaluateHandshake(project?: ProjectContext): Finding | null {
       "Wire initialize/session tracking through the JSON-RPC and SSE adapters before re-running diagnostics.",
     tags: ["self-improvement", "handshake"],
   };
+}
+
+function determineAdapterBase(files: string[], project?: ProjectContext): string {
+  for (const file of files) {
+    const adapterIndex = file.indexOf("/src/adapters/");
+    if (adapterIndex !== -1) {
+      return `${file.slice(0, adapterIndex)}/src/adapters/`;
+    }
+  }
+  for (const file of files) {
+    const srcIndex = file.indexOf("/src/");
+    if (srcIndex !== -1) {
+      const root = file.slice(0, srcIndex);
+      if (root.length === 0) return "src/adapters/";
+      return `${root}/src/adapters/`;
+    }
+  }
+  if (project?.name) {
+    return `packages/${project.name}/src/adapters/`;
+  }
+  return "src/adapters/";
 }
 
 function evaluateDependencies(project?: ProjectContext): Finding | null {

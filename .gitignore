@@ -5,3 +5,13 @@ artifacts
 dist
 .DS_Store
 .nx/
+
+# Generated diagnostic artifacts
+fixed-inspector-report.json
+working-inspector-report.json
+server-running-report.json
+studio-wrapper-test.json
+cortex-test-report.json
+docs-maintenance-report.json
+docs-validation-report.json
+packages/insula-mcp/server.log

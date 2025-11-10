@@ -36,6 +36,11 @@ program
   .option("--otel-exporter <url>", "OTLP/HTTP endpoint")
   .option("--har", "capture redacted HAR on failures")
   .option("--compare <files...>", "diff two JSON findings")
+  .option("--auth0-domain <domain>", "Auth0 domain used for MCP protection")
+  .option("--auth0-client-id <id>", "Auth0 client id for client-credential flow")
+  .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
+  .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
+  .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
   .option(
     "--budget-time <ms>",
     "per-plugin time budget",

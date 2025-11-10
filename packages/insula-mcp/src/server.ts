@@ -4,9 +4,9 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { type IncomingMessage, type ServerResponse, createServer } from "node:http";
 import { extname, join } from "node:path";
-import { fileURLToPath, URL } from "node:url";
+import { URL, fileURLToPath } from "node:url";
 import { ConversationManager } from "./conversation/manager.js";
 import { AutoHealer } from "./healing/auto-healer.js";
 import { MonitoringScheduler } from "./healing/scheduler.js";
@@ -20,13 +20,15 @@ import {
 } from "./observability/health-checks.js";
 import { getGlobalMonitoring } from "./observability/monitoring.js";
 import { runPlugins } from "./plugin-host.js";
-import { createAuthMiddleware, createToolAccessMiddleware, type AuthenticatedRequest, type AuthMiddlewareConfig } from "./plugins/auth-middleware.js";
+import { type AuthMiddlewareConfig, type AuthenticatedRequest, createAuthMiddleware, createToolAccessMiddleware } from "./plugins/auth-middleware.js";
 import type { LicenseKey } from "./plugins/commercial-licensing.js";
-import { createFeatureAccessMiddleware, createLicenseEnforcementMiddleware, type LicenseEnforcementConfig } from "./plugins/license-enforcement.js";
+import { type LicenseEnforcementConfig, createFeatureAccessMiddleware, createLicenseEnforcementMiddleware } from "./plugins/license-enforcement.js";
 import { getAcademicRegistry } from "./registry/index.js";
 import { TemplateEngine } from "./template-engine/engine.js";
 import type { FixTemplate } from "./templates/fix-templates.js";
 import * as FixTemplateModule from "./templates/fix-templates.js";
+import { findMcpTool, getAllMcpToolsFlat } from "./tools/index.js";
+import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "./types.js";
 const { getTemplate, getTemplatesByArea, getTemplatesBySeverity } = FixTemplateModule;
 
 const listAllTemplates = (): FixTemplate[] => {
@@ -36,8 +38,6 @@ const listAllTemplates = (): FixTemplate[] => {
     }
     return [];
 };
-import { findMcpTool, getAllMcpToolsFlat } from "./tools/index.js";
-import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "./types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -59,36 +59,38 @@ const DEFAULT_TIER = (process.env.DEFAULT_TIER as "community" | "professional" |
 const licenseDatabase = new Map<string, LicenseKey>();
 
 // Initialize demo licenses
-licenseDatabase.set("community-demo-key", {
-    key: "community-demo-key",
-    tier: "community",
-    features: ["basic-diagnostics", "protocol-validation", "core-mcp-tools"],
-});
+if (process.env.NODE_ENV !== "production") {
+    licenseDatabase.set("community-demo-key", {
+        key: "community-demo-key",
+        tier: "community",
+        features: ["basic-diagnostics", "protocol-validation", "core-mcp-tools"],
+    });
 
-licenseDatabase.set("professional-demo-key", {
-    key: "professional-demo-key",
-    tier: "professional",
-    features: [
-        "basic-diagnostics",
-        "protocol-validation",
-        "core-mcp-tools",
-        "advanced-diagnostics",
-        "llm-backends",
-        "academic-validation",
-        "performance-profiling",
-        "security-scanning",
-    ],
-    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
-});
+    licenseDatabase.set("professional-demo-key", {
+        key: "professional-demo-key",
+        tier: "professional",
+        features: [
+            "basic-diagnostics",
+            "protocol-validation",
+            "core-mcp-tools",
+            "advanced-diagnostics",
+            "llm-backends",
+            "academic-validation",
+            "performance-profiling",
+            "security-scanning",
+        ],
+        expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+    });
 
-licenseDatabase.set("enterprise-demo-key", {
-    key: "enterprise-demo-key",
-    tier: "enterprise",
-    features: ["*"],
-    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
-    organizationId: "demo-org",
-    maxUsers: 100,
-});
+    licenseDatabase.set("enterprise-demo-key", {
+        key: "enterprise-demo-key",
+        tier: "enterprise",
+        features: ["*"],
+        expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+        organizationId: "demo-org",
+        maxUsers: 100,
+    });
+}
 
 // SSE clients for real-time updates
 const sseClients = new Set<ServerResponse>();

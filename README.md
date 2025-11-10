@@ -132,6 +132,13 @@ issues so everyone flips the same profile without editing plist files manually.
 cortexdx diagnose <endpoint> --auth bearer:your-token
 cortexdx diagnose <endpoint> --auth basic:user:pass
 
+# Auth0 (client credentials)
+cortexdx diagnose <endpoint> \
+  --auth0-domain tenant.auth0.com \
+  --auth0-client-id <client_id> \
+  --auth0-client-secret <client_secret> \
+  --auth0-audience https://api.cortexdx.com
+
 # Suite Selection
 cortexdx diagnose <endpoint> --suites streaming,governance,cors
 
@@ -151,6 +158,11 @@ cortexdx diagnose <endpoint> --a11y --no-color --deterministic
 |----------|---------|
 | `EXA_API_KEY` | Required for the Exa academic provider. Stored in 1Password-managed `.env` and injected at runtime. |
 | `SEMANTIC_SCHOLAR_API_KEY` | Optional API key for Semantic Scholar. If unset, CortexDx falls back to `jscraik@brainwav.io` as the contact identity so traffic stays compliant until a dedicated email is provisioned. |
+| `CORTEXDX_AUTH0_DOMAIN` | Auth0 tenant domain (`example.auth0.com`) used to secure the MCP endpoint. |
+| `CORTEXDX_AUTH0_CLIENT_ID` | Machine-to-machine client id for CortexDx to request tokens. |
+| `CORTEXDX_AUTH0_CLIENT_SECRET` | Client secret paired with the Auth0 client id (store securely). |
+| `CORTEXDX_AUTH0_AUDIENCE` | API audience / identifier configured in Auth0. |
+| `CORTEXDX_AUTH0_SCOPE` | Optional scopes (space-delimited) to request during the client credential flow. |
 
 ## 📚 Documentation
 
@@ -158,6 +170,7 @@ cortexdx diagnose <endpoint> --a11y --no-color --deterministic
 |----------|-------------|----------|
 | [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md) | Installation and first steps | New Users |
 | [User Guide](packages/cortexdx/docs/USER_GUIDE.md) | Comprehensive usage guide | All Users |
+| [Auth0 Setup](docs/AUTH0_SETUP.md) | Auth0 authentication configuration | Production Setup |
 | [API Reference](packages/cortexdx/docs/API_REFERENCE.md) | CLI and programmatic API | Developers |
 | [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md) | Creating custom plugins | Plugin Authors |
 | [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md) | Common issues and solutions | Support |
@@ -168,6 +181,7 @@ cortexdx diagnose <endpoint> --a11y --no-color --deterministic
 ### Quick Navigation
 
 - **New to CortexDx?** Start with [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md)
+- **Need Auth0 authentication?** See [Auth0 Setup](docs/AUTH0_SETUP.md)
 - **Need help?** Check [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md)
 - **Want to contribute?** Read [Contributing](packages/cortexdx/docs/CONTRIBUTING.md)
 - **Building plugins?** See [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)

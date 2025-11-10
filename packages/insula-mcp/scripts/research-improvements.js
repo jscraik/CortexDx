@@ -5,7 +5,7 @@
  * Uses academic providers to research state-of-the-art approaches
  */
 
-import { getAcademicRegistry } from './dist/registry/index.js';
+import { getAcademicRegistry } from '../dist/registry/index.js';
 
 // Create diagnostic context for research
 const createResearchContext = () => ({

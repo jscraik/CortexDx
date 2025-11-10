@@ -56,9 +56,19 @@ export interface ReportConfig {
     formats: ReportFormat[];
 }
 
+const firstAvailableEnv = (...keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = process.env[key];
+        if (value && value.trim().length > 0) {
+            return value;
+        }
+    }
+    return undefined;
+};
+
 const DEFAULT_CONFIG: ReportConfig = {
-    storageRoot: process.env.CORTEXDX_REPORT_DIR || "./reports",
-    baseUrl: process.env.CORTEXDX_REPORT_URL || "http://localhost:5001/reports",
+    storageRoot: firstAvailableEnv("CORTEXDX_REPORT_DIR", "INSULA_REPORT_DIR") || "./reports",
+    baseUrl: firstAvailableEnv("CORTEXDX_REPORT_URL", "INSULA_REPORT_URL") || "http://localhost:5001/reports",
     organizationStrategy: "date",
     retentionDays: 30,
     enableCompression: false,

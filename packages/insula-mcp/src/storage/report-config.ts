@@ -16,6 +16,16 @@ const DEFAULT_CONFIG_LOCATIONS = [
     "/etc/cortexdx/report-config.json",
 ];
 
+const envValue = (...keys: string[]): string | undefined => {
+    for (const key of keys) {
+        const value = process.env[key];
+        if (value && value.trim().length > 0) {
+            return value;
+        }
+    }
+    return undefined;
+};
+
 export class ReportConfigManager {
     private config: ReportConfig | null = null;
     private configPath: string | null = null;
@@ -65,12 +75,14 @@ export class ReportConfigManager {
     private loadFromEnvironment(): Partial<ReportConfig> {
         const config: Partial<ReportConfig> = {};
 
-        if (process.env.CORTEXDX_REPORT_DIR) {
-            config.storageRoot = process.env.CORTEXDX_REPORT_DIR;
+        const storageRoot = envValue("CORTEXDX_REPORT_DIR", "INSULA_REPORT_DIR");
+        if (storageRoot) {
+            config.storageRoot = storageRoot;
         }
 
-        if (process.env.CORTEXDX_REPORT_URL) {
-            config.baseUrl = process.env.CORTEXDX_REPORT_URL;
+        const baseUrl = envValue("CORTEXDX_REPORT_URL", "INSULA_REPORT_URL");
+        if (baseUrl) {
+            config.baseUrl = baseUrl;
         }
 
         if (process.env.CORTEXDX_REPORT_STRATEGY) {

@@ -6,6 +6,7 @@ import { buildFilePlan } from "./report/fileplan.js";
 import { buildJsonReport } from "./report/json.js";
 import { buildMarkdownReport } from "./report/markdown.js";
 import type { Finding } from "./types.js";
+import { resolveAuthHeaders } from "./auth/auth0-handshake.js";
 
 interface DiagnoseOptions {
   out?: string;
@@ -16,6 +17,12 @@ interface DiagnoseOptions {
   "budget-time"?: number | string;
   budgetMem?: number | string;
   "budget-mem"?: number | string;
+  auth?: string;
+  auth0Domain?: string;
+  auth0ClientId?: string;
+  auth0ClientSecret?: string;
+  auth0Audience?: string;
+  auth0Scope?: string;
 }
 
 export async function runDiagnose({
@@ -37,7 +44,14 @@ export async function runDiagnose({
     timeMs: coerceNumber(opts.budgetTime) ?? coerceNumber(opts["budget-time"]) ?? 5000,
     memMb: coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96
   };
-  const headers = parseAuthHeaders((opts as unknown as { auth?: string }).auth);
+  const headers = await resolveAuthHeaders({
+    auth: opts.auth,
+    auth0Domain: opts.auth0Domain,
+    auth0ClientId: opts.auth0ClientId,
+    auth0ClientSecret: opts.auth0ClientSecret,
+    auth0Audience: opts.auth0Audience,
+    auth0Scope: opts.auth0Scope,
+  });
 
   const { findings } = await runPlugins({
     endpoint,
@@ -81,26 +95,4 @@ function coerceNumber(value: number | string | undefined): number | undefined {
     if (!Number.isNaN(parsed)) return parsed;
   }
   return undefined;
-}
-
-function parseAuthHeaders(auth?: string): Record<string, string> | undefined {
-  if (!auth || auth.trim().length === 0) return undefined;
-  const [schemeRaw, ...restParts] = auth.split(":");
-  if (!schemeRaw || restParts.length === 0) return undefined;
-  const scheme = schemeRaw.toLowerCase();
-  if (scheme === "bearer") {
-    return { authorization: `Bearer ${restParts.join(":").trim()}` };
-  }
-  if (scheme === "basic") {
-    const [user, ...passwordParts] = restParts;
-    if (!user || passwordParts.length === 0) return undefined;
-    const credentials = Buffer.from(`${user}:${passwordParts.join(":")}`).toString("base64");
-    return { authorization: `Basic ${credentials}` };
-  }
-  if (scheme === "header") {
-    const [name, ...valueParts] = restParts;
-    if (!name || valueParts.length === 0) return undefined;
-    return { [name]: valueParts.join(":") };
-  }
-  return { authorization: `${schemeRaw} ${restParts.join(":")}` };
 }

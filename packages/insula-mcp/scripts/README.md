@@ -1,6 +1,8 @@
 # CortexDx Release Scripts
 
-This directory contains scripts for building, publishing, and deploying CortexDx v1.0.0.
+This directory contains scripts for building, publishing, deploying, and experimentally researching CortexDx v1.0.0. Production-ready utilities are documented below; anything marked as **experimental** must never be bundled with release artifacts.
+
+> **Experimental tooling:** `scripts/research-improvements.js` runs academic MCP providers to prototype debugging/codegen ideas. It is for internal research only and should not be invoked in production pipelines.
 
 ## Scripts Overview
 
