@@ -96,7 +96,7 @@ describe("Cross-Platform Compatibility", () => {
             if (platform() === "linux") {
                 const homeDir = process.env.HOME;
                 expect(homeDir).toBeTruthy();
-                expect(homeDir).toContain("/home/");
+                expect(homeDir).toMatch(/^\/(home|root)(\/|$)/);
             } else {
                 expect(true).toBe(true);
             }

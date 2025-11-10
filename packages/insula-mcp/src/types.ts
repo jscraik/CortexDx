@@ -6,6 +6,16 @@ export interface EvidencePointer {
   lines?: [number, number];
 }
 
+export interface ManifestArtifact {
+  name: string;
+  encoding: "utf-8" | "base64";
+  content: string;
+}
+
+export interface DiagnosticArtifacts {
+  dependencyManifests?: ManifestArtifact[];
+}
+
 export interface FilePlanItem {
   action: "update" | "new";
   path: string;
@@ -442,6 +452,7 @@ export interface DiagnosticContext {
   evidence: (ev: EvidencePointer) => void;
   deterministic?: boolean;
   transport?: TransportState;
+  artifacts?: DiagnosticArtifacts;
 }
 
 export interface DiagnosticPlugin {

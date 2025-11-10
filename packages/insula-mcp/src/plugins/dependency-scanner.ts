@@ -9,7 +9,12 @@ import {
   type SBOMGenerationOptions,
   SBOMGenerator,
 } from "../security/sbom-generator.js";
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "../types.js";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+  ManifestArtifact,
+} from "../types.js";
 
 export const DependencyScannerPlugin: DiagnosticPlugin = {
   id: "dependency-scanner",
@@ -64,8 +69,10 @@ async function generateSBOMFindings(
   const generator = new SBOMGenerator();
 
   try {
-    // Try to detect package manifests from MCP server context
-    const manifests = await detectPackageManifests(ctx);
+    const manifests = ingestManifestsFromArtifacts(
+      ctx.artifacts?.dependencyManifests ?? [],
+      ctx.logger,
+    );
 
     if (manifests.length === 0) {
       findings.push({
@@ -167,24 +174,66 @@ async function generateSBOMFindings(
   return findings;
 }
 
-/**
- * Detect package manifests from MCP server context
- */
-async function detectPackageManifests(
-  ctx: DiagnosticContext,
-): Promise<PackageManifest[]> {
-  const manifests: PackageManifest[] = [];
+function ingestManifestsFromArtifacts(
+  artifacts: ManifestArtifact[],
+  logger: DiagnosticContext["logger"],
+): PackageManifest[] {
+  return artifacts
+    .map((artifact) => toPackageManifest(artifact, logger))
+    .filter((manifest): manifest is PackageManifest => manifest !== null);
+}
 
-  // For now, return empty array as we don't have access to file system
-  // In production, this would scan the MCP server's codebase
-  // This is a placeholder for the actual implementation
+function toPackageManifest(
+  artifact: ManifestArtifact,
+  logger: DiagnosticContext["logger"],
+): PackageManifest | null {
+  const manifestType = classifyManifest(artifact.name);
+  if (!manifestType) {
+    logger(`Unsupported manifest provided: ${artifact.name}`);
+    return null;
+  }
+  const decoded = decodeArtifactContent(artifact);
+  if (decoded === null) {
+    logger(`Failed to decode manifest: ${artifact.name}`);
+    return null;
+  }
+  if (!isValidManifest(decoded)) {
+    logger(`Manifest rejected due to size or emptiness: ${artifact.name}`);
+    return null;
+  }
+  return {
+    type: manifestType,
+    path: artifact.name,
+    content: decoded,
+  };
+}
 
-  // Example: If we had access to the server's file system
-  // manifests.push({
-  //   type: "npm",
-  //   path: "package.json",
-  //   content: await readFile("package.json"),
-  // });
+function decodeArtifactContent(artifact: ManifestArtifact): string | null {
+  if (artifact.encoding === "utf-8") {
+    return artifact.content;
+  }
+  try {
+    return Buffer.from(artifact.content, "base64").toString("utf-8");
+  } catch {
+    return null;
+  }
+}
 
-  return manifests;
+function classifyManifest(name: string): PackageManifest["type"] | null {
+  const normalized = name.toLowerCase();
+  if (normalized.endsWith("package.json")) return "npm";
+  if (normalized.endsWith("package-lock.json")) return "npm";
+  if (normalized.endsWith("requirements.txt")) return "pip";
+  if (normalized.endsWith("poetry.lock")) return "pip";
+  if (normalized.endsWith("pom.xml")) return "maven";
+  if (normalized.endsWith("build.gradle")) return "gradle";
+  return null;
+}
+
+function isValidManifest(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+  return Buffer.byteLength(content, "utf-8") <= 2 * 1024 * 1024;
 }

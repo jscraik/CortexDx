@@ -4,7 +4,7 @@
  * Requirements: 20.1, 20.2, 20.3, 20.4, 20.5, 20.6
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ASVSComplianceEngine } from "../src/security/asvs-compliance.js";
 import { ATLASThreatDetector } from "../src/security/atlas-threat-detector.js";
 import { GitleaksIntegration } from "../src/security/gitleaks-integration.js";
@@ -277,6 +277,36 @@ describe("gitleaks Secrets Scanner Integration (Req 20.4)", () => {
 });
 
 describe("OWASP ZAP DAST Integration (Req 20.5)", () => {
+    const flagKeys = ["CORTEXDX_ENABLE_ZAP", "INSULA_ENABLE_ZAP"] as const;
+    const originalEnv: Record<(typeof flagKeys)[number], string | undefined> = {
+        CORTEXDX_ENABLE_ZAP: undefined,
+        INSULA_ENABLE_ZAP: undefined,
+    };
+    const originalFetch = globalThis.fetch;
+
+    beforeEach(() => {
+        for (const key of flagKeys) {
+            originalEnv[key] = process.env[key];
+            delete process.env[key];
+        }
+        vi.restoreAllMocks();
+    });
+
+    afterEach(() => {
+        for (const key of flagKeys) {
+            const value = originalEnv[key];
+            if (typeof value === "string") {
+                process.env[key] = value;
+            } else {
+                delete process.env[key];
+            }
+        }
+        if (originalFetch) {
+            globalThis.fetch = originalFetch;
+        }
+        vi.restoreAllMocks();
+    });
+
     it("should initialize with default configuration", () => {
         const zap = new ZAPIntegration();
         expect(zap).toBeDefined();
@@ -322,6 +352,47 @@ describe("OWASP ZAP DAST Integration (Req 20.5)", () => {
             expect(finding.cweid).toBeDefined();
             expect(finding.wascid).toBeDefined();
         });
+    });
+
+    it("should respect CORTEXDX_ENABLE_ZAP flag", async () => {
+        process.env.CORTEXDX_ENABLE_ZAP = "1";
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ alerts: [] }) });
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        const zap = new ZAPIntegration();
+        const result = await zap.baselineScan("http://example.com");
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(result.scanType).toBe("baseline");
+        expect(result.executionTime).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should fall back to INSULA_ENABLE_ZAP with warning", async () => {
+        process.env.INSULA_ENABLE_ZAP = "1";
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ alerts: [] }) });
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        const zap = new ZAPIntegration();
+        const result = await zap.fullScan("http://example.com");
+
+        expect(warnSpy).toHaveBeenCalledWith(
+            "CORTEXDX_ENABLE_ZAP is not set; falling back to deprecated INSULA_ENABLE_ZAP",
+        );
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(result.scanType).toBe("full");
+    });
+
+    it("should remain disabled when no flags are set", async () => {
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ alerts: [] }) });
+        globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+        const zap = new ZAPIntegration();
+        const result = await zap.apiScan("openapi.json", "http://example.com");
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(result.executionTime).toBe(0);
+        expect(result.findings).toHaveLength(0);
     });
 });
 

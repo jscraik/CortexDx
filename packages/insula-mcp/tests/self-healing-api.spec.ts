@@ -2,9 +2,18 @@
  * Self-healing API endpoint tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { promises as fs } from 'node:fs';
+import { LlmOrchestrator } from '../src/ml/orchestrator.js';
+
+const initializeAdaptersSpy = vi
+  .spyOn(LlmOrchestrator.prototype as unknown as { initializeAdapters: () => Promise<void> }, 'initializeAdapters')
+  .mockResolvedValue(undefined);
+
+afterAll(() => {
+  initializeAdaptersSpy.mockRestore();
+});
 
 // Mock the self-healing modules
 vi.mock('../src/healing/auto-healer.js', () => ({

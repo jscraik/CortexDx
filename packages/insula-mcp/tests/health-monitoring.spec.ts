@@ -342,13 +342,15 @@ describe("Integration Tests", () => {
     });
 
     it("should handle high load scenarios", () => {
-        // Simulate high load
+        // Simulate high load with deterministic success/error ratios
         for (let i = 0; i < 100; i++) {
-            recordRequest(Math.random() * 1000, Math.random() > 0.1);
+            const latency = 100 + (i % 7) * 25;
+            const succeeded = (i + 1) % 10 !== 0; // 10% error rate ceiling
+            recordRequest(latency, succeeded);
         }
 
         const perfMetrics = getPerformanceMetrics();
         expect(perfMetrics.avgResponseTimeMs).toBeGreaterThan(0);
-        expect(perfMetrics.errorRate).toBeLessThan(15);
+        expect(perfMetrics.errorRate).toBeLessThanOrEqual(15);
     });
 });

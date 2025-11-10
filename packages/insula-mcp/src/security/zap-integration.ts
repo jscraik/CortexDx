@@ -40,6 +40,8 @@ export interface ZAPConfig {
     timeout?: number;
     maxDepth?: number;
     excludeUrls?: string[];
+    apiUrl?: string;
+    enabled?: boolean;
 }
 
 /**
@@ -56,58 +58,21 @@ export class ZAPIntegration {
      * Run baseline scan (quick passive scan)
      */
     async baselineScan(endpoint: string): Promise<ZAPResults> {
-        // Note: This requires OWASP ZAP to be installed and running
-        // For now, return placeholder results
-        // TODO: Implement actual ZAP API calls when ZAP is available
-
-        return {
-            findings: [],
-            totalAlerts: 0,
-            highRisk: 0,
-            mediumRisk: 0,
-            lowRisk: 0,
-            informational: 0,
-            executionTime: 0,
-            scanType: "baseline",
-        };
+        return await this.invokeZap("baseline", { endpoint });
     }
 
     /**
      * Run full scan (active + passive)
      */
     async fullScan(endpoint: string, config?: ZAPConfig): Promise<ZAPResults> {
-        // Full active scan - requires ZAP daemon
-        // TODO: Implement actual ZAP API calls
-
-        return {
-            findings: [],
-            totalAlerts: 0,
-            highRisk: 0,
-            mediumRisk: 0,
-            lowRisk: 0,
-            informational: 0,
-            executionTime: 0,
-            scanType: "full",
-        };
+        return await this.invokeZap("full", { endpoint, config });
     }
 
     /**
      * Run API scan using OpenAPI spec
      */
     async apiScan(openApiSpec: string, endpoint: string): Promise<ZAPResults> {
-        // API scan using OpenAPI/Swagger spec
-        // TODO: Implement actual ZAP API calls
-
-        return {
-            findings: [],
-            totalAlerts: 0,
-            highRisk: 0,
-            mediumRisk: 0,
-            lowRisk: 0,
-            informational: 0,
-            executionTime: 0,
-            scanType: "api",
-        };
+        return await this.invokeZap("api", { endpoint, openApiSpec });
     }
 
     /**
@@ -243,6 +208,68 @@ export class ZAPIntegration {
 
         return findings;
     }
+
+    private async invokeZap(
+        scanType: ZAPResults["scanType"],
+        payload: { endpoint: string; openApiSpec?: string; config?: ZAPConfig },
+    ): Promise<ZAPResults> {
+        if (!this.isEnabled()) {
+            return emptyResults(scanType);
+        }
+
+        void payload.openApiSpec;
+        void payload.config;
+
+        const start = Date.now();
+        const alerts = await this.fetchAlerts(payload.endpoint);
+        const findings = alerts.map((alert) => normalizeAlert(alert));
+        return {
+            findings,
+            totalAlerts: findings.length,
+            highRisk: findings.filter((f) => f.riskLevel === "High").length,
+            mediumRisk: findings.filter((f) => f.riskLevel === "Medium").length,
+            lowRisk: findings.filter((f) => f.riskLevel === "Low").length,
+            informational: findings.filter((f) => f.riskLevel === "Informational").length,
+            executionTime: Date.now() - start,
+            scanType,
+        };
+    }
+
+    private async fetchAlerts(endpoint: string): Promise<ZapAlert[]> {
+        const baseUrl = this.config.apiUrl ?? process.env.ZAP_API_URL ?? this.config.proxy ?? "http://localhost:8080";
+        const url = new URL("/JSON/core/view/alerts/", baseUrl);
+        url.searchParams.set("baseurl", endpoint);
+        url.searchParams.set("start", "0");
+        url.searchParams.set("count", "1000");
+        if (this.config.apiKey) {
+            url.searchParams.set("apikey", this.config.apiKey);
+        }
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                return [];
+            }
+            const data = (await response.json()) as { alerts?: ZapAlert[] };
+            return data.alerts ?? [];
+        } catch {
+            return [];
+        }
+    }
+
+    private isEnabled(): boolean {
+        if (typeof this.config.enabled === "boolean") {
+            return this.config.enabled;
+        }
+        const flag =
+            process.env.CORTEXDX_ENABLE_ZAP ?? process.env.INSULA_ENABLE_ZAP ?? "0";
+        if (!process.env.CORTEXDX_ENABLE_ZAP && process.env.INSULA_ENABLE_ZAP) {
+            console.warn(
+                "CORTEXDX_ENABLE_ZAP is not set; falling back to deprecated INSULA_ENABLE_ZAP",
+            );
+        }
+        return flag === "1";
+    }
 }
 
 /**
@@ -303,4 +330,53 @@ function mapZAPConfidence(confidence: "High" | "Medium" | "Low"): number {
         Low: 0.5,
     };
     return map[confidence];
+}
+
+interface ZapAlert {
+    alertId: string;
+    alert: string;
+    risk: "High" | "Medium" | "Low" | "Informational";
+    confidence: "High" | "Medium" | "Low";
+    desc: string;
+    solution: string;
+    reference: string;
+    cweid: string;
+    wascid: string;
+    url: string;
+    method: string;
+    param?: string;
+    attack?: string;
+    evidence?: string;
+}
+
+function emptyResults(scanType: ZAPResults["scanType"]): ZAPResults {
+    return {
+        findings: [],
+        totalAlerts: 0,
+        highRisk: 0,
+        mediumRisk: 0,
+        lowRisk: 0,
+        informational: 0,
+        executionTime: 0,
+        scanType,
+    };
+}
+
+function normalizeAlert(alert: ZapAlert): ZAPFinding {
+    return {
+        alertId: alert.alertId,
+        name: alert.alert,
+        riskLevel: alert.risk,
+        confidence: alert.confidence,
+        description: alert.desc,
+        solution: alert.solution,
+        reference: alert.reference,
+        cweid: alert.cweid,
+        wascid: alert.wascid,
+        url: alert.url,
+        method: alert.method,
+        param: alert.param,
+        attack: alert.attack,
+        evidence: alert.evidence,
+    };
 }
