@@ -1,0 +1,106 @@
+{
+  "name": "@cortex-os/agent-toolkit",
+  "version": "0.1.0",
+  "description": "Agent-friendly toolkit for code search, transformation, and validation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./infra/*": {
+      "types": "./dist/infra/*.d.ts",
+      "import": "./dist/infra/*.js",
+      "default": "./dist/infra/*.js"
+    },
+    "./app/*": {
+      "types": "./dist/app/*.d.ts",
+      "import": "./dist/app/*.js",
+      "default": "./dist/app/*.js"
+    },
+    "./domain/*": {
+      "types": "./dist/domain/*.d.ts",
+      "import": "./dist/domain/*.js",
+      "default": "./dist/domain/*.js"
+    },
+    "./events/*": {
+      "types": "./dist/events/*.d.ts",
+      "import": "./dist/events/*.js",
+      "default": "./dist/events/*.js"
+    },
+    "./resilience/*": {
+      "types": "./dist/resilience/*.d.ts",
+      "import": "./dist/resilience/*.js",
+      "default": "./dist/resilience/*.js"
+    },
+    "./semantics/*": {
+      "types": "./dist/semantics/*.d.ts",
+      "import": "./dist/semantics/*.js",
+      "default": "./dist/semantics/*.js"
+    },
+    "./session/*": {
+      "types": "./dist/session/*.d.ts",
+      "import": "./dist/session/*.js",
+      "default": "./dist/session/*.js"
+    },
+    "./cli/*": {
+      "types": "./dist/cli/*.d.ts",
+      "import": "./dist/cli/*.js",
+      "default": "./dist/cli/*.js"
+    },
+    "./tools/*": {
+      "types": "./dist/tools/*.d.ts",
+      "import": "./dist/tools/*.js",
+      "default": "./dist/tools/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "pretest": "pnpm run build",
+    "test": "node ../../scripts/vitest-safe.mjs run",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist",
+    "test:safe": "node ../../scripts/vitest-safe.mjs run"
+  },
+  "dependencies": {
+    "@cortex-os/a2a": "workspace:*",
+    "@cortex-os/contracts": "workspace:*",
+    "@cortex-os/utils": "workspace:*",
+    "@cortex-os/security": "workspace:*",
+    "@opentelemetry/api": "1.9.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.8.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "eslint": "^9.35.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "bin": {
+    "agent-toolkit-diagnostics": "dist/cli/diagnostics.js"
+  },
+  "files": [
+    "dist",
+    "tools",
+    "Justfile"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jamiescottcraik/Cortex-OS.git",
+    "directory": "packages/agent-toolkit"
+  },
+  "keywords": [
+    "agent-toolkit",
+    "code-search",
+    "code-transformation",
+    "validation",
+    "mcp",
+    "cortex-os"
+  ]
+}

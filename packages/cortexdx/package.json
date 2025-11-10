@@ -32,6 +32,7 @@
     "internal:self-healing-suite": "tsx src/self-healing/cli.ts"
   },
   "dependencies": {
+    "agent-toolkit": "file:../agent-toolkit",
     "@clinic/bubbleprof": "^10.0.0",
     "@clinic/doctor": "^11.0.0",
     "@clinic/flame": "^13.0.0",
