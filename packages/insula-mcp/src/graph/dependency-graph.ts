@@ -36,7 +36,7 @@ type NodeMap = Map<string, Node>;
 
 type EdgeList = Edge[];
 
-const DEFAULT_SERVER_ID = "insula-mcp";
+const DEFAULT_SERVER_ID = "cortexdx";
 
 export function buildDependencyGraph(
   manifest: ManifestLike = {},

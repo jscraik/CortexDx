@@ -1,5 +1,5 @@
 /**
- * Adapter exports for Insula MCP
+ * Adapter exports for CortexDx
  */
 
 export type { EnhancedLlmAdapter } from "../types.js";

@@ -138,7 +138,7 @@ export class InspectorAdapter {
   }
 
   /**
-   * Convert Inspector findings to Insula Finding format
+   * Convert Inspector findings to CortexDx Finding format
    */
   convertFindings(inspectorFindings: InspectorFinding[]): Finding[] {
     return inspectorFindings.map(finding => ({
@@ -156,10 +156,10 @@ export class InspectorAdapter {
   }
 
   /**
-   * Run self-diagnostic on the running Insula instance
+   * Run self-diagnostic on the running CortexDx instance
    */
   async selfDiagnose(): Promise<InspectorReport> {
-    const selfEndpoint = process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001';
+    const selfEndpoint = process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001';
     const probes = ['handshake', 'protocol', 'security', 'performance', 'sse'];
 
     this.ctx.logger?.(`[Inspector] Running self-diagnosis on ${selfEndpoint}`);
@@ -194,6 +194,7 @@ export class InspectorAdapter {
       const adapterDir = path.dirname(fileURLToPath(import.meta.url));
       const wrapperCandidates = [
         path.join(adapterDir, "stdio-wrapper.js"),
+        path.join(adapterDir, "adapters/stdio-wrapper.js"),
         path.join(adapterDir, "../../dist/adapters/stdio-wrapper.js"),
       ];
 

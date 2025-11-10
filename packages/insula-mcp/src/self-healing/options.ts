@@ -27,7 +27,7 @@ export function parseCliOptions(argv: string[]): SelfHealingCliOptions {
     plugins,
     model: modelArg,
     dryRun,
-    endpoint: endpointArg ?? process.env.INSULA_SELF_HEALING_ENDPOINT ?? "http://127.0.0.1:5001",
+    endpoint: endpointArg ?? process.env.CORTEXDX_SELF_HEALING_ENDPOINT ?? "http://127.0.0.1:5001",
   };
 }
 

@@ -23,7 +23,7 @@ const parseSeverityThreshold = (value?: string): SeverityThreshold => {
  */
 function createDevelopmentContext(): DevelopmentContext {
   return {
-    endpoint: process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
+    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
     logger: (...args) => console.log('[Self-Healing]', ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
@@ -339,7 +339,7 @@ async function sendWebhook(webhookUrl: string, payload: Record<string, unknown>)
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Insula-MCP-Self-Healing/1.0',
+        'User-Agent': 'CortexDx-Self-Healing/1.0',
       },
       body: JSON.stringify(payload),
     });

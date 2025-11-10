@@ -1,5 +1,5 @@
 /**
- * Web server exports for Insula MCP
+ * Web server exports for CortexDx
  */
 
 // Report server

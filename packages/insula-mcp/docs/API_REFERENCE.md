@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for Insula MCP - the diagnostic meta-inspector for Model Context Protocol servers.
+Complete API documentation for CortexDx - the diagnostic meta-inspector for Model Context Protocol servers.
 
 ## Table of Contents
 
@@ -298,13 +298,13 @@ const logEvidence: EvidencePointer = {
 ### Installation
 
 ```bash
-npm install @brainwav/insula-mcp
+npm install @brainwav/cortexdx
 ```
 
 ### Basic Usage
 
 ```typescript
-import { runDiagnose } from '@brainwav/insula-mcp';
+import { runDiagnose } from '@brainwav/cortexdx';
 
 // Run diagnostics programmatically
 const exitCode = await runDiagnose({
@@ -379,7 +379,7 @@ interface DiagnoseOptions {
 **Example**:
 
 ```typescript
-import { runDiagnose } from '@brainwav/insula-mcp';
+import { runDiagnose } from '@brainwav/cortexdx';
 
 async function diagnoseServer() {
     const result = await runDiagnose({
@@ -458,7 +458,7 @@ interface EnhancedLlmAdapter extends LlmAdapter {
 ### Creating LLM Adapters
 
 ```typescript
-import { createOllamaAdapter } from '@brainwav/insula-mcp';
+import { createOllamaAdapter } from '@brainwav/cortexdx';
 
 // Ollama adapter
 const ollama = createOllamaAdapter({
@@ -469,19 +469,19 @@ const ollama = createOllamaAdapter({
 // Use adapter
 const response = await ollama.complete('Explain MCP protocol');
 
-// Insula MCP supports the Ollama backend exclusively. Remove any legacy MLX integrations to avoid runtime errors.
+// CortexDx supports the Ollama backend exclusively. Remove any legacy MLX integrations to avoid runtime errors.
 ```
 
 ## Plugin Development
 
 ### Plugin Architecture
 
-Insula MCP uses a plugin-based architecture where each diagnostic capability is implemented as a separate plugin. Plugins run in sandboxed worker threads with resource budgets.
+CortexDx uses a plugin-based architecture where each diagnostic capability is implemented as a separate plugin. Plugins run in sandboxed worker threads with resource budgets.
 
 #### Basic Plugin Structure
 
 ```typescript
-import type { DiagnosticPlugin, DiagnosticContext, Finding } from '@brainwav/insula-mcp';
+import type { DiagnosticPlugin, DiagnosticContext, Finding } from '@brainwav/cortexdx';
 
 export const myPlugin: DiagnosticPlugin = {
     id: 'unique-plugin-id',
@@ -600,7 +600,7 @@ export const protocolPlugin: DiagnosticPlugin = {
 Enhanced plugins that provide development assistance and code generation.
 
 ```typescript
-import type { DevelopmentPlugin, DevelopmentContext } from '@brainwav/insula-mcp';
+import type { DevelopmentPlugin, DevelopmentContext } from '@brainwav/cortexdx';
 
 export const codeGeneratorPlugin: DevelopmentPlugin = {
     id: 'code-generator',
@@ -670,7 +670,7 @@ export const codeGeneratorPlugin: DevelopmentPlugin = {
 Interactive plugins that provide conversational assistance.
 
 ```typescript
-import type { ConversationalPlugin, ConversationSession } from '@brainwav/insula-mcp';
+import type { ConversationalPlugin, ConversationSession } from '@brainwav/cortexdx';
 
 export const debugAssistantPlugin: ConversationalPlugin = {
     id: 'debug-assistant',
@@ -844,7 +844,7 @@ async run(ctx: DiagnosticContext): Promise<Finding[]> {
 ```typescript
 import { describe, it, expect, vi } from 'vitest';
 import { myPlugin } from './my-plugin.js';
-import type { DiagnosticContext } from '@brainwav/insula-mcp';
+import type { DiagnosticContext } from '@brainwav/cortexdx';
 
 describe('MyPlugin', () => {
     it('should detect missing headers', async () => {
@@ -872,7 +872,7 @@ describe('MyPlugin', () => {
 #### Integration Testing
 
 ```typescript
-import { runDiagnose } from '@brainwav/insula-mcp';
+import { runDiagnose } from '@brainwav/cortexdx';
 
 describe('Plugin Integration', () => {
     it('should work with real server', async () => {
@@ -896,7 +896,7 @@ describe('Plugin Integration', () => {
 Run comprehensive diagnostic suite on MCP server endpoint.
 
 ```bash
-insula-mcp diagnose <endpoint> [options]
+cortexdx diagnose <endpoint> [options]
 ```
 
 **Arguments**:
@@ -934,25 +934,25 @@ insula-mcp diagnose <endpoint> [options]
 
 ```bash
 # Basic diagnostic
-insula-mcp diagnose http://localhost:3000
+cortexdx diagnose http://localhost:3000
 
 # Full suite with authentication
-insula-mcp diagnose https://api.example.com --full --auth bearer:abc123
+cortexdx diagnose https://api.example.com --full --auth bearer:abc123
 
 # Specific suites with custom output
-insula-mcp diagnose http://localhost:3000 \
+cortexdx diagnose http://localhost:3000 \
   --suites protocol,security,cors \
   --out ./diagnostics \
   --deterministic
 
 # External simulation with HAR capture
-insula-mcp diagnose https://api.example.com \
+cortexdx diagnose https://api.example.com \
   --simulate-external \
   --har \
   --otel-exporter http://localhost:4318/v1/traces
 
 # Compare two diagnostic runs
-insula-mcp diagnose http://localhost:3000 \
+cortexdx diagnose http://localhost:3000 \
   --compare reports/old-findings.json reports/new-findings.json
 ```
 
@@ -961,7 +961,7 @@ insula-mcp diagnose http://localhost:3000 \
 Start interactive conversational development session with AI assistance.
 
 ```bash
-insula-mcp interactive [options]
+cortexdx interactive [options]
 ```
 
 **Alias**: `i`
@@ -986,13 +986,13 @@ insula-mcp interactive [options]
 
 ```bash
 # Start interactive session
-insula-mcp interactive
+cortexdx interactive
 
 # Start with beginner-friendly explanations
-insula-mcp interactive --expertise beginner
+cortexdx interactive --expertise beginner
 
 # Start without colors (for screen readers)
-insula-mcp interactive --no-color --expertise expert
+cortexdx interactive --no-color --expertise expert
 ```
 
 ### generate
@@ -1000,7 +1000,7 @@ insula-mcp interactive --no-color --expertise expert
 Code generation commands for MCP servers, connectors, and documentation.
 
 ```bash
-insula-mcp generate <subcommand> [arguments] [options]
+cortexdx generate <subcommand> [arguments] [options]
 ```
 
 #### generate template
@@ -1008,7 +1008,7 @@ insula-mcp generate <subcommand> [arguments] [options]
 Generate MCP server template from scratch.
 
 ```bash
-insula-mcp generate template <name> [options]
+cortexdx generate template <name> [options]
 ```
 
 **Arguments**:
@@ -1040,7 +1040,7 @@ insula-mcp generate template <name> [options]
 **Example**:
 
 ```bash
-insula-mcp generate template my-mcp-server \
+cortexdx generate template my-mcp-server \
   --lang typescript \
   --features tools,resources,authentication \
   --transport http,sse \
@@ -1052,7 +1052,7 @@ insula-mcp generate template my-mcp-server \
 Generate MCP connector from API specification.
 
 ```bash
-insula-mcp generate connector <name> <spec> [options]
+cortexdx generate connector <name> <spec> [options]
 ```
 
 **Arguments**:
@@ -1075,7 +1075,7 @@ insula-mcp generate connector <name> <spec> [options]
 **Example**:
 
 ```bash
-insula-mcp generate connector github-api \
+cortexdx generate connector github-api \
   https://api.github.com/openapi.json \
   --auth oauth2 \
   --lang typescript
@@ -1086,7 +1086,7 @@ insula-mcp generate connector github-api \
 Generate documentation for MCP implementation.
 
 ```bash
-insula-mcp generate docs <target> <source> [options]
+cortexdx generate docs <target> <source> [options]
 ```
 
 **Arguments**:
@@ -1111,7 +1111,7 @@ insula-mcp generate docs <target> <source> [options]
 **Example**:
 
 ```bash
-insula-mcp generate docs server ./my-server \
+cortexdx generate docs server ./my-server \
   --format markdown \
   --out ./docs/server-api.md
 ```
@@ -1121,7 +1121,7 @@ insula-mcp generate docs server ./my-server \
 Start interactive debugging session for MCP problems.
 
 ```bash
-insula-mcp debug <problem> [options]
+cortexdx debug <problem> [options]
 ```
 
 **Arguments**:
@@ -1138,7 +1138,7 @@ insula-mcp debug <problem> [options]
 **Example**:
 
 ```bash
-insula-mcp debug "Connection refused on port 3000" \
+cortexdx debug "Connection refused on port 3000" \
   --errors ./logs/server.log \
   --configs ./config/mcp.json \
   --expertise beginner
@@ -1149,7 +1149,7 @@ insula-mcp debug "Connection refused on port 3000" \
 Explain errors or MCP concepts with AI assistance.
 
 ```bash
-insula-mcp explain <subcommand> [arguments] [options]
+cortexdx explain <subcommand> [arguments] [options]
 ```
 
 #### explain error
@@ -1157,7 +1157,7 @@ insula-mcp explain <subcommand> [arguments] [options]
 Interpret and explain error messages in user-friendly terms.
 
 ```bash
-insula-mcp explain error <error> [options]
+cortexdx explain error <error> [options]
 ```
 
 **Arguments**:
@@ -1173,7 +1173,7 @@ insula-mcp explain error <error> [options]
 **Example**:
 
 ```bash
-insula-mcp explain error "ECONNREFUSED 127.0.0.1:3000" \
+cortexdx explain error "ECONNREFUSED 127.0.0.1:3000" \
   --context ./debug-context.json \
   --expertise beginner
 ```
@@ -1183,7 +1183,7 @@ insula-mcp explain error "ECONNREFUSED 127.0.0.1:3000" \
 Explain MCP concepts, patterns, and best practices.
 
 ```bash
-insula-mcp explain concept <concept> [options]
+cortexdx explain concept <concept> [options]
 ```
 
 **Arguments**:
@@ -1199,8 +1199,8 @@ insula-mcp explain concept <concept> [options]
 **Example**:
 
 ```bash
-insula-mcp explain concept tools --expertise beginner
-insula-mcp explain concept streaming --no-examples
+cortexdx explain concept tools --expertise beginner
+cortexdx explain concept streaming --no-examples
 ```
 
 ### best-practices
@@ -1208,7 +1208,7 @@ insula-mcp explain concept streaming --no-examples
 Analyze implementation and provide best practices recommendations.
 
 ```bash
-insula-mcp best-practices [endpoint] [options]
+cortexdx best-practices [endpoint] [options]
 ```
 
 **Alias**: `bp`
@@ -1233,10 +1233,10 @@ insula-mcp best-practices [endpoint] [options]
 **Example**:
 
 ```bash
-insula-mcp best-practices http://localhost:3000 \
+cortexdx best-practices http://localhost:3000 \
   --focus protocol,security,performance
 
-insula-mcp bp --code ./my-mcp-server \
+cortexdx bp --code ./my-mcp-server \
   --focus maintainability,testing \
   --standards ./org-standards.json
 ```
@@ -1246,7 +1246,7 @@ insula-mcp bp --code ./my-mcp-server \
 Create interactive tutorial for MCP development topics.
 
 ```bash
-insula-mcp tutorial <topic> [options]
+cortexdx tutorial <topic> [options]
 ```
 
 **Arguments**:
@@ -1262,11 +1262,11 @@ insula-mcp tutorial <topic> [options]
 **Example**:
 
 ```bash
-insula-mcp tutorial "creating first MCP server" \
+cortexdx tutorial "creating first MCP server" \
   --expertise beginner \
   --lang python
 
-insula-mcp tutorial "advanced streaming patterns" \
+cortexdx tutorial "advanced streaming patterns" \
   --expertise expert \
   --no-exercises
 ```
@@ -1276,7 +1276,7 @@ insula-mcp tutorial "advanced streaming patterns" \
 Perform environment and system checks.
 
 ```bash
-insula-mcp doctor
+cortexdx doctor
 ```
 
 **Checks Performed**:
@@ -1304,7 +1304,7 @@ insula-mcp doctor
 Compare diagnostic findings between two runs.
 
 ```bash
-insula-mcp compare <old> <new>
+cortexdx compare <old> <new>
 ```
 
 **Arguments**:
@@ -1322,18 +1322,18 @@ insula-mcp compare <old> <new>
 **Example**:
 
 ```bash
-insula-mcp compare reports/baseline.json reports/current.json
+cortexdx compare reports/baseline.json reports/current.json
 ```
 
 ## Configuration
 
 ### Configuration File Schema
 
-Insula MCP supports configuration via `.insula-mcp.json` file in your project root or via environment variables.
+CortexDx supports configuration via `.cortexdx.json` file in your project root or via environment variables.
 
 ```json
 {
-  "$schema": "https://schemas.brainwav.dev/insula-mcp/config.json",
+  "$schema": "https://schemas.brainwav.dev/cortexdx/config.json",
   "llm": {
     "backend": "ollama",
     "model": "llama3.1",
@@ -1428,7 +1428,7 @@ Insula MCP supports configuration via `.insula-mcp.json` file in your project ro
     "otel": {
       "enabled": true,
       "endpoint": "http://localhost:4318/v1/traces",
-      "serviceName": "insula-mcp",
+      "serviceName": "cortexdx",
       "headers": {}
     },
     "logging": {
@@ -1444,7 +1444,7 @@ Insula MCP supports configuration via `.insula-mcp.json` file in your project ro
   "networking": {
     "timeout": 30000,
     "retries": 3,
-    "userAgent": "Insula-MCP/0.1.0",
+    "userAgent": "CortexDx-MCP/0.1.0",
     "proxy": {
       "http": "${HTTP_PROXY}",
       "https": "${HTTPS_PROXY}",
@@ -1552,14 +1552,14 @@ Environment variables override configuration file settings and support variable 
 
 ### Configuration Validation
 
-Insula MCP validates configuration on startup and provides detailed error messages for invalid settings.
+CortexDx validates configuration on startup and provides detailed error messages for invalid settings.
 
 ```bash
 # Validate configuration
-insula-mcp doctor
+cortexdx doctor
 
 # Example validation output
-[brAInwav] Config: Loading from .insula-mcp.json ✓
+[brAInwav] Config: Loading from .cortexdx.json ✓
 [brAInwav] Config: LLM backend 'ollama' available ✓
 [brAInwav] Config: Model 'llama3.1' accessible ✓
 [brAInwav] Config: All plugins loadable ✓
@@ -1612,7 +1612,7 @@ insula-mcp doctor
     }
   },
   "output": {
-    "directory": "/var/log/insula-mcp",
+    "directory": "/var/log/cortexdx",
     "formats": ["json"],
     "accessibility": true,
     "colors": false,
@@ -1633,7 +1633,7 @@ insula-mcp doctor
 
 ## Output Formats
 
-Insula MCP generates multiple output formats to support different use cases and integrations.
+CortexDx generates multiple output formats to support different use cases and integrations.
 
 ### JSON Format
 
@@ -1678,7 +1678,7 @@ Machine-readable format for programmatic processing and CI/CD integration.
 
 ```bash
 # Generate JSON output
-insula-mcp diagnose http://localhost:3000 --out ./reports
+cortexdx diagnose http://localhost:3000 --out ./reports
 
 # Process with jq
 cat reports/insula-findings.json | jq '.findings[] | select(.severity == "blocker")'
@@ -1699,7 +1699,7 @@ Human-readable format for documentation and reporting.
 **Structure**:
 
 ```markdown
-# Insula MCP Diagnostic Report (brAInwav)
+# CortexDx Diagnostic Report (brAInwav)
 
 - Endpoint: https://api.example.com
 - Date: 2024-11-06T10:30:00.000Z
@@ -1772,7 +1772,7 @@ describe('Authentication', () => {
 **Verification**:
 
 - Run authentication tests
-- Verify with `insula-mcp diagnose --auth bearer:test-token`
+- Verify with `cortexdx diagnose --auth bearer:test-token`
 
 ## Phase 2: Major Issues
 
@@ -1853,7 +1853,7 @@ Unified diff format for automated code fixes.
 
 ```bash
 # Generate file plan
-insula-mcp diagnose http://localhost:3000 --file-plan
+cortexdx diagnose http://localhost:3000 --file-plan
 
 # Apply patches (review first!)
 git apply reports/insula-fileplan.patch
@@ -1919,7 +1919,7 @@ When `--no-color` flag is used, ANSI color codes are stripped:
 # GitHub Actions example
 - name: Run MCP Diagnostics
   run: |
-    insula-mcp diagnose ${{ env.MCP_ENDPOINT }} \
+    cortexdx diagnose ${{ env.MCP_ENDPOINT }} \
       --out ./reports \
       --deterministic
 
@@ -2038,7 +2038,7 @@ try {
 
 ## Performance Requirements
 
-Insula MCP is designed for high-performance diagnostic operations with the following targets:
+CortexDx is designed for high-performance diagnostic operations with the following targets:
 
 ### Response Time Targets
 
@@ -2133,7 +2133,7 @@ import type {
     SseResult,
     GovernancePack,
     PerformanceMetrics
-} from '@brainwav/insula-mcp';
+} from '@brainwav/cortexdx';
 ```
 
 ### Type Definitions
@@ -2201,7 +2201,7 @@ interface McpError {
 
 ### Error Types
 
-Insula MCP defines specific error types for different failure scenarios:
+CortexDx defines specific error types for different failure scenarios:
 
 ```typescript
 // Plugin execution errors
@@ -2337,19 +2337,19 @@ async function requestWithRetry<T>(
 
 ### External Resources
 
-- [GitHub Repository](https://github.com/brainwav/insula-mcp) - Source code and issues
-- [npm Package](https://www.npmjs.com/package/@brainwav/insula-mcp) - Package registry
+- [GitHub Repository](https://github.com/brainwav/cortexdx) - Source code and issues
+- [npm Package](https://www.npmjs.com/package/@brainwav/cortexdx) - Package registry
 - [MCP Specification](https://spec.modelcontextprotocol.io/) - Official MCP protocol specification
 - [brAInwav Documentation](https://docs.brainwav.dev/) - Organization documentation
 
 ### Community
 
-- [GitHub Discussions](https://github.com/brainwav/insula-mcp/discussions) - Community support
-- [Issue Tracker](https://github.com/brainwav/insula-mcp/issues) - Bug reports and feature requests
+- [GitHub Discussions](https://github.com/brainwav/cortexdx/discussions) - Community support
+- [Issue Tracker](https://github.com/brainwav/cortexdx/issues) - Bug reports and feature requests
 - [Contributing Guide](../CONTRIBUTING.md) - How to contribute to the project
 
 ### Examples
 
-- [Example Plugins](https://github.com/brainwav/insula-mcp/tree/main/examples/plugins) - Sample plugin implementations
-- [Integration Examples](https://github.com/brainwav/insula-mcp/tree/main/examples/integrations) - CI/CD and monitoring integrations
-- [Configuration Examples](https://github.com/brainwav/insula-mcp/tree/main/examples/configs) - Sample configuration files
+- [Example Plugins](https://github.com/brainwav/cortexdx/tree/main/examples/plugins) - Sample plugin implementations
+- [Integration Examples](https://github.com/brainwav/cortexdx/tree/main/examples/integrations) - CI/CD and monitoring integrations
+- [Configuration Examples](https://github.com/brainwav/cortexdx/tree/main/examples/configs) - Sample configuration files

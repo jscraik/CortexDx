@@ -1,10 +1,10 @@
 # Commercial Deployment Guide
 
-This guide covers the commercial deployment features of Insula MCP, including Auth0 integration, license tier enforcement, and billing/analytics integration.
+This guide covers the commercial deployment features of CortexDx, including Auth0 integration, license tier enforcement, and billing/analytics integration.
 
 ## Overview
 
-Insula MCP supports three deployment tiers:
+CortexDx supports three deployment tiers:
 
 - **Community Edition (Free)**: Basic diagnostic tools and core MCP validation
 - **Professional Edition**: Advanced diagnostics, LLM backends, and academic validation
@@ -258,7 +258,7 @@ curl -X POST http://localhost:5001/mcp \
       "name": "validate_commercial_license",
       "arguments": {
         "licenseKey": "professional-demo-key",
-        "productId": "insula-mcp"
+        "productId": "cortexdx"
       }
     }
   }'
@@ -375,7 +375,7 @@ All commercial operations are logged:
 # Auth0 Configuration
 AUTH0_DOMAIN=production.auth0.com
 AUTH0_CLIENT_ID=prod-client-id
-AUTH0_AUDIENCE=https://api.insula-mcp.com
+AUTH0_AUDIENCE=https://api.cortexdx.com
 REQUIRE_AUTH=true
 
 # License Configuration
@@ -408,6 +408,6 @@ In production, replace in-memory storage with persistent databases:
 
 For commercial deployment support:
 
-- Email: support@insula-mcp.com
-- Documentation: https://docs.insula-mcp.com
+- Email: support@cortexdx.com
+- Documentation: https://docs.cortexdx.com
 - Enterprise Support: Available with Enterprise tier

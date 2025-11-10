@@ -12,7 +12,7 @@ import { createPersistentStorage } from "./pattern-storage.js";
  */
 export async function demonstratePatternStorage() {
     // Create persistent storage (data survives across restarts)
-    const storage = createPersistentStorage("/tmp/insula-patterns.json");
+    const storage = createPersistentStorage("/tmp/cortexdx-patterns.json");
 
     // Example 1: Save a successful resolution pattern
     const pattern: ResolutionPattern = {
@@ -85,7 +85,7 @@ export async function demonstratePatternStorage() {
  * Example: Cross-session knowledge accumulation
  */
 export async function demonstrateCrossSessionLearning() {
-    const storagePath = "/tmp/insula-cross-session.json";
+    const storagePath = "/tmp/cortexdx-cross-session.json";
 
     // Session 1: Initial learning
     console.log("Session 1: Learning from first resolution...");
@@ -131,7 +131,7 @@ export async function demonstrateCrossSessionLearning() {
  * Example: Pattern ranking for intelligent suggestion
  */
 export async function demonstratePatternRanking() {
-    const storage = createPersistentStorage("/tmp/insula-ranking.json");
+    const storage = createPersistentStorage("/tmp/cortexdx-ranking.json");
 
     // Add multiple patterns with different characteristics
     const patterns: ResolutionPattern[] = [

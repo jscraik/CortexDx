@@ -2,7 +2,7 @@ import { createOllamaAdapter } from "../adapters/ollama.js";
 import type { EnhancedLlmAdapter, LlmAdapter } from "../types.js";
 import { hasOllama, isOllamaReachable } from "./detect.js";
 
-const ENABLE_LOCAL_LLM = process.env.INSULA_ENABLE_LOCAL_LLM === "true";
+const ENABLE_LOCAL_LLM = process.env.CORTEXDX_ENABLE_LOCAL_LLM === "true";
 
 export async function pickLocalLLM(): Promise<"ollama" | "none"> {
   if (!ENABLE_LOCAL_LLM) return "none";

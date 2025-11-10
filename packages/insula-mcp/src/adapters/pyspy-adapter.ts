@@ -49,7 +49,7 @@ export class PySpyAdapter {
   private workDir: string;
 
   constructor(workDir?: string) {
-    this.workDir = workDir ?? join(tmpdir(), "insula-pyspy-profiles");
+    this.workDir = workDir ?? join(tmpdir(), "cortexdx-pyspy-profiles");
   }
 
   /**

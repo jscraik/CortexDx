@@ -1,10 +1,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runPlugins, type SandboxBudgets } from "./plugin-host.js";
-import { buildJsonReport } from "./report/json.js";
-import { buildMarkdownReport } from "./report/markdown.js";
+import { type SandboxBudgets, runPlugins } from "./plugin-host.js";
 import { buildArcTddPlan } from "./report/arctdd.js";
 import { buildFilePlan } from "./report/fileplan.js";
+import { buildJsonReport } from "./report/json.js";
+import { buildMarkdownReport } from "./report/markdown.js";
 import type { Finding } from "./types.js";
 
 interface DiagnoseOptions {
@@ -68,10 +68,10 @@ function writeArtifacts(outDir: string, stamp: Record<string, unknown>, findings
   const arc = buildArcTddPlan(stamp, findings);
   const fp = buildFilePlan(findings);
 
-  writeFileSync(join(outDir, "insula-findings.json"), JSON.stringify(json, null, 2));
-  writeFileSync(join(outDir, "insula-report.md"), md);
-  writeFileSync(join(outDir, "insula-arctdd.md"), arc);
-  if (fp.length) writeFileSync(join(outDir, "insula-fileplan.patch"), fp.join("\n"));
+  writeFileSync(join(outDir, "cortexdx-findings.json"), JSON.stringify(json, null, 2));
+  writeFileSync(join(outDir, "cortexdx-report.md"), md);
+  writeFileSync(join(outDir, "cortexdx-arctdd.md"), arc);
+  if (fp.length) writeFileSync(join(outDir, "cortexdx-fileplan.patch"), fp.join("\n"));
 }
 
 function coerceNumber(value: number | string | undefined): number | undefined {

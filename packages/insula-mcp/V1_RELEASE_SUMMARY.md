@@ -1,8 +1,8 @@
-# Insula MCP v1.0.0 Release Implementation Summary
+# CortexDx v1.0.0 Release Implementation Summary
 
 ## Overview
 
-This document summarizes the implementation of task 14.5.3: "Package and release v1.0" from the Insula MCP diagnostic system specification.
+This document summarizes the implementation of task 14.5.3: "Package and release v1.0" from the CortexDx diagnostic system specification.
 
 ## Completed Deliverables
 
@@ -53,7 +53,7 @@ This document summarizes the implementation of task 14.5.3: "Package and release
 **Package Configuration**
 
 - Proper package metadata
-- Scoped package name: `@brainwav/insula-mcp`
+- Scoped package name: `@brainwav/cortexdx`
 - CLI binary configuration
 - Files whitelist for distribution
 - Engine requirements specified
@@ -156,7 +156,7 @@ This document summarizes the implementation of task 14.5.3: "Package and release
 ## File Structure
 
 ```
-packages/insula-mcp/
+packages/cortexdx/
 ├── package.json (updated to v1.0.0)
 ├── Dockerfile.community (new)
 ├── Dockerfile.professional (new)
@@ -184,29 +184,29 @@ packages/insula-mcp/
 **Community Edition**
 
 ```bash
-brainwav/insula-mcp:1.0.0-community
-brainwav/insula-mcp:latest-community
-brainwav/insula-mcp:latest
+brainwav/cortexdx:1.0.0-community
+brainwav/cortexdx:latest-community
+brainwav/cortexdx:latest
 ```
 
 **Professional Edition**
 
 ```bash
-brainwav/insula-mcp:1.0.0-professional
-brainwav/insula-mcp:latest-professional
+brainwav/cortexdx:1.0.0-professional
+brainwav/cortexdx:latest-professional
 ```
 
 **Enterprise Edition**
 
 ```bash
-brainwav/insula-mcp:1.0.0-enterprise
-brainwav/insula-mcp:latest-enterprise
+brainwav/cortexdx:1.0.0-enterprise
+brainwav/cortexdx:latest-enterprise
 ```
 
 ### NPM Package
 
 ```bash
-@brainwav/insula-mcp@1.0.0
+@brainwav/cortexdx@1.0.0
 ```
 
 ## Usage Examples
@@ -215,7 +215,7 @@ brainwav/insula-mcp:latest-enterprise
 
 ```bash
 # Build all tiers
-cd packages/insula-mcp
+cd packages/cortexdx
 ./scripts/build-docker-images.sh 1.0.0
 
 # Build and push
@@ -226,7 +226,7 @@ PUSH=true ./scripts/build-docker-images.sh 1.0.0
 
 ```bash
 # Dry run
-cd packages/insula-mcp
+cd packages/cortexdx
 DRY_RUN=true ./scripts/publish-npm.sh 1.0.0
 
 # Actual publish
@@ -363,7 +363,7 @@ The release includes:
 - Quick deployment tools
 - CI/CD integration
 
-This implementation provides a solid foundation for the stable v1.0.0 release of Insula MCP.
+This implementation provides a solid foundation for the stable v1.0.0 release of CortexDx.
 
 ---
 

@@ -1,11 +1,11 @@
-# Insula MCP — Diagnostic Meta-Inspector
+# CortexDx — Diagnostic Meta-Inspector
 
-[![GitHub Actions](https://github.com/brainwav/insula-mcp/workflows/Insula%20MCP%20Diagnose/badge.svg)](https://github.com/brainwav/insula-mcp/actions)
-[![npm version](https://img.shields.io/npm/v/@brainwav/insula-mcp.svg)](https://www.npmjs.com/package/@brainwav/insula-mcp)
+[![GitHub Actions](https://github.com/brainwav/cortexdx/workflows/CortexDx%20Diagnose/badge.svg)](https://github.com/brainwav/cortexdx/actions)
+[![npm version](https://img.shields.io/npm/v/@brainwav/cortexdx.svg)](https://www.npmjs.com/package/@brainwav/cortexdx)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 
-**Stateless, plugin-based diagnostics for Model Context Protocol (MCP) servers and clients.** Insula MCP is the comprehensive diagnostic tool that helps you harden MCP implementations before production deployment.
+**Stateless, plugin-based diagnostics for Model Context Protocol (MCP) servers and clients.** CortexDx is the comprehensive diagnostic tool that helps you harden MCP implementations before production deployment.
 
 ## 🚀 Key Features
 
@@ -16,7 +16,7 @@
 - **⚡ CI/CD Ready**: GitHub Actions integration with severity-based failure modes
 - **♿ Accessibility**: WCAG 2.2 AA compliant CLI output with screen reader support
 - **🎯 Deterministic**: Reproducible results with `--deterministic` mode for reliable testing
-- **🧠 Internal Self-Improvement** *(Brainwav dev builds only)*: Internal diagnostics plugin highlights handshake, dependency, and health regressions inside Insula MCP itself
+- **🧠 Internal Self-Improvement** *(Brainwav dev builds only)*: Internal diagnostics plugin highlights handshake, dependency, and health regressions inside CortexDx itself
 
 ## 📦 Quick Start
 
@@ -24,38 +24,38 @@
 
 ```bash
 # Install globally
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 
 # Or use with npx (no installation required)
-npx @brainwav/insula-mcp diagnose https://your-mcp-server.com
+npx @brainwav/cortexdx diagnose https://your-mcp-server.com
 ```
 
 ### Basic Usage
 
 ```bash
 # Quick diagnostic scan
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # Full comprehensive analysis
-insula-mcp diagnose https://mcp.example.com --full
+cortexdx diagnose https://mcp.example.com --full
 
 # Generate implementation plan
-insula-mcp diagnose https://mcp.example.com --file-plan --out reports
+cortexdx diagnose https://mcp.example.com --file-plan --out reports
 
 # Compare two diagnostic runs
-insula-mcp compare reports/old.json reports/new.json
+cortexdx compare reports/old.json reports/new.json
 ```
 
 ### Example Output
 
 ```bash
-$ insula-mcp diagnose https://cortex-mcp.brainwav.io/mcp
+$ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp
 
-[brAInwav] Insula MCP Diagnostic Report
+[brAInwav] CortexDx Diagnostic Report
 ✅ [INFO] MCP server responding
 ⚠️  [MAJOR] SSE endpoint not streaming (HTTP 502)
 ℹ️  [MINOR] No 'rpc.ping' response
-📊 Generated: reports/insula-report.md, reports/insula-arctdd.md
+📊 Generated: reports/cortexdx-report.md, reports/cortexdx-arctdd.md
 ```
 
 ## 🛠️ Advanced Usage
@@ -64,45 +64,85 @@ $ insula-mcp diagnose https://cortex-mcp.brainwav.io/mcp
 
 ```bash
 # Clone and setup (for contributors)
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx
 mise install          # Install Node/pnpm versions
 pnpm install          # Install dependencies
 pnpm build           # Build the project
 pnpm test            # Run tests
 ```
 
+#### CortexDx LaunchAgent (macOS)
+
+Need CortexDx listening on `127.0.0.1:5001` without touching `.Cortex-OS`? Use the
+bundled service scripts:
+
+```bash
+./install-service.sh      # render + install com.brainwav.cortexdx
+./manage-service.sh logs  # tail /var/log/cortexdx.log
+./uninstall-service.sh    # remove the LaunchAgent
+```
+
+The plist template renders with your absolute paths and the label stays
+`com.brainwav.cortexdx`, so it can co-exist with `.Cortex-OS`'s
+`com.brainwav.insula-local-memory` profile. See `SERVICE_SETUP.md` for details
+and environment overrides like `PORT=5002 ./install-service.sh`.
+
+#### Optional: reuse `.Cortex-OS` toggle (Cortex ↔ Insula)
+
+If you prefer the shared profile switcher that ships with `.Cortex-OS`, you can
+still flip between Cortex profiles:
+
+```bash
+# From ~/.Cortex-OS
+pnpm mcp:profile cortexdx   # MCP-only (REST disabled, Qdrant still on 6333)
+pnpm mcp:profile cortex     # Restore Cortex profile (REST 3002 + MCP bridge)
+```
+
+Each command wraps `scripts/launchd/toggle-local-memory.sh`, which renders the
+correct plist, bootouts the previous LaunchAgent, and bootstraps the new one via
+`launchctl`. Confirm the active profile before diagnostics:
+
+```bash
+launchctl print gui/$UID/com.brainwav.insula-local-memory | rg -i state
+lsof -i :3002   # should be empty for Insula profile
+lsof -i :6333   # Qdrant should listen in both profiles
+```
+
+Share these commands in runbooks/PRs when asking reviewers to reproduce CortexDx
+issues so everyone flips the same profile without editing plist files manually.
+
 ### Command Reference
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `diagnose` | Run diagnostic analysis | `insula-mcp diagnose <endpoint> [options]` |
-| `interactive` | Start interactive mode | `insula-mcp interactive` |
-| `debug` | Interactive debugging session | `insula-mcp debug "connection timeout"` |
-| `generate` | Code generation assistance | `insula-mcp generate` |
-| `best-practices` | Implementation analysis | `insula-mcp best-practices <endpoint>` |
-| `tutorial` | Interactive tutorials | `insula-mcp tutorial "mcp-basics"` |
-| `doctor` | Environment diagnostics | `insula-mcp doctor` |
-| `compare` | Compare diagnostic results | `insula-mcp compare old.json new.json` |
+| `diagnose` | Run diagnostic analysis | `cortexdx diagnose <endpoint> [options]` |
+| `interactive` | Start interactive mode | `cortexdx interactive` |
+| `debug` | Interactive debugging session | `cortexdx debug "connection timeout"` |
+| `generate` | Code generation assistance | `cortexdx generate` |
+| `best-practices` | Implementation analysis | `cortexdx best-practices <endpoint>` |
+| `tutorial` | Interactive tutorials | `cortexdx tutorial "mcp-basics"` |
+| `doctor` | Environment diagnostics | `cortexdx doctor` |
+| `compare` | Compare diagnostic results | `cortexdx compare old.json new.json` |
 
 ### Configuration Options
 
 ```bash
 # Authentication
-insula-mcp diagnose <endpoint> --auth bearer:your-token
-insula-mcp diagnose <endpoint> --auth basic:user:pass
+cortexdx diagnose <endpoint> --auth bearer:your-token
+cortexdx diagnose <endpoint> --auth basic:user:pass
 
 # Suite Selection
-insula-mcp diagnose <endpoint> --suites streaming,governance,cors
+cortexdx diagnose <endpoint> --suites streaming,governance,cors
 
 # Output Control
-insula-mcp diagnose <endpoint> --out custom-reports --file-plan --har
+cortexdx diagnose <endpoint> --out custom-reports --file-plan --har
 
 # Performance Tuning
-insula-mcp diagnose <endpoint> --budget-time 10000 --budget-mem 128
+cortexdx diagnose <endpoint> --budget-time 10000 --budget-mem 128
 
 # Accessibility & CI/CD
-insula-mcp diagnose <endpoint> --a11y --no-color --deterministic
+cortexdx diagnose <endpoint> --a11y --no-color --deterministic
 ```
 
 ### Environment Variables
@@ -110,32 +150,32 @@ insula-mcp diagnose <endpoint> --a11y --no-color --deterministic
 | Variable | Purpose |
 |----------|---------|
 | `EXA_API_KEY` | Required for the Exa academic provider. Stored in 1Password-managed `.env` and injected at runtime. |
-| `SEMANTIC_SCHOLAR_API_KEY` | Optional API key for Semantic Scholar. If unset, Insula MCP falls back to `jscraik@brainwav.io` as the contact identity so traffic stays compliant until a dedicated email is provisioned. |
+| `SEMANTIC_SCHOLAR_API_KEY` | Optional API key for Semantic Scholar. If unset, CortexDx falls back to `jscraik@brainwav.io` as the contact identity so traffic stays compliant until a dedicated email is provisioned. |
 
 ## 📚 Documentation
 
 | Document | Description | Audience |
 |----------|-------------|----------|
-| [Getting Started](packages/insula-mcp/docs/GETTING_STARTED.md) | Installation and first steps | New Users |
-| [User Guide](packages/insula-mcp/docs/USER_GUIDE.md) | Comprehensive usage guide | All Users |
-| [API Reference](packages/insula-mcp/docs/API_REFERENCE.md) | CLI and programmatic API | Developers |
-| [Plugin Development](packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md) | Creating custom plugins | Plugin Authors |
-| [Troubleshooting](packages/insula-mcp/docs/TROUBLESHOOTING.md) | Common issues and solutions | Support |
-| [Deployment](packages/insula-mcp/docs/DEPLOYMENT.md) | Production deployment | DevOps |
-| [IDE Integration](packages/insula-mcp/docs/IDE_INTEGRATION.md) | Editor setup and extensions | Developers |
-| [Contributing](packages/insula-mcp/docs/CONTRIBUTING.md) | Development and contribution guide | Contributors |
+| [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md) | Installation and first steps | New Users |
+| [User Guide](packages/cortexdx/docs/USER_GUIDE.md) | Comprehensive usage guide | All Users |
+| [API Reference](packages/cortexdx/docs/API_REFERENCE.md) | CLI and programmatic API | Developers |
+| [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md) | Creating custom plugins | Plugin Authors |
+| [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md) | Common issues and solutions | Support |
+| [Deployment](packages/cortexdx/docs/DEPLOYMENT.md) | Production deployment | DevOps |
+| [IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md) | Editor setup and extensions | Developers |
+| [Contributing](packages/cortexdx/docs/CONTRIBUTING.md) | Development and contribution guide | Contributors |
 
 ### Quick Navigation
 
-- **New to Insula MCP?** Start with [Getting Started](packages/insula-mcp/docs/GETTING_STARTED.md)
-- **Need help?** Check [Troubleshooting](packages/insula-mcp/docs/TROUBLESHOOTING.md)
-- **Want to contribute?** Read [Contributing](packages/insula-mcp/docs/CONTRIBUTING.md)
-- **Building plugins?** See [Plugin Development](packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md)
-- **Setting up your IDE?** Visit [IDE Integration](packages/insula-mcp/docs/IDE_INTEGRATION.md)
+- **New to CortexDx?** Start with [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md)
+- **Need help?** Check [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md)
+- **Want to contribute?** Read [Contributing](packages/cortexdx/docs/CONTRIBUTING.md)
+- **Building plugins?** See [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)
+- **Setting up your IDE?** Visit [IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md)
 
 ## 🏗️ Architecture
 
-Insula MCP follows a **plugin-first architecture** with these core principles:
+CortexDx follows a **plugin-first architecture** with these core principles:
 
 - **Stateless & Read-Only**: Never mutates target MCP servers
 - **Sandboxed Plugins**: Worker-thread isolation with CPU/memory budgets
@@ -184,7 +224,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ```yaml
 - name: MCP Diagnostic
   run: |
-    npx @brainwav/insula-mcp diagnose ${{ secrets.MCP_ENDPOINT }} --out reports
+    npx @brainwav/cortexdx diagnose ${{ secrets.MCP_ENDPOINT }} --out reports
     
 - name: Upload Reports
   uses: actions/upload-artifact@v4
@@ -220,7 +260,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 🏷️ Versioning & Releases
 
-We follow [Semantic Versioning](https://semver.org/). See [Releases](https://github.com/brainwav/insula-mcp/releases) for changelog.
+We follow [Semantic Versioning](https://semver.org/). See [Releases](https://github.com/brainwav/cortexdx/releases) for changelog.
 
 - **Major**: Breaking changes to CLI or API
 - **Minor**: New features, plugins, or diagnostic capabilities
@@ -232,8 +272,8 @@ Licensed under the [Apache License 2.0](LICENSE). See LICENSE file for details.
 
 ## 🆘 Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/brainwav/insula-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/brainwav/insula-mcp/discussions)
+- **Issues**: [GitHub Issues](https://github.com/brainwav/cortexdx/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/brainwav/cortexdx/discussions)
 - **Documentation**: [docs.brainwav.io/mcp](https://docs.brainwav.io/mcp)
 - **Security**: Report security issues to <security@brainwav.io>
 

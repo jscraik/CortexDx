@@ -1,4 +1,4 @@
-# Insula MCP Diagnostic Report (brAInwav)
+# CortexDx Diagnostic Report (brAInwav)
 - Endpoint: https://cortex-mcp.brainwav.io/mcp
 - Date: 2025-11-06T21:14:12.421Z
 - Duration: 9368ms

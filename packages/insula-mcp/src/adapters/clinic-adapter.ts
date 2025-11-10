@@ -72,7 +72,7 @@ export class ClinicAdapter {
   private workDir: string;
 
   constructor(workDir?: string) {
-    this.workDir = workDir ?? join(tmpdir(), "insula-clinic-profiles");
+    this.workDir = workDir ?? join(tmpdir(), "cortexdx-clinic-profiles");
   }
 
   /**

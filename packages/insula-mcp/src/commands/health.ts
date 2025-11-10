@@ -1,6 +1,5 @@
-import type { DevelopmentContext } from "../types.js";
 import { AutoHealer } from "../healing/auto-healer.js";
-import { InspectorAdapter } from "../adapters/inspector-adapter.js";
+import type { DevelopmentContext } from "../types.js";
 
 /**
  * Create development context for health check
@@ -19,7 +18,7 @@ interface HealthWebhookPayload {
 
 function createDevelopmentContext(): DevelopmentContext {
   return {
-    endpoint: process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
+    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
     logger: (...args) => console.log('[Health]', ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
@@ -47,7 +46,7 @@ export async function runHealthCheck(options: {
   webhook?: string;
   json?: boolean;
 }): Promise<number> {
-  const endpoint = options.endpoint || process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001';
+  const endpoint = options.endpoint || process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001';
   const isJson = options.json || false;
 
   try {
@@ -125,7 +124,7 @@ function displayHealthResult(
   endpoint: string
 ): void {
   console.log('='.repeat(50));
-  console.log('INSULA MCP HEALTH CHECK');
+  console.log('CORTEXDX HEALTH CHECK');
   console.log('='.repeat(50));
 
   console.log(`Endpoint: ${endpoint}`);
@@ -150,29 +149,29 @@ function displayHealthResult(
     console.log('\nRECOMMENDATIONS:');
     if (healthResult.criticalIssues > 0) {
       console.log('  1. Run comprehensive self-diagnosis:');
-      console.log('     insula-mcp self-diagnose --auto-fix');
+      console.log('     cortexdx self-diagnose --auto-fix');
       console.log('  2. Check system logs for detailed error information');
       console.log('  3. Verify all dependencies are properly installed');
     } else {
       console.log('  1. Run detailed diagnostics:');
-      console.log('     insula-mcp self-diagnose --dry-run');
+      console.log('     cortexdx self-diagnose --dry-run');
       console.log('  2. Review findings and apply fixes if needed');
     }
 
     console.log('  4. Start background monitoring:');
-    console.log('     insula-mcp monitor --start --auto-heal');
+    console.log('     cortexdx monitor --start --auto-heal');
   } else {
     console.log('\n✅ All systems operational');
     console.log('\nMAINTENANCE RECOMMENDATIONS:');
     console.log('  1. Enable background monitoring:');
-    console.log('     insula-mcp monitor --start');
+    console.log('     cortexdx monitor --start');
     console.log('  2. Schedule regular health checks');
     console.log('  3. Monitor system performance and logs');
   }
 
   console.log('\nFor more detailed analysis, run:');
-  console.log('  insula-mcp self-diagnose --dry-run');
-  console.log('  insula-mcp templates list');
+  console.log('  cortexdx self-diagnose --dry-run');
+  console.log('  cortexdx templates list');
 
   console.log('='.repeat(50));
 }
@@ -186,7 +185,7 @@ async function sendWebhook(webhookUrl: string, payload: HealthWebhookPayload): P
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Insula-MCP-Health/1.0',
+        'User-Agent': 'CortexDx-Health/1.0',
       },
       body: JSON.stringify(payload),
     });

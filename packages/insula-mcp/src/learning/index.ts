@@ -1,5 +1,5 @@
 /**
- * Learning system exports for Insula MCP
+ * Learning system exports for CortexDx
  */
 
 // Pattern recognition

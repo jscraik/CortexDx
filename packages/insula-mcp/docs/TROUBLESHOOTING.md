@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This comprehensive guide helps you diagnose and resolve common issues when using Insula MCP. The guide is organized by problem category with platform-specific solutions and debugging techniques.
+This comprehensive guide helps you diagnose and resolve common issues when using CortexDx. The guide is organized by problem category with platform-specific solutions and debugging techniques.
 
 ## Quick Diagnostic Commands
 
@@ -8,19 +8,19 @@ Before diving into specific issues, try these diagnostic commands:
 
 ```bash
 # Check system health and requirements
-insula-mcp doctor
+cortexdx doctor
 
 # Run basic diagnostics with verbose output
-insula-mcp diagnose <endpoint> --verbose --debug
+cortexdx diagnose <endpoint> --verbose --debug
 
 # Interactive troubleshooting assistant
-insula-mcp interactive
+cortexdx interactive
 
 # Explain specific error messages
-insula-mcp explain error "<error-message>"
+cortexdx explain error "<error-message>"
 
 # Get debugging help for specific problems
-insula-mcp debug "<problem-description>"
+cortexdx debug "<problem-description>"
 ```
 
 ## Connection Issues
@@ -82,8 +82,8 @@ Test-NetConnection -ComputerName localhost -Port 3000
 1. **Verify server is running**:
 
    ```bash
-   # Use Insula MCP diagnostics
-   insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
+   # Use CortexDx diagnostics
+   cortexdx diagnose http://localhost:3000 --suites discovery --verbose
    
    # Test with curl
    curl -v http://localhost:3000
@@ -93,18 +93,18 @@ Test-NetConnection -ComputerName localhost -Port 3000
 
    ```bash
    # Correct formats
-   insula-mcp diagnose http://localhost:3000
-   insula-mcp diagnose https://api.example.com/mcp
+   cortexdx diagnose http://localhost:3000
+   cortexdx diagnose https://api.example.com/mcp
    
    # Common mistakes to avoid
-   # ❌ insula-mcp diagnose localhost:3000 (missing protocol)
-   # ❌ insula-mcp diagnose http://localhost:3000/ (trailing slash)
+   # ❌ cortexdx diagnose localhost:3000 (missing protocol)
+   # ❌ cortexdx diagnose http://localhost:3000/ (trailing slash)
    ```
 
 3. **Use interactive debugger**:
 
    ```bash
-   insula-mcp debug "Cannot connect to localhost:3000"
+   cortexdx debug "Cannot connect to localhost:3000"
    ```
 
 ### SSL/TLS Errors
@@ -162,10 +162,10 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Use HTTP instead of HTTPS
-   insula-mcp diagnose http://localhost:3000
+   cortexdx diagnose http://localhost:3000
    
    # Skip certificate validation (development only)
-   NODE_TLS_REJECT_UNAUTHORIZED=0 insula-mcp diagnose https://localhost:3000
+   NODE_TLS_REJECT_UNAUTHORIZED=0 cortexdx diagnose https://localhost:3000
    ```
 
 2. **Generate proper certificates**:
@@ -185,7 +185,7 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
    ```bash
    # Specify custom CA bundle
    export NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.pem
-   insula-mcp diagnose https://localhost:3000
+   cortexdx diagnose https://localhost:3000
    ```
 
 ### Timeout Errors
@@ -203,20 +203,20 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Run with detailed timing
-   insula-mcp diagnose http://localhost:3000 --verbose --debug
+   cortexdx diagnose http://localhost:3000 --verbose --debug
    
    # Check specific performance metrics
-   insula-mcp diagnose http://localhost:3000 --suites performance
+   cortexdx diagnose http://localhost:3000 --suites performance
    ```
 
 2. **Adjust timeout settings**:
 
    ```bash
    # Increase overall timeout (default: 5000ms)
-   insula-mcp diagnose http://localhost:3000 --budget-time 30000
+   cortexdx diagnose http://localhost:3000 --budget-time 30000
    
    # Increase memory budget (default: 96MB)
-   insula-mcp diagnose http://localhost:3000 --budget-mem 256
+   cortexdx diagnose http://localhost:3000 --budget-mem 256
    ```
 
 3. **Platform-specific network diagnostics**:
@@ -251,10 +251,10 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Run performance-focused diagnostics
-   insula-mcp best-practices http://localhost:3000 --focus performance
+   cortexdx best-practices http://localhost:3000 --focus performance
    
    # Generate performance report
-   insula-mcp diagnose http://localhost:3000 --suites performance --out performance-report
+   cortexdx diagnose http://localhost:3000 --suites performance --out performance-report
    ```
 
 ## Protocol Compliance Issues
@@ -274,17 +274,17 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Comprehensive protocol compliance check
-   insula-mcp diagnose http://localhost:3000 --suites protocol
+   cortexdx diagnose http://localhost:3000 --suites protocol
    
    # Check specific JSON-RPC compliance
-   insula-mcp diagnose http://localhost:3000 --suites jsonrpc-batch
+   cortexdx diagnose http://localhost:3000 --suites jsonrpc-batch
    ```
 
 2. **Validate message structure**:
 
    ```bash
    # Enable detailed protocol logging
-   insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+   cortexdx diagnose http://localhost:3000 --verbose --debug --har
    
    # Check HAR file for raw request/response data
    # Output: reports/capture.har (redacted)
@@ -336,7 +336,7 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Use interactive mode for JSON validation
-   insula-mcp explain error "Unexpected token } in JSON"
+   cortexdx explain error "Unexpected token } in JSON"
    
    # Validate JSON manually
    echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | jq .
@@ -356,10 +356,10 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Check MCP protocol compliance
-   insula-mcp diagnose http://localhost:3000 --suites mcp-compatibility
+   cortexdx diagnose http://localhost:3000 --suites mcp-compatibility
    
    # Get detailed protocol information
-   insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
+   cortexdx diagnose http://localhost:3000 --suites discovery --verbose
    ```
 
 2. **Supported MCP protocol versions**:
@@ -370,17 +370,17 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
    ```bash
    # Generate updated server template
-   insula-mcp generate template my-server --lang typescript
+   cortexdx generate template my-server --lang typescript
    
    # Get migration guidance
-   insula-mcp best-practices --focus protocol
+   cortexdx best-practices --focus protocol
    ```
 
 4. **Test version compatibility**:
 
    ```bash
    # Test against specific protocol version
-   insula-mcp diagnose http://localhost:3000 --suites protocol --verbose
+   cortexdx diagnose http://localhost:3000 --suites protocol --verbose
    ```
 
 ## LLM Integration Issues
@@ -449,17 +449,17 @@ ollama pull llama3.2:3b
 
    ```bash
    # Run system diagnostics
-   insula-mcp doctor
+   cortexdx doctor
    
    # Test LLM integration specifically
-   insula-mcp interactive
+   cortexdx interactive
    # Then ask: "Test LLM connection"
    ```
 
 2. **Manual configuration**:
 
    ```json
-   // .insula-mcp.json
+   // .cortexdx.json
    {
      "llm": {
        "backend": "ollama",
@@ -470,7 +470,7 @@ ollama pull llama3.2:3b
    }
    ```
 
-   > **Note:** Insula MCP now supports the Ollama backend exclusively. Remove any legacy MLX configuration blocks to avoid startup failures.
+   > **Note:** CortexDx now supports the Ollama backend exclusively. Remove any legacy MLX configuration blocks to avoid startup failures.
 
 ### Slow LLM Responses
 
@@ -673,7 +673,7 @@ ollama pull llama3.2:3b
 1. **List available plugins**:
 
    ```bash
-   insula-mcp plugins list
+   cortexdx plugins list
    ```
 
 2. **Install plugin**:
@@ -685,7 +685,7 @@ ollama pull llama3.2:3b
 3. **Register plugin**:
 
    ```typescript
-   import { registerPlugin } from '@brainwav/insula-mcp';
+   import { registerPlugin } from '@brainwav/cortexdx';
    import { myPlugin } from './my-plugin.js';
    registerPlugin(myPlugin);
    ```
@@ -699,19 +699,19 @@ ollama pull llama3.2:3b
 1. **Run with verbose logging**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --verbose --debug
+   cortexdx diagnose http://localhost:3000 --verbose --debug
    ```
 
 2. **Test plugin individually**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --plugin security-scanner
+   cortexdx diagnose http://localhost:3000 --plugin security-scanner
    ```
 
 3. **Check plugin logs**:
 
    ```bash
-   tail -f ~/.insula-mcp/logs/plugin-errors.log
+   tail -f ~/.cortexdx/logs/plugin-errors.log
    ```
 
 ## License Validation Issues
@@ -725,7 +725,7 @@ ollama pull llama3.2:3b
 1. **Check approved licenses**:
 
    ```bash
-   insula-mcp licenses list
+   cortexdx licenses list
    ```
 
 2. **Add license to approved list**:
@@ -741,7 +741,7 @@ ollama pull llama3.2:3b
 3. **Request approval for proprietary content**:
 
    ```bash
-   insula-mcp licenses request-approval --source "research-paper-xyz"
+   cortexdx licenses request-approval --source "research-paper-xyz"
    ```
 
 ### Compliance Monitoring Errors
@@ -753,13 +753,13 @@ ollama pull llama3.2:3b
 1. **Generate compliance report**:
 
    ```bash
-   insula-mcp compliance report --period 2024-Q1
+   cortexdx compliance report --period 2024-Q1
    ```
 
 2. **Review flagged usage**:
 
    ```bash
-   insula-mcp compliance review --flagged
+   cortexdx compliance review --flagged
    ```
 
 3. **Update compliance policies**:
@@ -789,13 +789,13 @@ ollama pull llama3.2:3b
 
    ```bash
    # Run only essential suites
-   insula-mcp diagnose http://localhost:3000 --suites protocol,cors,auth
+   cortexdx diagnose http://localhost:3000 --suites protocol,cors,auth
    
    # Skip resource-intensive suites
-   insula-mcp diagnose http://localhost:3000 --suites protocol --budget-time 10000
+   cortexdx diagnose http://localhost:3000 --suites protocol --budget-time 10000
    
    # Quick health check
-   insula-mcp diagnose http://localhost:3000 --suites discovery
+   cortexdx diagnose http://localhost:3000 --suites discovery
    ```
 
 2. **Available diagnostic suites** (ordered by performance impact):
@@ -808,13 +808,13 @@ ollama pull llama3.2:3b
 
    ```bash
    # Increase time budget per plugin (default: 5000ms)
-   insula-mcp diagnose http://localhost:3000 --budget-time 15000
+   cortexdx diagnose http://localhost:3000 --budget-time 15000
    
    # Increase memory budget per plugin (default: 96MB)
-   insula-mcp diagnose http://localhost:3000 --budget-mem 256
+   cortexdx diagnose http://localhost:3000 --budget-mem 256
    
    # Conservative settings for slow systems
-   insula-mcp diagnose http://localhost:3000 --budget-time 30000 --budget-mem 512
+   cortexdx diagnose http://localhost:3000 --budget-time 30000 --budget-mem 512
    ```
 
 4. **Platform-specific optimizations**:
@@ -829,7 +829,7 @@ ollama pull llama3.2:3b
    memory_pressure
    
    # Optimize for Apple Silicon
-   insula-mcp diagnose http://localhost:3000 --budget-mem 128
+   cortexdx diagnose http://localhost:3000 --budget-mem 128
    ```
 
    #### Linux
@@ -858,7 +858,7 @@ ollama pull llama3.2:3b
 5. **Configuration for performance**:
 
    ```json
-   // .insula-mcp.json
+   // .cortexdx.json
    {
      "diagnostics": {
        "defaultSuites": ["protocol", "cors", "auth"],
@@ -876,7 +876,7 @@ ollama pull llama3.2:3b
 
 **Symptoms**:
 
-- Insula MCP consuming >1GB RAM
+- CortexDx consuming >1GB RAM
 - System becoming unresponsive during diagnostics
 - Out of memory errors
 
@@ -886,10 +886,10 @@ ollama pull llama3.2:3b
 
    ```bash
    # Limit memory per plugin (default: 96MB)
-   insula-mcp diagnose http://localhost:3000 --budget-mem 64
+   cortexdx diagnose http://localhost:3000 --budget-mem 64
    
    # Very conservative settings
-   insula-mcp diagnose http://localhost:3000 --budget-mem 32
+   cortexdx diagnose http://localhost:3000 --budget-mem 32
    ```
 
 2. **Optimize LLM memory usage**:
@@ -909,27 +909,27 @@ ollama pull llama3.2:3b
    #### macOS
 
    ```bash
-   # Monitor Insula MCP memory usage
-   ps aux | grep insula-mcp
+   # Monitor CortexDx memory usage
+   ps aux | grep cortexdx
    
    # Check memory pressure
    memory_pressure
    
    # Monitor in real-time
-   top -pid $(pgrep -f insula-mcp)
+   top -pid $(pgrep -f cortexdx)
    ```
 
    #### Linux
 
    ```bash
    # Monitor memory usage
-   ps aux | grep insula-mcp
+   ps aux | grep cortexdx
    
    # Check system memory
    cat /proc/meminfo
    
    # Monitor with htop
-   htop -p $(pgrep -f insula-mcp)
+   htop -p $(pgrep -f cortexdx)
    ```
 
    #### Windows
@@ -965,10 +965,10 @@ ollama pull llama3.2:3b
 
    ```bash
    # Force garbage collection (Node.js)
-   node --expose-gc $(which insula-mcp) diagnose http://localhost:3000
+   node --expose-gc $(which cortexdx) diagnose http://localhost:3000
    
    # Increase heap size if needed
-   node --max-old-space-size=2048 $(which insula-mcp) diagnose http://localhost:3000
+   node --max-old-space-size=2048 $(which cortexdx) diagnose http://localhost:3000
    ```
 
 ## Configuration Issues
@@ -982,13 +982,13 @@ ollama pull llama3.2:3b
 1. **Validate configuration**:
 
    ```bash
-   insula-mcp config validate
+   cortexdx config validate
    ```
 
 2. **Reset to defaults**:
 
    ```bash
-   insula-mcp config reset
+   cortexdx config reset
    ```
 
 3. **Example valid configuration**:
@@ -1016,19 +1016,19 @@ ollama pull llama3.2:3b
 
    ```bash
    # Project-level
-   ./.insula-mcp.json
+   ./.cortexdx.json
    
    # User-level
-   ~/.insula-mcp/config.json
+   ~/.cortexdx/config.json
    
    # System-level
-   /etc/insula-mcp/config.json
+   /etc/cortexdx/config.json
    ```
 
 2. **Specify configuration explicitly**:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --config ./my-config.json
+   cortexdx diagnose http://localhost:3000 --config ./my-config.json
    ```
 
 ## Advanced Debugging Techniques
@@ -1039,20 +1039,20 @@ ollama pull llama3.2:3b
 
    ```bash
    # Maximum verbosity
-   insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+   cortexdx diagnose http://localhost:3000 --verbose --debug --har
    
    # Debug specific plugin
-   DEBUG=insula:plugin:* insula-mcp diagnose http://localhost:3000
+   DEBUG=insula:plugin:* cortexdx diagnose http://localhost:3000
    
    # Debug network requests
-   DEBUG=insula:http:* insula-mcp diagnose http://localhost:3000
+   DEBUG=insula:http:* cortexdx diagnose http://localhost:3000
    ```
 
 2. **Capture network traffic**:
 
    ```bash
    # Enable HAR capture (HTTP Archive)
-   insula-mcp diagnose http://localhost:3000 --har
+   cortexdx diagnose http://localhost:3000 --har
    
    # Output: reports/capture.har (sensitive data redacted)
    # View with: Chrome DevTools > Network > Import HAR
@@ -1074,7 +1074,7 @@ ollama pull llama3.2:3b
 
    ```bash
    # View system logs
-   journalctl -f -u insula-mcp
+   journalctl -f -u cortexdx
    
    # Network debugging
    sudo tcpdump -i lo port 3000
@@ -1096,11 +1096,11 @@ ollama pull llama3.2:3b
 
 ```bash
 # Start interactive troubleshooting session
-insula-mcp interactive
+cortexdx interactive
 
 # Or get help with specific problems
-insula-mcp debug "Server returns 500 errors"
-insula-mcp explain error "ECONNREFUSED"
+cortexdx debug "Server returns 500 errors"
+cortexdx explain error "ECONNREFUSED"
 ```
 
 **Interactive commands**:
@@ -1114,7 +1114,7 @@ insula-mcp explain error "ECONNREFUSED"
 
 ```bash
 # Comprehensive system diagnostics
-insula-mcp doctor
+cortexdx doctor
 ```
 
 **Doctor checks**:
@@ -1135,7 +1135,7 @@ When reporting issues, include:
 
    ```bash
    # Generate system report
-   insula-mcp doctor > system-info.txt
+   cortexdx doctor > system-info.txt
    
    # Include Node.js and npm versions
    node --version && npm --version
@@ -1145,21 +1145,21 @@ When reporting issues, include:
 
    ```bash
    # Run with maximum debugging
-   insula-mcp diagnose http://localhost:3000 --verbose --debug --har 2>&1 | tee debug.log
+   cortexdx diagnose http://localhost:3000 --verbose --debug --har 2>&1 | tee debug.log
    ```
 
 3. **Configuration and logs**:
 
    ```bash
    # Sanitize and include configuration
-   cat .insula-mcp.json | jq 'del(.auth, .secrets)'
+   cat .cortexdx.json | jq 'del(.auth, .secrets)'
    
    # Include relevant log files (sanitized)
-   tail -100 ~/.insula-mcp/logs/error.log
+   tail -100 ~/.cortexdx/logs/error.log
    ```
 
 4. **Create GitHub issue**:
-   - Visit: <https://github.com/brainwav/insula-mcp/issues/new>
+   - Visit: <https://github.com/brainwav/cortexdx/issues/new>
    - Use the bug report template
    - Include system info, logs, and reproduction steps
    - Attach HAR file if network-related (ensure sensitive data is redacted)
@@ -1168,13 +1168,13 @@ When reporting issues, include:
 
 ```bash
 # Generate performance profile
-node --prof $(which insula-mcp) diagnose http://localhost:3000
+node --prof $(which cortexdx) diagnose http://localhost:3000
 
 # Process profile (generates report)
 node --prof-process isolate-*.log > profile.txt
 
 # Memory profiling
-node --inspect $(which insula-mcp) diagnose http://localhost:3000
+node --inspect $(which cortexdx) diagnose http://localhost:3000
 # Then open Chrome DevTools > Memory tab
 ```
 
@@ -1194,7 +1194,7 @@ node --inspect $(which insula-mcp) diagnose http://localhost:3000
 | `ERR_PLUGIN_TIMEOUT` | Plugin | Plugin execution timeout | Increase budget: `--budget-time 15000` |
 | `ERR_PLUGIN_MEMORY` | Plugin | Plugin memory limit exceeded | Increase budget: `--budget-mem 256` |
 | `ERR_PLUGIN_FAILED` | Plugin | Plugin execution error | Run with `--verbose --debug` for details |
-| `ERR_LICENSE_VIOLATION` | Compliance | License compliance issue | Review licenses: `insula-mcp best-practices --focus compliance` |
+| `ERR_LICENSE_VIOLATION` | Compliance | License compliance issue | Review licenses: `cortexdx best-practices --focus compliance` |
 | `ERR_MALFORMED_JSON` | Protocol | Invalid JSON in request/response | Validate JSON: `echo '{}' \| jq .` |
 | `ERR_JSONRPC_INVALID` | Protocol | Invalid JSON-RPC message | Check required fields: `jsonrpc`, `method`, `id` |
 | `ERR_METHOD_NOT_FOUND` | Protocol | MCP method not implemented | Check server capabilities |
@@ -1207,23 +1207,23 @@ node --inspect $(which insula-mcp) diagnose http://localhost:3000
 
 ```bash
 # Network errors (ECONNREFUSED, ETIMEDOUT, ENOTFOUND)
-insula-mcp diagnose http://localhost:3000 --suites discovery --verbose
+cortexdx diagnose http://localhost:3000 --suites discovery --verbose
 
 # TLS/SSL errors (CERT_*, UNABLE_TO_VERIFY_*)
-insula-mcp diagnose https://localhost:3000 --verbose --debug
+cortexdx diagnose https://localhost:3000 --verbose --debug
 
 # Protocol errors (ERR_INVALID_PROTOCOL, ERR_JSONRPC_*)
-insula-mcp diagnose http://localhost:3000 --suites protocol,jsonrpc-batch --verbose
+cortexdx diagnose http://localhost:3000 --suites protocol,jsonrpc-batch --verbose
 
 # LLM errors (ERR_LLM_*)
-insula-mcp doctor
-insula-mcp interactive
+cortexdx doctor
+cortexdx interactive
 
 # Plugin errors (ERR_PLUGIN_*)
-insula-mcp diagnose http://localhost:3000 --budget-time 30000 --budget-mem 256 --verbose
+cortexdx diagnose http://localhost:3000 --budget-time 30000 --budget-mem 256 --verbose
 
 # Compliance errors (ERR_LICENSE_*)
-insula-mcp best-practices http://localhost:3000 --focus compliance
+cortexdx best-practices http://localhost:3000 --focus compliance
 ```
 
 ## Best Practices for Troubleshooting
@@ -1233,26 +1233,26 @@ insula-mcp best-practices http://localhost:3000 --focus compliance
 1. **Start with system health check**:
 
    ```bash
-   insula-mcp doctor
+   cortexdx doctor
    ```
 
 2. **Run basic diagnostics**:
 
    ```bash
-   insula-mcp diagnose <endpoint> --suites discovery,protocol
+   cortexdx diagnose <endpoint> --suites discovery,protocol
    ```
 
 3. **Use interactive mode for complex issues**:
 
    ```bash
-   insula-mcp interactive
+   cortexdx interactive
    # Then describe your problem in natural language
    ```
 
 4. **Enable verbose logging when needed**:
 
    ```bash
-   insula-mcp diagnose <endpoint> --verbose --debug --har
+   cortexdx diagnose <endpoint> --verbose --debug --har
    ```
 
 ### Development vs Production
@@ -1261,10 +1261,10 @@ insula-mcp best-practices http://localhost:3000 --focus compliance
 
 ```bash
 # Use local HTTP endpoints
-insula-mcp diagnose http://localhost:3000
+cortexdx diagnose http://localhost:3000
 
 # Enable all debugging features
-insula-mcp diagnose http://localhost:3000 --verbose --debug --har
+cortexdx diagnose http://localhost:3000 --verbose --debug --har
 
 # Use smaller, faster models
 ollama pull llama3.2:1b
@@ -1274,24 +1274,24 @@ ollama pull llama3.2:1b
 
 ```bash
 # Use HTTPS endpoints
-insula-mcp diagnose https://api.example.com/mcp
+cortexdx diagnose https://api.example.com/mcp
 
 # Focus on essential suites
-insula-mcp diagnose https://api.example.com/mcp --suites protocol,auth,cors
+cortexdx diagnose https://api.example.com/mcp --suites protocol,auth,cors
 
 # Use deterministic mode for consistent results
-insula-mcp diagnose https://api.example.com/mcp --deterministic
+cortexdx diagnose https://api.example.com/mcp --deterministic
 ```
 
 ### Maintenance and Updates
 
-1. **Keep Insula MCP updated**:
+1. **Keep CortexDx updated**:
 
    ```bash
-   npm update @brainwav/insula-mcp
+   npm update @brainwav/cortexdx
    
    # Check for updates
-   npm outdated @brainwav/insula-mcp
+   npm outdated @brainwav/cortexdx
    ```
 
 2. **Update LLM models regularly**:
@@ -1326,7 +1326,7 @@ insula-mcp diagnose https://api.example.com/mcp --deterministic
 
    ```bash
    # Set conservative budgets for slow systems
-   insula-mcp diagnose <endpoint> --budget-time 30000 --budget-mem 128
+   cortexdx diagnose <endpoint> --budget-time 30000 --budget-mem 128
    ```
 
 ### Security Considerations
@@ -1340,17 +1340,17 @@ insula-mcp diagnose https://api.example.com/mcp --deterministic
 
    ```bash
    # Always test with discovery suite first
-   insula-mcp diagnose <endpoint> --suites discovery
+   cortexdx diagnose <endpoint> --suites discovery
    ```
 
 3. **Use appropriate authentication**:
 
    ```bash
    # Bearer token
-   insula-mcp diagnose <endpoint> --auth bearer:your-token
+   cortexdx diagnose <endpoint> --auth bearer:your-token
    
    # Basic auth
-   insula-mcp diagnose <endpoint> --auth basic:user:pass
+   cortexdx diagnose <endpoint> --auth basic:user:pass
    ```
 
 ## Platform-Specific Issues
@@ -1359,7 +1359,7 @@ insula-mcp diagnose https://api.example.com/mcp --deterministic
 
 #### Common Issues
 
-- **Gatekeeper blocking execution**: `xattr -d com.apple.quarantine /usr/local/bin/insula-mcp`
+- **Gatekeeper blocking execution**: `xattr -d com.apple.quarantine /usr/local/bin/cortexdx`
 - **Permission denied for network access**: Check System Preferences > Security & Privacy > Privacy > Network
 - **MLX not working on Intel Macs**: Use Ollama instead of MLX on Intel-based Macs
 
@@ -1373,7 +1373,7 @@ uname -m
 sw_vers
 
 # Monitor system resources
-sudo fs_usage -w -f network | grep insula-mcp
+sudo fs_usage -w -f network | grep cortexdx
 ```
 
 ### Linux
@@ -1394,14 +1394,14 @@ cat /etc/os-release
 ss -tlnp
 
 # Monitor network connections
-sudo netstat -tulpn | grep insula-mcp
+sudo netstat -tulpn | grep cortexdx
 ```
 
 ### Windows
 
 #### Common Issues
 
-- **Windows Defender blocking execution**: Add exception for insula-mcp
+- **Windows Defender blocking execution**: Add exception for cortexdx
 - **PowerShell execution policy**: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 - **WSL networking issues**: Use Windows IP instead of localhost in WSL
 
@@ -1430,10 +1430,10 @@ Get-Process | Where-Object {$_.ProcessName -like "*node*"}
 
 ```bash
 # Run with host networking
-docker run --network host insula-mcp diagnose http://localhost:3000
+docker run --network host cortexdx diagnose http://localhost:3000
 
 # Increase memory limit
-docker run -m 2g insula-mcp diagnose http://localhost:3000
+docker run -m 2g cortexdx diagnose http://localhost:3000
 
 # Debug container networking
 docker exec -it container-name ping host.docker.internal
@@ -1445,20 +1445,20 @@ docker exec -it container-name ping host.docker.internal
 
 ```bash
 # Reset all configuration
-rm -rf ~/.insula-mcp/
+rm -rf ~/.cortexdx/
 
 # Reinstall from scratch
-npm uninstall -g @brainwav/insula-mcp
-npm install -g @brainwav/insula-mcp
+npm uninstall -g @brainwav/cortexdx
+npm install -g @brainwav/cortexdx
 
 # Verify installation
-insula-mcp doctor
+cortexdx doctor
 ```
 
 ### Minimal Working Configuration
 
 ```json
-// .insula-mcp.json (minimal)
+// .cortexdx.json (minimal)
 {
   "llm": {
     "backend": "ollama",
@@ -1474,10 +1474,10 @@ insula-mcp doctor
 
 ### Self-Service Resources
 
-- **Interactive Help**: `insula-mcp interactive`
-- **System Diagnostics**: `insula-mcp doctor`
-- **Error Explanation**: `insula-mcp explain error "<message>"`
-- **Best Practices**: `insula-mcp best-practices <endpoint>`
+- **Interactive Help**: `cortexdx interactive`
+- **System Diagnostics**: `cortexdx doctor`
+- **Error Explanation**: `cortexdx explain error "<message>"`
+- **Best Practices**: `cortexdx best-practices <endpoint>`
 
 ### Documentation
 
@@ -1490,9 +1490,9 @@ insula-mcp doctor
 
 ### Community Support
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/insula-mcp/issues)
-- **GitHub Discussions**: [Ask questions and share tips](https://github.com/brainwav/insula-mcp/discussions)
-- **Documentation**: [Official documentation](https://github.com/brainwav/insula-mcp/tree/main/docs)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/cortexdx/issues)
+- **GitHub Discussions**: [Ask questions and share tips](https://github.com/brainwav/cortexdx/discussions)
+- **Documentation**: [Official documentation](https://github.com/brainwav/cortexdx/tree/main/docs)
 
 ### Professional Support
 
@@ -1500,4 +1500,4 @@ For enterprise support and consulting services, contact [brAInwav](https://brain
 
 ---
 
-**Remember**: When reporting issues, always include the output of `insula-mcp doctor` and use `--verbose --debug` flags to capture detailed logs.
+**Remember**: When reporting issues, always include the output of `cortexdx doctor` and use `--verbose --debug` flags to capture detailed logs.

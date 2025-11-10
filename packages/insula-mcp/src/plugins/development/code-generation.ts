@@ -894,7 +894,7 @@ async function integrateWithRepository(
     }
 
     if (integration.createPR && result.branchUrl) {
-        const prTitle = integration.prTitle || 'Generated code from Insula MCP';
+        const prTitle = integration.prTitle || 'Generated code from CortexDx';
         const prDescription = integration.prDescription || 'Automatically generated code with quality checks passed';
         // Simulate PR creation
         result.prUrl = `https://${integration.provider}.com/repo/pull/123`;

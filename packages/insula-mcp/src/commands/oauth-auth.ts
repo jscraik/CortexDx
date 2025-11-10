@@ -162,6 +162,6 @@ export async function detectAuthRequirements(
     logger("=".repeat(60));
     logger("");
     logger("To authenticate, run:");
-    logger(`  insula-mcp auth --endpoint ${endpoint} --client-id <CLIENT_ID> --token-endpoint <TOKEN_ENDPOINT>`);
+    logger(`  cortexdx auth --endpoint ${endpoint} --client-id <CLIENT_ID> --token-endpoint <TOKEN_ENDPOINT>`);
     logger("");
 }

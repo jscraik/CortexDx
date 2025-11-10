@@ -1,5 +1,5 @@
 /**
- * Insula MCP Plugin SDK
+ * CortexDx Plugin SDK
  * Comprehensive SDK for custom plugin development
  */
 

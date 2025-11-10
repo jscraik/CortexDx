@@ -312,7 +312,7 @@ async function analyzeCurrentPerformance(
           protocolVersion: "2024-11-05",
           capabilities: {},
           clientInfo: {
-            name: "insula-mcp-performance-test",
+            name: "cortexdx-performance-test",
             version: "1.0.0",
           },
         },

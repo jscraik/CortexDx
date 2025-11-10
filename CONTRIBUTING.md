@@ -1,19 +1,19 @@
-# Contributing to Insula MCP
+# Contributing to CortexDx
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Community](https://img.shields.io/badge/community-inclusive-brightgreen.svg)](#community-guidelines)
 [![Development](https://img.shields.io/badge/development-welcome-blue.svg)](#getting-started)
 
-Welcome to the Insula MCP project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol servers. This repository-wide guide will help you understand how to contribute effectively to the entire project.
+Welcome to the CortexDx project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol servers. This repository-wide guide will help you understand how to contribute effectively to the entire project.
 
 ## 🚀 Quick Start for Contributors
 
 ### Repository Overview
 
-Insula MCP is a monorepo containing:
+CortexDx is a monorepo containing:
 
-- **Core Package**: `packages/insula-mcp/` - Main diagnostic tool and CLI
-- **Documentation**: Comprehensive guides in `packages/insula-mcp/docs/`
+- **Core Package**: `packages/cortexdx/` - Main diagnostic tool and CLI
+- **Documentation**: Comprehensive guides in `packages/cortexdx/docs/`
 - **Project Rules**: Governance and standards in `.insula/rules/`
 - **Configuration**: Shared toolchain and quality gates
 
@@ -40,8 +40,8 @@ Before contributing, please review these **mandatory** documents:
 ```bash
 # 1. Fork the repository on GitHub
 # 2. Clone your fork
-git clone https://github.com/YOUR_USERNAME/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/YOUR_USERNAME/cortexdx.git
+cd cortexdx
 
 # 3. Install tool versions (Node, pnpm, etc.)
 mise install
@@ -69,9 +69,9 @@ We follow **ArcTDD (Architecture-Test-Driven Development)**:
 
 For detailed development guidelines, see:
 
-- **[Package Contributing Guide](packages/insula-mcp/docs/CONTRIBUTING.md)** - Comprehensive development guide
-- **[Plugin Development](packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md)** - Creating diagnostic plugins
-- **[API Reference](packages/insula-mcp/docs/API_REFERENCE.md)** - Technical specifications
+- **[Package Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md)** - Comprehensive development guide
+- **[Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)** - Creating diagnostic plugins
+- **[API Reference](packages/cortexdx/docs/API_REFERENCE.md)** - Technical specifications
 
 ### Documentation Contributions
 
@@ -113,8 +113,8 @@ Before submitting any contribution:
 ### Repository Structure
 
 ```
-insula-mcp/
-├── packages/insula-mcp/          # Main package
+cortexdx/
+├── packages/cortexdx/          # Main package
 │   ├── src/                      # Source code
 │   ├── tests/                    # Test suites
 │   ├── docs/                     # Package documentation
@@ -148,9 +148,9 @@ We are committed to providing a welcoming and inclusive environment. Please read
 
 ### Getting Help
 
-- **New Contributors**: Start with [Getting Started Guide](packages/insula-mcp/docs/GETTING_STARTED.md)
-- **Development Questions**: Check [Package Contributing Guide](packages/insula-mcp/docs/CONTRIBUTING.md)
-- **Technical Issues**: See [Troubleshooting Guide](packages/insula-mcp/docs/TROUBLESHOOTING.md)
+- **New Contributors**: Start with [Getting Started Guide](packages/cortexdx/docs/GETTING_STARTED.md)
+- **Development Questions**: Check [Package Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md)
+- **Technical Issues**: See [Troubleshooting Guide](packages/cortexdx/docs/TROUBLESHOOTING.md)
 - **Community Support**: Use GitHub Discussions for general questions
 
 ## 🔒 Security
@@ -223,7 +223,7 @@ All contributions must:
 
 For creating diagnostic plugins:
 
-- Review [Plugin Development Guide](packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md)
+- Review [Plugin Development Guide](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)
 - Ensure sandbox compliance and resource budgets
 - Include comprehensive tests and evidence validation
 - Follow naming conventions and export standards
@@ -257,13 +257,13 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ### Package-Specific Documentation
 
-- **[Package Contributing Guide](packages/insula-mcp/docs/CONTRIBUTING.md)** - Detailed development workflow
-- **[User Guide](packages/insula-mcp/docs/USER_GUIDE.md)** - Complete usage documentation
-- **[API Reference](packages/insula-mcp/docs/API_REFERENCE.md)** - CLI and programmatic APIs
-- **[Plugin Development](packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md)** - Creating custom plugins
-- **[Troubleshooting](packages/insula-mcp/docs/TROUBLESHOOTING.md)** - Common issues and solutions
-- **[Deployment](packages/insula-mcp/docs/DEPLOYMENT.md)** - Production deployment guidance
-- **[IDE Integration](packages/insula-mcp/docs/IDE_INTEGRATION.md)** - Development environment setup
+- **[Package Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md)** - Detailed development workflow
+- **[User Guide](packages/cortexdx/docs/USER_GUIDE.md)** - Complete usage documentation
+- **[API Reference](packages/cortexdx/docs/API_REFERENCE.md)** - CLI and programmatic APIs
+- **[Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)** - Creating custom plugins
+- **[Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Deployment](packages/cortexdx/docs/DEPLOYMENT.md)** - Production deployment guidance
+- **[IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md)** - Development environment setup
 
 ### Project Governance
 
@@ -280,7 +280,7 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## 🙏 Recognition
 
-We value all contributions to Insula MCP:
+We value all contributions to CortexDx:
 
 - **Code Contributors**: Feature development, bug fixes, and improvements
 - **Documentation Contributors**: Guides, examples, and clarity improvements
@@ -300,7 +300,7 @@ All contributors are recognized in our release notes and project documentation.
 
 ## Summary
 
-Contributing to Insula MCP involves:
+Contributing to CortexDx involves:
 
 1. **Understanding Standards**: Read AGENTS.md, CODESTYLE.md, and Code of Conduct
 2. **Following Workflow**: ArcTDD methodology with test-first development
@@ -308,9 +308,9 @@ Contributing to Insula MCP involves:
 4. **Community Participation**: Respectful, inclusive, and constructive engagement
 5. **Continuous Learning**: Stay aligned with project vision and MCP protocol evolution
 
-For detailed development guidance, see the [Package Contributing Guide](packages/insula-mcp/docs/CONTRIBUTING.md).
+For detailed development guidance, see the [Package Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md).
 
-Thank you for contributing to Insula MCP! Your efforts help make MCP server diagnostics more reliable and secure for everyone. 🚀
+Thank you for contributing to CortexDx! Your efforts help make MCP server diagnostics more reliable and secure for everyone. 🚀
 
 ---
 

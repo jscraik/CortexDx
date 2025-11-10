@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Insula MCP will be documented in this file.
+All notable changes to CortexDx will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -109,8 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Package Name**: Changed from `insula-mcp` to `@brainwav/insula-mcp`
-- **CLI Command**: Changed from `insula` to `insula-mcp`
+- **Package Name**: Changed from `cortexdx` to `@brainwav/cortexdx`
+- **CLI Command**: Changed from `insula` to `cortexdx`
 - **Version**: Bumped to 1.0.0 for stable release
 - **Performance**: Improved response times across all operations
   - Conversational tasks: <2s
@@ -151,8 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-- Package name changed to `@brainwav/insula-mcp`
-- CLI command changed to `insula-mcp`
+- Package name changed to `@brainwav/cortexdx`
+- CLI command changed to `cortexdx`
 - Configuration file format updated with new fields
 - Docker image names now tier-specific
 - New environment variables required for Professional/Enterprise tiers
@@ -163,7 +163,7 @@ See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed upgrade instructions.
 
 ### Added
 
-- Initial release of Insula MCP
+- Initial release of CortexDx
 - Basic diagnostic capabilities
 - Protocol compliance validation
 - Security scanning
@@ -189,14 +189,14 @@ See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed upgrade instructions.
 
 - [1.0.0 Release Notes](RELEASE_NOTES.md)
 - [1.0.0 Migration Guide](MIGRATION_GUIDE.md)
-- [NPM Package](https://www.npmjs.com/package/@brainwav/insula-mcp)
-- [Docker Hub](https://hub.docker.com/r/brainwav/insula-mcp)
-- [GitHub Releases](https://github.com/brainwav/insula-mcp/releases)
+- [NPM Package](https://www.npmjs.com/package/@brainwav/cortexdx)
+- [Docker Hub](https://hub.docker.com/r/brainwav/cortexdx)
+- [GitHub Releases](https://github.com/brainwav/cortexdx/releases)
 
 ## Support
 
 For questions, issues, or feature requests:
 
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
-- Discussions: https://github.com/brainwav/insula-mcp/discussions
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
+- Discussions: https://github.com/brainwav/cortexdx/discussions
 - Commercial Support: support@brainwav.io

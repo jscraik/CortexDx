@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of persistent pattern storage with ranking and cross-session knowledge accumulation for the Insula MCP diagnostic system.
+This document describes the implementation of persistent pattern storage with ranking and cross-session knowledge accumulation for the CortexDx diagnostic system.
 
 ## Requirements Addressed
 
@@ -81,12 +81,12 @@ All pattern data persists across server restarts:
 ### File Structure
 
 ```
-packages/insula-mcp/src/storage/
+packages/cortexdx/src/storage/
 ├── pattern-storage.ts              # Enhanced implementation
 ├── pattern-storage-example.ts      # Usage examples
 └── index.ts                        # Exports
 
-packages/insula-mcp/tests/
+packages/cortexdx/tests/
 └── pattern-storage.spec.ts         # Comprehensive tests
 ```
 

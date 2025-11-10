@@ -1,8 +1,8 @@
-# Insula MCP v1.0.0 Release Notes
+# CortexDx v1.0.0 Release Notes
 
 **Release Date:** November 7, 2025
 
-We're excited to announce the first stable release of Insula MCP, a comprehensive diagnostic meta-inspector and development assistant for the Model Context Protocol ecosystem.
+We're excited to announce the first stable release of CortexDx, a comprehensive diagnostic meta-inspector and development assistant for the Model Context Protocol ecosystem.
 
 ## 🎉 What's New in v1.0.0
 
@@ -83,44 +83,44 @@ We're excited to announce the first stable release of Insula MCP, a comprehensiv
 
 ```bash
 # Install globally
-npm install -g @brainwav/insula-mcp@1.0.0
+npm install -g @brainwav/cortexdx@1.0.0
 
 # Or use with npx
-npx @brainwav/insula-mcp@1.0.0 diagnose https://your-mcp-server.com
+npx @brainwav/cortexdx@1.0.0 diagnose https://your-mcp-server.com
 ```
 
 ### Docker Images
 
 ```bash
 # Community Edition (Free)
-docker pull brainwav/insula-mcp:1.0.0-community
+docker pull brainwav/cortexdx:1.0.0-community
 
 # Professional Edition
-docker pull brainwav/insula-mcp:1.0.0-professional
+docker pull brainwav/cortexdx:1.0.0-professional
 
 # Enterprise Edition
-docker pull brainwav/insula-mcp:1.0.0-enterprise
+docker pull brainwav/cortexdx:1.0.0-enterprise
 ```
 
 ### Docker Compose
 
 ```bash
 # Clone repository
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp/packages/insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx/packages/cortexdx
 
 # Start Community Edition
-docker-compose up insula-mcp-community
+docker-compose up cortexdx-community
 
 # Start Professional Edition (requires license)
-INSULA_LICENSE_KEY=your-key docker-compose up insula-mcp-professional
+INSULA_LICENSE_KEY=your-key docker-compose up cortexdx-professional
 
 # Start Enterprise Edition (requires license and Auth0)
 INSULA_LICENSE_KEY=your-key \
 AUTH0_DOMAIN=your-domain.auth0.com \
 AUTH0_CLIENT_ID=your-client-id \
 AUTH0_CLIENT_SECRET=your-secret \
-docker-compose up insula-mcp-enterprise
+docker-compose up cortexdx-enterprise
 ```
 
 ## 🚀 Quick Start
@@ -129,37 +129,37 @@ docker-compose up insula-mcp-enterprise
 
 ```bash
 # Simple diagnostic scan
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # Full comprehensive analysis
-insula-mcp diagnose https://mcp.example.com --full --out reports
+cortexdx diagnose https://mcp.example.com --full --out reports
 ```
 
 ### Interactive Development
 
 ```bash
 # Start interactive session
-insula-mcp interactive
+cortexdx interactive
 
 # Debug specific issues
-insula-mcp debug "SSE connection timeout"
+cortexdx debug "SSE connection timeout"
 
 # Generate MCP server from description
-insula-mcp generate
+cortexdx generate
 ```
 
 ### Docker Deployment
 
 ```bash
 # Run Community Edition
-docker run -p 3000:3000 brainwav/insula-mcp:1.0.0-community
+docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Run Professional Edition with Ollama
 docker run -p 3000:3000 \
   -e INSULA_LICENSE_KEY=your-key \
   -e OLLAMA_HOST=ollama:11434 \
   -v insula-models:/app/models \
-  brainwav/insula-mcp:1.0.0-professional
+  brainwav/cortexdx:1.0.0-professional
 ```
 
 ## 📊 Feature Comparison by Tier
@@ -245,8 +245,8 @@ Special thanks to:
 
 ### Community Support
 
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
-- Discussions: https://github.com/brainwav/insula-mcp/discussions
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
+- Discussions: https://github.com/brainwav/cortexdx/discussions
 
 ### Commercial Support
 
@@ -279,6 +279,6 @@ Special thanks to:
 
 ---
 
-**Thank you for using Insula MCP!** We're excited to see what you build with it.
+**Thank you for using CortexDx!** We're excited to see what you build with it.
 
 For questions, feedback, or support, please reach out through our community channels or commercial support options.

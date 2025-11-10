@@ -14,7 +14,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
     return [
         // Execute single plugin
         {
-            name: "insula_execute_plugin",
+            name: "cortexdx_execute_plugin",
             description: "Execute a single diagnostic or development plugin",
             inputSchema: {
                 type: "object",
@@ -57,7 +57,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Execute plugins in parallel
         {
-            name: "insula_execute_parallel",
+            name: "cortexdx_execute_parallel",
             description:
                 "Execute multiple plugins in parallel for faster diagnostics (completes in <30s)",
             inputSchema: {
@@ -83,7 +83,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Execute workflow
         {
-            name: "insula_execute_workflow",
+            name: "cortexdx_execute_workflow",
             description:
                 "Execute a predefined workflow with sequential and parallel stages",
             inputSchema: {
@@ -108,7 +108,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Create workflow
         {
-            name: "insula_create_workflow",
+            name: "cortexdx_create_workflow",
             description: "Create a new diagnostic workflow with stages and dependencies",
             inputSchema: {
                 type: "object",
@@ -182,7 +182,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // List plugins
         {
-            name: "insula_list_plugins",
+            name: "cortexdx_list_plugins",
             description: "List all available diagnostic and development plugins",
             inputSchema: {
                 type: "object",
@@ -198,7 +198,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Get plugin schema
         {
-            name: "insula_get_plugin_schema",
+            name: "cortexdx_get_plugin_schema",
             description: "Get detailed schema information for a specific plugin",
             inputSchema: {
                 type: "object",
@@ -214,7 +214,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // List workflows
         {
-            name: "insula_list_workflows",
+            name: "cortexdx_list_workflows",
             description: "List all created workflows",
             inputSchema: {
                 type: "object",
@@ -224,7 +224,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Get workflow
         {
-            name: "insula_get_workflow",
+            name: "cortexdx_get_workflow",
             description: "Get details of a specific workflow",
             inputSchema: {
                 type: "object",
@@ -240,7 +240,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Delete workflow
         {
-            name: "insula_delete_workflow",
+            name: "cortexdx_delete_workflow",
             description: "Delete a workflow",
             inputSchema: {
                 type: "object",
@@ -256,7 +256,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Get workflow execution history
         {
-            name: "insula_get_workflow_history",
+            name: "cortexdx_get_workflow_history",
             description: "Get execution history for a workflow",
             inputSchema: {
                 type: "object",
@@ -276,7 +276,7 @@ export function createPluginOrchestrationTools(): McpTool[] {
 
         // Validate workflow
         {
-            name: "insula_validate_workflow",
+            name: "cortexdx_validate_workflow",
             description: "Validate a workflow definition before execution",
             inputSchema: {
                 type: "object",
@@ -303,37 +303,37 @@ export async function executePluginOrchestrationTool(
     const orchestrator = getPluginOrchestrator();
 
     switch (tool.name) {
-        case "insula_execute_plugin":
+        case "cortexdx_execute_plugin":
             return await executePlugin(args, context, orchestrator);
 
-        case "insula_execute_parallel":
+        case "cortexdx_execute_parallel":
             return await executeParallel(args, context, orchestrator);
 
-        case "insula_execute_workflow":
+        case "cortexdx_execute_workflow":
             return await executeWorkflow(args, context, orchestrator);
 
-        case "insula_create_workflow":
+        case "cortexdx_create_workflow":
             return await createWorkflow(args, orchestrator);
 
-        case "insula_list_plugins":
+        case "cortexdx_list_plugins":
             return await listPlugins(args, orchestrator);
 
-        case "insula_get_plugin_schema":
+        case "cortexdx_get_plugin_schema":
             return await getPluginSchema(args, orchestrator);
 
-        case "insula_list_workflows":
+        case "cortexdx_list_workflows":
             return await listWorkflows(orchestrator);
 
-        case "insula_get_workflow":
+        case "cortexdx_get_workflow":
             return await getWorkflow(args, orchestrator);
 
-        case "insula_delete_workflow":
+        case "cortexdx_delete_workflow":
             return await deleteWorkflow(args, orchestrator);
 
-        case "insula_get_workflow_history":
+        case "cortexdx_get_workflow_history":
             return await getWorkflowHistory(args, orchestrator);
 
-        case "insula_validate_workflow":
+        case "cortexdx_validate_workflow":
             return await validateWorkflow(args, orchestrator);
 
         default:

@@ -58,7 +58,7 @@ export interface WikidataSearchParams {
 export class WikidataProvider {
     private readonly apiUrl = "https://www.wikidata.org/w/api.php";
     private readonly sparqlUrl = "https://query.wikidata.org/sparql";
-    private readonly userAgent = "Insula-MCP/1.0.0 (Academic Research)";
+    private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     constructor(private ctx: DiagnosticContext) {

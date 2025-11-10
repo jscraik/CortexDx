@@ -1,5 +1,5 @@
 /**
- * Comprehensive health check system for Insula MCP
+ * Comprehensive health check system for CortexDx
  * Provides detailed health status for all system components
  */
 

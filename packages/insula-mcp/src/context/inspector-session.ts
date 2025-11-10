@@ -75,13 +75,13 @@ export function createInspectorSession(
     if (initialized) return;
     const initRequest = {
       jsonrpc: "2.0",
-      id: "__insula_init__",
+      id: "__cortexdx_init__",
       method: "initialize",
       params: {
         protocolVersion: "2024-11-05",
         capabilities: {},
         clientInfo: {
-          name: "insula-mcp-inspector",
+          name: "cortexdx-inspector",
           version: "0.1.0",
         },
       },

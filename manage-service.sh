@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Insula MCP Service Management Script
-# Easy commands to manage the Insula MCP service
+# CortexDx LaunchAgent management
+
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -11,12 +12,15 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-SERVICE_NAME="com.brainwav.insula-mcp"
+SERVICE_NAME="com.brainwav.cortexdx"
 PLIST_FILE="${SERVICE_NAME}.plist"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
+PLIST_PATH="$LAUNCH_AGENTS_DIR/$PLIST_FILE"
+USER_ID="$(id -u)"
+SERVICE_TARGET="gui/${USER_ID}/${SERVICE_NAME}"
 
 show_usage() {
-    echo -e "${BLUE}Insula MCP Service Manager${NC}"
+    echo -e "${BLUE}CortexDx LaunchAgent Manager${NC}"
     echo "========================="
     echo ""
     echo "Usage: $0 {start|stop|restart|status|logs|install|uninstall}"
@@ -33,41 +37,48 @@ show_usage() {
 }
 
 check_service_installed() {
-    if [ ! -f "$LAUNCH_AGENTS_DIR/$PLIST_FILE" ]; then
+    if [ ! -f "$PLIST_PATH" ]; then
         echo -e "${RED}❌ Service is not installed${NC}"
         echo "Run: $0 install"
         exit 1
     fi
 }
 
+bootout_service() {
+    launchctl bootout "$SERVICE_TARGET" >/dev/null 2>&1 || true
+}
+
 service_start() {
     check_service_installed
-    echo -e "${BLUE}🚀 Starting Insula MCP service...${NC}"
-    launchctl load "$LAUNCH_AGENTS_DIR/$PLIST_FILE"
+    echo -e "${BLUE}🚀 Starting CortexDx service...${NC}"
+    bootout_service
+    launchctl bootstrap "gui/$USER_ID" "$PLIST_PATH"
+    launchctl enable "$SERVICE_TARGET"
+    launchctl kickstart -k "$SERVICE_TARGET"
     sleep 2
     service_status
 }
 
 service_stop() {
     check_service_installed
-    echo -e "${YELLOW}🛑 Stopping Insula MCP service...${NC}"
-    launchctl unload "$LAUNCH_AGENTS_DIR/$PLIST_FILE"
+    echo -e "${YELLOW}🛑 Stopping CortexDx service...${NC}"
+    bootout_service
     echo -e "${GREEN}✅ Service stopped${NC}"
 }
 
 service_restart() {
-    echo -e "${BLUE}🔄 Restarting Insula MCP service...${NC}"
+    echo -e "${BLUE}🔄 Restarting CortexDx service...${NC}"
     service_stop
     sleep 2
     service_start
 }
 
 service_status() {
-    if launchctl list | grep -q "$SERVICE_NAME"; then
+    if launchctl print "$SERVICE_TARGET" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ Service is running${NC}"
         echo ""
         echo -e "${BLUE}Service Details:${NC}"
-        launchctl list | grep "$SERVICE_NAME"
+        launchctl print "$SERVICE_TARGET" | rg -E "state|pid" || true
         echo ""
         echo -e "${BLUE}Test Connection:${NC}"
         if curl -s http://127.0.0.1:5001/health > /dev/null; then
@@ -81,12 +92,12 @@ service_status() {
 }
 
 service_logs() {
-    echo -e "${BLUE}📋 Showing Insula MCP logs (Ctrl+C to exit)...${NC}"
+    echo -e "${BLUE}📋 Showing CortexDx logs (Ctrl+C to exit)...${NC}"
     echo "=============================================="
-    if [ -f "/var/log/insula-mcp.log" ]; then
-        tail -f /var/log/insula-mcp.log
+    if [ -f "/var/log/cortexdx.log" ]; then
+        tail -f /var/log/cortexdx.log
     else
-        echo -e "${RED}❌ Log file not found: /var/log/insula-mcp.log${NC}"
+        echo -e "${RED}❌ Log file not found: /var/log/cortexdx.log${NC}"
     fi
 }
 

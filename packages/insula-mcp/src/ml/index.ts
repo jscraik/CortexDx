@@ -1,5 +1,5 @@
 /**
- * ML module exports for Insula MCP
+ * ML module exports for CortexDx
  */
 
 export { hasOllama } from "./detect.js";

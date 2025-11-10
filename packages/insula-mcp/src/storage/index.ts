@@ -1,5 +1,5 @@
 /**
- * Storage exports for Insula MCP
+ * Storage exports for CortexDx
  */
 
 // Conversation storage

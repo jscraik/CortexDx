@@ -1,4 +1,4 @@
-export const STORY_FEATURE_FLAG = "INSULA_STORIES_ENABLED";
+export const STORY_FEATURE_FLAG = "CORTEXDX_STORIES_ENABLED";
 
 export const isStoryFeatureEnabled = (
   env: Record<string, string | undefined> = process.env,

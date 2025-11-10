@@ -813,7 +813,7 @@ class RollbackManager {
       metadata: {
         problemId,
         fixStrategy,
-        appliedBy: 'insula-mcp'
+        appliedBy: 'cortexdx'
       }
     };
 

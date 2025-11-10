@@ -202,7 +202,7 @@ export class IdeAdapter {
             },
             severity: this.mapSeverityToLsp(item.severity || "info"),
             code: item.code,
-            source: item.source || "insula-mcp",
+            source: item.source || "cortexdx",
             message: item.message || item.description,
             relatedInformation: item.evidence?.map((ev) => ({
                 location: {

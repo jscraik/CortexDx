@@ -1,10 +1,10 @@
-# Migration Guide to Insula MCP v1.0.0
+# Migration Guide to CortexDx v1.0.0
 
-This guide helps you migrate from pre-1.0 versions of Insula MCP to the stable v1.0.0 release.
+This guide helps you migrate from pre-1.0 versions of CortexDx to the stable v1.0.0 release.
 
 ## Overview
 
-Insula MCP v1.0.0 introduces significant enhancements including local LLM integration, academic research validation, commercial licensing tiers, and improved diagnostic capabilities. This guide covers breaking changes, new features, and step-by-step migration instructions.
+CortexDx v1.0.0 introduces significant enhancements including local LLM integration, academic research validation, commercial licensing tiers, and improved diagnostic capabilities. This guide covers breaking changes, new features, and step-by-step migration instructions.
 
 ## Breaking Changes
 
@@ -13,20 +13,20 @@ Insula MCP v1.0.0 introduces significant enhancements including local LLM integr
 **Before (v0.x):**
 
 ```bash
-npm install insula-mcp
+npm install cortexdx
 ```
 
 **After (v1.0.0):**
 
 ```bash
-npm install @brainwav/insula-mcp
+npm install @brainwav/cortexdx
 ```
 
 **Migration Steps:**
 
-1. Uninstall old package: `npm uninstall insula-mcp`
-2. Install new package: `npm install -g @brainwav/insula-mcp@1.0.0`
-3. Update any scripts or CI/CD configurations to use `@brainwav/insula-mcp`
+1. Uninstall old package: `npm uninstall cortexdx`
+2. Install new package: `npm install -g @brainwav/cortexdx@1.0.0`
+3. Update any scripts or CI/CD configurations to use `@brainwav/cortexdx`
 
 ### 2. CLI Command Structure
 
@@ -39,12 +39,12 @@ insula diagnose <endpoint>
 **After (v1.0.0):**
 
 ```bash
-insula-mcp diagnose <endpoint>
+cortexdx diagnose <endpoint>
 ```
 
 **Migration Steps:**
 
-1. Update all CLI commands to use `insula-mcp` instead of `insula`
+1. Update all CLI commands to use `cortexdx` instead of `insula`
 2. Update shell scripts and automation tools
 3. Update CI/CD pipeline configurations
 
@@ -84,16 +84,16 @@ insula-mcp diagnose <endpoint>
 **Before (v0.x):**
 
 ```bash
-docker pull brainwav/insula-mcp:latest
+docker pull brainwav/cortexdx:latest
 ```
 
 **After (v1.0.0):**
 
 ```bash
 # Choose tier-specific image
-docker pull brainwav/insula-mcp:1.0.0-community
-docker pull brainwav/insula-mcp:1.0.0-professional
-docker pull brainwav/insula-mcp:1.0.0-enterprise
+docker pull brainwav/cortexdx:1.0.0-community
+docker pull brainwav/cortexdx:1.0.0-professional
+docker pull brainwav/cortexdx:1.0.0-enterprise
 ```
 
 **Migration Steps:**
@@ -140,7 +140,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull llama3:8b
 ollama pull codellama:7b
 
-# Configure Insula MCP
+# Configure CortexDx
 export INSULA_MCP_LLM_BACKEND=ollama
 export OLLAMA_HOST=localhost:11434
 ```
@@ -149,13 +149,13 @@ export OLLAMA_HOST=localhost:11434
 
 ```bash
 # Interactive development assistance
-insula-mcp interactive
+cortexdx interactive
 
 # Debug with AI assistance
-insula-mcp debug "SSE connection timeout"
+cortexdx debug "SSE connection timeout"
 
 # Generate code from description
-insula-mcp generate
+cortexdx generate
 ```
 
 ### 2. Academic Research Integration (Professional/Enterprise)
@@ -174,17 +174,17 @@ export INSULA_LICENSE_VALIDATION=strict
 
 ```bash
 # Get research-backed recommendations
-insula-mcp diagnose https://mcp.example.com --academic
+cortexdx diagnose https://mcp.example.com --academic
 
 # Validate license compliance
-insula-mcp validate-licenses --report
+cortexdx validate-licenses --report
 ```
 
 ### 3. Commercial Licensing
 
 **Obtaining a License:**
 
-1. Visit https://brainwav.io/insula-mcp/pricing
+1. Visit https://brainwav.io/cortexdx/pricing
 2. Choose Professional or Enterprise tier
 3. Complete purchase and receive license key
 4. Set `INSULA_LICENSE_KEY` environment variable
@@ -196,10 +196,10 @@ insula-mcp validate-licenses --report
 export INSULA_LICENSE_KEY=your-license-key
 
 # Verify activation
-insula-mcp license verify
+cortexdx license verify
 
 # Check feature access
-insula-mcp license features
+cortexdx license features
 ```
 
 ### 4. Pattern Storage and Learning
@@ -220,13 +220,13 @@ export INSULA_EMBEDDING_MODEL=nomic-embed-text
 
 ```bash
 # View learned patterns
-insula-mcp patterns list
+cortexdx patterns list
 
 # Export patterns
-insula-mcp patterns export --output patterns.json
+cortexdx patterns export --output patterns.json
 
 # Import patterns
-insula-mcp patterns import --input patterns.json
+cortexdx patterns import --input patterns.json
 ```
 
 ## Migration Paths
@@ -236,8 +236,8 @@ insula-mcp patterns import --input patterns.json
 **Step 1: Update Package**
 
 ```bash
-npm uninstall insula-mcp
-npm install -g @brainwav/insula-mcp@1.0.0
+npm uninstall cortexdx
+npm install -g @brainwav/cortexdx@1.0.0
 ```
 
 **Step 2: Update Scripts**
@@ -247,7 +247,7 @@ npm install -g @brainwav/insula-mcp@1.0.0
 insula diagnose https://mcp.example.com
 
 # After
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 ```
 
 **Step 3: Update Docker Deployment**
@@ -255,8 +255,8 @@ insula-mcp diagnose https://mcp.example.com
 ```yaml
 # docker-compose.yml
 services:
-  insula-mcp:
-    image: brainwav/insula-mcp:1.0.0-community
+  cortexdx:
+    image: brainwav/cortexdx:1.0.0-community
     environment:
       - INSULA_MCP_TIER=community
 ```
@@ -265,17 +265,17 @@ services:
 
 ```bash
 # Run diagnostic to verify
-insula-mcp diagnose https://mcp.example.com --full
+cortexdx diagnose https://mcp.example.com --full
 
 # Check version
-insula-mcp --version
+cortexdx --version
 ```
 
 ### From v0.1.x to v1.0.0 (Professional Tier)
 
 **Step 1: Obtain License**
 
-1. Purchase Professional license at https://brainwav.io/insula-mcp/pricing
+1. Purchase Professional license at https://brainwav.io/cortexdx/pricing
 2. Receive license key via email
 3. Store license key securely
 
@@ -306,8 +306,8 @@ export INSULA_MCP_LLM_BACKEND=ollama
 ```yaml
 # docker-compose.yml
 services:
-  insula-mcp:
-    image: brainwav/insula-mcp:1.0.0-professional
+  cortexdx:
+    image: brainwav/cortexdx:1.0.0-professional
     environment:
       - INSULA_MCP_TIER=professional
       - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
@@ -326,13 +326,13 @@ services:
 
 ```bash
 # Verify license
-insula-mcp license verify
+cortexdx license verify
 
 # Test LLM integration
-insula-mcp interactive
+cortexdx interactive
 
 # Test code generation
-insula-mcp generate
+cortexdx generate
 ```
 
 ### From v0.1.x to v1.0.0 (Enterprise Tier)
@@ -376,8 +376,8 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otel-collector.com
 ```yaml
 # docker-compose.enterprise.yml
 services:
-  insula-mcp:
-    image: brainwav/insula-mcp:1.0.0-enterprise
+  cortexdx:
+    image: brainwav/cortexdx:1.0.0-enterprise
     environment:
       - INSULA_MCP_TIER=enterprise
       - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
@@ -398,14 +398,14 @@ services:
 
 ```bash
 # Verify license and features
-insula-mcp license verify
-insula-mcp license features
+cortexdx license verify
+cortexdx license features
 
 # Test authentication
-insula-mcp auth login
+cortexdx auth login
 
 # Test analytics
-insula-mcp analytics dashboard
+cortexdx analytics dashboard
 ```
 
 ## Data Migration
@@ -435,7 +435,7 @@ insula-mcp analytics dashboard
 cp -r old-reports/ new-reports/
 
 # Re-run diagnostics to update format
-insula-mcp diagnose https://mcp.example.com --out new-reports
+cortexdx diagnose https://mcp.example.com --out new-reports
 ```
 
 ### Pattern Storage
@@ -447,7 +447,7 @@ insula-mcp diagnose https://mcp.example.com --out new-reports
 export INSULA_PATTERN_STORAGE=enabled
 
 # Initialize database
-insula-mcp patterns init
+cortexdx patterns init
 
 # System will learn patterns from new interactions
 ```
@@ -467,7 +467,7 @@ insula-mcp patterns init
 
 ```yaml
 - name: Run Diagnostics
-  run: npx @brainwav/insula-mcp@1.0.0 diagnose ${{ secrets.MCP_ENDPOINT }}
+  run: npx @brainwav/cortexdx@1.0.0 diagnose ${{ secrets.MCP_ENDPOINT }}
   env:
     INSULA_MCP_TIER: community
 ```
@@ -479,7 +479,7 @@ insula-mcp patterns init
 ```yaml
 test:
   script:
-    - npm install -g insula-mcp
+    - npm install -g cortexdx
     - insula diagnose $MCP_ENDPOINT
 ```
 
@@ -488,8 +488,8 @@ test:
 ```yaml
 test:
   script:
-    - npm install -g @brainwav/insula-mcp@1.0.0
-    - insula-mcp diagnose $MCP_ENDPOINT
+    - npm install -g @brainwav/cortexdx@1.0.0
+    - cortexdx diagnose $MCP_ENDPOINT
   variables:
     INSULA_MCP_TIER: community
 ```
@@ -499,16 +499,16 @@ test:
 **Before (v0.x):**
 
 ```groovy
-sh 'npm install -g insula-mcp'
+sh 'npm install -g cortexdx'
 sh 'insula diagnose ${MCP_ENDPOINT}'
 ```
 
 **After (v1.0.0):**
 
 ```groovy
-sh 'npm install -g @brainwav/insula-mcp@1.0.0'
+sh 'npm install -g @brainwav/cortexdx@1.0.0'
 withEnv(['INSULA_MCP_TIER=community']) {
-    sh 'insula-mcp diagnose ${MCP_ENDPOINT}'
+    sh 'cortexdx diagnose ${MCP_ENDPOINT}'
 }
 ```
 
@@ -522,13 +522,13 @@ withEnv(['INSULA_MCP_TIER=community']) {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: insula-mcp
+  name: cortexdx
 spec:
   template:
     spec:
       containers:
-      - name: insula-mcp
-        image: brainwav/insula-mcp:latest
+      - name: cortexdx
+        image: brainwav/cortexdx:latest
 ```
 
 **After (v1.0.0):**
@@ -537,13 +537,13 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: insula-mcp
+  name: cortexdx
 spec:
   template:
     spec:
       containers:
-      - name: insula-mcp
-        image: brainwav/insula-mcp:1.0.0-professional
+      - name: cortexdx
+        image: brainwav/cortexdx:1.0.0-professional
         env:
         - name: INSULA_MCP_TIER
           value: "professional"
@@ -585,7 +585,7 @@ Error: Invalid license key for tier 'professional'
 echo $INSULA_LICENSE_KEY
 
 # Re-verify license
-insula-mcp license verify
+cortexdx license verify
 
 # Contact support if issue persists
 ```
@@ -643,13 +643,13 @@ Error: Container exits immediately after start
 
 ```bash
 # Check container logs
-docker logs insula-mcp
+docker logs cortexdx
 
 # Verify environment variables
-docker inspect insula-mcp | grep -A 20 Env
+docker inspect cortexdx | grep -A 20 Env
 
 # Check volume permissions
-docker exec insula-mcp ls -la /app
+docker exec cortexdx ls -la /app
 ```
 
 ## Rollback Procedure
@@ -659,13 +659,13 @@ If you encounter issues with v1.0.0, you can rollback to v0.x:
 **Step 1: Uninstall v1.0.0**
 
 ```bash
-npm uninstall -g @brainwav/insula-mcp
+npm uninstall -g @brainwav/cortexdx
 ```
 
 **Step 2: Reinstall v0.x**
 
 ```bash
-npm install -g insula-mcp@0.1.0
+npm install -g cortexdx@0.1.0
 ```
 
 **Step 3: Restore Configuration**
@@ -689,9 +689,9 @@ insula diagnose https://mcp.example.com
 
 ### Community Support
 
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
-- Discussions: https://github.com/brainwav/insula-mcp/discussions
-- Documentation: https://docs.brainwav.io/insula-mcp
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
+- Discussions: https://github.com/brainwav/cortexdx/discussions
+- Documentation: https://docs.brainwav.io/cortexdx
 
 ### Commercial Support
 

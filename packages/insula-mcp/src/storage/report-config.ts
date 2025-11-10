@@ -11,9 +11,9 @@ export interface ReportConfigOptions {
 }
 
 const DEFAULT_CONFIG_LOCATIONS = [
-    ".insula/report-config.json",
-    join(homedir(), ".insula", "report-config.json"),
-    "/etc/insula/report-config.json",
+    ".cortexdx/report-config.json",
+    join(homedir(), ".cortexdx", "report-config.json"),
+    "/etc/cortexdx/report-config.json",
 ];
 
 export class ReportConfigManager {
@@ -65,34 +65,34 @@ export class ReportConfigManager {
     private loadFromEnvironment(): Partial<ReportConfig> {
         const config: Partial<ReportConfig> = {};
 
-        if (process.env.INSULA_REPORT_DIR) {
-            config.storageRoot = process.env.INSULA_REPORT_DIR;
+        if (process.env.CORTEXDX_REPORT_DIR) {
+            config.storageRoot = process.env.CORTEXDX_REPORT_DIR;
         }
 
-        if (process.env.INSULA_REPORT_URL) {
-            config.baseUrl = process.env.INSULA_REPORT_URL;
+        if (process.env.CORTEXDX_REPORT_URL) {
+            config.baseUrl = process.env.CORTEXDX_REPORT_URL;
         }
 
-        if (process.env.INSULA_REPORT_STRATEGY) {
-            const strategy = process.env.INSULA_REPORT_STRATEGY;
+        if (process.env.CORTEXDX_REPORT_STRATEGY) {
+            const strategy = process.env.CORTEXDX_REPORT_STRATEGY;
             if (strategy === "date" || strategy === "session" || strategy === "type") {
                 config.organizationStrategy = strategy;
             }
         }
 
-        if (process.env.INSULA_REPORT_RETENTION_DAYS) {
-            const days = Number.parseInt(process.env.INSULA_REPORT_RETENTION_DAYS, 10);
+        if (process.env.CORTEXDX_REPORT_RETENTION_DAYS) {
+            const days = Number.parseInt(process.env.CORTEXDX_REPORT_RETENTION_DAYS, 10);
             if (!Number.isNaN(days) && days > 0) {
                 config.retentionDays = days;
             }
         }
 
-        if (process.env.INSULA_REPORT_COMPRESSION) {
-            config.enableCompression = process.env.INSULA_REPORT_COMPRESSION === "true";
+        if (process.env.CORTEXDX_REPORT_COMPRESSION) {
+            config.enableCompression = process.env.CORTEXDX_REPORT_COMPRESSION === "true";
         }
 
-        if (process.env.INSULA_REPORT_FORMATS) {
-            const formats = process.env.INSULA_REPORT_FORMATS.split(",")
+        if (process.env.CORTEXDX_REPORT_FORMATS) {
+            const formats = process.env.CORTEXDX_REPORT_FORMATS.split(",")
                 .map(f => f.trim().toLowerCase())
                 .filter(f => f === "json" || f === "markdown" || f === "html");
 
@@ -273,16 +273,16 @@ export class ReportConfigManager {
 
         if (platform === "linux") {
             const xdgDataHome = process.env.XDG_DATA_HOME || join(homedir(), ".local", "share");
-            return join(xdgDataHome, "insula-mcp", "reports");
-        }if (platform === "darwin") {
-            return join(homedir(), "Library", "Application Support", "insula-mcp", "reports");
-        }if (platform === "win32") {
+            return join(xdgDataHome, "cortexdx", "reports");
+        } if (platform === "darwin") {
+            return join(homedir(), "Library", "Application Support", "cortexdx", "reports");
+        } if (platform === "win32") {
             const localAppData = process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
-            return join(localAppData, "insula-mcp", "reports");
+            return join(localAppData, "cortexdx", "reports");
         }
 
         // Fallback
-        return join(homedir(), ".insula-mcp", "reports");
+        return join(homedir(), ".cortexdx", "reports");
     }
 
     /**

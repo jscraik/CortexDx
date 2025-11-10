@@ -1,6 +1,6 @@
 # Backup and Recovery Guide
 
-This guide provides comprehensive instructions for backing up and restoring Insula MCP data, including conversation history, pattern learning databases, local models, and configuration.
+This guide provides comprehensive instructions for backing up and restoring CortexDx data, including conversation history, pattern learning databases, local models, and configuration.
 
 ## Table of Contents
 
@@ -64,14 +64,14 @@ Best for production Kubernetes deployments.
 
 ```bash
 # Apply backup CronJob
-kubectl apply -f packages/insula-mcp/kubernetes/backup/backup-cronjob.yaml
+kubectl apply -f packages/cortexdx/kubernetes/backup/backup-cronjob.yaml
 
 # Configure remote storage (optional)
 kubectl create secret generic backup-secrets \
-  --from-literal=remote-url='s3://my-bucket/insula-mcp-backups' \
+  --from-literal=remote-url='s3://my-bucket/cortexdx-backups' \
   --from-literal=aws-access-key-id='YOUR_KEY' \
   --from-literal=aws-secret-access-key='YOUR_SECRET' \
-  -n insula-mcp
+  -n cortexdx
 ```
 
 **Schedule:**
@@ -83,13 +83,13 @@ kubectl create secret generic backup-secrets \
 
 ```bash
 # View backup jobs
-kubectl get cronjobs -n insula-mcp
+kubectl get cronjobs -n cortexdx
 
 # Check last backup status
-kubectl get jobs -n insula-mcp | grep backup
+kubectl get jobs -n cortexdx | grep backup
 
 # View backup logs
-kubectl logs -n insula-mcp job/insula-mcp-backup-<timestamp>
+kubectl logs -n cortexdx job/cortexdx-backup-<timestamp>
 ```
 
 ### Method 2: Manual Script Execution
@@ -100,10 +100,10 @@ Best for Docker deployments or manual backups.
 
 ```bash
 # Run backup inside container
-docker exec insula-mcp /app/scripts/backup.sh
+docker exec cortexdx /app/scripts/backup.sh
 
 # Copy backup to host
-docker cp insula-mcp:/app/backups/insula-mcp-backup-<timestamp>.tar.gz ./
+docker cp cortexdx:/app/backups/cortexdx-backup-<timestamp>.tar.gz ./
 ```
 
 **Direct Execution:**
@@ -116,7 +116,7 @@ export PATTERNS_DIR=/app/patterns
 export RETENTION_DAYS=30
 
 # Run backup script
-./packages/insula-mcp/scripts/backup.sh
+./packages/cortexdx/scripts/backup.sh
 ```
 
 ### Method 3: Volume Snapshots
@@ -129,16 +129,16 @@ Best for cloud-native deployments with snapshot support.
 # Create snapshot of EBS volume
 aws ec2 create-snapshot \
   --volume-id vol-xxxxx \
-  --description "Insula MCP backup $(date +%Y-%m-%d)" \
-  --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=insula-mcp-backup}]'
+  --description "CortexDx backup $(date +%Y-%m-%d)" \
+  --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=cortexdx-backup}]'
 ```
 
 **GCP Persistent Disk:**
 
 ```bash
 # Create snapshot
-gcloud compute disks snapshot insula-mcp-data \
-  --snapshot-names=insula-mcp-backup-$(date +%Y%m%d) \
+gcloud compute disks snapshot cortexdx-data \
+  --snapshot-names=cortexdx-backup-$(date +%Y%m%d) \
   --zone=us-central1-a
 ```
 
@@ -148,8 +148,8 @@ gcloud compute disks snapshot insula-mcp-data \
 # Create snapshot
 az snapshot create \
   --resource-group myResourceGroup \
-  --name insula-mcp-backup-$(date +%Y%m%d) \
-  --source /subscriptions/.../disks/insula-mcp-data
+  --name cortexdx-backup-$(date +%Y%m%d) \
+  --source /subscriptions/.../disks/cortexdx-data
 ```
 
 ## Automated Backups
@@ -162,7 +162,7 @@ az snapshot create \
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: insula-mcp-backup
+  name: cortexdx-backup
 spec:
   schedule: "0 2 * * *"  # Daily at 2 AM
   jobTemplate:
@@ -171,7 +171,7 @@ spec:
         spec:
           containers:
             - name: backup
-              image: brainwav/insula-mcp:latest
+              image: brainwav/cortexdx:latest
               command: ["/bin/bash", "/app/scripts/backup.sh"]
               env:
                 - name: RETENTION_DAYS
@@ -183,7 +183,7 @@ spec:
 ```yaml
 env:
   - name: BACKUP_REMOTE_URL
-    value: "s3://my-bucket/insula-mcp-backups"
+    value: "s3://my-bucket/cortexdx-backups"
   - name: AWS_ACCESS_KEY_ID
     valueFrom:
       secretKeyRef:
@@ -220,7 +220,7 @@ RETENTION_DAYS=365
 apt-get update && apt-get install -y awscli
 
 # Upload to S3
-aws s3 cp backup.tar.gz s3://my-bucket/insula-mcp-backups/
+aws s3 cp backup.tar.gz s3://my-bucket/cortexdx-backups/
 ```
 
 **Google Cloud Storage:**
@@ -230,7 +230,7 @@ aws s3 cp backup.tar.gz s3://my-bucket/insula-mcp-backups/
 apt-get update && apt-get install -y google-cloud-sdk
 
 # Upload to GCS
-gsutil cp backup.tar.gz gs://my-bucket/insula-mcp-backups/
+gsutil cp backup.tar.gz gs://my-bucket/cortexdx-backups/
 ```
 
 **Azure Blob Storage:**
@@ -243,7 +243,7 @@ apt-get update && apt-get install -y azure-cli
 az storage blob upload \
   --file backup.tar.gz \
   --container-name backups \
-  --name insula-mcp-backup-$(date +%Y%m%d).tar.gz
+  --name cortexdx-backup-$(date +%Y%m%d).tar.gz
 ```
 
 ## Manual Backups
@@ -252,7 +252,7 @@ az storage blob upload \
 
 Always backup before:
 
-- Upgrading Insula MCP
+- Upgrading CortexDx
 - Changing configuration
 - Migrating to new infrastructure
 - Testing new features
@@ -266,10 +266,10 @@ Always backup before:
 
 ```bash
 # Kubernetes
-kubectl create job --from=cronjob/insula-mcp-backup manual-backup-$(date +%Y%m%d)
+kubectl create job --from=cronjob/cortexdx-backup manual-backup-$(date +%Y%m%d)
 
 # Docker
-docker exec insula-mcp /app/scripts/backup.sh
+docker exec cortexdx /app/scripts/backup.sh
 
 # Direct
 ./scripts/backup.sh
@@ -282,11 +282,11 @@ docker exec insula-mcp /app/scripts/backup.sh
 ls -lh /app/backups/
 
 # Check backup contents
-tar -tzf insula-mcp-backup-<timestamp>.tar.gz
+tar -tzf cortexdx-backup-<timestamp>.tar.gz
 
 # Verify checksums
-tar -xzf insula-mcp-backup-<timestamp>.tar.gz
-cd insula-mcp-backup-<timestamp>
+tar -xzf cortexdx-backup-<timestamp>.tar.gz
+cd cortexdx-backup-<timestamp>
 sha256sum -c checksums.sha256
 ```
 
@@ -298,48 +298,48 @@ sha256sum -c checksums.sha256
 
 ```bash
 # Stop current deployment
-kubectl scale deployment insula-mcp --replicas=0 -n insula-mcp
+kubectl scale deployment cortexdx --replicas=0 -n cortexdx
 
 # Create restore job
-kubectl run insula-mcp-restore \
-  --image=brainwav/insula-mcp:latest \
+kubectl run cortexdx-restore \
+  --image=brainwav/cortexdx:latest \
   --restart=Never \
-  --command -- /bin/bash /app/scripts/restore.sh /backups/insula-mcp-backup-<timestamp>.tar.gz
+  --command -- /bin/bash /app/scripts/restore.sh /backups/cortexdx-backup-<timestamp>.tar.gz
 
 # Wait for completion
-kubectl wait --for=condition=complete job/insula-mcp-restore -n insula-mcp --timeout=10m
+kubectl wait --for=condition=complete job/cortexdx-restore -n cortexdx --timeout=10m
 
 # Scale deployment back up
-kubectl scale deployment insula-mcp --replicas=2 -n insula-mcp
+kubectl scale deployment cortexdx --replicas=2 -n cortexdx
 ```
 
 **Docker:**
 
 ```bash
 # Stop container
-docker stop insula-mcp
+docker stop cortexdx
 
 # Copy backup to container
-docker cp insula-mcp-backup-<timestamp>.tar.gz insula-mcp:/tmp/
+docker cp cortexdx-backup-<timestamp>.tar.gz cortexdx:/tmp/
 
 # Restore
-docker exec insula-mcp /app/scripts/restore.sh /tmp/insula-mcp-backup-<timestamp>.tar.gz
+docker exec cortexdx /app/scripts/restore.sh /tmp/cortexdx-backup-<timestamp>.tar.gz
 
 # Start container
-docker start insula-mcp
+docker start cortexdx
 ```
 
 **Direct:**
 
 ```bash
 # Stop service
-systemctl stop insula-mcp
+systemctl stop cortexdx
 
 # Run restore
-./scripts/restore.sh /path/to/insula-mcp-backup-<timestamp>.tar.gz
+./scripts/restore.sh /path/to/cortexdx-backup-<timestamp>.tar.gz
 
 # Start service
-systemctl start insula-mcp
+systemctl start cortexdx
 ```
 
 ### Partial Restore
@@ -348,8 +348,8 @@ Restore specific components:
 
 ```bash
 # Extract backup
-tar -xzf insula-mcp-backup-<timestamp>.tar.gz
-cd insula-mcp-backup-<timestamp>
+tar -xzf cortexdx-backup-<timestamp>.tar.gz
+cd cortexdx-backup-<timestamp>
 
 # Restore only patterns
 tar -xzf patterns.tar.gz -C /app/patterns
@@ -370,7 +370,7 @@ Restore to a specific point in time:
 ls -lt /app/backups/
 
 # Choose backup from desired time
-./scripts/restore.sh /app/backups/insula-mcp-backup-20250108_140000.tar.gz
+./scripts/restore.sh /app/backups/cortexdx-backup-20250108_140000.tar.gz
 ```
 
 ## Disaster Recovery
@@ -397,12 +397,12 @@ Maximum acceptable data loss:
 
 ```bash
 # Check service status
-kubectl get pods -n insula-mcp
-systemctl status insula-mcp
+kubectl get pods -n cortexdx
+systemctl status cortexdx
 
 # Check logs
-kubectl logs -n insula-mcp -l app=insula-mcp --tail=100
-journalctl -u insula-mcp -n 100
+kubectl logs -n cortexdx -l app=cortexdx --tail=100
+journalctl -u cortexdx -n 100
 ```
 
 **2. Identify Latest Backup**
@@ -435,10 +435,10 @@ curl http://localhost:3000/health
 
 ```bash
 # Scale to normal capacity
-kubectl scale deployment insula-mcp --replicas=5 -n insula-mcp
+kubectl scale deployment cortexdx --replicas=5 -n cortexdx
 
 # Monitor for issues
-kubectl logs -f -n insula-mcp -l app=insula-mcp
+kubectl logs -f -n cortexdx -l app=cortexdx
 ```
 
 ### Multi-Region Disaster Recovery
@@ -447,10 +447,10 @@ For enterprise deployments:
 
 ```yaml
 # Primary region backup
-aws s3 sync /app/backups/ s3://primary-backups/insula-mcp/
+aws s3 sync /app/backups/ s3://primary-backups/cortexdx/
 
 # Replicate to secondary region
-aws s3 sync s3://primary-backups/insula-mcp/ s3://secondary-backups/insula-mcp/ \
+aws s3 sync s3://primary-backups/cortexdx/ s3://secondary-backups/cortexdx/ \
   --source-region us-east-1 \
   --region us-west-2
 ```
@@ -475,7 +475,7 @@ TEMP_DIR=$(mktemp -d)
 tar -xzf "$BACKUP_FILE" -C "$TEMP_DIR"
 
 # Verify checksums
-cd "$TEMP_DIR"/insula-mcp-backup-*
+cd "$TEMP_DIR"/cortexdx-backup-*
 sha256sum -c checksums.sha256
 
 # Check metadata
@@ -489,24 +489,24 @@ rm -rf "$TEMP_DIR"
 
 ```bash
 # Create test environment
-kubectl create namespace insula-mcp-test
+kubectl create namespace cortexdx-test
 
 # Deploy test instance
-helm install insula-mcp-test ./helm/insula-mcp \
-  --namespace insula-mcp-test
+helm install cortexdx-test ./helm/cortexdx \
+  --namespace cortexdx-test
 
 # Restore backup to test instance
 kubectl run restore-test \
-  --image=brainwav/insula-mcp:latest \
-  --namespace=insula-mcp-test \
+  --image=brainwav/cortexdx:latest \
+  --namespace=cortexdx-test \
   --command -- /app/scripts/restore.sh /backups/latest.tar.gz
 
 # Verify functionality
-kubectl port-forward -n insula-mcp-test svc/insula-mcp-test 3001:80
+kubectl port-forward -n cortexdx-test svc/cortexdx-test 3001:80
 curl http://localhost:3001/health
 
 # Cleanup
-kubectl delete namespace insula-mcp-test
+kubectl delete namespace cortexdx-test
 ```
 
 ## Best Practices
@@ -640,7 +640,7 @@ ls -lt /app/backups/ | head -10
 
 ```bash
 # Check backup version
-tar -xzOf backup.tar.gz insula-mcp-backup-*/metadata.json | jq .version
+tar -xzOf backup.tar.gz cortexdx-backup-*/metadata.json | jq .version
 
 # Upgrade/downgrade if needed
 ```
@@ -649,7 +649,7 @@ tar -xzOf backup.tar.gz insula-mcp-backup-*/metadata.json | jq .version
 
 ```bash
 # Check logs
-journalctl -u insula-mcp -n 100
+journalctl -u cortexdx -n 100
 
 # Verify configuration
 cat /app/config/*.json
@@ -662,7 +662,7 @@ ls -la /app/data /app/patterns
 
 For additional help:
 
-- Documentation: https://brainwav.dev/docs/insula-mcp/backup
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
+- Documentation: https://brainwav.dev/docs/cortexdx/backup
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
 - Community: https://discord.gg/brainwav
 - Enterprise Support: support@brainwav.dev

@@ -119,7 +119,7 @@
 
 ## 🎓 ACADEMIC RIGOR ACHIEVED
 
-**Insula MCP is now the most academically rigorous MCP development assistant available:**
+**CortexDx is now the most academically rigorous MCP development assistant available:**
 
 - **Research Validation**: Every recommendation backed by peer-reviewed research
 - **Multi-Provider Cross-Validation**: 7 academic sources validate each suggestion

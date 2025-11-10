@@ -1,4 +1,4 @@
-# Insula MCP v1.0.0 Release Checklist
+# CortexDx v1.0.0 Release Checklist
 
 This checklist ensures all necessary steps are completed before releasing v1.0.0.
 
@@ -267,7 +267,7 @@ This checklist ensures all necessary steps are completed before releasing v1.0.0
 ### Build Docker Images
 
 ```bash
-cd packages/insula-mcp
+cd packages/cortexdx
 ./scripts/build-docker-images.sh 1.0.0
 ```
 
@@ -298,7 +298,7 @@ git push origin v1.0.0
 
 ```bash
 gh release create v1.0.0 \
-  --title "Insula MCP v1.0.0" \
+  --title "CortexDx v1.0.0" \
   --notes-file RELEASE_NOTES.md \
   --latest
 ```
@@ -315,15 +315,15 @@ If critical issues are discovered post-release:
 2. **Rollback NPM**
 
    ```bash
-   npm deprecate @brainwav/insula-mcp@1.0.0 "Critical issue - use 0.1.0"
+   npm deprecate @brainwav/cortexdx@1.0.0 "Critical issue - use 0.1.0"
    ```
 
 3. **Rollback Docker**
 
    ```bash
    # Update latest tags to previous version
-   docker tag brainwav/insula-mcp:0.1.0 brainwav/insula-mcp:latest
-   docker push brainwav/insula-mcp:latest
+   docker tag brainwav/cortexdx:0.1.0 brainwav/cortexdx:latest
+   docker push brainwav/cortexdx:latest
    ```
 
 4. **Communication**

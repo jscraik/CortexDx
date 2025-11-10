@@ -1,6 +1,6 @@
-# Insula MCP IDE Extensions
+# CortexDx IDE Extensions
 
-This directory contains IDE-specific extensions and plugins for integrating Insula MCP with popular development environments.
+This directory contains IDE-specific extensions and plugins for integrating CortexDx with popular development environments.
 
 ## Available Extensions
 
@@ -23,7 +23,7 @@ cd vscode
 npm install
 npm run compile
 npm run package
-code --install-extension insula-mcp-vscode-1.0.0.vsix
+code --install-extension cortexdx-vscode-1.0.0.vsix
 ```
 
 ### IntelliJ IDEA / WebStorm / PyCharm
@@ -48,7 +48,7 @@ cd intellij
 
 ## Architecture
 
-All IDE extensions communicate with Insula MCP via the Model Context Protocol (MCP):
+All IDE extensions communicate with CortexDx via the Model Context Protocol (MCP):
 
 ```
 ┌─────────────┐
@@ -59,7 +59,7 @@ All IDE extensions communicate with Insula MCP via the Model Context Protocol (M
        │ (HTTP/WebSocket/stdio)
        ▼
 ┌─────────────┐
-│   Insula    │
+│   CortexDx    │
 │  MCP Server │
 └─────────────┘
 ```
@@ -138,7 +138,7 @@ See [IDE Integration Guide](../docs/ide-integration.md) for detailed documentati
 
 ### Server Configuration
 
-Configure the Insula MCP server in `mcp-server.config.json`:
+Configure the CortexDx server in `mcp-server.config.json`:
 
 ```json
 {
@@ -164,12 +164,12 @@ Each IDE extension has its own configuration:
 
 ```json
 {
-  "insula-mcp.server.url": "http://localhost:3000",
-  "insula-mcp.diagnostics.enabled": true
+  "cortexdx.server.url": "http://localhost:3000",
+  "cortexdx.diagnostics.enabled": true
 }
 ```
 
-**IntelliJ** (Settings → Tools → Insula MCP):
+**IntelliJ** (Settings → Tools → CortexDx):
 
 - Server URL: <http://localhost:3000>
 - Enable diagnostics: ✓
@@ -189,7 +189,7 @@ To contribute IDE extension improvements:
 
 For issues or questions:
 
-- GitHub Issues: <https://github.com/brainwav/insula-mcp/issues>
+- GitHub Issues: <https://github.com/brainwav/cortexdx/issues>
 - Documentation: [IDE Integration Guide](../docs/ide-integration.md)
 - MCP Specification: <https://spec.modelcontextprotocol.io/>
 

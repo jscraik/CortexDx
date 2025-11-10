@@ -19,22 +19,22 @@ const ACTION_DEFINITIONS: Record<Event["kind"], { id: string; label: string; com
   latency: {
     id: "action-reprobe",
     label: "Run targeted reprobe",
-    command: "insula-mcp story.reprobe --target={target}",
+    command: "cortexdx story.reprobe --target={target}",
   },
   errors: {
     id: "action-revert",
     label: "Revert last config",
-    command: "insula-mcp actions.revert-config --target={target}",
+    command: "cortexdx actions.revert-config --target={target}",
   },
   health: {
     id: "action-restart",
     label: "Restart connector",
-    command: "insula-mcp actions.restart-connector --target={target}",
+    command: "cortexdx actions.restart-connector --target={target}",
   },
   fallback: {
     id: "action-auth",
     label: "Rotate auth token",
-    command: "insula-mcp actions.auth-rotate --target={target}",
+    command: "cortexdx actions.auth-rotate --target={target}",
   },
 };
 

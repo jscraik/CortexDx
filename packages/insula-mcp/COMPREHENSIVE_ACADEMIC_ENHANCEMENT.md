@@ -2,7 +2,7 @@
 
 ## ALL Academic Providers Integration
 
-I will now systematically use **ALL 6 academic providers** to enhance **ALL features** of Insula MCP:
+I will now systematically use **ALL 6 academic providers** to enhance **ALL features** of CortexDx:
 
 ### 📚 Available Academic Providers
 
@@ -148,4 +148,4 @@ I will now systematically use **ALL 6 academic providers** to enhance **ALL feat
 4. **Feature Coverage**: 7/7 features academically enhanced
 5. **User Experience**: Seamless integration with transparent research backing
 
-This comprehensive plan will transform Insula MCP into the most academically rigorous MCP development assistant available! 🎓✨
+This comprehensive plan will transform CortexDx into the most academically rigorous MCP development assistant available! 🎓✨

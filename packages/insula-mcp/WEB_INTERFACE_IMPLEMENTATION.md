@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implemented a minimal but functional web-based interface for Insula MCP that provides visual MCP development and debugging capabilities.
+Implemented a minimal but functional web-based interface for CortexDx that provides visual MCP development and debugging capabilities.
 
 ## Implementation Details
 

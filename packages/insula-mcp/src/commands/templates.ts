@@ -13,7 +13,7 @@ const jsonRpcStub = async (): Promise<Record<string, never>> => ({});
 
 function createDevelopmentContext(): DevelopmentContext {
   return {
-    endpoint: process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
+    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
     logger: (...args) => console.log('[Templates]', ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
@@ -110,7 +110,7 @@ export async function runTemplateApply(
     const template = getTemplate(templateId);
     if (!template) {
       console.error(`[Templates] Template '${templateId}' not found`);
-      console.log('[Templates] Use "insula-mcp templates list" to see available templates');
+      console.log('[Templates] Use "cortexdx templates list" to see available templates');
       return 1;
     }
 
@@ -189,7 +189,7 @@ export async function runTemplateShow(templateId: string): Promise<number> {
     const template = getTemplate(templateId);
     if (!template) {
       console.error(`[Templates] Template '${templateId}' not found`);
-      console.log('[Templates] Use "insula-mcp templates list" to see available templates');
+      console.log('[Templates] Use "cortexdx templates list" to see available templates');
       return 1;
     }
 
@@ -233,8 +233,8 @@ export async function runTemplateShow(templateId: string): Promise<number> {
     }
 
     console.log('\nUSAGE:');
-    console.log(`  Apply this template: insula-mcp templates apply ${templateId}`);
-    console.log(`  Dry run first:     insula-mcp templates apply ${templateId} --dry-run`);
+    console.log(`  Apply this template: cortexdx templates apply ${templateId}`);
+    console.log(`  Dry run first:     cortexdx templates apply ${templateId} --dry-run`);
 
     return 0;
 

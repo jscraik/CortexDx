@@ -69,7 +69,7 @@ export const GovernancePlugin: DiagnosticPlugin = {
       const baseUrl = ctx.endpoint.replace(/\/mcp\/?$/, "");
       const packLocations = [
         { path: "/.cortex/manifest.json", name: "Cortex" },
-        { path: "/.insula/manifest.json", name: "Insula" },
+        { path: "/.cortexdx/manifest.json", name: "CortexDx" },
         { path: "/governance/manifest.json", name: "Generic" }
       ];
 

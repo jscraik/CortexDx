@@ -84,7 +84,7 @@ interface PromptSections {
 function buildPrompt(findings: NormalizedFinding[]): PromptSections {
   const severityCounts = tallySeverities(findings);
   const system = [
-    "You are Insula MCP's internal safety and remediation partner.",
+    "You are CortexDx's internal safety and remediation partner.",
     "You must produce factual, objective summaries and remediation priorities.",
     "Always reference finding ids and sources when giving direction.",
     "Respond with short paragraphs (<=4 sentences) plus an action list.",

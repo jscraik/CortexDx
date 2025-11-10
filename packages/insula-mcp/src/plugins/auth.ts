@@ -100,7 +100,7 @@ export async function validateAuth0Token(
     return {
       valid: true,
       userId: payload.sub,
-      roles: payload["https://insula-mcp/roles"] || [],
+      roles: payload["https://cortexdx/roles"] || [],
       permissions: payload.permissions || [],
       expiresAt: payload.exp,
     };

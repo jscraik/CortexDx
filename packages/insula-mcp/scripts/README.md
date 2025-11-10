@@ -1,6 +1,6 @@
-# Insula MCP Release Scripts
+# CortexDx Release Scripts
 
-This directory contains scripts for building, publishing, and deploying Insula MCP v1.0.0.
+This directory contains scripts for building, publishing, and deploying CortexDx v1.0.0.
 
 ## Scripts Overview
 
@@ -32,10 +32,10 @@ DOCKER_REGISTRY=myregistry ./scripts/build-docker-images.sh 1.0.0
 
 **Output:**
 
-- `brainwav/insula-mcp:1.0.0-community`
-- `brainwav/insula-mcp:1.0.0-professional`
-- `brainwav/insula-mcp:1.0.0-enterprise`
-- `brainwav/insula-mcp:latest` (points to community)
+- `brainwav/cortexdx:1.0.0-community`
+- `brainwav/cortexdx:1.0.0-professional`
+- `brainwav/cortexdx:1.0.0-enterprise`
+- `brainwav/cortexdx:latest` (points to community)
 
 ### publish-npm.sh
 
@@ -149,9 +149,9 @@ git push origin main
 ./scripts/build-docker-images.sh 1.0.0
 
 # Test images locally
-docker run -p 3000:3000 brainwav/insula-mcp:1.0.0-community
-docker run -p 3001:3000 brainwav/insula-mcp:1.0.0-professional
-docker run -p 3002:3000 brainwav/insula-mcp:1.0.0-enterprise
+docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
+docker run -p 3001:3000 brainwav/cortexdx:1.0.0-professional
+docker run -p 3002:3000 brainwav/cortexdx:1.0.0-enterprise
 
 # Push to registry
 PUSH=true ./scripts/build-docker-images.sh 1.0.0
@@ -167,9 +167,9 @@ DRY_RUN=true ./scripts/publish-npm.sh 1.0.0
 ./scripts/publish-npm.sh 1.0.0
 
 # Verify publication
-npm view @brainwav/insula-mcp
-npm install -g @brainwav/insula-mcp@1.0.0
-insula-mcp --version
+npm view @brainwav/cortexdx
+npm install -g @brainwav/cortexdx@1.0.0
+cortexdx --version
 ```
 
 ### 4. Create GitHub Release
@@ -181,7 +181,7 @@ git push origin v1.0.0
 
 # Create GitHub release (manual or via gh CLI)
 gh release create v1.0.0 \
-  --title "Insula MCP v1.0.0" \
+  --title "CortexDx v1.0.0" \
   --notes-file RELEASE_NOTES.md \
   --latest
 ```
@@ -190,8 +190,8 @@ gh release create v1.0.0 \
 
 ```bash
 # Test npm package
-npx @brainwav/insula-mcp@1.0.0 --version
-npx @brainwav/insula-mcp@1.0.0 diagnose https://example.com
+npx @brainwav/cortexdx@1.0.0 --version
+npx @brainwav/cortexdx@1.0.0 diagnose https://example.com
 
 # Test Docker images
 ./scripts/quick-deploy.sh community
@@ -211,14 +211,14 @@ INSULA_LICENSE_KEY=test-key ./scripts/quick-deploy.sh professional
 
 ```bash
 # Ensure you're in the correct directory
-cd packages/insula-mcp
+cd packages/cortexdx
 
 # Check .dockerignore is present
 cat ../../.dockerignore
 
 # Build from workspace root
 cd ../..
-docker build -f packages/insula-mcp/Dockerfile.community .
+docker build -f packages/cortexdx/Dockerfile.community .
 ```
 
 ### NPM Publish Fails
@@ -270,7 +270,7 @@ docker login
 docker info | grep Username
 
 # Push specific image
-docker push brainwav/insula-mcp:1.0.0-community
+docker push brainwav/cortexdx:1.0.0-community
 ```
 
 ## CI/CD Integration
@@ -282,7 +282,7 @@ These scripts are designed to work with CI/CD pipelines:
 ```yaml
 - name: Build Docker Images
   run: |
-    cd packages/insula-mcp
+    cd packages/cortexdx
     ./scripts/build-docker-images.sh ${{ github.ref_name }}
   env:
     PUSH: true
@@ -290,7 +290,7 @@ These scripts are designed to work with CI/CD pipelines:
 
 - name: Publish to NPM
   run: |
-    cd packages/insula-mcp
+    cd packages/cortexdx
     ./scripts/publish-npm.sh ${{ github.ref_name }}
   env:
     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -301,7 +301,7 @@ These scripts are designed to work with CI/CD pipelines:
 ```yaml
 build-docker:
   script:
-    - cd packages/insula-mcp
+    - cd packages/cortexdx
     - ./scripts/build-docker-images.sh $CI_COMMIT_TAG
   variables:
     PUSH: "true"
@@ -309,7 +309,7 @@ build-docker:
 
 publish-npm:
   script:
-    - cd packages/insula-mcp
+    - cd packages/cortexdx
     - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
     - ./scripts/publish-npm.sh $CI_COMMIT_TAG
 ```
@@ -341,6 +341,6 @@ publish-npm:
 
 For issues with release scripts:
 
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
 - Email: support@brainwav.io
-- Documentation: https://docs.brainwav.io/insula-mcp
+- Documentation: https://docs.brainwav.io/cortexdx

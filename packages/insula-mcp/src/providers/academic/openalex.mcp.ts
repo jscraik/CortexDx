@@ -100,7 +100,7 @@ export interface OpenAlexSearchParams {
 
 export class OpenAlexProvider {
     private readonly baseUrl = "https://api.openalex.org";
-    private readonly userAgent = "Insula-MCP/1.0.0 (Academic Research)";
+    private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     constructor(private ctx: DiagnosticContext) {

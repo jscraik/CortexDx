@@ -15,9 +15,9 @@ import { runDiagnose } from "./orchestrator.js";
 
 const program = new Command();
 program
-  .name("insula-mcp")
+  .name("cortexdx")
   .description(
-    "brAInwav • Insula MCP — Diagnostic Meta-Inspector (stateless, plugin-based)",
+    "brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)",
   )
   .version("0.1.0");
 

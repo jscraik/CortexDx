@@ -2,7 +2,7 @@
  * Studio Wrapper - stdio transport bridge for MCP Inspector
  *
  * This wrapper allows MCP Inspector (which expects stdio transport) to communicate
- * with HTTP-based MCP servers like Insula. It translates between:
+ * with HTTP-based MCP servers like CortexDx. It translates between:
  *
  * MCP Inspector stdio ←→ JSON-RPC 2.0 ←→ HTTP requests to MCP server
  */
@@ -48,7 +48,7 @@ class StudioWrapper {
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Insula-Studio-Wrapper/1.0.0',
+        'User-Agent': 'CortexDx-Studio-Wrapper/1.0.0',
       },
       verbose: false,
       ...config,

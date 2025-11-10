@@ -1,10 +1,10 @@
 # Plugin Development Guide
 
-Learn how to create custom plugins for Insula MCP to extend its diagnostic and development assistance capabilities. This guide provides comprehensive examples, API documentation, and best practices for building robust, testable plugins.
+Learn how to create custom plugins for CortexDx to extend its diagnostic and development assistance capabilities. This guide provides comprehensive examples, API documentation, and best practices for building robust, testable plugins.
 
 ## Plugin Architecture
 
-Insula MCP uses a plugin-based architecture where all diagnostic and development assistance features are implemented as plugins. The system supports multiple plugin types with different interfaces and capabilities.
+CortexDx uses a plugin-based architecture where all diagnostic and development assistance features are implemented as plugins. The system supports multiple plugin types with different interfaces and capabilities.
 
 ### Plugin Types
 
@@ -1799,7 +1799,7 @@ my-insula-plugin/
 {
   "name": "@myorg/insula-plugin-custom",
   "version": "1.0.0",
-  "description": "Custom diagnostic and development plugins for Insula MCP",
+  "description": "Custom diagnostic and development plugins for CortexDx",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -1832,7 +1832,7 @@ my-insula-plugin/
     "prepublishOnly": "pnpm build && pnpm test && pnpm lint"
   },
   "keywords": [
-    "insula-mcp",
+    "cortexdx",
     "mcp",
     "plugin",
     "diagnostic",
@@ -1850,7 +1850,7 @@ my-insula-plugin/
   },
   "homepage": "https://github.com/myorg/insula-plugin-custom#readme",
   "peerDependencies": {
-    "@brainwav/insula-mcp": "^0.1.0"
+    "@brainwav/cortexdx": "^0.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -1869,7 +1869,7 @@ my-insula-plugin/
 
 ```json
 {
-  "extends": "@brainwav/insula-mcp/tsconfig.json",
+  "extends": "@brainwav/cortexdx/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
@@ -1915,7 +1915,7 @@ export default defineConfig({
   target: 'node20',
   outDir: 'dist',
   external: [
-    '@brainwav/insula-mcp'
+    '@brainwav/cortexdx'
   ]
 });
 ```
@@ -1925,9 +1925,9 @@ export default defineConfig({
 Create comprehensive documentation for your plugin:
 
 ```markdown
-# My Custom Insula MCP Plugin
+# My Custom CortexDx Plugin
 
-A comprehensive plugin package providing custom diagnostic and development capabilities for Insula MCP.
+A comprehensive plugin package providing custom diagnostic and development capabilities for CortexDx.
 
 ## Features
 
@@ -2057,7 +2057,7 @@ Before publishing your plugin:
    - [ ] Tests run in CI environment
 
 5. **Compatibility**
-   - [ ] Compatible with current Insula MCP version
+   - [ ] Compatible with current CortexDx version
    - [ ] Peer dependencies are correct
    - [ ] Node.js version requirements are specified
    - [ ] Works with both diagnostic and development contexts
@@ -2520,7 +2520,7 @@ Provide specific, actionable suggestions.
 
 ### Community and Support
 
-- **Interactive Help**: Use `insula-mcp interactive` for conversational assistance
+- **Interactive Help**: Use `cortexdx interactive` for conversational assistance
 - **GitHub Discussions**: Share plugins and get community help
 - **GitHub Issues**: Report bugs and request features
 - **Plugin Registry**: Discover community plugins (coming soon)

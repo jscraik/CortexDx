@@ -1,6 +1,6 @@
-# LLM Integration for Insula MCP
+# LLM Integration for CortexDx
 
-This module provides enhanced LLM integration for the Insula MCP diagnostic system, enabling conversational development assistance and intelligent problem solving.
+This module provides enhanced LLM integration for the CortexDx diagnostic system, enabling conversational development assistance and intelligent problem solving.
 
 ## Features
 
@@ -13,7 +13,7 @@ This module provides enhanced LLM integration for the Insula MCP diagnostic syst
 ## Quick Start
 
 ```typescript
-import { createLlmOrchestrator, getEnhancedLlmAdapter } from '@brainwav/insula-mcp';
+import { createLlmOrchestrator, getEnhancedLlmAdapter } from '@brainwav/cortexdx';
 
 // Create an orchestrator for managing LLM interactions
 const orchestrator = createLlmOrchestrator({
@@ -88,7 +88,7 @@ interface MlxConfig {
 
 ## Integration with Diagnostic Context
 
-The LLM integration seamlessly works with the existing Insula MCP diagnostic system:
+The LLM integration seamlessly works with the existing CortexDx diagnostic system:
 
 ```typescript
 // The orchestrator integrates with DiagnosticContext

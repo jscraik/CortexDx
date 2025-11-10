@@ -36,7 +36,7 @@ export async function executeSelfHealingRun(options: SelfHealingRunOptions): Pro
     cache,
     deterministic: options.deterministic,
     model: options.model,
-    endpoint: process.env.INSULA_OLLAMA_ENDPOINT,
+    endpoint: process.env.CORTEXDX_OLLAMA_ENDPOINT,
   });
 
   const now = new Date().toISOString();

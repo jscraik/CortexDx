@@ -1,6 +1,6 @@
 import type { DevelopmentContext } from "../types.js";
-import { AutoHealer } from "./auto-healer.js";
 import type { HealingReport } from "./auto-healer.js";
+import { AutoHealer } from "./auto-healer.js";
 
 export interface MonitoringConfig {
   endpoint: string;
@@ -185,8 +185,8 @@ export class MonitoringScheduler {
 
       // Check if it's self-monitoring or external endpoint
       const isSelf = job.config.endpoint.includes('localhost') ||
-                    job.config.endpoint.includes('127.0.0.1') ||
-                    job.config.endpoint === (process.env.INSULA_INTERNAL_ENDPOINT || '');
+        job.config.endpoint.includes('127.0.0.1') ||
+        job.config.endpoint === (process.env.CORTEXDX_INTERNAL_ENDPOINT || '');
 
       let report: HealingReport;
       if (isSelf) {
@@ -261,7 +261,7 @@ export class MonitoringScheduler {
 
     // Log summary
     const logLevel = report.summary.severity === 'success' ? 'info' :
-                     report.summary.severity === 'partial' ? 'warn' : 'error';
+      report.summary.severity === 'partial' ? 'warn' : 'error';
 
     this.ctx.logger?.(`[MonitoringScheduler] [${logLevel.toUpperCase()}] ${job.id}: ${report.summary.message}`);
   }
@@ -278,7 +278,7 @@ export class MonitoringScheduler {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Insula-MCP-Monitor/1.0',
+          'User-Agent': 'CortexDx-Monitor/1.0',
         },
         body: JSON.stringify(payload),
       });
@@ -387,7 +387,7 @@ export class MonitoringScheduler {
   addDefaultMonitoring(): void {
     // Self-monitoring
     this.addJob({
-      endpoint: process.env.INSULA_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
+      endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
       schedule: '*/5 * * * *', // Every 5 minutes
       probes: ['handshake', 'protocol', 'security', 'performance'],
       autoHeal: true,

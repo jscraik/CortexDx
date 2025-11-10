@@ -124,7 +124,7 @@ export interface CodeQualityIssue {
 }
 
 export class Context7Provider {
-    private readonly userAgent = "Insula-MCP/1.0.0 (Contextual Research Analysis)";
+    private readonly userAgent = "CortexDx/1.0.0 (Contextual Research Analysis)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     constructor(private ctx: DiagnosticContext) {

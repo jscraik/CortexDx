@@ -1,6 +1,6 @@
 # MCP Tool Definitions
 
-This directory contains comprehensive MCP tool definitions for the Insula MCP diagnostic system. All tools follow the MCP protocol specification version 2024-11-05 and provide JSON schema-based input validation.
+This directory contains comprehensive MCP tool definitions for the CortexDx diagnostic system. All tools follow the MCP protocol specification version 2024-11-05 and provide JSON schema-based input validation.
 
 ## Tool Categories
 

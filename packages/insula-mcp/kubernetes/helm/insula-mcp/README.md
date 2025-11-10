@@ -1,6 +1,6 @@
-# Insula MCP Helm Chart
+# CortexDx Helm Chart
 
-This Helm chart deploys Insula MCP on a Kubernetes cluster.
+This Helm chart deploys CortexDx on a Kubernetes cluster.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ This Helm chart deploys Insula MCP on a Kubernetes cluster.
 ### Community Edition
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set tier=community \
   --set replicaCount=2
 ```
@@ -21,7 +21,7 @@ helm install insula-mcp ./insula-mcp \
 ### Professional Edition
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set tier=professional \
   --set replicaCount=3 \
   --set secrets.licenseKey="YOUR_LICENSE_KEY" \
@@ -31,7 +31,7 @@ helm install insula-mcp ./insula-mcp \
 ### Enterprise Edition
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set tier=enterprise \
   --set replicaCount=5 \
   --set secrets.licenseKey="YOUR_LICENSE_KEY" \
@@ -46,13 +46,13 @@ helm install insula-mcp ./insula-mcp \
 
 ## Configuration
 
-The following table lists the configurable parameters of the Insula MCP chart and their default values.
+The following table lists the configurable parameters of the CortexDx chart and their default values.
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `tier` | Licensing tier (community, professional, enterprise) | `community` |
 | `replicaCount` | Number of replicas | `2` |
-| `image.repository` | Image repository | `brainwav/insula-mcp` |
+| `image.repository` | Image repository | `brainwav/cortexdx` |
 | `image.tag` | Image tag | `""` (uses appVersion) |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `service.type` | Service type | `ClusterIP` |
@@ -74,7 +74,7 @@ The following table lists the configurable parameters of the Insula MCP chart an
 ## Upgrading
 
 ```bash
-helm upgrade insula-mcp ./insula-mcp \
+helm upgrade cortexdx ./cortexdx \
   --set tier=professional \
   --reuse-values
 ```
@@ -82,7 +82,7 @@ helm upgrade insula-mcp ./insula-mcp \
 ## Uninstalling
 
 ```bash
-helm uninstall insula-mcp
+helm uninstall cortexdx
 ```
 
 ## Examples
@@ -90,7 +90,7 @@ helm uninstall insula-mcp
 ### Enable Autoscaling
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set autoscaling.enabled=true \
   --set autoscaling.minReplicas=3 \
   --set autoscaling.maxReplicas=15
@@ -99,19 +99,19 @@ helm install insula-mcp ./insula-mcp \
 ### Enable Ingress with TLS
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set ingress.enabled=true \
-  --set ingress.hosts[0].host=insula-mcp.example.com \
+  --set ingress.hosts[0].host=cortexdx.example.com \
   --set ingress.hosts[0].paths[0].path=/ \
   --set ingress.hosts[0].paths[0].pathType=Prefix \
-  --set ingress.tls[0].secretName=insula-mcp-tls \
-  --set ingress.tls[0].hosts[0]=insula-mcp.example.com
+  --set ingress.tls[0].secretName=cortexdx-tls \
+  --set ingress.tls[0].hosts[0]=cortexdx.example.com
 ```
 
 ### Custom Resource Limits
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set resources.professional.requests.memory=1Gi \
   --set resources.professional.requests.cpu=1000m \
   --set resources.professional.limits.memory=2Gi \
@@ -123,7 +123,7 @@ helm install insula-mcp ./insula-mcp \
 To enable Prometheus monitoring:
 
 ```bash
-helm install insula-mcp ./insula-mcp \
+helm install cortexdx ./cortexdx \
   --set monitoring.enabled=true \
   --set monitoring.serviceMonitor.enabled=true
 ```
@@ -133,19 +133,19 @@ helm install insula-mcp ./insula-mcp \
 ### Check Pod Status
 
 ```bash
-kubectl get pods -l app.kubernetes.io/name=insula-mcp
+kubectl get pods -l app.kubernetes.io/name=cortexdx
 ```
 
 ### View Logs
 
 ```bash
-kubectl logs -l app.kubernetes.io/name=insula-mcp -f
+kubectl logs -l app.kubernetes.io/name=cortexdx -f
 ```
 
 ### Check Health
 
 ```bash
-kubectl port-forward svc/insula-mcp 3000:80
+kubectl port-forward svc/cortexdx 3000:80
 curl http://localhost:3000/health
 ```
 
@@ -153,5 +153,5 @@ curl http://localhost:3000/health
 
 For issues and questions, please visit:
 
-- GitHub: https://github.com/brainwav/insula-mcp
-- Documentation: https://brainwav.dev/docs/insula-mcp
+- GitHub: https://github.com/brainwav/cortexdx
+- Documentation: https://brainwav.dev/docs/cortexdx

@@ -1,6 +1,6 @@
-# Insula MCP User Guide
+# CortexDx User Guide
 
-**Complete guide to using Insula MCP for Model Context Protocol diagnostics, development, and debugging.**
+**Complete guide to using CortexDx for Model Context Protocol diagnostics, development, and debugging.**
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@
 
 ## Overview
 
-Insula MCP is a comprehensive diagnostic meta-inspector for Model Context Protocol (MCP) servers and clients. It provides:
+CortexDx is a comprehensive diagnostic meta-inspector for Model Context Protocol (MCP) servers and clients. It provides:
 
 - **Stateless Analysis**: Read-only diagnostics that never modify target servers
 - **Evidence-Based Findings**: Every issue includes concrete evidence and remediation steps
@@ -49,11 +49,11 @@ Insula MCP is a comprehensive diagnostic meta-inspector for Model Context Protoc
 ```bash
 # Using Homebrew (recommended)
 brew install node@20
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 
 # Verify installation
-insula-mcp --version
-insula-mcp doctor
+cortexdx --version
+cortexdx doctor
 ```
 
 #### Linux (Ubuntu/Debian)
@@ -63,11 +63,11 @@ insula-mcp doctor
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# Install Insula MCP
-npm install -g @brainwav/insula-mcp
+# Install CortexDx
+npm install -g @brainwav/cortexdx
 
 # Verify installation
-insula-mcp --version
+cortexdx --version
 ```
 
 #### Windows (WSL)
@@ -79,8 +79,8 @@ source ~/.bashrc
 nvm install 20
 nvm use 20
 
-# Install Insula MCP
-npm install -g @brainwav/insula-mcp
+# Install CortexDx
+npm install -g @brainwav/cortexdx
 ```
 
 ### Alternative Installation Methods
@@ -89,18 +89,18 @@ npm install -g @brainwav/insula-mcp
 
 ```bash
 # Run directly without installation
-npx @brainwav/insula-mcp diagnose https://your-mcp-server.com
+npx @brainwav/cortexdx diagnose https://your-mcp-server.com
 
 # Interactive mode
-npx @brainwav/insula-mcp interactive
+npx @brainwav/cortexdx interactive
 ```
 
 #### Development Installation
 
 ```bash
 # Clone repository for development/contribution
-git clone https://github.com/jscraik/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/jscraik/cortexdx.git
+cd cortexdx
 
 # Install mise for toolchain management
 curl https://mise.run | sh
@@ -120,11 +120,11 @@ After installation, verify everything works correctly:
 
 ```bash
 # Check version and basic functionality
-insula-mcp --version
-insula-mcp doctor
+cortexdx --version
+cortexdx doctor
 
 # Run a quick diagnostic test
-insula-mcp diagnose https://httpbin.org --suites discovery
+cortexdx diagnose https://httpbin.org --suites discovery
 ```
 
 Expected output:
@@ -144,10 +144,10 @@ Expected output:
 
 ```bash
 # Simple diagnostic of an MCP server
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # Expected output:
-# [brAInwav] Insula MCP Diagnostic Report
+# [brAInwav] CortexDx Diagnostic Report
 # 🔍 Analyzing: https://mcp.example.com
 # ⚡ Duration: 1.8s
 # 
@@ -160,7 +160,7 @@ insula-mcp diagnose https://mcp.example.com
 
 ```bash
 # Full diagnostic suite with detailed reporting
-insula-mcp diagnose https://mcp.example.com --full --out reports
+cortexdx diagnose https://mcp.example.com --full --out reports
 
 # This generates:
 # - reports/insula-report.md (human-readable)
@@ -173,7 +173,7 @@ insula-mcp diagnose https://mcp.example.com --full --out reports
 
 ```bash
 # Start conversational assistance
-insula-mcp interactive
+cortexdx interactive
 
 # Example interaction:
 # > How do I create an MCP server for file operations?
@@ -183,20 +183,20 @@ insula-mcp interactive
 
 ### Authentication
 
-Insula MCP supports multiple authentication methods:
+CortexDx supports multiple authentication methods:
 
 ```bash
 # Bearer token authentication
-insula-mcp diagnose https://api.example.com --auth bearer:your-jwt-token
+cortexdx diagnose https://api.example.com --auth bearer:your-jwt-token
 
 # Basic authentication
-insula-mcp diagnose https://api.example.com --auth basic:username:password
+cortexdx diagnose https://api.example.com --auth basic:username:password
 
 # Custom header authentication
-insula-mcp diagnose https://api.example.com --auth header:X-API-Key:your-api-key
+cortexdx diagnose https://api.example.com --auth header:X-API-Key:your-api-key
 
 # Multiple headers (JSON format)
-insula-mcp diagnose https://api.example.com --auth 'header:{"Authorization":"Bearer token","X-Client-ID":"client123"}'
+cortexdx diagnose https://api.example.com --auth 'header:{"Authorization":"Bearer token","X-Client-ID":"client123"}'
 ```
 
 ### Diagnostic Suites
@@ -205,16 +205,16 @@ Target specific areas of analysis:
 
 ```bash
 # Protocol compliance only
-insula-mcp diagnose https://mcp.example.com --suites protocol,jsonrpc
+cortexdx diagnose https://mcp.example.com --suites protocol,jsonrpc
 
 # Security assessment
-insula-mcp diagnose https://mcp.example.com --suites cors,auth,ratelimit,threat-model
+cortexdx diagnose https://mcp.example.com --suites cors,auth,ratelimit,threat-model
 
 # Performance analysis
-insula-mcp diagnose https://mcp.example.com --suites streaming,performance-analysis
+cortexdx diagnose https://mcp.example.com --suites streaming,performance-analysis
 
 # All available suites
-insula-mcp diagnose https://mcp.example.com --full
+cortexdx diagnose https://mcp.example.com --full
 ```
 
 ### Output Control
@@ -223,16 +223,16 @@ Customize output format and verbosity:
 
 ```bash
 # Screen-reader friendly output
-insula-mcp diagnose https://mcp.example.com --a11y
+cortexdx diagnose https://mcp.example.com --a11y
 
 # No colors (for CI/CD)
-insula-mcp diagnose https://mcp.example.com --no-color
+cortexdx diagnose https://mcp.example.com --no-color
 
 # Deterministic output (stable timestamps)
-insula-mcp diagnose https://mcp.example.com --deterministic
+cortexdx diagnose https://mcp.example.com --deterministic
 
 # Custom output directory
-insula-mcp diagnose https://mcp.example.com --out /path/to/reports
+cortexdx diagnose https://mcp.example.com --out /path/to/reports
 ```
 
 ## Command Reference
@@ -246,7 +246,7 @@ Run comprehensive diagnostic analysis on an MCP server.
 **Syntax:**
 
 ```bash
-insula-mcp diagnose <endpoint> [options]
+cortexdx diagnose <endpoint> [options]
 ```
 
 **Arguments:**
@@ -275,16 +275,16 @@ insula-mcp diagnose <endpoint> [options]
 
 ```bash
 # Basic scan
-insula-mcp diagnose https://api.example.com
+cortexdx diagnose https://api.example.com
 
 # Security-focused analysis
-insula-mcp diagnose https://api.example.com --suites cors,auth,threat-model
+cortexdx diagnose https://api.example.com --suites cors,auth,threat-model
 
 # CI/CD integration
-insula-mcp diagnose $MCP_ENDPOINT --deterministic --no-color --out reports
+cortexdx diagnose $MCP_ENDPOINT --deterministic --no-color --out reports
 
 # Debug with network capture
-insula-mcp diagnose https://api.example.com --har --budget-time 15000
+cortexdx diagnose https://api.example.com --har --budget-time 15000
 ```
 
 #### `interactive` / `i`
@@ -294,7 +294,7 @@ Start interactive mode for conversational assistance.
 **Syntax:**
 
 ```bash
-insula-mcp interactive [options]
+cortexdx interactive [options]
 ```
 
 **Options:**
@@ -306,13 +306,13 @@ insula-mcp interactive [options]
 
 ```bash
 # Start interactive session
-insula-mcp interactive
+cortexdx interactive
 
 # Beginner-friendly mode
-insula-mcp interactive --expertise beginner
+cortexdx interactive --expertise beginner
 
 # Expert mode with advanced features
-insula-mcp interactive --expertise expert
+cortexdx interactive --expertise expert
 ```
 
 #### `generate`
@@ -326,7 +326,7 @@ Generate MCP server template.
 **Syntax:**
 
 ```bash
-insula-mcp generate template <name> [options]
+cortexdx generate template <name> [options]
 ```
 
 **Options:**
@@ -342,13 +342,13 @@ insula-mcp generate template <name> [options]
 
 ```bash
 # Basic TypeScript server
-insula-mcp generate template my-server
+cortexdx generate template my-server
 
 # Python server with all features
-insula-mcp generate template py-server --lang python --features tools,resources,prompts,auth
+cortexdx generate template py-server --lang python --features tools,resources,prompts,auth
 
 # Minimal JavaScript server
-insula-mcp generate template simple-server --lang javascript --no-tests --no-docs
+cortexdx generate template simple-server --lang javascript --no-tests --no-docs
 ```
 
 ##### `generate connector <name> <spec>`
@@ -358,7 +358,7 @@ Generate MCP connector from API specification.
 **Syntax:**
 
 ```bash
-insula-mcp generate connector <name> <spec> [options]
+cortexdx generate connector <name> <spec> [options]
 ```
 
 **Arguments:**
@@ -377,10 +377,10 @@ insula-mcp generate connector <name> <spec> [options]
 
 ```bash
 # GitHub API connector
-insula-mcp generate connector github-mcp https://api.github.com/openapi.json --auth bearer
+cortexdx generate connector github-mcp https://api.github.com/openapi.json --auth bearer
 
 # Local API specification
-insula-mcp generate connector my-api ./api-spec.yaml --auth api-key --lang python
+cortexdx generate connector my-api ./api-spec.yaml --auth api-key --lang python
 ```
 
 ##### `generate docs <target> <source>`
@@ -390,7 +390,7 @@ Generate documentation for MCP implementation.
 **Syntax:**
 
 ```bash
-insula-mcp generate docs <target> <source> [options]
+cortexdx generate docs <target> <source> [options]
 ```
 
 **Arguments:**
@@ -408,10 +408,10 @@ insula-mcp generate docs <target> <source> [options]
 
 ```bash
 # Server documentation
-insula-mcp generate docs server ./src --format markdown --out README.md
+cortexdx generate docs server ./src --format markdown --out README.md
 
 # API documentation from live server
-insula-mcp generate docs api https://mcp.example.com --format html
+cortexdx generate docs api https://mcp.example.com --format html
 ```
 
 #### `debug <problem>`
@@ -421,7 +421,7 @@ Start interactive debugging session.
 **Syntax:**
 
 ```bash
-insula-mcp debug <problem> [options]
+cortexdx debug <problem> [options]
 ```
 
 **Arguments:**
@@ -439,13 +439,13 @@ insula-mcp debug <problem> [options]
 
 ```bash
 # Debug connection issue
-insula-mcp debug "WebSocket connection keeps dropping"
+cortexdx debug "WebSocket connection keeps dropping"
 
 # Debug with log files
-insula-mcp debug "Server startup fails" --errors server.log --configs config.json
+cortexdx debug "Server startup fails" --errors server.log --configs config.json
 
 # Debug with code context
-insula-mcp debug "Tool registration error" --code src/tools.ts --expertise expert
+cortexdx debug "Tool registration error" --code src/tools.ts --expertise expert
 ```
 
 #### `explain`
@@ -459,7 +459,7 @@ Interpret and explain error messages.
 **Syntax:**
 
 ```bash
-insula-mcp explain error <error> [options]
+cortexdx explain error <error> [options]
 ```
 
 **Options:**
@@ -472,10 +472,10 @@ insula-mcp explain error <error> [options]
 
 ```bash
 # Explain error message
-insula-mcp explain error "JSON-RPC parse error: unexpected token"
+cortexdx explain error "JSON-RPC parse error: unexpected token"
 
 # Explain with context
-insula-mcp explain error "Connection refused" --context server-config.json --technical
+cortexdx explain error "Connection refused" --context server-config.json --technical
 ```
 
 ##### `explain concept <concept>`
@@ -485,7 +485,7 @@ Explain MCP concepts and patterns.
 **Syntax:**
 
 ```bash
-insula-mcp explain concept <concept> [options]
+cortexdx explain concept <concept> [options]
 ```
 
 **Options:**
@@ -498,10 +498,10 @@ insula-mcp explain concept <concept> [options]
 
 ```bash
 # Explain MCP tools
-insula-mcp explain concept tools --expertise beginner
+cortexdx explain concept tools --expertise beginner
 
 # Explain resources without examples
-insula-mcp explain concept resources --no-examples --expertise expert
+cortexdx explain concept resources --no-examples --expertise expert
 ```
 
 #### `best-practices [endpoint]`
@@ -511,7 +511,7 @@ Analyze implementation and provide recommendations.
 **Syntax:**
 
 ```bash
-insula-mcp best-practices [endpoint] [options]
+cortexdx best-practices [endpoint] [options]
 ```
 
 **Options:**
@@ -525,13 +525,13 @@ insula-mcp best-practices [endpoint] [options]
 
 ```bash
 # Analyze live server
-insula-mcp best-practices https://mcp.example.com
+cortexdx best-practices https://mcp.example.com
 
 # Analyze codebase
-insula-mcp best-practices --code ./src --focus security,performance
+cortexdx best-practices --code ./src --focus security,performance
 
 # Use organization standards
-insula-mcp best-practices --code ./src --standards .insula-standards.json
+cortexdx best-practices --code ./src --standards .insula-standards.json
 ```
 
 #### `tutorial <topic>`
@@ -541,7 +541,7 @@ Create interactive tutorial for MCP development.
 **Syntax:**
 
 ```bash
-insula-mcp tutorial <topic> [options]
+cortexdx tutorial <topic> [options]
 ```
 
 **Options:**
@@ -554,10 +554,10 @@ insula-mcp tutorial <topic> [options]
 
 ```bash
 # Basic MCP tutorial
-insula-mcp tutorial "creating first MCP server"
+cortexdx tutorial "creating first MCP server"
 
 # Advanced Python tutorial
-insula-mcp tutorial "advanced MCP patterns" --lang python --expertise expert
+cortexdx tutorial "advanced MCP patterns" --lang python --expertise expert
 ```
 
 #### `doctor`
@@ -567,7 +567,7 @@ Run environment diagnostics.
 **Syntax:**
 
 ```bash
-insula-mcp doctor
+cortexdx doctor
 ```
 
 **Output:**
@@ -589,7 +589,7 @@ Compare diagnostic results between runs.
 **Syntax:**
 
 ```bash
-insula-mcp compare <old> <new>
+cortexdx compare <old> <new>
 ```
 
 **Arguments:**
@@ -601,17 +601,17 @@ insula-mcp compare <old> <new>
 
 ```bash
 # Compare before/after changes
-insula-mcp diagnose https://api.example.com --out reports-before
+cortexdx diagnose https://api.example.com --out reports-before
 # ... make changes ...
-insula-mcp diagnose https://api.example.com --out reports-after
-insula-mcp compare reports-before/insula-findings.json reports-after/insula-findings.json
+cortexdx diagnose https://api.example.com --out reports-after
+cortexdx compare reports-before/insula-findings.json reports-after/insula-findings.json
 ```
 
 ## Configuration
 
 ### Configuration File
 
-Create `.insula-mcp.json` in your project root for persistent settings:
+Create `.cortexdx.json` in your project root for persistent settings:
 
 ```json
 {
@@ -631,7 +631,7 @@ Create `.insula-mcp.json` in your project root for persistent settings:
   "authentication": {
     "default": "bearer",
     "headers": {
-      "User-Agent": "Insula-MCP/0.1.0",
+      "User-Agent": "CortexDx-MCP/0.1.0",
       "Accept": "application/json"
     }
   },
@@ -662,17 +662,17 @@ Create `.insula-mcp.json` in your project root for persistent settings:
 
 ### Environment Variables
 
-Configure Insula MCP using environment variables:
+Configure CortexDx using environment variables:
 
 ```bash
 # Core settings
-export INSULA_CONFIG_FILE=".insula-mcp.json"
+export INSULA_CONFIG_FILE=".cortexdx.json"
 export INSULA_OUTPUT_DIR="./reports"
 export INSULA_LOG_LEVEL="info"
 
 # Authentication
 export INSULA_DEFAULT_AUTH="bearer:${API_TOKEN}"
-export INSULA_USER_AGENT="MyOrg-Insula/1.0"
+export INSULA_USER_AGENT="MyOrg-CortexDx/1.0"
 
 # Plugin budgets
 export INSULA_BUDGET_TIME="15000"
@@ -680,7 +680,7 @@ export INSULA_BUDGET_MEM="256"
 
 # OpenTelemetry
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318"
-export OTEL_SERVICE_NAME="insula-mcp"
+export OTEL_SERVICE_NAME="cortexdx"
 export OTEL_RESOURCE_ATTRIBUTES="service.version=0.1.0,environment=production"
 
 # Debug logging
@@ -851,7 +851,7 @@ export DEBUG_COLORS="true"
         "type": "header",
         "headers": {
           "X-API-Key": "${DEV_API_KEY}",
-          "X-Client-ID": "insula-mcp-dev"
+          "X-Client-ID": "cortexdx-dev"
         }
       }
     },
@@ -903,12 +903,12 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Insula MCP
-        run: npm install -g @brainwav/insula-mcp
+      - name: Install CortexDx
+        run: npm install -g @brainwav/cortexdx
 
       - name: Run MCP Diagnostics
         run: |
-          insula-mcp diagnose ${{ secrets.MCP_ENDPOINT }} \
+          cortexdx diagnose ${{ secrets.MCP_ENDPOINT }} \
             --auth bearer:${{ secrets.MCP_TOKEN }} \
             --full \
             --deterministic \
@@ -992,10 +992,10 @@ mcp-diagnostics:
   stage: quality-gate
   image: node:20-alpine
   before_script:
-    - npm install -g @brainwav/insula-mcp
+    - npm install -g @brainwav/cortexdx
   script:
     - |
-      insula-mcp diagnose $MCP_ENDPOINT \
+      cortexdx diagnose $MCP_ENDPOINT \
         --auth bearer:$MCP_TOKEN \
         --full \
         --deterministic \
@@ -1033,14 +1033,14 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh 'npm install -g @brainwav/insula-mcp'
+                sh 'npm install -g @brainwav/cortexdx'
             }
         }
         
         stage('MCP Diagnostics') {
             steps {
                 sh '''
-                    insula-mcp diagnose $MCP_ENDPOINT \
+                    cortexdx diagnose $MCP_ENDPOINT \
                         --auth bearer:$MCP_TOKEN \
                         --full \
                         --deterministic \
@@ -1091,20 +1091,20 @@ pipeline {
 ```dockerfile
 FROM node:20-alpine
 
-# Install Insula MCP
-RUN npm install -g @brainwav/insula-mcp
+# Install CortexDx
+RUN npm install -g @brainwav/cortexdx
 
 # Create app directory
 WORKDIR /app
 
 # Copy configuration
-COPY .insula-mcp.json ./
+COPY .cortexdx.json ./
 
 # Create reports directory
 RUN mkdir -p reports
 
 # Default command
-CMD ["insula-mcp", "diagnose", "$MCP_ENDPOINT", "--config", ".insula-mcp.json", "--out", "reports"]
+CMD ["cortexdx", "diagnose", "$MCP_ENDPOINT", "--config", ".cortexdx.json", "--out", "reports"]
 ```
 
 #### Docker Compose for Testing
@@ -1132,12 +1132,12 @@ services:
         condition: service_healthy
     volumes:
       - ./reports:/app/reports
-      - ./.insula-mcp.json:/app/.insula-mcp.json
+      - ./.cortexdx.json:/app/.cortexdx.json
     working_dir: /app
     command: |
       sh -c "
-        npm install -g @brainwav/insula-mcp &&
-        insula-mcp diagnose http://mcp-server:3000 --config .insula-mcp.json --out reports
+        npm install -g @brainwav/cortexdx &&
+        cortexdx diagnose http://mcp-server:3000 --config .cortexdx.json --out reports
       "
 ```
 
@@ -1151,7 +1151,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'insula-mcp'
+  - job_name: 'cortexdx'
     static_configs:
       - targets: ['localhost:9090']
     metrics_path: '/metrics'
@@ -1160,7 +1160,7 @@ scrape_configs:
 
 ```bash
 # Run with OpenTelemetry metrics export
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --otel-exporter http://prometheus:9090/api/v1/otlp \
   --deterministic
 ```
@@ -1215,7 +1215,7 @@ insula-mcp diagnose https://mcp.example.com \
     {
       "label": "MCP Diagnostics",
       "type": "shell",
-      "command": "insula-mcp",
+      "command": "cortexdx",
       "args": [
         "diagnose",
         "${input:mcpEndpoint}",
@@ -1241,7 +1241,7 @@ insula-mcp diagnose https://mcp.example.com \
     {
       "label": "MCP Interactive Debug",
       "type": "shell",
-      "command": "insula-mcp",
+      "command": "cortexdx",
       "args": ["interactive"],
       "group": "test",
       "presentation": {
@@ -1270,7 +1270,7 @@ insula-mcp diagnose https://mcp.example.com \
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug MCP Server with Insula",
+      "name": "Debug MCP Server with CortexDx",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/src/server.ts",
@@ -1280,7 +1280,7 @@ insula-mcp diagnose https://mcp.example.com \
       },
       "postDebugTask": {
         "type": "shell",
-        "command": "insula-mcp",
+        "command": "cortexdx",
         "args": [
           "diagnose",
           "http://localhost:3000",
@@ -1307,7 +1307,7 @@ ENDPOINT="$1"
 WEBHOOK_URL="$2"
 
 # Run diagnostics
-insula-mcp diagnose "$ENDPOINT" --out reports --deterministic
+cortexdx diagnose "$ENDPOINT" --out reports --deterministic
 
 # Parse results
 FINDINGS=$(cat reports/insula-findings.json)
@@ -1391,7 +1391,7 @@ sendTeamsNotification(process.argv[2], process.argv[3]);
 
 ## Output Formats
 
-Insula MCP generates multiple output formats to serve different use cases and audiences.
+CortexDx generates multiple output formats to serve different use cases and audiences.
 
 ### 1. Markdown Report (`insula-report.md`)
 
@@ -1400,7 +1400,7 @@ Human-readable diagnostic report optimized for developers and stakeholders.
 **Structure:**
 
 ```markdown
-# Insula MCP Diagnostic Report (brAInwav)
+# CortexDx Diagnostic Report (brAInwav)
 
 **Endpoint:** https://mcp.example.com  
 **Analyzed:** 2025-11-06T21:50:59.157Z  
@@ -1476,7 +1476,7 @@ Human-readable diagnostic report optimized for developers and stakeholders.
 - **Plugin Execution Time:** 1.8s
 
 ---
-*Generated by Insula MCP v0.1.0 • brAInwav • Apache 2.0*
+*Generated by CortexDx v0.1.0 • brAInwav • Apache 2.0*
 ```
 
 ### 2. JSON Findings (`insula-findings.json`)
@@ -1540,7 +1540,7 @@ Machine-readable structured data for automation and integration.
   },
   "metadata": {
     "version": "0.1.0",
-    "generator": "insula-mcp",
+    "generator": "cortexdx",
     "configuration": {
       "suites": ["protocol", "security", "streaming"],
       "budgets": {
@@ -1561,7 +1561,7 @@ Test-driven development plan with prioritized remediation steps.
 ```markdown
 # ArcTDD Implementation Plan
 
-*Generated from Insula MCP diagnostic findings*  
+*Generated from CortexDx diagnostic findings*  
 *Endpoint:* https://mcp.example.com  
 *Priority:* High → Low  
 
@@ -1723,10 +1723,10 @@ app.use(cors({
 
 ```bash
 # Re-run diagnostics after implementation
-insula-mcp diagnose https://mcp.example.com --full --out validation-reports
+cortexdx diagnose https://mcp.example.com --full --out validation-reports
 
 # Compare before/after
-insula-mcp compare initial-findings.json validation-findings.json
+cortexdx compare initial-findings.json validation-findings.json
 ```
 
 ---
@@ -1795,7 +1795,7 @@ Test results format for CI/CD integration.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Insula MCP Diagnostics" tests="15" failures="2" errors="0" time="2.3">
+<testsuites name="CortexDx Diagnostics" tests="15" failures="2" errors="0" time="2.3">
   <testsuite name="Protocol Compliance" tests="8" failures="0" errors="0" time="0.8">
     <testcase name="JSON-RPC 2.0 compliance" classname="protocol" time="0.1"/>
     <testcase name="Tool enumeration" classname="protocol" time="0.2"/>
@@ -1834,9 +1834,9 @@ Static Analysis Results Interchange Format for security tools.
     {
       "tool": {
         "driver": {
-          "name": "Insula MCP",
+          "name": "CortexDx",
           "version": "0.1.0",
-          "informationUri": "https://github.com/brainwav/insula-mcp"
+          "informationUri": "https://github.com/brainwav/cortexdx"
         }
       },
       "results": [
@@ -1877,16 +1877,16 @@ Control which formats are generated:
 
 ```bash
 # Generate all formats (default)
-insula-mcp diagnose https://mcp.example.com --out reports
+cortexdx diagnose https://mcp.example.com --out reports
 
 # Specific formats only
-insula-mcp diagnose https://mcp.example.com --out reports --formats json,arctdd
+cortexdx diagnose https://mcp.example.com --out reports --formats json,arctdd
 
 # CI-optimized (minimal output)
-insula-mcp diagnose https://mcp.example.com --out reports --formats json,junit
+cortexdx diagnose https://mcp.example.com --out reports --formats json,junit
 
 # Security-focused
-insula-mcp diagnose https://mcp.example.com --out reports --formats json,sarif,arctdd
+cortexdx diagnose https://mcp.example.com --out reports --formats json,sarif,arctdd
 ```
 
 ### Custom Output Templates
@@ -1936,10 +1936,10 @@ Example Handlebars template:
 
 ```bash
 # Start with interactive guidance
-insula-mcp interactive --expertise beginner
+cortexdx interactive --expertise beginner
 
 # Generate server template
-insula-mcp generate template my-mcp-server \
+cortexdx generate template my-mcp-server \
   --lang typescript \
   --features tools,resources,authentication \
   --transport http,sse
@@ -1947,50 +1947,50 @@ insula-mcp generate template my-mcp-server \
 # Develop your server...
 
 # Test during development
-insula-mcp diagnose http://localhost:3000 \
+cortexdx diagnose http://localhost:3000 \
   --suites protocol,streaming \
   --out dev-reports
 
 # Full validation before deployment
-insula-mcp diagnose http://localhost:3000 --full
+cortexdx diagnose http://localhost:3000 --full
 ```
 
 #### 2. Debugging Connection Issues
 
 ```bash
 # Start with basic connectivity
-insula-mcp doctor
+cortexdx doctor
 
 # Run targeted diagnostics
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites streaming,protocol \
   --har \
   --budget-time 15000
 
 # Interactive debugging session
-insula-mcp debug "WebSocket connection keeps dropping" \
+cortexdx debug "WebSocket connection keeps dropping" \
   --errors server.log \
   --configs mcp-config.json
 
 # Compare before/after fixes
-insula-mcp compare before-fix.json after-fix.json
+cortexdx compare before-fix.json after-fix.json
 ```
 
 #### 3. Security Assessment
 
 ```bash
 # Comprehensive security scan
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites cors,auth,ratelimit,threat-model,permissioning \
   --out security-reports
 
 # Generate security-focused documentation
-insula-mcp generate docs security https://mcp.example.com \
+cortexdx generate docs security https://mcp.example.com \
   --format markdown \
   --out SECURITY.md
 
 # Best practices analysis
-insula-mcp best-practices https://mcp.example.com \
+cortexdx best-practices https://mcp.example.com \
   --focus security,maintainability
 ```
 
@@ -1998,17 +1998,17 @@ insula-mcp best-practices https://mcp.example.com \
 
 ```bash
 # Performance profiling
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites performance-analysis,streaming \
   --budget-time 30000
 
 # Load testing simulation
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --simulate-external \
   --suites streaming,protocol
 
 # Monitor with OpenTelemetry
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --otel-exporter http://jaeger:14268 \
   --full
 ```
@@ -2019,19 +2019,19 @@ insula-mcp diagnose https://mcp.example.com \
 
 ```bash
 # Staging environment validation
-insula-mcp diagnose https://staging.mcp.example.com \
+cortexdx diagnose https://staging.mcp.example.com \
   --auth bearer:$STAGING_TOKEN \
   --full \
   --deterministic \
   --out staging-reports
 
 # Production readiness check
-insula-mcp best-practices https://staging.mcp.example.com \
+cortexdx best-practices https://staging.mcp.example.com \
   --focus security,performance,maintainability \
   --standards production-standards.json
 
 # Generate deployment documentation
-insula-mcp generate docs deployment ./src \
+cortexdx generate docs deployment ./src \
   --format markdown \
   --out DEPLOYMENT.md
 ```
@@ -2040,13 +2040,13 @@ insula-mcp generate docs deployment ./src \
 
 ```bash
 # Scheduled health checks
-*/15 * * * * insula-mcp diagnose https://mcp.example.com \
+*/15 * * * * cortexdx diagnose https://mcp.example.com \
   --suites protocol,streaming \
   --deterministic \
   --out /var/log/mcp-health
 
 # Weekly comprehensive scan
-0 2 * * 0 insula-mcp diagnose https://mcp.example.com \
+0 2 * * 0 cortexdx diagnose https://mcp.example.com \
   --full \
   --out /var/log/mcp-weekly \
   && ./notify-team.sh
@@ -2056,18 +2056,18 @@ insula-mcp generate docs deployment ./src \
 
 ```bash
 # Quick triage
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites protocol,streaming \
   --budget-time 3000
 
 # Detailed investigation
-insula-mcp debug "Server returning 502 errors" \
+cortexdx debug "Server returning 502 errors" \
   --errors /var/log/mcp-server.log \
   --configs /etc/mcp/config.json \
   --expertise expert
 
 # Generate incident report
-insula-mcp generate docs incident https://mcp.example.com \
+cortexdx generate docs incident https://mcp.example.com \
   --format markdown \
   --out incident-$(date +%Y%m%d).md
 ```
@@ -2086,7 +2086,7 @@ if [ -f "mcp-server.js" ]; then
   SERVER_PID=$!
   sleep 5
   
-  insula-mcp diagnose http://localhost:3000 \
+  cortexdx diagnose http://localhost:3000 \
     --suites protocol,security \
     --out .git-reports \
     --deterministic
@@ -2105,16 +2105,16 @@ fi
 
 ```bash
 # Generate team documentation
-insula-mcp generate docs api ./src \
+cortexdx generate docs api ./src \
   --format markdown \
   --out docs/API.md
 
-insula-mcp generate docs deployment ./src \
+cortexdx generate docs deployment ./src \
   --format markdown \
   --out docs/DEPLOYMENT.md
 
 # Create interactive tutorial
-insula-mcp tutorial "team MCP patterns" \
+cortexdx tutorial "team MCP patterns" \
   --lang typescript \
   --expertise intermediate \
   --out docs/TUTORIAL.md
@@ -2124,12 +2124,12 @@ insula-mcp tutorial "team MCP patterns" \
 
 ```bash
 # Validate against team standards
-insula-mcp best-practices ./src \
+cortexdx best-practices ./src \
   --standards .team-standards.json \
   --focus protocol,security,documentation
 
 # Generate compliance report
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --full \
   --out compliance-reports \
   --formats json,sarif,junit
@@ -2152,7 +2152,7 @@ cat > expected-findings.json << EOF
 EOF
 
 # Develop against expectations
-insula-mcp diagnose http://localhost:3000 \
+cortexdx diagnose http://localhost:3000 \
   --expect expected-findings.json
 ```
 
@@ -2160,28 +2160,28 @@ insula-mcp diagnose http://localhost:3000 \
 
 ```bash
 # Start with basic protocol compliance
-insula-mcp diagnose http://localhost:3000 --suites protocol
+cortexdx diagnose http://localhost:3000 --suites protocol
 
 # Add streaming when ready
-insula-mcp diagnose http://localhost:3000 --suites protocol,streaming
+cortexdx diagnose http://localhost:3000 --suites protocol,streaming
 
 # Full validation before merge
-insula-mcp diagnose http://localhost:3000 --full
+cortexdx diagnose http://localhost:3000 --full
 ```
 
 #### 3. Evidence-Based Development
 
 ```bash
 # Capture evidence during development
-insula-mcp diagnose http://localhost:3000 \
+cortexdx diagnose http://localhost:3000 \
   --har \
   --otel-exporter http://localhost:4318 \
   --out evidence
 
 # Use evidence for debugging
-insula-mcp debug "SSE not working" \
+cortexdx debug "SSE not working" \
   --errors evidence/insula.har \
-  --configs .insula-mcp.json
+  --configs .cortexdx.json
 ```
 
 ### Production Best Practices
@@ -2190,17 +2190,17 @@ insula-mcp debug "SSE not working" \
 
 ```bash
 # Layer 1: Basic health (every 1 minute)
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites protocol \
   --budget-time 2000
 
 # Layer 2: Comprehensive (every 15 minutes)
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites protocol,streaming,security \
   --budget-time 5000
 
 # Layer 3: Deep analysis (daily)
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --full \
   --budget-time 30000
 ```
@@ -2223,13 +2223,13 @@ fi
 
 ```bash
 # Monitor resource usage
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites performance-analysis \
   --budget-time 60000 \
   --otel-exporter http://prometheus:9090
 
 # Trend analysis
-insula-mcp compare \
+cortexdx compare \
   reports-$(date -d '1 week ago' +%Y%m%d)/findings.json \
   reports-$(date +%Y%m%d)/findings.json
 ```
@@ -2240,16 +2240,16 @@ insula-mcp compare \
 
 ```bash
 # Network security
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites cors,ratelimit \
   --simulate-external
 
 # Application security
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites auth,permissioning,threat-model
 
 # Infrastructure security
-insula-mcp best-practices https://mcp.example.com \
+cortexdx best-practices https://mcp.example.com \
   --focus security \
   --standards security-baseline.json
 ```
@@ -2258,13 +2258,13 @@ insula-mcp best-practices https://mcp.example.com \
 
 ```bash
 # SOC 2 compliance
-insula-mcp diagnose https://mcp.example.com \
+cortexdx diagnose https://mcp.example.com \
   --suites security,governance \
   --standards soc2-requirements.json \
   --formats sarif,json
 
 # GDPR compliance
-insula-mcp best-practices https://mcp.example.com \
+cortexdx best-practices https://mcp.example.com \
   --focus security,documentation \
   --standards gdpr-requirements.json
 ```
@@ -2273,7 +2273,7 @@ insula-mcp best-practices https://mcp.example.com \
 
 ```bash
 # Security incident playbook
-insula-mcp debug "Potential security breach" \
+cortexdx debug "Potential security breach" \
   --errors /var/log/security.log \
   --configs /etc/mcp/security.json \
   --expertise expert \
@@ -2284,13 +2284,13 @@ insula-mcp debug "Potential security breach" \
 
 ### General Questions
 
-**Q: What is the difference between Insula MCP and other API testing tools?**
+**Q: What is the difference between CortexDx and other API testing tools?**
 
-A: Insula MCP is specifically designed for the Model Context Protocol (MCP). Unlike generic API testing tools, it understands MCP semantics, validates protocol compliance, and provides MCP-specific remediation guidance. It also includes AI-powered debugging and code generation features.
+A: CortexDx is specifically designed for the Model Context Protocol (MCP). Unlike generic API testing tools, it understands MCP semantics, validates protocol compliance, and provides MCP-specific remediation guidance. It also includes AI-powered debugging and code generation features.
 
-**Q: Can Insula MCP modify my MCP server?**
+**Q: Can CortexDx modify my MCP server?**
 
-A: No. Insula MCP is strictly read-only and stateless. It never modifies target servers, writes data, or performs destructive operations. All analysis is performed through safe, non-mutating requests.
+A: No. CortexDx is strictly read-only and stateless. It never modifies target servers, writes data, or performs destructive operations. All analysis is performed through safe, non-mutating requests.
 
 **Q: How accurate are the diagnostic findings?**
 
@@ -2302,7 +2302,7 @@ A: Findings include confidence levels (high, medium, low) based on evidence qual
 
 A: Node.js 20.0.0 or higher is required. This ensures compatibility with modern JavaScript features and security updates.
 
-**Q: Can I run Insula MCP in Docker?**
+**Q: Can I run CortexDx in Docker?**
 
 A: Yes. Use the official Node.js 20 Alpine image and install globally with npm. See the Docker integration section for examples.
 
@@ -2331,7 +2331,7 @@ A: Yes. Place custom plugins in the directory specified by the `plugins.custom` 
 
 ### CI/CD Integration
 
-**Q: What exit codes does Insula MCP return?**
+**Q: What exit codes does CortexDx return?**
 
 A:
 
@@ -2355,11 +2355,11 @@ A: Increase the time budget with `--budget-time 15000` (15 seconds) or use light
 
 **Q: I'm getting "connection refused" errors.**
 
-A: Verify the endpoint URL, check network connectivity with `insula-mcp doctor`, and ensure the MCP server is running and accessible.
+A: Verify the endpoint URL, check network connectivity with `cortexdx doctor`, and ensure the MCP server is running and accessible.
 
 **Q: How do I debug plugin failures?**
 
-A: Enable debug logging with `DEBUG=insula:plugin:* insula-mcp diagnose <endpoint>` to see detailed plugin execution information.
+A: Enable debug logging with `DEBUG=insula:plugin:* cortexdx diagnose <endpoint>` to see detailed plugin execution information.
 
 **Q: The tool reports false positives. How do I handle them?**
 
@@ -2371,7 +2371,7 @@ A: Check the confidence level and evidence. Low-confidence findings may need man
 
 A: Create a standards JSON file defining your organization's requirements and use it with `--standards your-standards.json`. This enables custom validation rules.
 
-**Q: Can I extend Insula MCP with custom output formats?**
+**Q: Can I extend CortexDx with custom output formats?**
 
 A: Yes. Use custom Handlebars templates in the configuration to generate organization-specific reports, notifications, or integration formats.
 
@@ -2381,15 +2381,15 @@ A: Set up scheduled diagnostics with cron jobs, integrate with monitoring system
 
 **Q: Is there an API for programmatic usage?**
 
-A: Yes. Import Insula MCP as a library and use the programmatic API. See the API Reference documentation for details.
+A: Yes. Import CortexDx as a library and use the programmatic API. See the API Reference documentation for details.
 
 ---
 
 ## Support & Resources
 
 - **Documentation**: [Complete documentation suite](../README.md#documentation)
-- **Interactive Help**: Run `insula-mcp interactive` for conversational assistance
-- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/insula-mcp/issues)
+- **Interactive Help**: Run `cortexdx interactive` for conversational assistance
+- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/cortexdx/issues)
 - **Community**: Join discussions and get help from the community
 
 ## Related Documentation
@@ -2421,4 +2421,4 @@ Licensed under the [Apache License 2.0](../../../LICENSE).
 
 ---
 
-*This guide covers the essential usage patterns for Insula MCP. For advanced topics, see the specialized documentation in the [docs directory](./README.md).*
+*This guide covers the essential usage patterns for CortexDx. For advanced topics, see the specialized documentation in the [docs directory](./README.md).*

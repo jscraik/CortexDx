@@ -2,7 +2,7 @@ import type { Finding } from "../types.js";
 
 export function buildMarkdownReport(stamp: Record<string, unknown>, findings: Finding[]): string {
   const lines: string[] = [];
-  lines.push("# Insula MCP Diagnostic Report (brAInwav)");
+  lines.push("# CortexDx MCP Diagnostic Report (brAInwav)");
   lines.push(`- Endpoint: ${stamp.endpoint}`);
   lines.push(`- Date: ${stamp.inspectedAt}`);
   lines.push(`- Duration: ${stamp.durationMs}ms`);

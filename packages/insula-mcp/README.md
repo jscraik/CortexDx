@@ -1,15 +1,15 @@
-# @brainwav/insula-mcp
+# @brainwav/cortexdx
 
-[![npm version](https://img.shields.io/npm/v/@brainwav/insula-mcp.svg)](https://www.npmjs.com/package/@brainwav/insula-mcp)
+[![npm version](https://img.shields.io/npm/v/@brainwav/cortexdx.svg)](https://www.npmjs.com/package/@brainwav/cortexdx)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
-[![Docker](https://img.shields.io/docker/v/brainwav/insula-mcp?label=docker)](https://hub.docker.com/r/brainwav/insula-mcp)
+[![Docker](https://img.shields.io/docker/v/brainwav/cortexdx?label=docker)](https://hub.docker.com/r/brainwav/cortexdx)
 
 **Comprehensive diagnostic meta-inspector and AI-powered development assistant for Model Context Protocol (MCP) servers and clients.** Provides stateless, plugin-based analysis with evidence-backed findings, local LLM integration, academic research validation, and actionable remediation guidance.
 
 ## 🎉 v1.0.0 Released
 
-Insula MCP v1.0.0 is now available with major enhancements:
+CortexDx v1.0.0 is now available with major enhancements:
 
 - 🤖 **Local LLM Integration**: Conversational development with Ollama, MLX, and llama.cpp
 - 🎓 **Academic Research Validation**: 7 integrated academic providers with license compliance
@@ -25,26 +25,26 @@ See [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details and [MIGRATION_GUI
 
 ```bash
 # Install globally
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 
 # Or use with npx (recommended)
-npx @brainwav/insula-mcp diagnose https://your-mcp-server.com
+npx @brainwav/cortexdx diagnose https://your-mcp-server.com
 ```
 
 ### Docker (Recommended for Production)
 
 ```bash
 # Quick deploy Community Edition
-curl -fsSL https://raw.githubusercontent.com/brainwav/insula-mcp/main/packages/insula-mcp/scripts/quick-deploy.sh | bash -s community
+curl -fsSL https://raw.githubusercontent.com/brainwav/cortexdx/main/packages/cortexdx/scripts/quick-deploy.sh | bash -s community
 
 # Or manually with Docker
-docker run -p 3000:3000 brainwav/insula-mcp:1.0.0-community
+docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Professional Edition (requires license)
 docker run -p 3000:3000 \
   -e INSULA_LICENSE_KEY=your-key \
   -e OLLAMA_HOST=ollama:11434 \
-  brainwav/insula-mcp:1.0.0-professional
+  brainwav/cortexdx:1.0.0-professional
 
 # Enterprise Edition (requires license and Auth0)
 docker run -p 3000:3000 \
@@ -52,26 +52,26 @@ docker run -p 3000:3000 \
   -e AUTH0_DOMAIN=your-domain.auth0.com \
   -e AUTH0_CLIENT_ID=your-client-id \
   -e AUTH0_CLIENT_SECRET=your-secret \
-  brainwav/insula-mcp:1.0.0-enterprise
+  brainwav/cortexdx:1.0.0-enterprise
 ```
 
 ### Docker Compose
 
 ```bash
 # Clone repository
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp/packages/insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx/packages/cortexdx
 
 # Start with docker-compose
-docker-compose up insula-mcp-community
+docker-compose up cortexdx-community
 ```
 
 ### Development Setup
 
 ```bash
 # For development/contribution
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx
 mise install && pnpm install && pnpm build
 ```
 
@@ -81,34 +81,34 @@ mise install && pnpm install && pnpm build
 
 ```bash
 # Simple diagnostic scan
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # Full comprehensive analysis
-insula-mcp diagnose https://mcp.example.com --full --out reports
+cortexdx diagnose https://mcp.example.com --full --out reports
 
 # With authentication
-insula-mcp diagnose https://mcp.example.com --auth bearer:your-token
+cortexdx diagnose https://mcp.example.com --auth bearer:your-token
 ```
 
 ### Interactive Mode
 
 ```bash
 # Start interactive diagnostic session
-insula-mcp interactive
+cortexdx interactive
 
 # Debug specific issues
-insula-mcp debug "SSE connection timeout"
+cortexdx debug "SSE connection timeout"
 
 # Get implementation guidance
-insula-mcp best-practices https://mcp.example.com
+cortexdx best-practices https://mcp.example.com
 ```
 
 ### Example Output
 
 ```bash
-$ insula-mcp diagnose https://cortex-mcp.brainwav.io/mcp --full
+$ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 
-[brAInwav] Insula MCP Diagnostic Report
+[brAInwav] CortexDx Diagnostic Report
 🔍 Analyzing: https://cortex-mcp.brainwav.io/mcp
 ⚡ Duration: 2.2s
 
@@ -132,19 +132,19 @@ $ insula-mcp diagnose https://cortex-mcp.brainwav.io/mcp --full
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `diagnose <endpoint>` | Run diagnostic analysis | `insula-mcp diagnose https://api.example.com/mcp` |
-| `interactive` | Interactive diagnostic mode | `insula-mcp interactive` |
-| `debug <problem>` | Debug specific issues | `insula-mcp debug "connection timeout"` |
-| `generate` | Code generation assistance | `insula-mcp generate` |
-| `best-practices [endpoint]` | Implementation analysis | `insula-mcp best-practices` |
-| `tutorial <topic>` | Interactive tutorials | `insula-mcp tutorial mcp-basics` |
-| `doctor` | Environment diagnostics | `insula-mcp doctor` |
-| `compare <old> <new>` | Compare diagnostic results | `insula-mcp compare old.json new.json` |
+| `diagnose <endpoint>` | Run diagnostic analysis | `cortexdx diagnose https://api.example.com/mcp` |
+| `interactive` | Interactive diagnostic mode | `cortexdx interactive` |
+| `debug <problem>` | Debug specific issues | `cortexdx debug "connection timeout"` |
+| `generate` | Code generation assistance | `cortexdx generate` |
+| `best-practices [endpoint]` | Implementation analysis | `cortexdx best-practices` |
+| `tutorial <topic>` | Interactive tutorials | `cortexdx tutorial mcp-basics` |
+| `doctor` | Environment diagnostics | `cortexdx doctor` |
+| `compare <old> <new>` | Compare diagnostic results | `cortexdx compare old.json new.json` |
 
 ### Diagnose Command Options
 
 ```bash
-insula-mcp diagnose <endpoint> [options]
+cortexdx diagnose <endpoint> [options]
 
 # Core Options
 --full                    # Run comprehensive analysis (all suites)
@@ -172,7 +172,7 @@ insula-mcp diagnose <endpoint> [options]
 
 ## 🔍 Diagnostic Suites
 
-Insula MCP includes comprehensive diagnostic suites covering all aspects of MCP implementations:
+CortexDx includes comprehensive diagnostic suites covering all aspects of MCP implementations:
 
 ### Protocol Suites
 
@@ -212,8 +212,8 @@ Set `INSULA_STORIES_ENABLED=true` to expose the experimental narrative diagnosti
 Before opening a PR, run the new validation gates:
 
 ```bash
-pnpm -w nx run insula-mcp:schema:check
-pnpm -w nx run insula-mcp:test
+pnpm -w nx run cortexdx:schema:check
+pnpm -w nx run cortexdx:test
 ```
 
 Vitest now enforces ≥70% line coverage for the story/anomaly/graph modules, ensuring the conversational diagnostics layer remains deterministic and well-tested.
@@ -225,7 +225,7 @@ Vitest now enforces ≥70% line coverage for the story/anomaly/graph modules, en
 Human-readable diagnostic report with findings organized by severity:
 
 ```markdown
-# Insula MCP Diagnostic Report (brAInwav)
+# CortexDx Diagnostic Report (brAInwav)
 - Endpoint: https://mcp.example.com
 - Date: 2025-11-06T21:50:59.157Z
 
@@ -326,7 +326,7 @@ pnpm test src/plugins/custom/my-plugin.test.ts
 ```bash
 # OpenTelemetry configuration
 OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otel-collector.com
-OTEL_SERVICE_NAME=insula-mcp
+OTEL_SERVICE_NAME=cortexdx
 
 # Plugin budgets (can also use CLI flags)
 INSULA_BUDGET_TIME=10000    # 10 seconds per plugin
@@ -355,7 +355,7 @@ jobs:
           
       - name: Run MCP Diagnostics
         run: |
-          npx @brainwav/insula-mcp diagnose ${{ secrets.MCP_ENDPOINT }} \
+          npx @brainwav/cortexdx diagnose ${{ secrets.MCP_ENDPOINT }} \
             --full --out reports --deterministic
             
       - name: Upload Reports
@@ -403,39 +403,39 @@ jobs:
 
 ```bash
 # Increase timeout budgets
-insula-mcp diagnose <endpoint> --budget-time 15000
+cortexdx diagnose <endpoint> --budget-time 15000
 
 # Check network connectivity
-insula-mcp doctor
+cortexdx doctor
 ```
 
 **Memory Issues**
 
 ```bash
 # Increase memory budget
-insula-mcp diagnose <endpoint> --budget-mem 256
+cortexdx diagnose <endpoint> --budget-mem 256
 
 # Use lighter suite selection
-insula-mcp diagnose <endpoint> --suites discovery,protocol
+cortexdx diagnose <endpoint> --suites discovery,protocol
 ```
 
 **Authentication Problems**
 
 ```bash
 # Test different auth methods
-insula-mcp diagnose <endpoint> --auth bearer:token
-insula-mcp diagnose <endpoint> --auth basic:user:pass
-insula-mcp diagnose <endpoint> --auth header:Authorization:"Bearer token"
+cortexdx diagnose <endpoint> --auth bearer:token
+cortexdx diagnose <endpoint> --auth basic:user:pass
+cortexdx diagnose <endpoint> --auth header:Authorization:"Bearer token"
 ```
 
 **CI/CD Integration**
 
 ```bash
 # Use deterministic mode for consistent results
-insula-mcp diagnose <endpoint> --deterministic --no-color
+cortexdx diagnose <endpoint> --deterministic --no-color
 
 # Generate machine-readable output only
-insula-mcp diagnose <endpoint> --out reports
+cortexdx diagnose <endpoint> --out reports
 cat reports/insula-findings.json | jq '.findings[].severity'
 ```
 
@@ -443,13 +443,13 @@ cat reports/insula-findings.json | jq '.findings[].severity'
 
 ```bash
 # Enable debug output
-DEBUG=insula:* insula-mcp diagnose <endpoint>
+DEBUG=insula:* cortexdx diagnose <endpoint>
 
 # Plugin-specific debugging
-DEBUG=insula:plugin:* insula-mcp diagnose <endpoint>
+DEBUG=insula:plugin:* cortexdx diagnose <endpoint>
 
 # Network debugging
-DEBUG=insula:adapter:* insula-mcp diagnose <endpoint>
+DEBUG=insula:adapter:* cortexdx diagnose <endpoint>
 ```
 
 ## 📚 Documentation

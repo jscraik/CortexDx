@@ -93,7 +93,7 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
         prompts: {}
       },
       clientInfo: {
-        name: "insula-mcp-validator",
+        name: "cortexdx-validator",
         version: "1.0.0"
       }
     };
@@ -411,7 +411,7 @@ async function validateMcpProtocolWithProtovalidate(
         prompts: {}
       },
       clientInfo: {
-        name: "insula-mcp-validator",
+        name: "cortexdx-validator",
         version: "1.0.0"
       }
     };
@@ -728,7 +728,7 @@ async function validateMcpHandshake(
         prompts: {}
       },
       clientInfo: {
-        name: "insula-mcp-validator",
+        name: "cortexdx-validator",
         version: "1.0.0"
       }
     };

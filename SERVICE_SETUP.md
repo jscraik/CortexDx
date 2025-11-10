@@ -1,13 +1,13 @@
-# Insula MCP Service Setup
+# CortexDx LaunchAgent Setup
 
-This directory contains scripts to set up the Insula MCP server as a macOS system service using launchd. The service will automatically start on boot and stop on shutdown.
+These scripts install CortexDx's MCP server as a macOS LaunchAgent. The generated plist uses the label `com.brainwav.cortexdx`, so it can live alongside the `.Cortex-OS` profiles (which use `com.brainwav.insula-local-memory`) without conflicts. Once installed, the service starts automatically on login and restarts if it crashes.
 
 ## Files
 
-- `com.brainwav.insula-mcp.plist` - launchd service configuration
-- `install-service.sh` - Install the service
-- `uninstall-service.sh` - Remove the service  
-- `manage-service.sh` - Manage the service (start/stop/status/logs)
+- `com.brainwav.cortexdx.plist` – plist template rendered by the installer
+- `install-service.sh` – renders the plist with your paths and loads it into launchd
+- `uninstall-service.sh` – unloads the LaunchAgent and removes the plist  
+- `manage-service.sh` – helper for start/stop/status/log tailing
 
 ## Quick Setup
 
@@ -19,10 +19,9 @@ This directory contains scripts to set up the Insula MCP server as a macOS syste
 
 This will:
 
-- Install the service configuration to `~/Library/LaunchAgents/`
-- Create log files in `/var/log/`
-- Start the service automatically
-- Configure it to start on boot
+- Render the plist with your `pnpm`/Node paths and install it to `~/Library/LaunchAgents/`
+- Create `/var/log/cortexdx.log` + `/var/log/cortexdx.error.log`
+- Bootstrap the LaunchAgent via `launchctl` and enable auto-start on login
 
 ### 2. Verify Installation
 
@@ -63,7 +62,7 @@ You should see:
 ./manage-service.sh logs
 
 # View error logs
-tail -f /var/log/insula-mcp.error.log
+tail -f /var/log/cortexdx.error.log
 ```
 
 ### Uninstall Service
@@ -79,14 +78,20 @@ tail -f /var/log/insula-mcp.error.log
 If you prefer to use launchctl directly:
 
 ```bash
-# Load/start service
-launchctl load ~/Library/LaunchAgents/com.brainwav.insula-mcp.plist
+PLIST=~/Library/LaunchAgents/com.brainwav.cortexdx.plist
+TARGET="gui/$UID/com.brainwav.cortexdx"
 
-# Unload/stop service
-launchctl unload ~/Library/LaunchAgents/com.brainwav.insula-mcp.plist
+# Start / reload the LaunchAgent
+launchctl bootout "$TARGET" 2>/dev/null || true
+launchctl bootstrap "gui/$UID" "$PLIST"
+launchctl enable "$TARGET"
+launchctl kickstart -k "$TARGET"
 
-# Check if running
-launchctl list | grep com.brainwav.insula-mcp
+# Stop the LaunchAgent
+launchctl bootout "$TARGET"
+
+# Inspect status
+launchctl print "$TARGET"
 ```
 
 ## Service Configuration
@@ -95,10 +100,10 @@ The service is configured to:
 
 - **Port**: 5001 (matches cloudflared tunnel)
 - **Host**: 127.0.0.1 (localhost only)
-- **Auto-start**: On boot
+- **Auto-start**: On login
 - **Auto-restart**: If crashed
-- **User**: jamiecraik (your user account)
-- **Logs**: `/var/log/insula-mcp.log` and `/var/log/insula-mcp.error.log`
+- **User**: current login (detected dynamically)
+- **Logs**: `/var/log/cortexdx.log` and `/var/log/cortexdx.error.log`
 
 ## Troubleshooting
 
@@ -107,7 +112,7 @@ The service is configured to:
 1. Check the error logs:
 
    ```bash
-   tail -f /var/log/insula-mcp.error.log
+   tail -f /var/log/cortexdx.error.log
    ```
 
 2. Verify pnpm is installed and in PATH:
@@ -119,7 +124,7 @@ The service is configured to:
 3. Check project directory exists:
 
    ```bash
-   ls -la /Volumes/ExternalSSD/dev/insula-mcp/packages/insula-mcp
+   ls -la /Volumes/ExternalSSD/dev/CortexDx/packages/insula-mcp
    ```
 
 ### Port Already in Use
@@ -132,7 +137,7 @@ If port 5001 is already in use:
    lsof -i :5001
    ```
 
-2. Stop the conflicting service or change the port in the plist file
+2. Stop the conflicting service or reinstall with a different port: `PORT=5002 ./install-service.sh`
 
 ### Permission Issues
 
@@ -141,18 +146,18 @@ If you get permission errors:
 1. Check file ownership:
 
    ```bash
-   ls -la ~/Library/LaunchAgents/com.brainwav.insula-mcp.plist
+   ls -la ~/Library/LaunchAgents/com.brainwav.cortexdx.plist
    ```
 
 2. Fix permissions:
 
    ```bash
-   chmod 644 ~/Library/LaunchAgents/com.brainwav.insula-mcp.plist
+   chmod 644 ~/Library/LaunchAgents/com.brainwav.cortexdx.plist
    ```
 
 ## Updating the Service
 
-When you update the Insula MCP code:
+When you update the CortexDx code:
 
 1. The service will automatically use the latest code (no reinstall needed)
 2. If you need to restart: `./manage-service.sh restart`

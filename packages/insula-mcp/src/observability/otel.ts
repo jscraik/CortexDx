@@ -7,7 +7,7 @@ export async function withSpan<T>(
   attrs: Record<string, AttributeValue>,
   fn: () => Promise<T>,
 ) {
-  const tracer = trace.getTracer("insula");
+  const tracer = trace.getTracer("cortexdx");
   return tracer.startActiveSpan(name, async (span) => {
     try {
       for (const [key, value] of Object.entries(attrs)) {
@@ -63,7 +63,7 @@ export function trackCommercialUsage(
   success = true,
   errorType?: string,
 ): CommercialUsageMetrics {
-  const meter = metrics.getMeter("insula-commercial");
+  const meter = metrics.getMeter("cortexdx-commercial");
   const counter = meter.createCounter("feature.usage", {
     description: "Commercial feature usage counter",
   });
@@ -95,7 +95,7 @@ export function trackApiCall(
   userId?: string,
   organizationId?: string,
 ): void {
-  const meter = metrics.getMeter("insula-api");
+  const meter = metrics.getMeter("cortexdx-api");
   const counter = meter.createCounter("api.calls", {
     description: "API call counter for rate limiting",
   });
@@ -113,7 +113,7 @@ export function trackRateLimitViolation(
   userId?: string,
   organizationId?: string,
 ): RateLimitMetrics {
-  const meter = metrics.getMeter("insula-ratelimit");
+  const meter = metrics.getMeter("cortexdx-ratelimit");
   const counter = meter.createCounter("ratelimit.violations", {
     description: "Rate limit violation counter",
   });
@@ -179,7 +179,7 @@ export async function withCommercialSpan<T>(
   userId?: string,
   organizationId?: string,
 ): Promise<T> {
-  const tracer = trace.getTracer("insula-commercial");
+  const tracer = trace.getTracer("cortexdx-commercial");
   return tracer.startActiveSpan(name, async (span) => {
     const startTime = Date.now();
     try {

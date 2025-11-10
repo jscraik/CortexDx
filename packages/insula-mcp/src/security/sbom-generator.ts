@@ -185,7 +185,7 @@ export class SBOMGenerator {
         tools: [
           {
             vendor: "brAInwav",
-            name: "Insula MCP Dependency Scanner",
+            name: "CortexDx Dependency Scanner",
             version: "1.0.0",
           },
         ],

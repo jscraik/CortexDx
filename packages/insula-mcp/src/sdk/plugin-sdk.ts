@@ -1,6 +1,6 @@
 /**
  * Plugin SDK for Custom Plugin Development
- * Provides interfaces and utilities for creating Insula MCP plugins
+ * Provides interfaces and utilities for creating CortexDx plugins
  * Requirements: 8.2, 10.1, 7.2
  */
 

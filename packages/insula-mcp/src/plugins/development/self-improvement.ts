@@ -9,8 +9,8 @@ import type {
 } from "../../types.js";
 
 const HANDSHAKE_FILES = [
-  "packages/insula-mcp/src/adapters/jsonrpc.ts",
-  "packages/insula-mcp/src/adapters/sse.ts",
+  "packages/cortexdx/src/adapters/jsonrpc.ts",
+  "packages/cortexdx/src/adapters/sse.ts",
 ];
 
 const REQUIRED_DEPENDENCIES = [
@@ -141,12 +141,12 @@ export async function analyzeWithLLM(
       ctx.logger?.(`[Self-Improvement] Analyzing finding with LLM: ${finding.id}`);
 
       const prompt = `
-You are Insula MCP's self-healing AI assistant. Analyze this Inspector finding and provide Insula-specific guidance.
+You are CortexDx's self-healing AI assistant. Analyze this Inspector finding and provide CortexDx-specific guidance.
 
 Inspector Finding:
 ${JSON.stringify(finding, null, 2)}
 
-Current Insula Context:
+Current CortexDx Context:
 - Project Files: ${ctx.projectContext?.sourceFiles?.slice(0, 10).join(', ') || 'unknown'}
 - Dependencies: ${ctx.projectContext?.dependencies?.slice(0, 10).join(', ') || 'unknown'}
 - Language: ${ctx.projectContext?.language || 'typescript'}
@@ -154,7 +154,7 @@ Current Insula Context:
 
 Provide analysis in JSON format with these REQUIRED fields:
 {
-  "rootCause": "Specific cause in Insula's codebase (REQUIRED)",
+  "rootCause": "Specific cause in CortexDx's codebase (REQUIRED)",
   "filesToModify": ["file1.ts", "file2.ts"],
   "codeChanges": "Actual code changes needed with line numbers and context",
   "validationSteps": ["step1: specific validation action", "step2: verification command"],
@@ -287,11 +287,11 @@ async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding
     ctx.logger?.("[Self-Improvement] Running MCP Inspector self-diagnosis");
     const report = await inspector.selfDiagnose();
 
-    // Convert Inspector findings to Insula format
-    const insulaFindings = inspector.convertFindings(report.findings);
+    // Convert Inspector findings to CortexDx format
+    const cortexdxFindings = inspector.convertFindings(report.findings);
 
-    ctx.logger?.(`[Self-Improvement] Inspector found ${insulaFindings.length} issues`);
-    return insulaFindings;
+    ctx.logger?.(`[Self-Improvement] Inspector found ${cortexdxFindings.length} issues`);
+    return cortexdxFindings;
 
   } catch (error) {
     ctx.logger?.("[Self-Improvement] Inspector self-diagnosis failed:", error);

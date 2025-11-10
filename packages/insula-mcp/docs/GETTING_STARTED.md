@@ -1,10 +1,10 @@
-# Getting Started with Insula MCP
+# Getting Started with CortexDx
 
-Welcome to Insula MCP, an intelligent diagnostic and development assistant for the Model Context Protocol ecosystem.
+Welcome to CortexDx, an intelligent diagnostic and development assistant for the Model Context Protocol ecosystem.
 
-## What is Insula MCP?
+## What is CortexDx?
 
-Insula MCP is an agentic MCP server that helps you:
+CortexDx is an agentic MCP server that helps you:
 
 - **Build MCP servers** through natural language conversations
 - **Debug MCP issues** with AI-powered assistance
@@ -15,7 +15,7 @@ Insula MCP is an agentic MCP server that helps you:
 
 ## Prerequisites and System Requirements
 
-Before installing Insula MCP, ensure your system meets these requirements:
+Before installing CortexDx, ensure your system meets these requirements:
 
 ### Required
 
@@ -56,10 +56,10 @@ df -h .
 
 ```bash
 # Install globally via npm
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 
 # Verify installation
-insula-mcp --version
+cortexdx --version
 # Expected output: 0.1.0
 ```
 
@@ -67,18 +67,18 @@ insula-mcp --version
 
 ```bash
 # Run directly without installing
-npx @brainwav/insula-mcp --help
+npx @brainwav/cortexdx --help
 
 # Use for one-time diagnostics
-npx @brainwav/insula-mcp diagnose http://localhost:3000
+npx @brainwav/cortexdx diagnose http://localhost:3000
 ```
 
 ### Method 3: Local Development
 
 ```bash
 # Clone and build from source
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp/packages/insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx/packages/cortexdx
 npm install
 npm run build
 
@@ -93,7 +93,7 @@ After installation, verify everything works correctly:
 ### 1. Check Installation
 
 ```bash
-insula-mcp --version
+cortexdx --version
 ```
 
 **Expected Output:**
@@ -105,7 +105,7 @@ insula-mcp --version
 ### 2. Run Environment Check
 
 ```bash
-insula-mcp doctor
+cortexdx doctor
 ```
 
 **Expected Output:**
@@ -120,15 +120,15 @@ insula-mcp doctor
 ### 3. Test Basic Functionality
 
 ```bash
-insula-mcp --help
+cortexdx --help
 ```
 
 **Expected Output:**
 
 ```text
-Usage: insula-mcp [options] [command]
+Usage: cortexdx [options] [command]
 
-brAInwav • Insula MCP — Diagnostic Meta-Inspector (stateless, plugin-based)
+brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)
 
 Options:
   -V, --version                    display version number
@@ -149,18 +149,18 @@ Commands:
 
 ## First-Time User Walkthrough
 
-This section provides a step-by-step walkthrough for new users to get familiar with Insula MCP.
+This section provides a step-by-step walkthrough for new users to get familiar with CortexDx.
 
 ### Step 1: Start Interactive Mode
 
 ```bash
-insula-mcp interactive
+cortexdx interactive
 ```
 
 **Expected Output:**
 
 ```text
-[brAInwav] Insula MCP Interactive Mode
+[brAInwav] CortexDx Interactive Mode
 🤖 Hello! I'm your MCP development assistant.
 
 What would you like to do today?
@@ -177,7 +177,7 @@ Type your choice (1-4) or describe what you need help with:
 ### Step 2: Generate Your First MCP Server
 
 ```bash
-insula-mcp generate template my-first-server
+cortexdx generate template my-first-server
 ```
 
 **Expected Output:**
@@ -227,13 +227,13 @@ npm run dev
 Open a new terminal and run:
 
 ```bash
-insula-mcp diagnose http://localhost:3000
+cortexdx diagnose http://localhost:3000
 ```
 
 **Expected Output:**
 
 ```text
-[brAInwav] Insula MCP Diagnostic Report
+[brAInwav] CortexDx Diagnostic Report
 🔍 Analyzing: http://localhost:3000
 
 ✓ Protocol Compliance: PASS (100%)
@@ -258,21 +258,21 @@ Try these commands to explore more features:
 
 ```bash
 # Get help with MCP concepts
-insula-mcp explain concept tools
+cortexdx explain concept tools
 
 # Debug a specific error
-insula-mcp debug "connection refused"
+cortexdx debug "connection refused"
 
 # Generate API connector
-insula-mcp generate connector weather-api https://api.openweathermap.org/swagger.json
+cortexdx generate connector weather-api https://api.openweathermap.org/swagger.json
 
 # Get best practices analysis
-insula-mcp best-practices http://localhost:3000
+cortexdx best-practices http://localhost:3000
 ```
 
 ## Common First-Time Issues and Solutions
 
-### Issue: "Command not found: insula-mcp"
+### Issue: "Command not found: cortexdx"
 
 **Solution:**
 
@@ -280,7 +280,7 @@ insula-mcp best-practices http://localhost:3000
 # Check if npm global bin is in PATH
 npm config get prefix
 # Add the bin directory to your PATH, or reinstall:
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 ```
 
 ### Issue: "Node version not supported"
@@ -302,7 +302,7 @@ nvm use 20
 
 ```bash
 # Use npx instead of global install:
-npx @brainwav/insula-mcp --help
+npx @brainwav/cortexdx --help
 
 # Or fix npm permissions:
 npm config set prefix ~/.npm-global
@@ -332,52 +332,52 @@ Once you've completed the walkthrough above, use these commands for daily develo
 #### 1. Diagnose an MCP Server
 
 ```bash
-insula-mcp diagnose http://localhost:3000
+cortexdx diagnose http://localhost:3000
 ```
 
 **Available Options:**
 
 ```bash
 # Full diagnostic suite
-insula-mcp diagnose http://localhost:3000 --full
+cortexdx diagnose http://localhost:3000 --full
 
 # Specific test suites
-insula-mcp diagnose http://localhost:3000 --suites protocol,security
+cortexdx diagnose http://localhost:3000 --suites protocol,security
 
 # With authentication
-insula-mcp diagnose http://localhost:3000 --auth bearer:your-token
+cortexdx diagnose http://localhost:3000 --auth bearer:your-token
 
 # Save detailed reports
-insula-mcp diagnose http://localhost:3000 --out ./reports --har
+cortexdx diagnose http://localhost:3000 --out ./reports --har
 ```
 
 #### 2. Interactive Development Mode
 
 ```bash
-insula-mcp interactive
+cortexdx interactive
 ```
 
 **Available Options:**
 
 ```bash
 # Set expertise level
-insula-mcp interactive --expertise beginner
+cortexdx interactive --expertise beginner
 
 # Disable colors for CI/CD
-insula-mcp interactive --no-color
+cortexdx interactive --no-color
 ```
 
 #### 3. Generate MCP Components
 
 ```bash
 # Generate server template
-insula-mcp generate template my-server --lang typescript
+cortexdx generate template my-server --lang typescript
 
 # Generate API connector
-insula-mcp generate connector weather-api ./openapi.json --auth api-key
+cortexdx generate connector weather-api ./openapi.json --auth api-key
 
 # Generate documentation
-insula-mcp generate docs server ./src --format markdown
+cortexdx generate docs server ./src --format markdown
 ```
 
 ## Key Features
@@ -423,8 +423,8 @@ curl -fsSL https://ollama.com/install.sh | sh
 # Pull a model
 ollama pull llama3
 
-# Insula MCP will auto-detect Ollama
-insula-mcp interactive
+# CortexDx will auto-detect Ollama
+cortexdx interactive
 ```
 
 ## Common Workflows
@@ -434,7 +434,7 @@ insula-mcp interactive
 1. Start interactive mode:
 
    ```bash
-   insula-mcp interactive
+   cortexdx interactive
    ```
 
 2. Describe your server:
@@ -454,7 +454,7 @@ insula-mcp interactive
 1. Run diagnostics:
 
    ```bash
-   insula-mcp diagnose http://localhost:3000 --verbose
+   cortexdx diagnose http://localhost:3000 --verbose
    ```
 
 2. Review findings and suggested fixes
@@ -462,27 +462,27 @@ insula-mcp interactive
 3. Apply automated fixes:
 
    ```bash
-   insula-mcp fix --finding-id <id>
+   cortexdx fix --finding-id <id>
    ```
 
 ### Validating Protocol Compliance
 
 ```bash
 # Full compliance check
-insula-mcp validate http://localhost:3000
+cortexdx validate http://localhost:3000
 
 # Check specific protocol version
-insula-mcp validate http://localhost:3000 --protocol 2024-11-05
+cortexdx validate http://localhost:3000 --protocol 2024-11-05
 
 # Test compatibility with multiple clients
-insula-mcp compatibility http://localhost:3000
+cortexdx compatibility http://localhost:3000
 ```
 
 ## Configuration Examples
 
 ### Basic Configuration
 
-Create `.insula-mcp.json` in your project root for custom settings:
+Create `.cortexdx.json` in your project root for custom settings:
 
 ```json
 {
@@ -529,16 +529,16 @@ Test your configuration:
 
 ```bash
 # Check current settings
-insula-mcp doctor
+cortexdx doctor
 
 # Test with your configuration
-insula-mcp diagnose http://localhost:3000 --deterministic
+cortexdx diagnose http://localhost:3000 --deterministic
 ```
 
 **Expected Output with Custom Config:**
 
 ```text
-[brAInwav] Using configuration: .insula-mcp.json
+[brAInwav] Using configuration: .cortexdx.json
 [brAInwav] LLM Backend: ollama (llama3)
 [brAInwav] Output Directory: ./reports
 ✓ Configuration loaded successfully
@@ -552,7 +552,7 @@ insula-mcp diagnose http://localhost:3000 --deterministic
 
 ```bash
 # Solution 1: Use npx instead
-npx @brainwav/insula-mcp --help
+npx @brainwav/cortexdx --help
 
 # Solution 2: Fix npm permissions
 mkdir ~/.npm-global
@@ -566,7 +566,7 @@ source ~/.bashrc
 ```bash
 # Clear npm cache and reinstall
 npm cache clean --force
-npm install -g @brainwav/insula-mcp
+npm install -g @brainwav/cortexdx
 ```
 
 ### Runtime Issues
@@ -583,7 +583,7 @@ cd your-mcp-server
 npm run dev
 
 # Then run diagnostics in another terminal
-insula-mcp diagnose http://localhost:3000
+cortexdx diagnose http://localhost:3000
 ```
 
 #### Slow performance or timeouts
@@ -594,10 +594,10 @@ insula-mcp diagnose http://localhost:3000
 
 ```bash
 # Increase timeout budgets
-insula-mcp diagnose http://localhost:3000 --budget-time 10000
+cortexdx diagnose http://localhost:3000 --budget-time 10000
 
 # Run lighter test suites
-insula-mcp diagnose http://localhost:3000 --suites protocol
+cortexdx diagnose http://localhost:3000 --suites protocol
 ```
 
 #### Interactive mode not responding
@@ -612,7 +612,7 @@ curl -fsSL https://ollama.com/install.sh | sh
 ollama pull llama3
 
 # Or use without AI features
-insula-mcp diagnose http://localhost:3000  # Non-interactive diagnostics
+cortexdx diagnose http://localhost:3000  # Non-interactive diagnostics
 ```
 
 ### Verification Commands
@@ -621,15 +621,15 @@ Use these commands to verify your setup is working correctly:
 
 ```bash
 # 1. Check installation
-insula-mcp --version
+cortexdx --version
 # Expected: 0.1.0
 
 # 2. Verify environment
-insula-mcp doctor
+cortexdx doctor
 # Expected: Node version and dependency checks
 
 # 3. Test basic functionality
-insula-mcp --help | head -5
+cortexdx --help | head -5
 # Expected: Usage information
 
 # 4. Test network connectivity
@@ -639,7 +639,7 @@ curl -I http://httpbin.org/get
 
 ## Next Steps
 
-Now that you have Insula MCP set up and verified, explore these guides:
+Now that you have CortexDx set up and verified, explore these guides:
 
 ### For Users
 
@@ -671,27 +671,27 @@ If you encounter issues not covered in this guide:
 
 ```bash
 # Ask questions directly
-insula-mcp interactive
+cortexdx interactive
 # Then type: "I'm having trouble with..."
 ```
 
 ### Community Support
 
-- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/insula-mcp/issues)
-- **Discussions**: [Community Q&A](https://github.com/brainwav/insula-mcp/discussions)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/brainwav/cortexdx/issues)
+- **Discussions**: [Community Q&A](https://github.com/brainwav/cortexdx/discussions)
 - **Documentation**: All guides available in the `docs/` directory
 
 ### Self-Service Debugging
 
 ```bash
 # Explain specific errors
-insula-mcp explain error "your error message here"
+cortexdx explain error "your error message here"
 
 # Get concept explanations
-insula-mcp explain concept "MCP tools"
+cortexdx explain concept "MCP tools"
 
 # Debug specific problems
-insula-mcp debug "cannot connect to server"
+cortexdx debug "cannot connect to server"
 ```
 
 ## License

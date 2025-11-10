@@ -1,11 +1,11 @@
-# Insula MCP – Agentic Self-Healing Suite (Draft)
+# CortexDx – Agentic Self-Healing Suite (Draft)
 
-> _Scope_: Defines the LangGraph-powered self-healing/self-improvement system that exercises every diagnostic and academic plugin, reasons with Ollama, and feeds auto-healer outputs back into Insula MCP. This document is Step 1 of the implementation plan.
+> _Scope_: Defines the LangGraph-powered self-healing/self-improvement system that exercises every diagnostic and academic plugin, reasons with Ollama, and feeds auto-healer outputs back into CortexDx. This document is Step 1 of the implementation plan.
 
 ## 1. Goals
 
 - Provide an **agentic control plane** that can orchestrate Inspector, internal diagnostics, third-party (academic) plugins, and auto-healing in a single run.
-- Treat every diagnostic/academic capability as a callable **tool** so the suite “puts Insula through its paces.”
+- Treat every diagnostic/academic capability as a callable **tool** so the suite “puts CortexDx through its paces.”
 - Use **LangGraph + Ollama** for reasoning, summarisation, and remediation planning.
 - Produce deterministic evidence (JSON + Markdown reports) suitable for CI gating and human review.
 
@@ -131,7 +131,7 @@ type DiagnosticTool = (ctx: DevelopmentContext) => Promise<NormalizedFinding[]>;
 
 - New target: `pnpm internal:self-healing-suite --endpoint ...`
 - Flags: `--model <id>` (Ollama), `--plugins <list>`, `--skip-auto-heal`, `--deterministic`.
-- CI: add Nx target + GitHub Action to run suite on PRs touching diagnostics; nightly job runs full sweep against LaunchAgent-managed Insula instance.
+- CI: add Nx target + GitHub Action to run suite on PRs touching diagnostics; nightly job runs full sweep against LaunchAgent-managed CortexDx instance.
 - LaunchAgent: schedule suite to run after each release candidate deployment; artifacts publish to internal dashboard.
 
 ## 8. Next Steps

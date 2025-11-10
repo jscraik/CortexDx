@@ -1,6 +1,6 @@
 # CI/CD Integration Guide
 
-This guide provides comprehensive instructions for integrating Insula MCP into various CI/CD platforms.
+This guide provides comprehensive instructions for integrating CortexDx into various CI/CD platforms.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This guide provides comprehensive instructions for integrating Insula MCP into v
 ### Setup
 
 1. Copy the workflow files to `.github/workflows/`:
-   - `insula-mcp.yml` - Main CI workflow
+   - `cortexdx.yml` - Main CI workflow
    - `release.yml` - Release workflow
    - `deploy-production.yml` - Production deployment
 
@@ -153,7 +153,7 @@ pipeline {
         NODE_VERSION = '20.11.1'
         PNPM_VERSION = '9.12.2'
         DOCKER_REGISTRY = 'registry.example.com'
-        IMAGE_NAME = 'insula-mcp'
+        IMAGE_NAME = 'cortexdx'
     }
     
     stages {
@@ -191,7 +191,7 @@ pipeline {
                     steps {
                         script {
                             docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${env.TAG_NAME}-community", 
-                                "-f packages/insula-mcp/Dockerfile.community .")
+                                "-f packages/cortexdx/Dockerfile.community .")
                         }
                     }
                 }
@@ -199,7 +199,7 @@ pipeline {
                     steps {
                         script {
                             docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${env.TAG_NAME}-professional", 
-                                "-f packages/insula-mcp/Dockerfile.professional .")
+                                "-f packages/cortexdx/Dockerfile.professional .")
                         }
                     }
                 }
@@ -207,7 +207,7 @@ pipeline {
                     steps {
                         script {
                             docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${env.TAG_NAME}-enterprise", 
-                                "-f packages/insula-mcp/Dockerfile.enterprise .")
+                                "-f packages/cortexdx/Dockerfile.enterprise .")
                         }
                     }
                 }
@@ -222,9 +222,9 @@ pipeline {
                 input message: 'Deploy to production?', ok: 'Deploy'
                 withKubeConfig([credentialsId: 'kubeconfig']) {
                     sh '''
-                        helm upgrade --install insula-mcp \
-                            ./packages/insula-mcp/kubernetes/helm/insula-mcp \
-                            --namespace insula-mcp \
+                        helm upgrade --install cortexdx \
+                            ./packages/cortexdx/kubernetes/helm/cortexdx \
+                            --namespace cortexdx \
                             --create-namespace \
                             --set image.tag=${TAG_NAME}-community \
                             --wait
@@ -303,7 +303,7 @@ stages:
     - script: pnpm build
       displayName: 'Build package'
     
-    - publish: $(System.DefaultWorkingDirectory)/packages/insula-mcp/dist
+    - publish: $(System.DefaultWorkingDirectory)/packages/cortexdx/dist
       artifact: dist
 
 - stage: Package
@@ -322,9 +322,9 @@ stages:
     - task: Docker@2
       inputs:
         containerRegistry: 'DockerHub'
-        repository: 'brainwav/insula-mcp'
+        repository: 'brainwav/cortexdx'
         command: 'buildAndPush'
-        Dockerfile: 'packages/insula-mcp/Dockerfile.$(tier)'
+        Dockerfile: 'packages/cortexdx/Dockerfile.$(tier)'
         tags: |
           $(Build.SourceBranchName)-$(tier)
           latest-$(tier)
@@ -342,11 +342,11 @@ stages:
             inputs:
               connectionType: 'Kubernetes Service Connection'
               kubernetesServiceConnection: 'k8s-cluster'
-              namespace: 'insula-mcp'
+              namespace: 'cortexdx'
               command: 'upgrade'
               chartType: 'FilePath'
-              chartPath: 'packages/insula-mcp/kubernetes/helm/insula-mcp'
-              releaseName: 'insula-mcp'
+              chartPath: 'packages/cortexdx/kubernetes/helm/cortexdx'
+              releaseName: 'cortexdx'
               overrideValues: 'image.tag=$(Build.SourceBranchName)-community'
               waitForExecution: true
 ```
@@ -392,7 +392,7 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-            - packages/insula-mcp/node_modules
+            - packages/cortexdx/node_modules
           key: v1-dependencies-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Lint
@@ -406,7 +406,7 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths:
-            - packages/insula-mcp/dist
+            - packages/cortexdx/dist
 
   docker-build:
     executor: docker/docker
@@ -418,11 +418,11 @@ jobs:
       - setup_remote_docker
       - docker/check
       - docker/build:
-          image: brainwav/insula-mcp
+          image: brainwav/cortexdx
           tag: ${CIRCLE_TAG}-<< parameters.tier >>
-          dockerfile: packages/insula-mcp/Dockerfile.<< parameters.tier >>
+          dockerfile: packages/cortexdx/Dockerfile.<< parameters.tier >>
       - docker/push:
-          image: brainwav/insula-mcp
+          image: brainwav/cortexdx
           tag: ${CIRCLE_TAG}-<< parameters.tier >>
 
   deploy:
@@ -437,9 +437,9 @@ jobs:
       - run:
           name: Deploy to Kubernetes
           command: |
-            helm upgrade --install insula-mcp \
-              ./packages/insula-mcp/kubernetes/helm/insula-mcp \
-              --namespace insula-mcp \
+            helm upgrade --install cortexdx \
+              ./packages/cortexdx/kubernetes/helm/cortexdx \
+              --namespace cortexdx \
               --create-namespace \
               --set image.tag=${CIRCLE_TAG}-community \
               --wait
@@ -531,8 +531,8 @@ workflows:
 # Kubernetes blue-green deployment
 - name: Deploy green
   run: |
-    helm upgrade --install insula-mcp-green \
-      ./helm/insula-mcp \
+    helm upgrade --install cortexdx-green \
+      ./helm/cortexdx \
       --set service.selector.version=green \
       --wait
 
@@ -540,16 +540,16 @@ workflows:
   run: |
     kubectl run smoke-test --rm -i --restart=Never \
       --image=curlimages/curl -- \
-      curl http://insula-mcp-green/health
+      curl http://cortexdx-green/health
 
 - name: Switch traffic
   run: |
-    kubectl patch service insula-mcp \
+    kubectl patch service cortexdx \
       -p '{"spec":{"selector":{"version":"green"}}}'
 
 - name: Cleanup blue
   run: |
-    helm uninstall insula-mcp-blue
+    helm uninstall cortexdx-blue
 ```
 
 ## Troubleshooting
@@ -579,19 +579,19 @@ docker builder prune -a
 
 ```bash
 # Check pod status
-kubectl get pods -n insula-mcp
+kubectl get pods -n cortexdx
 
 # View logs
-kubectl logs -n insula-mcp -l app.kubernetes.io/name=insula-mcp
+kubectl logs -n cortexdx -l app.kubernetes.io/name=cortexdx
 
 # Describe pod
-kubectl describe pod -n insula-mcp <pod-name>
+kubectl describe pod -n cortexdx <pod-name>
 ```
 
 ## Support
 
 For additional help:
 
-- Documentation: https://brainwav.dev/docs/insula-mcp
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
+- Documentation: https://brainwav.dev/docs/cortexdx
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
 - Community: https://discord.gg/brainwav

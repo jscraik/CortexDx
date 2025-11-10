@@ -1,6 +1,6 @@
-# Contributing to Insula MCP
+# Contributing to CortexDx
 
-Welcome to the Insula MCP project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol servers. This guide will help you get started with development, testing, and contributing to the project.
+Welcome to the CortexDx project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol servers. This guide will help you get started with development, testing, and contributing to the project.
 
 ## Table of Contents
 
@@ -47,8 +47,8 @@ brew install mise
 
 ```bash
 # Clone the repository
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx
 
 # Install pinned tool versions
 mise install
@@ -61,7 +61,7 @@ pnpm install
 
 ```bash
 # Run the doctor command to check your setup
-cd packages/insula-mcp
+cd packages/cortexdx
 pnpm run doctor
 
 # Verify build works
@@ -124,12 +124,12 @@ We follow **ArcTDD (Architecture-Test-Driven Development)** with strict guidelin
 ### 5. Verification
 
 - Run `pnpm lint && pnpm test && pnpm build`
-- Test against mock servers when relevant: `npx insula-mcp diagnose`
+- Test against mock servers when relevant: `npx cortexdx diagnose`
 - Validate outputs make sense and include proper branding
 
 ### Internal Self-Improvement Diagnostics (Brainwav dev team only)
 
-- Run `pnpm internal:self-improvement -- --endpoint http://127.0.0.1:5001` from the workspace root to execute the internal-only plugin against a local Insula instance.
+- Run `pnpm internal:self-improvement -- --endpoint http://127.0.0.1:5001` from the workspace root to execute the internal-only plugin against a local CortexDx instance.
 - Optional flags: `--project <path>` to target a different package, `--history <file>` for JSON-formatted chat history, and `--out <file>` to persist findings.
 - This runner executes TypeScript directly via `tsx`, stays outside the published `dist/` bundle, and satisfies the "internal only" requirement—do not enable or ship it with commercial builds.
 
@@ -137,8 +137,8 @@ We follow **ArcTDD (Architecture-Test-Driven Development)** with strict guidelin
 
 ### Test Structure
 
-- **Unit Tests**: `packages/insula-mcp/tests/*.spec.ts`
-- **Mock Servers**: `packages/insula-mcp/scripts/mock-servers/`
+- **Unit Tests**: `packages/cortexdx/tests/*.spec.ts`
+- **Mock Servers**: `packages/cortexdx/scripts/mock-servers/`
 - **Integration Tests**: End-to-end workflow validation
 
 ### Running Tests
@@ -371,7 +371,7 @@ For security vulnerabilities:
 ### For New Contributors
 
 - **[Getting Started](./GETTING_STARTED.md)** - Installation and first steps
-- **[User Guide](./USER_GUIDE.md)** - Understanding how Insula MCP works
+- **[User Guide](./USER_GUIDE.md)** - Understanding how CortexDx works
 - **[API Reference](./API_REFERENCE.md)** - Complete API documentation
 
 ### For Plugin Developers
@@ -391,4 +391,4 @@ For security vulnerabilities:
 
 ---
 
-Thank you for contributing to Insula MCP! Your efforts help make MCP server diagnostics more reliable and secure for everyone. 🚀
+Thank you for contributing to CortexDx! Your efforts help make MCP server diagnostics more reliable and secure for everyone. 🚀

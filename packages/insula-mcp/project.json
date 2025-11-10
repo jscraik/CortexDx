@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "insula-mcp",
+  "name": "cortexdx",
   "projectType": "library",
   "sourceRoot": "packages/insula-mcp/src",
   "targets": {

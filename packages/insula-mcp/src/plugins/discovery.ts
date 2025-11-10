@@ -271,7 +271,7 @@ async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticCo
     const initResponse = await ctx.jsonrpc<{ capabilities?: { tools?: unknown, resources?: unknown, prompts?: unknown, logging?: unknown } }>("initialize", {
       protocolVersion: "2024-11-05",
       capabilities: {},
-      clientInfo: { name: "insula-mcp-inspector", version: "1.0.0" }
+      clientInfo: { name: "cortexdx-inspector", version: "1.0.0" }
     });
 
     const capabilities = initResponse?.capabilities || {};

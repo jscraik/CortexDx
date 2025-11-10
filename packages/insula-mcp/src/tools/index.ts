@@ -1,6 +1,6 @@
 /**
  * MCP Tools Index
- * Exports all MCP tool definitions for the Insula MCP diagnostic system
+ * Exports all MCP tool definitions for the CortexDx diagnostic system
  */
 
 export { createAcademicIntegrationTools } from "./academic-integration-tools.js";

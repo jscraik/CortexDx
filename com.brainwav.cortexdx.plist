@@ -4,73 +4,71 @@
 <dict>
     <!-- Service Identification -->
     <key>Label</key>
-    <string>com.brainwav.insula-mcp</string>
-    
+    <string>com.brainwav.cortexdx</string>
+
     <!-- Program Configuration -->
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/jamiecraik/.local/share/mise/installs/pnpm/9.12.2/pnpm</string>
+        <string>__PNPM_BIN__</string>
         <string>--dir</string>
-        <string>/Volumes/ExternalSSD/dev/insula-mcp/packages/insula-mcp</string>
+        <string>__PACKAGE_DIR__</string>
         <string>run</string>
         <string>server</string>
     </array>
-    
+
     <!-- Working Directory -->
     <key>WorkingDirectory</key>
-    <string>/Volumes/ExternalSSD/dev/insula-mcp</string>
-    
+    <string>__PROJECT_DIR__</string>
+
     <!-- Environment Variables -->
     <key>EnvironmentVariables</key>
     <dict>
         <key>NODE_ENV</key>
         <string>production</string>
         <key>PORT</key>
-        <string>5001</string>
+        <string>__PORT__</string>
         <key>HOST</key>
-        <string>127.0.0.1</string>
+        <string>__HOST__</string>
         <key>PATH</key>
-        <string>/Users/jamiecraik/.local/share/mise/installs/pnpm/9.12.2:/Users/jamiecraik/.local/share/mise/installs/node/20.11.1/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>__PATH__</string>
     </dict>
-    
+
     <!-- Execution Settings -->
     <key>RunAtLoad</key>
     <true/>
-    
-    <!-- Keep service running, but with throttle to prevent spam -->
+
     <key>KeepAlive</key>
     <true/>
-    
-    <!-- Throttle restarts to prevent spam (wait 10 seconds between restarts) -->
+
     <key>ThrottleInterval</key>
     <integer>10</integer>
-    
+
     <!-- Logging -->
     <key>StandardOutPath</key>
-    <string>/var/log/insula-mcp.log</string>
-    
+    <string>/var/log/cortexdx.log</string>
+
     <key>StandardErrorPath</key>
-    <string>/var/log/insula-mcp.error.log</string>
-    
+    <string>/var/log/cortexdx.error.log</string>
+
     <!-- Process Management -->
     <key>ProcessType</key>
     <string>Background</string>
-    
+
     <key>ExitTimeOut</key>
     <integer>30</integer>
-    
+
     <!-- Resource Limits -->
     <key>SoftResourceLimits</key>
     <dict>
         <key>NumberOfFiles</key>
         <integer>1024</integer>
     </dict>
-    
+
     <!-- User Context -->
     <key>UserName</key>
-    <string>jamiecraik</string>
-    
+    <string>__USER_NAME__</string>
+
     <key>GroupName</key>
-    <string>staff</string>
+    <string>__GROUP_NAME__</string>
 </dict>
 </plist>

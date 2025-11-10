@@ -89,7 +89,7 @@ export const runInteractiveMode = async (
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: formatOutput("insula> ", "prompt", opts.color),
+    prompt: formatOutput("cortexdx> ", "prompt", opts.color),
   });
 
   rl.prompt();

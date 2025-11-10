@@ -46,13 +46,13 @@ The Dependency & Supply-Chain Scanner Plugin provides comprehensive dependency a
 The plugin runs automatically as part of the diagnostic suite:
 
 ```bash
-npx insula-mcp diagnose http://localhost:3000
+npx cortexdx diagnose http://localhost:3000
 ```
 
 Or run specifically:
 
 ```bash
-npx insula-mcp diagnose http://localhost:3000 --suite dependency-scanner
+npx cortexdx diagnose http://localhost:3000 --suite dependency-scanner
 ```
 
 ## Configuration

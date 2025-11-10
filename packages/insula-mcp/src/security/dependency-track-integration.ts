@@ -140,7 +140,7 @@ export class DependencyTrackIntegration {
       {
         method: "PUT",
         body: JSON.stringify({
-          name: `Insula MCP Alert - ${projectId}`,
+          name: `CortexDx Alert - ${projectId}`,
           scope: "PORTFOLIO",
           notificationLevel: "INFORMATIONAL",
           projects: [{ uuid: projectId }],

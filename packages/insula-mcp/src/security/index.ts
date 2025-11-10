@@ -1,6 +1,6 @@
 /**
  * Security Module Exports
- * Local-first security framework for Insula MCP
+ * Local-first security framework for CortexDx
  */
 
 export {

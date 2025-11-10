@@ -53,7 +53,7 @@ export class OAuthIntegration {
                         protocolVersion: "2024-11-05",
                         capabilities: {},
                         clientInfo: {
-                            name: "insula-mcp",
+                            name: "cortexdx",
                             version: "1.0.0",
                         },
                     },

@@ -57,8 +57,8 @@ export interface ReportConfig {
 }
 
 const DEFAULT_CONFIG: ReportConfig = {
-    storageRoot: process.env.INSULA_REPORT_DIR || "./reports",
-    baseUrl: process.env.INSULA_REPORT_URL || "http://localhost:5001/reports",
+    storageRoot: process.env.CORTEXDX_REPORT_DIR || "./reports",
+    baseUrl: process.env.CORTEXDX_REPORT_URL || "http://localhost:5001/reports",
     organizationStrategy: "date",
     retentionDays: 30,
     enableCompression: false,
@@ -384,7 +384,7 @@ export class ReportManager {
 
     private toMarkdown(report: DiagnosticReport): string {
         const lines: string[] = [];
-        lines.push("# Insula MCP Diagnostic Report (brAInwav)");
+        lines.push("# CortexDx Diagnostic Report (brAInwav)");
         lines.push("");
         lines.push(`- **Report ID**: ${report.id || "N/A"}`);
         lines.push(`- **Session ID**: ${report.sessionId}`);
@@ -458,7 +458,7 @@ export class ReportManager {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Insula MCP Diagnostic Report</title>
+  <title>CortexDx Diagnostic Report</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
     h1 { color: #333; }
@@ -475,7 +475,7 @@ export class ReportManager {
   </style>
 </head>
 <body>
-  <h1>Insula MCP Diagnostic Report (brAInwav)</h1>
+  <h1>CortexDx Diagnostic Report (brAInwav)</h1>
   
   <div class="metadata">
     <p><strong>Report ID:</strong> ${this.escapeHtml(report.id || "N/A")}</p>

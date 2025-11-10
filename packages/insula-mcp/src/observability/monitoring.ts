@@ -1,5 +1,5 @@
 /**
- * Monitoring and alerting system for Insula MCP
+ * Monitoring and alerting system for CortexDx
  * Provides real-time monitoring and performance degradation detection
  */
 

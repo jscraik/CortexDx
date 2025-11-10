@@ -49,7 +49,7 @@ export class CredentialManager {
     private readonly AUTH_TAG_LENGTH = 16;
 
     constructor(storageDir?: string) {
-        this.storageDir = storageDir || join(homedir(), ".insula-mcp", "credentials");
+        this.storageDir = storageDir || join(homedir(), ".cortexdx", "credentials");
         this.storageFile = join(this.storageDir, "credentials.enc");
         this.encryptionKey = this.deriveEncryptionKey();
     }

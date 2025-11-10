@@ -64,7 +64,7 @@ export interface ExaSearchParams {
 }
 
 export class ExaProvider {
-    private readonly userAgent = "Insula-MCP/1.0.0 (Advanced Search Analysis)";
+    private readonly userAgent = "CortexDx/1.0.0 (Advanced Search Analysis)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     constructor(private ctx: DiagnosticContext) {

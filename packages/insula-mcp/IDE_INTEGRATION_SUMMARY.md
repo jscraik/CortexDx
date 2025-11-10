@@ -6,7 +6,7 @@
 
 ### What Was Implemented
 
-This implementation provides a foundation for IDE integration with Insula MCP through the Model Context Protocol (MCP), enabling real-time validation and assistance in popular development environments.
+This implementation provides a foundation for IDE integration with CortexDx through the Model Context Protocol (MCP), enabling real-time validation and assistance in popular development environments.
 
 ### Components Created
 
@@ -71,7 +71,7 @@ Ten MCP tools for IDE integration:
        │ (HTTP/WebSocket/stdio)
        ▼
 ┌─────────────┐
-│   Insula    │
+│   CortexDx    │
 │  MCP Server │
 │             │
 │  ┌────────┐ │
@@ -131,7 +131,7 @@ Ten MCP tools for IDE integration:
 Build verification:
 
 ```bash
-cd packages/insula-mcp
+cd packages/cortexdx
 pnpm build
 # ✅ Build successful
 # ✅ ESM bundle created
@@ -165,7 +165,7 @@ For full production deployment, consider:
 ### Files Created
 
 ```
-packages/insula-mcp/
+packages/cortexdx/
 ├── src/
 │   ├── plugins/development/
 │   │   └── ide-integration.ts          (Core plugin)

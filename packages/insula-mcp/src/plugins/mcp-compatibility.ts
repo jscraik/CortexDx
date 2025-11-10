@@ -84,7 +84,7 @@ async function testProtocolVersions(
       const initRequest = {
         protocolVersion: version,
         capabilities: { tools: {}, resources: {}, prompts: {} },
-        clientInfo: { name: "insula-compat-checker", version: "1.0.0" },
+        clientInfo: { name: "cortexdx-compat-checker", version: "1.0.0" },
       };
 
       const response = await ctx.jsonrpc<{

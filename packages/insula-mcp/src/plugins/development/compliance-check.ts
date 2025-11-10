@@ -107,7 +107,7 @@ async function testMcpInitialize(endpoint: string): Promise<McpTestResult> {
                 params: {
                     protocolVersion: '2024-11-05',
                     capabilities: {},
-                    clientInfo: { name: 'insula-mcp-diagnostic', version: '1.0.0' }
+                    clientInfo: { name: 'cortexdx-diagnostic', version: '1.0.0' }
                 }
             }),
             signal: AbortSignal.timeout(5000)

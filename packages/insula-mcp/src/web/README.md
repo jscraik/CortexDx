@@ -1,4 +1,4 @@
-# Insula MCP Web Interface
+# CortexDx Web Interface
 
 A minimal web-based interface for visual MCP development and debugging.
 
@@ -42,7 +42,7 @@ The interface uses Server-Sent Events (SSE) for real-time updates:
 
 ## Usage
 
-1. Start the Insula MCP server:
+1. Start the CortexDx server:
 
    ```bash
    pnpm server:prod

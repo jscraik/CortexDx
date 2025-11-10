@@ -1,10 +1,10 @@
 {
-  "name": "@brainwav/insula-mcp",
+  "name": "@brainwav/cortexdx",
   "version": "1.0.0",
-  "description": "Insula MCP — Diagnostic Meta-Inspector (stateless, plugin-based)",
+  "description": "CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)",
   "type": "module",
   "bin": {
-    "insula-mcp": "dist/cli.js"
+    "cortexdx": "dist/cli.js"
   },
   "main": "dist/index.js",
   "exports": {

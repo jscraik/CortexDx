@@ -1,5 +1,5 @@
 /**
- * Insula MCP Server
+ * CortexDx Server
  * HTTP server that exposes the academic research providers as MCP endpoints
  */
 
@@ -774,7 +774,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         status: 'healthy',
-                        service: 'Insula MCP Server',
+                        service: 'CortexDx Server',
                         version: '1.0.0',
                         providers: Object.keys(registry.getAllProviders()),
                         timestamp: new Date().toISOString(),
@@ -1052,7 +1052,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                                     prompts: {}
                                 },
                                 serverInfo: {
-                                    name: 'Insula MCP Server',
+                                    name: 'CortexDx Server',
                                     version: '1.0.0'
                                 }
                             }
@@ -1197,7 +1197,7 @@ const SHOULD_LISTEN = process.env.VITEST !== "true" && process.env.NODE_ENV !== 
 
 if (SHOULD_LISTEN) {
     server.listen(PORT, HOST, () => {
-        console.log(`🚀 Insula MCP Server running on http://${HOST}:${PORT}`);
+        console.log(`🚀 CortexDx Server running on http://${HOST}:${PORT}`);
         console.log(`📚 Academic providers available: ${Object.keys(registry.getAllProviders()).join(', ')}`);
         console.log(`🌐 Web Interface: http://${HOST}:${PORT}/`);
         console.log("\nEndpoints:");

@@ -1,6 +1,6 @@
 # Monitoring and Alerting Guide
 
-This guide provides comprehensive instructions for monitoring Insula MCP in production environments.
+This guide provides comprehensive instructions for monitoring CortexDx in production environments.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ This guide provides comprehensive instructions for monitoring Insula MCP in prod
 
 ## Overview
 
-Insula MCP exposes Prometheus-compatible metrics for monitoring system health, performance, and usage. The monitoring stack includes:
+CortexDx exposes Prometheus-compatible metrics for monitoring system health, performance, and usage. The monitoring stack includes:
 
 - **Prometheus** - Metrics collection and storage
 - **Grafana** - Visualization and dashboards
@@ -96,10 +96,10 @@ kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheu
 kubectl create namespace monitoring
 
 # Apply ServiceMonitor
-kubectl apply -f packages/insula-mcp/kubernetes/monitoring/prometheus-servicemonitor.yaml
+kubectl apply -f packages/cortexdx/kubernetes/monitoring/prometheus-servicemonitor.yaml
 
 # Apply PrometheusRule
-kubectl apply -f packages/insula-mcp/kubernetes/monitoring/prometheus-rules.yaml
+kubectl apply -f packages/cortexdx/kubernetes/monitoring/prometheus-rules.yaml
 ```
 
 ### Configuration
@@ -115,16 +115,16 @@ global:
     environment: 'prod'
 
 scrape_configs:
-  - job_name: 'insula-mcp'
+  - job_name: 'cortexdx'
     kubernetes_sd_configs:
       - role: pod
         namespaces:
           names:
-            - insula-mcp
+            - cortexdx
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
         action: keep
-        regex: insula-mcp
+        regex: cortexdx
       - source_labels: [__meta_kubernetes_pod_name]
         target_label: pod
       - source_labels: [__meta_kubernetes_namespace]
@@ -150,7 +150,7 @@ kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
 open http://localhost:9090
 
 # Query metrics
-curl http://localhost:9090/api/v1/query?query=up{job="insula-mcp"}
+curl http://localhost:9090/api/v1/query?query=up{job="cortexdx"}
 ```
 
 ## Grafana Dashboards
@@ -177,7 +177,7 @@ kubectl port-forward -n monitoring svc/grafana 3000:80
 1. Access Grafana at http://localhost:3000
 2. Login with admin credentials
 3. Navigate to Dashboards → Import
-4. Upload `packages/insula-mcp/kubernetes/monitoring/grafana-dashboard.json`
+4. Upload `packages/cortexdx/kubernetes/monitoring/grafana-dashboard.json`
 5. Select Prometheus data source
 6. Click Import
 
@@ -241,19 +241,19 @@ Create custom dashboards for specific use cases:
 #### Service Availability
 
 ```yaml
-- alert: InsulaMCPDown
-  expr: up{job="insula-mcp"} == 0
+- alert: CortexDxMCPDown
+  expr: up{job="cortexdx"} == 0
   for: 5m
   labels:
     severity: critical
   annotations:
-    summary: "Insula MCP instance is down"
+    summary: "CortexDx instance is down"
 ```
 
 #### Performance
 
 ```yaml
-- alert: InsulaMCPHighResponseTime
+- alert: CortexDxMCPHighResponseTime
   expr: histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m])) > 2
   for: 10m
   labels:
@@ -265,7 +265,7 @@ Create custom dashboards for specific use cases:
 #### Resource Usage
 
 ```yaml
-- alert: InsulaMCPHighMemoryUsage
+- alert: CortexDxMCPHighMemoryUsage
   expr: (container_memory_working_set_bytes / container_spec_memory_limit_bytes) > 0.85
   for: 5m
   labels:
@@ -279,14 +279,14 @@ Create custom dashboards for specific use cases:
 Apply alerting rules:
 
 ```bash
-kubectl apply -f packages/insula-mcp/kubernetes/monitoring/prometheus-rules.yaml
+kubectl apply -f packages/cortexdx/kubernetes/monitoring/prometheus-rules.yaml
 ```
 
 Verify rules are loaded:
 
 ```bash
 # Check PrometheusRule status
-kubectl get prometheusrule -n insula-mcp
+kubectl get prometheusrule -n cortexdx
 
 # View active alerts
 kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
@@ -303,7 +303,7 @@ receivers:
   - name: 'slack-notifications'
     slack_configs:
       - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
-        channel: '#insula-mcp-alerts'
+        channel: '#cortexdx-alerts'
         title: '{{ .GroupLabels.alertname }}'
         text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
         send_resolved: true
@@ -381,8 +381,8 @@ EOF
 **Check ServiceMonitor:**
 
 ```bash
-kubectl get servicemonitor -n insula-mcp
-kubectl describe servicemonitor insula-mcp -n insula-mcp
+kubectl get servicemonitor -n cortexdx
+kubectl describe servicemonitor cortexdx -n cortexdx
 ```
 
 **Check Prometheus Targets:**
@@ -395,7 +395,7 @@ kubectl port-forward -n monitoring svc/prometheus-operated 9090:9090
 **Check Pod Labels:**
 
 ```bash
-kubectl get pods -n insula-mcp --show-labels
+kubectl get pods -n cortexdx --show-labels
 ```
 
 ### Alerts Not Firing
@@ -403,8 +403,8 @@ kubectl get pods -n insula-mcp --show-labels
 **Check PrometheusRule:**
 
 ```bash
-kubectl get prometheusrule -n insula-mcp
-kubectl describe prometheusrule insula-mcp-alerts -n insula-mcp
+kubectl get prometheusrule -n cortexdx
+kubectl describe prometheusrule cortexdx-alerts -n cortexdx
 ```
 
 **Check Alert Status:**
@@ -422,7 +422,7 @@ open http://localhost:9093
 
 ```bash
 # Test alert query in Prometheus
-curl 'http://localhost:9090/api/v1/query?query=up{job="insula-mcp"}==0'
+curl 'http://localhost:9090/api/v1/query?query=up{job="cortexdx"}==0'
 ```
 
 ### High Cardinality Issues
@@ -504,6 +504,6 @@ curl 'http://localhost:9090/api/v1/query?query=YOUR_QUERY'
 
 For additional help:
 
-- Documentation: https://brainwav.dev/docs/insula-mcp/monitoring
-- GitHub Issues: https://github.com/brainwav/insula-mcp/issues
+- Documentation: https://brainwav.dev/docs/cortexdx/monitoring
+- GitHub Issues: https://github.com/brainwav/cortexdx/issues
 - Community: https://discord.gg/brainwav

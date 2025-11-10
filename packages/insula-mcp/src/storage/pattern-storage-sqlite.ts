@@ -154,7 +154,7 @@ export class PatternEncryption {
     constructor(encryptionKey?: string) {
         // In production, retrieve from system keychain
         // For now, use provided key or generate one (but cache it for consistency)
-        const keyString = encryptionKey || process.env.INSULA_PATTERN_KEY || this.getOrGenerateDefaultKey();
+        const keyString = encryptionKey || process.env.CORTEXDX_PATTERN_KEY || this.getOrGenerateDefaultKey();
         this.key = Buffer.from(keyString, "hex");
     }
 

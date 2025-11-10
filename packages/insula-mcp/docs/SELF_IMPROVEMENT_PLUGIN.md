@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Self-Improvement Plugin is an internal diagnostic plugin that analyzes Insula MCP itself for handshake gaps, dependency issues, health regressions, and conversation signals. It provides enhanced self-healing insights using LLM analysis to identify and resolve internal issues.
+The Self-Improvement Plugin is an internal diagnostic plugin that analyzes CortexDx itself for handshake gaps, dependency issues, health regressions, and conversation signals. It provides enhanced self-healing insights using LLM analysis to identify and resolve internal issues.
 
 **Plugin ID**: `self-improvement`  
 **Category**: `development`  
@@ -11,9 +11,9 @@ The Self-Improvement Plugin is an internal diagnostic plugin that analyzes Insul
 
 ## Purpose
 
-The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, enabling continuous self-monitoring and improvement. It addresses Requirement 15 from the specification:
+The Self-Improvement Plugin serves as CortexDx's internal diagnostic system, enabling continuous self-monitoring and improvement. It addresses Requirement 15 from the specification:
 
-> As a brAInwav developer, I want Insula MCP to continuously self-diagnose and identify internal regressions in handshakes, dependencies, and health, so that I can maintain system reliability and automatically improve the diagnostic tool itself.
+> As a brAInwav developer, I want CortexDx to continuously self-diagnose and identify internal regressions in handshakes, dependencies, and health, so that I can maintain system reliability and automatically improve the diagnostic tool itself.
 
 ## Core Functionality
 
@@ -25,8 +25,8 @@ The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, e
 
 **Tracked Files**:
 
-- `packages/insula-mcp/src/adapters/jsonrpc.ts` - JSON-RPC adapter for handshake
-- `packages/insula-mcp/src/adapters/sse.ts` - SSE adapter for streaming handshake
+- `packages/cortexdx/src/adapters/jsonrpc.ts` - JSON-RPC adapter for handshake
+- `packages/cortexdx/src/adapters/sse.ts` - SSE adapter for streaming handshake
 
 **Detection Logic**:
 
@@ -193,7 +193,7 @@ The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, e
 
 1. Creates InspectorAdapter instance
 2. Runs `selfDiagnose()` method
-3. Converts Inspector findings to Insula format
+3. Converts Inspector findings to CortexDx format
 4. Returns array of findings or error finding on failure
 
 **Integration Benefits**:
@@ -201,7 +201,7 @@ The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, e
 - Leverages MCP Inspector's comprehensive diagnostic capabilities
 - Provides deep protocol-level analysis
 - Identifies issues not caught by basic checks
-- Enables meta-diagnostic workflows (Insula diagnosing itself)
+- Enables meta-diagnostic workflows (CortexDx diagnosing itself)
 
 ### 7. LLM-Enhanced Analysis (Req 15.5)
 
@@ -214,7 +214,7 @@ The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, e
 1. Retrieves enhanced LLM adapter from router
 2. For each finding, constructs analysis prompt with:
    - Finding details (ID, severity, description, evidence)
-   - Current Insula context (files, dependencies, language)
+   - Current CortexDx context (files, dependencies, language)
    - User expertise level
 3. Requests structured JSON analysis from LLM
 4. Enhances finding with LLM insights
@@ -223,7 +223,7 @@ The Self-Improvement Plugin serves as Insula MCP's internal diagnostic system, e
 
 ```typescript
 {
-  rootCause: "Specific cause in Insula's codebase",
+  rootCause: "Specific cause in CortexDx's codebase",
   filesToModify: ["file1.ts", "file2.ts"],
   codeChanges: "Actual code changes needed",
   validationSteps: ["step1", "step2"],
@@ -286,7 +286,7 @@ const ctx: DevelopmentContext = {
   userExpertiseLevel: 'intermediate',
   conversationHistory: [],
   projectContext: {
-    name: 'insula-mcp',
+    name: 'cortexdx',
     type: 'mcp-client',
     language: 'typescript',
     dependencies: ['@modelcontextprotocol/sdk'],
@@ -302,15 +302,15 @@ const findings = await SelfImprovementPlugin.run(ctx);
 
 ```bash
 # Run self-improvement diagnostics
-pnpm tsx packages/insula-mcp/scripts/internal/self-improvement.ts \
+pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
   --endpoint http://localhost:5001 \
-  --project packages/insula-mcp \
+  --project packages/cortexdx \
   --type mcp-client \
   --language typescript \
   --out reports/self-improvement.json
 
 # With conversation history
-pnpm tsx packages/insula-mcp/scripts/internal/self-improvement.ts \
+pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
   --endpoint http://localhost:5001 \
   --history .insula/conversation-history.json \
   --out reports/self-improvement.json
@@ -319,7 +319,7 @@ pnpm tsx packages/insula-mcp/scripts/internal/self-improvement.ts \
 ### CLI Options
 
 - `--endpoint <url>`: Inspector endpoint (default: `http://127.0.0.1:5001`)
-- `--project <path>`: Project root path (default: `packages/insula-mcp`)
+- `--project <path>`: Project root path (default: `packages/cortexdx`)
 - `--type <type>`: Project type (`mcp-server`, `mcp-client`, `mcp-connector`)
 - `--language <lang>`: Project language (default: `typescript`)
 - `--history <path>`: Path to conversation history JSON file
@@ -446,10 +446,10 @@ pnpm test:coverage self-improvement
 
 ## Design Rationale
 
-The Self-Improvement Plugin follows the principle of "eating your own dog food" by using Insula MCP's diagnostic capabilities to diagnose itself. This approach:
+The Self-Improvement Plugin follows the principle of "eating your own dog food" by using CortexDx's diagnostic capabilities to diagnose itself. This approach:
 
 1. **Validates Core Functionality**: Ensures diagnostic tools work correctly
-2. **Enables Meta-Diagnostics**: Allows Insula to identify its own issues
+2. **Enables Meta-Diagnostics**: Allows CortexDx to identify its own issues
 3. **Provides Continuous Monitoring**: Detects regressions early
 4. **Leverages LLM Intelligence**: Uses AI for enhanced root cause analysis
 5. **Maintains Consistency**: Uses same plugin architecture as other diagnostics
@@ -467,4 +467,4 @@ The Self-Improvement Plugin follows the principle of "eating your own dog food" 
 - [Inspector Adapter](./INSPECTOR_ADAPTER.md)
 - [LLM Integration](./LLM_INTEGRATION.md)
 - [Development Plugins](./DEVELOPMENT_PLUGINS.md)
-- [Requirements Document](../.kiro/specs/insula-mcp-diagnostic-system/requirements.md)
+- [Requirements Document](../.kiro/specs/cortexdx-diagnostic-system/requirements.md)

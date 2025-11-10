@@ -48,7 +48,7 @@ export interface HealingSummary {
 }
 
 /**
- * Auto-healer for Insula MCP self-diagnosis and automated fixing
+ * Auto-healer for CortexDx self-diagnosis and automated fixing
  */
 export class AutoHealer {
   private ctx: DevelopmentContext;

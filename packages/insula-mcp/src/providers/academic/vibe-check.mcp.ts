@@ -95,7 +95,7 @@ export interface CodeHealthAnalysis {
 }
 
 export class VibeCheckProvider {
-    private readonly userAgent = "Insula-MCP/1.0.0 (Academic Research Quality Assessment)";
+    private readonly userAgent = "CortexDx/1.0.0 (Academic Research Quality Assessment)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     // Quality assessment criteria weights

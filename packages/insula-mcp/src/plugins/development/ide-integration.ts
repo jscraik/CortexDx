@@ -76,7 +76,7 @@ export const IdeIntegrationPlugin: DevelopmentPlugin = {
                 severity: "info",
                 title: "IDE integration available",
                 description:
-                    "Connect your IDE to Insula MCP for real-time validation and assistance.",
+                    "Connect your IDE to CortexDx for real-time validation and assistance.",
                 evidence: [{ type: "log", ref: "ide-integration" }],
                 recommendation:
                     "Configure your IDE to connect to this MCP server:\n" +
@@ -217,7 +217,7 @@ async function validateMcpCode(
                     severity: "warning",
                     message: "MCP tool should define inputSchema",
                     code: "mcp-tool-schema",
-                    source: "insula-mcp",
+                    source: "cortexdx",
                 });
 
                 quickFixes.push({
@@ -246,7 +246,7 @@ async function validateMcpCode(
                 severity: "error",
                 message: 'JSON-RPC version must be "2.0"',
                 code: "jsonrpc-version",
-                source: "insula-mcp",
+                source: "cortexdx",
             });
 
             quickFixes.push({
@@ -317,7 +317,7 @@ async function validateMcpCode(
                         severity: "warning",
                         message: `Unknown MCP method: ${method}`,
                         code: "mcp-method-unknown",
-                        source: "insula-mcp",
+                        source: "cortexdx",
                     });
                 }
             }

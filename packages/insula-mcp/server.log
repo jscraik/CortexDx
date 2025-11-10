@@ -1,0 +1,164 @@
+🚀 CortexDx Server running on http://127.0.0.1:5001
+📚 Academic providers available: semantic-scholar, openalex, wikidata, arxiv, vibe-check, context7, exa
+🌐 Web Interface: http://127.0.0.1:5001/
+
+Endpoints:
+  GET  /              - Web Interface
+  GET  /health        - Health check (add ?detailed=true for full report)
+  GET  /events        - SSE real-time updates
+  GET  /providers     - List all providers
+  GET  /capabilities  - All provider capabilities
+  GET  /health-checks - Provider health status
+  POST /mcp           - MCP protocol endpoint
+  GET  /providers/:id - Provider details
+  POST /providers/:id/execute - Execute provider tool
+
+Monitoring API:
+  GET  /monitoring/status  - Monitoring system status
+  GET  /monitoring/report  - Comprehensive monitoring report
+  GET  /monitoring/alerts  - Current alerts
+  DELETE /monitoring/alerts - Clear alerts
+  POST /monitoring/control - Start/stop monitoring
+
+Self-Healing API:
+  POST /api/v1/self-diagnose - Run self-diagnosis with optional auto-fix
+  GET  /api/v1/health        - Quick health check
+  GET  /api/v1/templates      - List available fix templates
+  POST /api/v1/templates/:id - Apply a fix template
+  POST /api/v1/monitor       - Control background monitoring
+
+📊 Monitoring enabled (interval: 60000ms)
+[ALERT] WARNING: memory - Memory usage at 76%
+[SelfHealingAPI] [AutoHealer] Starting self-healing job heal_1762725088923_3a5wx40x7pt
+[SelfHealingAPI] [AutoHealer] Running comprehensive diagnostics
+[SelfHealingAPI] [Inspector] Running self-diagnosis on http://127.0.0.1:5001
+[SelfHealingAPI] [Inspector] Starting diagnostic job inspector_1762725088924_7lz1jtzqvqs for http://127.0.0.1:5001
+[SelfHealingAPI] [InspectorAdapter] Running real MCP Inspector diagnostics on http://127.0.0.1:5001
+[SelfHealingAPI] [InspectorAdapter] Executing: npx @modelcontextprotocol/inspector --cli --transport stdio --timeout=30000 --log-level=info | node /Volumes/ExternalSSD/dev/insula-mcp/packages/insula-mcp/dist/adapters/stdio-wrapper.js --endpoint http://127.0.0.1:5001/mcp --timeout 30 --verbose
+[SelfHealingAPI] [InspectorAdapter] wrapper stderr: [StudioWrapper] Starting with endpoint: http://127.0.0.1:5001/mcp
+[SelfHealingAPI] [InspectorAdapter] inspector stderr: Method is required. Use --method to specify the method to invoke.
+[SelfHealingAPI] [InspectorAdapter] inspector stderr: Failed with exit code: 1
+[SelfHealingAPI] [InspectorAdapter] MCP Inspector exited with code 1
+[SelfHealingAPI] [InspectorAdapter] wrapper stderr: [StudioWrapper] stdin closed, exiting
+[SelfHealingAPI] [InspectorAdapter] Stdio wrapper exited with code 0
+[SelfHealingAPI] [Inspector] Completed job inspector_1762725088924_7lz1jtzqvqs in 5103ms with 5 findings
+[SelfHealingAPI] [AutoHealer] Inspector found 5 issues
+[SelfHealingAPI] [Self-Improvement] Running MCP Inspector self-diagnosis
+[SelfHealingAPI] [Inspector] Running self-diagnosis on http://127.0.0.1:5001
+[SelfHealingAPI] [Inspector] Starting diagnostic job inspector_1762725094027_8xpshhy82ka for http://127.0.0.1:5001
+[SelfHealingAPI] [InspectorAdapter] Running real MCP Inspector diagnostics on http://127.0.0.1:5001
+[SelfHealingAPI] [InspectorAdapter] Executing: npx @modelcontextprotocol/inspector --cli --transport stdio --timeout=30000 --log-level=info | node /Volumes/ExternalSSD/dev/insula-mcp/packages/insula-mcp/dist/adapters/stdio-wrapper.js --endpoint http://127.0.0.1:5001/mcp --timeout 30 --verbose
+[SelfHealingAPI] [InspectorAdapter] wrapper stderr: [StudioWrapper] Starting with endpoint: http://127.0.0.1:5001/mcp
+[SelfHealingAPI] [InspectorAdapter] inspector stderr: Method is required. Use --method to specify the method to invoke.
+[SelfHealingAPI] [InspectorAdapter] inspector stderr: Failed with exit code: 1
+[SelfHealingAPI] [InspectorAdapter] MCP Inspector exited with code 1
+[SelfHealingAPI] [InspectorAdapter] wrapper stderr: [StudioWrapper] stdin closed, exiting
+[SelfHealingAPI] [InspectorAdapter] Stdio wrapper exited with code 0
+[SelfHealingAPI] [Inspector] Completed job inspector_1762725094027_8xpshhy82ka in 2550ms with 5 findings
+[SelfHealingAPI] [Self-Improvement] Inspector found 5 issues
+[SelfHealingAPI] [Self-Improvement] LLM not available, returning raw findings
+[SelfHealingAPI] [AutoHealer] Self-improvement found 6 issues
+[SelfHealingAPI] [AutoHealer] Total unique findings: 11
+[SelfHealingAPI] [AutoHealer] Analyzing findings with LLM
+[SelfHealingAPI] [Self-Improvement] LLM not available, returning raw findings
+[SelfHealingAPI] [AutoHealer] Attempting to fix 0 findings automatically
+[SelfHealingAPI] [AutoHealer] Successfully applied 0 automated fixes
+[SelfHealingAPI] [AutoHealer] Validating applied fixes
+[SelfHealingAPI] [AutoHealer] Validation summary: {
+  totalFindings: 11,
+  issuesFixed: 0,
+  issuesRemaining: 11,
+  autoFixed: 0,
+  manualReviewRequired: 11,
+  blockersRemaining: 0
+}
+[SelfHealingAPI] [AutoHealer] Self-healing job heal_1762725088923_3a5wx40x7pt completed: partial
+[ALERT] WARNING: memory - Memory usage at 85%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: memory - Critical: Memory usage above 90%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 87%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 88%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 82%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 89%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 90%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 90%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 83%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 89%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 90%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 90%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: memory - Critical: Memory usage above 90%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 83%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 89%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 89%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: memory - Memory usage at 94%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: memory - Memory usage at 92%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 84%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: memory - Critical: Memory usage above 90%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: memory - Memory usage at 91%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 88%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: memory - Critical: Memory usage above 90%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 84%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 89%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: memory - Memory usage at 91%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 88%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: memory - Critical: Memory usage above 90%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 83%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] WARNING: memory - Memory usage at 87%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: memory - Memory usage at 94%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%
+[ALERT] CRITICAL: performance - Error rate at 25%
+[ALERT] CRITICAL: performance - Critical: Error rate above 10%

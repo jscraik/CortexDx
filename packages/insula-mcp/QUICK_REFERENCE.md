@@ -1,35 +1,35 @@
-# Insula MCP v1.0.0 Quick Reference
+# CortexDx v1.0.0 Quick Reference
 
 ## Installation
 
 ### NPM
 
 ```bash
-npm install -g @brainwav/insula-mcp@1.0.0
+npm install -g @brainwav/cortexdx@1.0.0
 ```
 
 ### Docker
 
 ```bash
 # Community (Free)
-docker run -p 3000:3000 brainwav/insula-mcp:1.0.0-community
+docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Professional (License Required)
 docker run -p 3000:3000 \
   -e INSULA_LICENSE_KEY=your-key \
-  brainwav/insula-mcp:1.0.0-professional
+  brainwav/cortexdx:1.0.0-professional
 
 # Enterprise (License + Auth0 Required)
 docker run -p 3000:3000 \
   -e INSULA_LICENSE_KEY=your-key \
   -e AUTH0_DOMAIN=your-domain.auth0.com \
-  brainwav/insula-mcp:1.0.0-enterprise
+  brainwav/cortexdx:1.0.0-enterprise
 ```
 
 ### Quick Deploy
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/brainwav/insula-mcp/main/packages/insula-mcp/scripts/quick-deploy.sh | bash -s community
+curl -fsSL https://raw.githubusercontent.com/brainwav/cortexdx/main/packages/cortexdx/scripts/quick-deploy.sh | bash -s community
 ```
 
 ## Essential Commands
@@ -38,39 +38,39 @@ curl -fsSL https://raw.githubusercontent.com/brainwav/insula-mcp/main/packages/i
 
 ```bash
 # Basic scan
-insula-mcp diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # Full analysis
-insula-mcp diagnose https://mcp.example.com --full
+cortexdx diagnose https://mcp.example.com --full
 
 # With authentication
-insula-mcp diagnose https://mcp.example.com --auth bearer:token
+cortexdx diagnose https://mcp.example.com --auth bearer:token
 ```
 
 ### Interactive Mode
 
 ```bash
 # Start interactive session
-insula-mcp interactive
+cortexdx interactive
 
 # Debug specific issue
-insula-mcp debug "connection timeout"
+cortexdx debug "connection timeout"
 
 # Generate code
-insula-mcp generate
+cortexdx generate
 ```
 
 ### Development
 
 ```bash
 # Get best practices
-insula-mcp best-practices https://mcp.example.com
+cortexdx best-practices https://mcp.example.com
 
 # Interactive tutorial
-insula-mcp tutorial mcp-basics
+cortexdx tutorial mcp-basics
 
 # Environment check
-insula-mcp doctor
+cortexdx doctor
 ```
 
 ## Feature Tiers
@@ -117,21 +117,21 @@ AUTH0_CLIENT_SECRET=your-secret
 ### Check Version
 
 ```bash
-insula-mcp --version
+cortexdx --version
 ```
 
 ### Verify License
 
 ```bash
-insula-mcp license verify
-insula-mcp license features
+cortexdx license verify
+cortexdx license features
 ```
 
 ### View Patterns
 
 ```bash
-insula-mcp patterns list
-insula-mcp patterns export --output patterns.json
+cortexdx patterns list
+cortexdx patterns export --output patterns.json
 ```
 
 ### Health Check
@@ -145,25 +145,25 @@ curl http://localhost:3000/health
 ### Start Container
 
 ```bash
-docker start insula-mcp-community
+docker start cortexdx-community
 ```
 
 ### Stop Container
 
 ```bash
-docker stop insula-mcp-community
+docker stop cortexdx-community
 ```
 
 ### View Logs
 
 ```bash
-docker logs -f insula-mcp-community
+docker logs -f cortexdx-community
 ```
 
 ### Shell Access
 
 ```bash
-docker exec -it insula-mcp-community sh
+docker exec -it cortexdx-community sh
 ```
 
 ## Troubleshooting
@@ -172,38 +172,38 @@ docker exec -it insula-mcp-community sh
 
 ```bash
 # Increase timeout
-insula-mcp diagnose <endpoint> --budget-time 15000
+cortexdx diagnose <endpoint> --budget-time 15000
 
 # Check network
-insula-mcp doctor
+cortexdx doctor
 ```
 
 ### Memory Issues
 
 ```bash
 # Increase memory budget
-insula-mcp diagnose <endpoint> --budget-mem 256
+cortexdx diagnose <endpoint> --budget-mem 256
 ```
 
 ### Authentication Problems
 
 ```bash
 # Test different auth methods
-insula-mcp diagnose <endpoint> --auth bearer:token
-insula-mcp diagnose <endpoint> --auth basic:user:pass
+cortexdx diagnose <endpoint> --auth bearer:token
+cortexdx diagnose <endpoint> --auth basic:user:pass
 ```
 
 ## Support
 
-- **Documentation**: https://docs.brainwav.io/insula-mcp
-- **GitHub Issues**: https://github.com/brainwav/insula-mcp/issues
-- **Community**: https://github.com/brainwav/insula-mcp/discussions
+- **Documentation**: https://docs.brainwav.io/cortexdx
+- **GitHub Issues**: https://github.com/brainwav/cortexdx/issues
+- **Community**: https://github.com/brainwav/cortexdx/discussions
 - **Email**: support@brainwav.io
 
 ## Links
 
-- **NPM**: https://www.npmjs.com/package/@brainwav/insula-mcp
-- **Docker Hub**: https://hub.docker.com/r/brainwav/insula-mcp
-- **GitHub**: https://github.com/brainwav/insula-mcp
+- **NPM**: https://www.npmjs.com/package/@brainwav/cortexdx
+- **Docker Hub**: https://hub.docker.com/r/brainwav/cortexdx
+- **GitHub**: https://github.com/brainwav/cortexdx
 - **Release Notes**: [RELEASE_NOTES.md](RELEASE_NOTES.md)
 - **Migration Guide**: [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)

@@ -1,6 +1,6 @@
 <!--
 file_path: "AGENTS.md"
-description: "Agent Operational Instructions for Insula MCP"
+description: "Agent Operational Instructions for CortexDx"
 maintainer: "@jamiescottcraik"
 last_updated: "2025-11-05"
 version: "2.0.0"
@@ -8,9 +8,9 @@ status: "authoritative"
 license: "Apache 2.0"
 -->
 
-# AGENTS — Insula MCP (authoritative)
+# AGENTS — CortexDx (authoritative)
 
-**Scope:** This document governs every human and AI contributor working inside the Insula MCP repository. The instructions below are mandatory unless a newer project-local `AGENTS.md` overrides a section. Failing to comply blocks merge.
+**Scope:** This document governs every human and AI contributor working inside the CortexDx repository. The instructions below are mandatory unless a newer project-local `AGENTS.md` overrides a section. Failing to comply blocks merge.
 
 > 📌 **Read this first:** the canonical vision and PRD integration for this project lives at [`/.insula/rules/vision.md`](./.insula/rules/vision.md). Always keep your work aligned with that document.
 
@@ -35,7 +35,7 @@ license: "Apache 2.0"
 
 ## 1. Hierarchy of Authority
 
-1. **This AGENTS.md** (repo root) — authoritative for Insula MCP.
+1. **This AGENTS.md** (repo root) — authoritative for CortexDx.
 2. **Nested `AGENTS.md` files** — may tighten rules for subdirectories.
 3. **Vision Doc** (`.insula/rules/vision.md`) — defines north star, roadmap, and non-goals.
 4. **brAInwav Constitution + CODESTYLE** — global policies (branding, a11y, ArcTDD, governance).
@@ -49,8 +49,8 @@ Whenever instructions conflict, obey the most specific rule that still honours h
 - **Node:** 20.11.1 (managed by Mise).
 - **pnpm:** 9.12.2 (managed by Mise).
 - **Nx:** 19.8.4.
-- **Biome:** 1.9.4 (lint + format via `pnpm lint` / `pnpm --dir packages/insula-mcp exec biome format src`).
-- **Typescript/tsup/vitest:** already specified in `packages/insula-mcp/package.json`.
+- **Biome:** 1.9.4 (lint + format via `pnpm lint` / `pnpm --dir packages/cortexdx exec biome format src`).
+- **Typescript/tsup/vitest:** already specified in `packages/cortexdx/package.json`.
 
 ```bash
 mise install             # installs pinned Node & pnpm
@@ -62,12 +62,29 @@ pnpm build               # tsup bundle & dts check
 
 Never substitute npm/yarn or bypass Nx target wrappers. Do not add global installs.
 
+### Local Memory profile toggle (Cortex ↔ Insula)
+
+Many Insula diagnostics rely on the Cortex Local Memory stack for Qdrant and
+MCP bridge parity. Before running workflows that must mirror Cortex behavior:
+
+1. From the `.Cortex-OS` repo root, run `pnpm mcp:profile insula` (wrapper for
+   `scripts/launchd/toggle-local-memory.sh`). This bootouts any existing agent,
+   renders the Insula plist, and restarts launchd with the MCP-only profile.
+2. Verify the swap with `launchctl print gui/$UID/com.brainwav.insula-local-memory
+   | rg -i state`, `lsof -i :3002` (should be empty), and `lsof -i :6333`
+   (Qdrant stays up for semantic recall).
+3. After reproducing/diagnosing, return to the Cortex default via
+   `pnpm mcp:profile cortex` and re-check the ports.
+
+Always mention which profile you used in PR evidence so reviewers can copy the
+same commands without editing plist files manually.
+
 ---
 
 ## 3. Development Workflow (ArcTDD in Practice)
 
 1. **Plan:** understand the relevant section in `vision.md`, break work into ≤7 steps.
-2. **Test first:** add or adjust Vitest suites (`packages/insula-mcp/tests`). For new plugins or adapters, include targeted tests plus any necessary mock servers under `scripts/mock-servers/`.
+2. **Test first:** add or adjust Vitest suites (`packages/cortexdx/tests`). For new plugins or adapters, include targeted tests plus any necessary mock servers under `scripts/mock-servers/`.
 3. **Implement:**
    - Keep functions ≤40 lines; compose helpers if necessary.
    - Maintain named exports (`export const Foo`, `export function`, `export type { ... }`).
@@ -76,13 +93,13 @@ Never substitute npm/yarn or bypass Nx target wrappers. Do not add global instal
 4. **Determinism:** if randomness/time is involved, respect the `deterministic` flag. Do not write real-time `Date.now()` results to findings unless seeded or offset aware.
 5. **Evidence:** every finding must include at least one evidence pointer (`url`, `file`, or `log`). For new plugin outputs, extend reporting if needed.
 6. **Docs & Vision Alignment:** update README/vision when introducing new flags, suites, or governance impacts.
-7. **Verify:** run lint/test/build, then—when relevant—`npx insula-mcp diagnose` against mock servers (`ok.ts`, `broken-sse.ts`, etc.) to validate outputs.
+7. **Verify:** run lint/test/build, then—when relevant—`npx cortexdx diagnose` against mock servers (`ok.ts`, `broken-sse.ts`, etc.) to validate outputs.
 
 ---
 
 ## 4. MCP-Specific Rules
 
-- **Scope:** Insula MCP inspects MCP servers/clients only. Do not expand into generic REST/GraphQL fuzzing without explicit roadmap approval.
+- **Scope:** CortexDx inspects MCP servers/clients only. Do not expand into generic REST/GraphQL fuzzing without explicit roadmap approval.
 - **Statelessness:** No writes, no destructive actions, no persistence beyond local artifacts (`reports/`, HAR). Opt-in HAR must always redact authorization headers.
 - **Plugin Sandbox:** all plugins execute inside worker threads with budgets. Never require forbidden modules (`fs`, `child_process`, raw `net`). If a plugin cannot run sandboxed, treat that as a bug and surface a major finding.
 - **Transports:** Support HTTP(S), SSE, WebSocket, JSON-RPC (batch & notifications), optional gRPC shim. Streaming probes must honour proxies (retry/ID semantics).
@@ -99,7 +116,7 @@ Never substitute npm/yarn or bypass Nx target wrappers. Do not add global instal
 - **Function size:** ≤40 lines. Break helpers when necessary.
 - **No implicit `any`.** Use discriminated unions, type guards, or generics.
 - **Linting:** `pnpm lint` must pass with zero warnings. Biome controls style, indentation (2 spaces), and forbids unused template literals.
-- **Testing:** Vitest tests live in `packages/insula-mcp/tests`. Keep them deterministic; employ mocks for network behaviour.
+- **Testing:** Vitest tests live in `packages/cortexdx/tests`. Keep them deterministic; employ mocks for network behaviour.
 - **File structure:** new suites in `src/plugins/`, adapters under `src/adapters/`, reporting under `src/report/`, workers under `src/workers/`.
 - **Docs:** update `README.md` for new commands/flags and cross-reference the vision doc.
 
@@ -110,7 +127,7 @@ Never substitute npm/yarn or bypass Nx target wrappers. Do not add global instal
 CI (GitHub Actions) will:
 - Install via pnpm (respecting provided lockfile).
 - `pnpm build`, `pnpm lint`, `pnpm test` (in that order).
-- Run `insula-mcp diagnose` (quick suite) and upload artifacts.
+- Run `cortexdx diagnose` (quick suite) and upload artifacts.
 - Fail the workflow if findings include severity `blocker` (exit 1) or `major` (exit 2) unless overridden by flags.
 - Produce SBOM (`npm ls`) and license scans per Constitution/CODESTYLE.
 
@@ -167,3 +184,27 @@ Failure to meet these expectations will block your contribution until corrected.
 ---
 
 Stay aligned with the vision, keep inscriptions deterministic, and ship evidence-backed diagnostics. ✦
+
+
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+# General Guidelines for working with Nx
+
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- You have access to the Nx MCP server and its tools, use them to help the user
+- When answering questions about the repository, use the `nx_workspace` tool first to gain an understanding of the workspace architecture where applicable.
+- When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
+- For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
+- If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+
+# CI Error Guidelines
+
+If the user wants help with fixing an error in their CI pipeline, use the following flow:
+- Retrieve the list of current CI Pipeline Executions (CIPEs) using the `nx_cloud_cipe_details` tool
+- If there are any errors, use the `nx_cloud_fix_cipe_failure` tool to retrieve the logs for a specific task
+- Use the task logs to see what's wrong and help the user fix their problem. Use the appropriate tools if necessary
+- Make sure that the problem is fixed by running the task that you passed into the `nx_cloud_fix_cipe_failure` tool
+
+
+<!-- nx configuration end-->

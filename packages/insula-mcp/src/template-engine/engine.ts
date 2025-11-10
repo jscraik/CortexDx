@@ -49,7 +49,7 @@ export class TemplateEngine {
 
   constructor(workspaceRoot: string = process.cwd()) {
     this.workspaceRoot = workspaceRoot;
-    this.backupDir = join(workspaceRoot, '.insula-backups');
+    this.backupDir = join(workspaceRoot, '.cortexdx-backups');
   }
 
   /**

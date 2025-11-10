@@ -1,12 +1,12 @@
 {
-  "name": "insula-mcp-workspace",
+  "name": "cortexdx-workspace",
   "private": true,
   "packageManager": "pnpm@9.12.2",
   "scripts": {
-    "build": "NX_CLOUD=false nx run insula-mcp:build",
-    "test": "NX_CLOUD=false nx run insula-mcp:test",
-    "lint": "NX_CLOUD=false nx run insula-mcp:lint",
-    "doctor": "NX_CLOUD=false nx run insula-mcp:doctor",
+    "build": "NX_CLOUD=false nx run cortexdx:build",
+    "test": "NX_CLOUD=false nx run cortexdx:test",
+    "lint": "NX_CLOUD=false nx run cortexdx:lint",
+    "doctor": "NX_CLOUD=false nx run cortexdx:doctor",
     "docs:validate": "node scripts/validate-docs.js",
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.nx\" \"#dist\" \"#reports\" \"#enhanced-reports\"",
     "docs:links": "find . -name \"*.md\" -not -path \"./node_modules/*\" -not -path \"./.nx/*\" -not -path \"./dist/*\" -not -path \"./reports/*\" -not -path \"./enhanced-reports/*\" -exec markdown-link-check {} \\;",
@@ -18,8 +18,8 @@
     "docs:sync-versions": "node scripts/sync-versions.js",
     "docs:sync-versions:dry-run": "node scripts/sync-versions.js --dry-run",
     "docs:monitor-links": "node scripts/broken-link-monitor.js",
-    "internal:self-improvement": "pnpm --filter @brainwav/insula-mcp run internal:self-improvement",
-    "internal:self-healing-suite": "pnpm --filter @brainwav/insula-mcp run internal:self-healing-suite"
+    "internal:self-improvement": "pnpm --filter @brainwav/cortexdx run internal:self-improvement",
+    "internal:self-healing-suite": "pnpm --filter @brainwav/cortexdx run internal:self-healing-suite"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

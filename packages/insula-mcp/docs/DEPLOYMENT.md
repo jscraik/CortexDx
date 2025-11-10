@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete guide for deploying Insula MCP in production environments across all licensing tiers. This guide covers Docker, Docker Compose, and Kubernetes deployments with production-ready configurations, security best practices, monitoring, and operational procedures.
+Complete guide for deploying CortexDx in production environments across all licensing tiers. This guide covers Docker, Docker Compose, and Kubernetes deployments with production-ready configurations, security best practices, monitoring, and operational procedures.
 
 ## Licensing Tiers
 
@@ -48,30 +48,30 @@ Complete guide for deploying Insula MCP in production environments across all li
 
 ```bash
 # Pull the image
-docker pull brainwav/insula-mcp:latest
+docker pull brainwav/cortexdx:latest
 
 # Run Community Edition
 docker run -d \
-  --name insula-mcp \
+  --name cortexdx \
   -p 3000:3000 \
   -e NODE_ENV=production \
   -e INSULA_MCP_TIER=community \
-  brainwav/insula-mcp:latest
+  brainwav/cortexdx:latest
 
 # Run Professional Edition
 docker run -d \
-  --name insula-mcp-pro \
+  --name cortexdx-pro \
   -p 3000:3000 \
   -e NODE_ENV=production \
   -e INSULA_MCP_TIER=professional \
   -e INSULA_MCP_LICENSE_KEY=your-license-key \
   -v insula-data:/app/data \
   -v insula-models:/app/models \
-  brainwav/insula-mcp:latest
+  brainwav/cortexdx:latest
 
 # Run Enterprise Edition
 docker run -d \
-  --name insula-mcp-enterprise \
+  --name cortexdx-enterprise \
   -p 3000:3000 \
   -e NODE_ENV=production \
   -e INSULA_MCP_TIER=enterprise \
@@ -81,33 +81,33 @@ docker run -d \
   -e AUTH0_CLIENT_SECRET=your-client-secret \
   -v insula-data:/app/data \
   -v insula-models:/app/models \
-  brainwav/insula-mcp:latest
+  brainwav/cortexdx:latest
 ```
 
 ### Building from Source
 
 ```bash
 # Clone repository
-git clone https://github.com/brainwav/insula-mcp.git
-cd insula-mcp
+git clone https://github.com/brainwav/cortexdx.git
+cd cortexdx
 
 # Build Docker image with build args
 docker build \
   --build-arg NODE_VERSION=20.11.1 \
   --build-arg PNPM_VERSION=9.12.2 \
-  -t insula-mcp:local \
-  -f packages/insula-mcp/Dockerfile .
+  -t cortexdx:local \
+  -f packages/cortexdx/Dockerfile .
 
 # Run with production settings
 docker run -d \
-  --name insula-mcp-local \
+  --name cortexdx-local \
   -p 3000:3000 \
   -e NODE_ENV=production \
   -e INSULA_MCP_TIER=community \
   --restart unless-stopped \
   --memory="512m" \
   --cpus="0.5" \
-  insula-mcp:local
+  cortexdx:local
 ```
 
 ### Production Docker Best Practices
@@ -119,19 +119,19 @@ export DOCKER_BUILDKIT=1
 
 # Build with cache optimization
 docker build \
-  --cache-from brainwav/insula-mcp:latest \
+  --cache-from brainwav/cortexdx:latest \
   --build-arg BUILDKIT_INLINE_CACHE=1 \
-  -t insula-mcp:production \
-  -f packages/insula-mcp/Dockerfile .
+  -t cortexdx:production \
+  -f packages/cortexdx/Dockerfile .
 
 # Security scanning
-docker scout cves insula-mcp:production
+docker scout cves cortexdx:production
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image insula-mcp:production
+  aquasec/trivy image cortexdx:production
 
 # Resource limits and security
 docker run -d \
-  --name insula-mcp-secure \
+  --name cortexdx-secure \
   -p 3000:3000 \
   --user 1001:1001 \
   --read-only \
@@ -146,7 +146,7 @@ docker run -d \
   --pids-limit 100 \
   -v insula-data:/app/data:rw \
   -v insula-logs:/app/logs:rw \
-  insula-mcp:production
+  cortexdx:production
 ```
 
 ## Docker Compose Deployment
@@ -175,13 +175,13 @@ OTEL_ENDPOINT=http://otel-collector:4318
 
 ```bash
 # Community Edition
-docker-compose up -d insula-mcp-community
+docker-compose up -d cortexdx-community
 
 # Professional Edition (includes Ollama)
-docker-compose up -d insula-mcp-professional ollama
+docker-compose up -d cortexdx-professional ollama
 
 # Enterprise Edition (full stack)
-docker-compose up -d insula-mcp-enterprise ollama postgres redis
+docker-compose up -d cortexdx-enterprise ollama postgres redis
 ```
 
 3. **Verify deployment**:
@@ -191,7 +191,7 @@ docker-compose up -d insula-mcp-enterprise ollama postgres redis
 curl http://localhost:3000/health
 
 # View logs
-docker-compose logs -f insula-mcp-professional
+docker-compose logs -f cortexdx-professional
 
 # Check status
 docker-compose ps
@@ -201,10 +201,10 @@ docker-compose ps
 
 ```bash
 # Scale Professional Edition
-docker-compose up -d --scale insula-mcp-professional=3
+docker-compose up -d --scale cortexdx-professional=3
 
 # Scale Enterprise Edition
-docker-compose up -d --scale insula-mcp-enterprise=5
+docker-compose up -d --scale cortexdx-enterprise=5
 ```
 
 ## Kubernetes Deployment
@@ -221,14 +221,14 @@ docker-compose up -d --scale insula-mcp-enterprise=5
 
 ```bash
 # Apply all configurations
-kubectl apply -f packages/insula-mcp/kubernetes/deployment.yaml
+kubectl apply -f packages/cortexdx/kubernetes/deployment.yaml
 
 # Verify deployment
-kubectl get pods -n insula-mcp
-kubectl get services -n insula-mcp
+kubectl get pods -n cortexdx
+kubectl get services -n cortexdx
 
 # Check logs
-kubectl logs -n insula-mcp -l app=insula-mcp --tail=100
+kubectl logs -n cortexdx -l app=cortexdx --tail=100
 ```
 
 ### Configuration
@@ -241,8 +241,8 @@ cat <<EOF > secrets.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: insula-mcp-secrets
-  namespace: insula-mcp
+  name: cortexdx-secrets
+  namespace: cortexdx
 type: Opaque
 stringData:
   license-key: "YOUR_LICENSE_KEY"
@@ -260,19 +260,19 @@ kubectl apply -f secrets.yaml
 
 ```bash
 # Update ingress host
-kubectl edit ingress insula-mcp-ingress -n insula-mcp
+kubectl edit ingress cortexdx-ingress -n cortexdx
 
 # Update with your domain
 # spec:
 #   rules:
-#   - host: insula-mcp.yourdomain.com
+#   - host: cortexdx.yourdomain.com
 ```
 
 3. **Configure storage**:
 
 ```bash
 # For cloud providers, update storage class
-kubectl edit pvc insula-mcp-data-pvc -n insula-mcp
+kubectl edit pvc cortexdx-data-pvc -n cortexdx
 
 # AWS: gp3
 # GCP: pd-ssd
@@ -283,30 +283,30 @@ kubectl edit pvc insula-mcp-data-pvc -n insula-mcp
 
 ```bash
 # Manual scaling
-kubectl scale deployment insula-mcp-enterprise -n insula-mcp --replicas=10
+kubectl scale deployment cortexdx-enterprise -n cortexdx --replicas=10
 
 # Auto-scaling is configured via HPA
-kubectl get hpa -n insula-mcp
+kubectl get hpa -n cortexdx
 
 # Update HPA
-kubectl edit hpa insula-mcp-enterprise-hpa -n insula-mcp
+kubectl edit hpa cortexdx-enterprise-hpa -n cortexdx
 ```
 
 ### Monitoring
 
 ```bash
 # Check pod status
-kubectl get pods -n insula-mcp -w
+kubectl get pods -n cortexdx -w
 
 # View logs
-kubectl logs -n insula-mcp -l app=insula-mcp -f
+kubectl logs -n cortexdx -l app=cortexdx -f
 
 # Check resource usage
-kubectl top pods -n insula-mcp
+kubectl top pods -n cortexdx
 kubectl top nodes
 
 # Describe deployment
-kubectl describe deployment insula-mcp-enterprise -n insula-mcp
+kubectl describe deployment cortexdx-enterprise -n cortexdx
 ```
 
 ## Production Deployment Best Practices
@@ -341,8 +341,8 @@ kubectl describe deployment insula-mcp-enterprise -n insula-mcp
 
 ```bash
 # Container security scanning
-docker scout cves brainwav/insula-mcp:latest
-trivy image brainwav/insula-mcp:latest
+docker scout cves brainwav/cortexdx:latest
+trivy image brainwav/cortexdx:latest
 
 # Kubernetes security policies
 kubectl apply -f security/pod-security-policy.yaml
@@ -365,11 +365,11 @@ kubectl apply -f k8s/green-deployment.yaml
 ./scripts/validate-deployment.sh green
 
 # Switch traffic to green
-kubectl patch service insula-mcp-service \
+kubectl patch service cortexdx-service \
   -p '{"spec":{"selector":{"version":"green"}}}'
 
 # Monitor and rollback if needed
-kubectl patch service insula-mcp-service \
+kubectl patch service cortexdx-service \
   -p '{"spec":{"selector":{"version":"blue"}}}'
 ```
 
@@ -380,7 +380,7 @@ kubectl patch service insula-mcp-service \
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: insula-mcp-canary
+  name: cortexdx-canary
 spec:
   http:
   - match:
@@ -389,15 +389,15 @@ spec:
           exact: "true"
     route:
     - destination:
-        host: insula-mcp-service
+        host: cortexdx-service
         subset: canary
   - route:
     - destination:
-        host: insula-mcp-service
+        host: cortexdx-service
         subset: stable
       weight: 90
     - destination:
-        host: insula-mcp-service
+        host: cortexdx-service
         subset: canary
       weight: 10
 ```
@@ -406,15 +406,15 @@ spec:
 
 ```bash
 # Kubernetes rolling update
-kubectl set image deployment/insula-mcp-enterprise \
-  insula-mcp=brainwav/insula-mcp:v1.2.0 \
+kubectl set image deployment/cortexdx-enterprise \
+  cortexdx=brainwav/cortexdx:v1.2.0 \
   --record
 
 # Monitor rollout progress
-kubectl rollout status deployment/insula-mcp-enterprise
+kubectl rollout status deployment/cortexdx-enterprise
 
 # Configure rollout strategy
-kubectl patch deployment insula-mcp-enterprise -p '{
+kubectl patch deployment cortexdx-enterprise -p '{
   "spec": {
     "strategy": {
       "type": "RollingUpdate",
@@ -447,7 +447,7 @@ defaults
 
 frontend insula_mcp_frontend
     bind *:80
-    bind *:443 ssl crt /etc/ssl/certs/insula-mcp.pem
+    bind *:443 ssl crt /etc/ssl/certs/cortexdx.pem
     redirect scheme https if !{ ssl_fc }
     default_backend insula_mcp_backend
 
@@ -463,7 +463,7 @@ backend insula_mcp_backend
 #### NGINX Configuration
 
 ```nginx
-# /etc/nginx/sites-available/insula-mcp
+# /etc/nginx/sites-available/cortexdx
 upstream insula_mcp {
     least_conn;
     server 10.0.1.10:3000 max_fails=3 fail_timeout=30s;
@@ -473,16 +473,16 @@ upstream insula_mcp {
 
 server {
     listen 80;
-    server_name insula-mcp.yourdomain.com;
+    server_name cortexdx.yourdomain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name insula-mcp.yourdomain.com;
+    server_name cortexdx.yourdomain.com;
 
-    ssl_certificate /etc/ssl/certs/insula-mcp.crt;
-    ssl_certificate_key /etc/ssl/private/insula-mcp.key;
+    ssl_certificate /etc/ssl/certs/cortexdx.crt;
+    ssl_certificate_key /etc/ssl/private/cortexdx.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
 
@@ -612,7 +612,7 @@ data:
 #### Observability & Monitoring
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`: OpenTelemetry collector endpoint
-- `OTEL_SERVICE_NAME`: Service name for tracing (default: `insula-mcp`)
+- `OTEL_SERVICE_NAME`: Service name for tracing (default: `cortexdx`)
 - `OTEL_RESOURCE_ATTRIBUTES`: Additional resource attributes
 - `METRICS_ENABLED`: Enable Prometheus metrics (default: `true`)
 - `METRICS_PORT`: Metrics endpoint port (default: `9090`)
@@ -693,7 +693,7 @@ docker run --rm \
   alpine tar czf /backup/insula-data-backup.tar.gz /data
 
 # Kubernetes PVCs
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   tar czf - /app/data | gzip > insula-data-backup.tar.gz
 ```
 
@@ -707,7 +707,7 @@ docker run --rm \
   alpine tar xzf /backup/insula-data-backup.tar.gz -C /
 
 # Kubernetes PVCs
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   tar xzf - -C /app/data < insula-data-backup.tar.gz
 ```
 
@@ -715,14 +715,14 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 
 ```bash
 # Cron job for daily backups
-0 2 * * * /usr/local/bin/backup-insula-mcp.sh
+0 2 * * * /usr/local/bin/backup-cortexdx.sh
 
-# backup-insula-mcp.sh
+# backup-cortexdx.sh
 #!/bin/bash
 DATE=$(date +%Y%m%d)
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   tar czf - /app/data | \
-  aws s3 cp - s3://backups/insula-mcp-$DATE.tar.gz
+  aws s3 cp - s3://backups/cortexdx-$DATE.tar.gz
 ```
 
 ## Monitoring and Logging
@@ -776,7 +776,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ```bash
 # Kubernetes health probes
-kubectl get pods -n insula-mcp -o wide
+kubectl get pods -n cortexdx -o wide
 
 # Custom health check script
 #!/bin/bash
@@ -812,56 +812,56 @@ export INSULA_MCP_AUDIT_ENABLED=true
 ```bash
 # Configure Docker logging driver
 docker run -d \
-  --name insula-mcp \
+  --name cortexdx \
   --log-driver=json-file \
   --log-opt max-size=100m \
   --log-opt max-file=5 \
   --log-opt compress=true \
-  brainwav/insula-mcp:latest
+  brainwav/cortexdx:latest
 
 # View logs with timestamps
-docker logs -f --timestamps insula-mcp
+docker logs -f --timestamps cortexdx
 
 # Export logs with rotation
 docker logs --since="2024-01-01T00:00:00" \
            --until="2024-01-02T00:00:00" \
-           insula-mcp > insula-mcp-$(date +%Y%m%d).log
+           cortexdx > cortexdx-$(date +%Y%m%d).log
 
 # Centralized logging with Fluentd
 docker run -d \
   --log-driver=fluentd \
   --log-opt fluentd-address=fluentd:24224 \
-  --log-opt tag="insula-mcp.{{.Name}}" \
-  brainwav/insula-mcp:latest
+  --log-opt tag="cortexdx.{{.Name}}" \
+  brainwav/cortexdx:latest
 ```
 
 #### Kubernetes Logging
 
 ```bash
 # View logs across all pods
-kubectl logs -n insula-mcp -l app=insula-mcp -f --tail=100
+kubectl logs -n cortexdx -l app=cortexdx -f --tail=100
 
 # Export logs with filtering
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise \
-  --since=1h --timestamps > insula-mcp-$(date +%Y%m%d-%H%M).log
+kubectl logs -n cortexdx deployment/cortexdx-enterprise \
+  --since=1h --timestamps > cortexdx-$(date +%Y%m%d-%H%M).log
 
 # Log aggregation with ELK stack
 kubectl apply -f - <<EOF
 apiVersion: logging.coreos.com/v1
 kind: ClusterLogForwarder
 metadata:
-  name: insula-mcp-logs
+  name: cortexdx-logs
 spec:
   outputs:
   - name: elasticsearch
     type: elasticsearch
     url: http://elasticsearch:9200
   pipelines:
-  - name: insula-mcp-pipeline
+  - name: cortexdx-pipeline
     inputRefs:
     - application
     filterRefs:
-    - insula-mcp-filter
+    - cortexdx-filter
     outputRefs:
     - elasticsearch
 EOF
@@ -871,16 +871,16 @@ EOF
 
 ```bash
 # Real-time log analysis with jq
-kubectl logs -n insula-mcp -l app=insula-mcp -f | \
+kubectl logs -n cortexdx -l app=cortexdx -f | \
   jq 'select(.level == "error" or .level == "warn")'
 
 # Performance monitoring from logs
-kubectl logs -n insula-mcp -l app=insula-mcp --tail=1000 | \
+kubectl logs -n cortexdx -l app=cortexdx --tail=1000 | \
   jq -r 'select(.response_time) | .response_time' | \
   awk '{sum+=$1; count++} END {print "Avg response time:", sum/count "ms"}'
 
 # Error rate calculation
-kubectl logs -n insula-mcp -l app=insula-mcp --since=1h | \
+kubectl logs -n cortexdx -l app=cortexdx --since=1h | \
   jq -r '.level' | sort | uniq -c
 ```
 
@@ -895,18 +895,18 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'insula-mcp'
+  - job_name: 'cortexdx'
     static_configs:
-      - targets: ['insula-mcp:9090']
+      - targets: ['cortexdx:9090']
     metrics_path: /metrics
     scrape_interval: 10s
     scrape_timeout: 5s
 
-  - job_name: 'insula-mcp-kubernetes'
+  - job_name: 'cortexdx-kubernetes'
     kubernetes_sd_configs:
       - role: pod
         namespaces:
-          names: ['insula-mcp']
+          names: ['cortexdx']
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep
@@ -958,7 +958,7 @@ processors:
   resource:
     attributes:
       - key: service.name
-        value: insula-mcp
+        value: cortexdx
         action: upsert
 
 exporters:
@@ -988,7 +988,7 @@ service:
 ```json
 {
   "dashboard": {
-    "title": "Insula MCP Production Dashboard",
+    "title": "CortexDx Production Dashboard",
     "panels": [
       {
         "title": "Request Rate",
@@ -1031,16 +1031,16 @@ service:
 
 ```yaml
 groups:
-- name: insula-mcp-critical
+- name: cortexdx-critical
   rules:
-  - alert: InsulaMCPDown
-    expr: up{job="insula-mcp"} == 0
+  - alert: CortexDxMCPDown
+    expr: up{job="cortexdx"} == 0
     for: 1m
     labels:
       severity: critical
     annotations:
-      summary: "Insula MCP service is down"
-      description: "Insula MCP has been down for more than 1 minute"
+      summary: "CortexDx service is down"
+      description: "CortexDx has been down for more than 1 minute"
 
   - alert: HighErrorRate
     expr: rate(insula_mcp_requests_total{status=~"5.."}[5m]) / rate(insula_mcp_requests_total[5m]) > 0.05
@@ -1078,7 +1078,7 @@ groups:
       summary: "LLM backend unavailable"
       description: "LLM backend has been unavailable for more than 2 minutes"
 
-- name: insula-mcp-capacity
+- name: cortexdx-capacity
   rules:
   - alert: HighCPUUsage
     expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
@@ -1172,7 +1172,7 @@ docker run -d \
   -v /path/to/certs:/certs \
   -e TLS_CERT=/certs/cert.pem \
   -e TLS_KEY=/certs/key.pem \
-  brainwav/insula-mcp:latest
+  brainwav/cortexdx:latest
 ```
 
 **Kubernetes**:
@@ -1188,12 +1188,12 @@ docker run -d \
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: insula-mcp-network-policy
-  namespace: insula-mcp
+  name: cortexdx-network-policy
+  namespace: cortexdx
 spec:
   podSelector:
     matchLabels:
-      app: insula-mcp
+      app: cortexdx
   policyTypes:
   - Ingress
   - Egress
@@ -1221,15 +1221,15 @@ spec:
 
 ```bash
 # Create from file
-kubectl create secret generic insula-mcp-secrets \
+kubectl create secret generic cortexdx-secrets \
   --from-file=license-key=./license.key \
   --from-file=auth0-config=./auth0.json \
-  -n insula-mcp
+  -n cortexdx
 
 # Create from literal
-kubectl create secret generic insula-mcp-secrets \
+kubectl create secret generic cortexdx-secrets \
   --from-literal=license-key=YOUR_KEY \
-  -n insula-mcp
+  -n cortexdx
 ```
 
 **External Secrets** (recommended):
@@ -1238,19 +1238,19 @@ kubectl create secret generic insula-mcp-secrets \
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: insula-mcp-secrets
-  namespace: insula-mcp
+  name: cortexdx-secrets
+  namespace: cortexdx
 spec:
   refreshInterval: 1h
   secretStoreRef:
     name: aws-secrets-manager
     kind: SecretStore
   target:
-    name: insula-mcp-secrets
+    name: cortexdx-secrets
   data:
   - secretKey: license-key
     remoteRef:
-      key: insula-mcp/license-key
+      key: cortexdx/license-key
 ```
 
 ## Disaster Recovery and Business Continuity
@@ -1261,11 +1261,11 @@ spec:
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/backup-insula-mcp.sh
+# /usr/local/bin/backup-cortexdx.sh
 
 set -euo pipefail
 
-BACKUP_DIR="/backups/insula-mcp"
+BACKUP_DIR="/backups/cortexdx"
 DATE=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=30
 
@@ -1277,12 +1277,12 @@ pg_dump -h postgres -U insula -d insula_mcp | \
   gzip > "$BACKUP_DIR/database_$DATE.sql.gz"
 
 # Application data backup
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   tar czf - /app/data | \
   aws s3 cp - "s3://insula-backups/data_$DATE.tar.gz"
 
 # Configuration backup
-kubectl get configmap,secret -n insula-mcp -o yaml | \
+kubectl get configmap,secret -n cortexdx -o yaml | \
   gzip > "$BACKUP_DIR/config_$DATE.yaml.gz"
 
 # Cleanup old backups
@@ -1333,22 +1333,22 @@ spec:
 RESTORE_DATE="20240115_143000"
 
 # Stop application
-kubectl scale deployment insula-mcp-enterprise --replicas=0
+kubectl scale deployment cortexdx-enterprise --replicas=0
 
 # Restore database
-gunzip -c "/backups/insula-mcp/database_$RESTORE_DATE.sql.gz" | \
+gunzip -c "/backups/cortexdx/database_$RESTORE_DATE.sql.gz" | \
   psql -h postgres -U insula -d insula_mcp
 
 # Restore application data
 aws s3 cp "s3://insula-backups/data_$RESTORE_DATE.tar.gz" - | \
-  kubectl exec -i -n insula-mcp deployment/insula-mcp-enterprise -- \
+  kubectl exec -i -n cortexdx deployment/cortexdx-enterprise -- \
   tar xzf - -C /app
 
 # Restart application
-kubectl scale deployment insula-mcp-enterprise --replicas=3
+kubectl scale deployment cortexdx-enterprise --replicas=3
 
 # Verify recovery
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -f http://localhost:3000/health
 ```
 
@@ -1359,7 +1359,7 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 #!/bin/bash
 PRIMARY_REGION="us-east-1"
 SECONDARY_REGION="us-west-2"
-HEALTH_ENDPOINT="https://insula-mcp.yourdomain.com/health"
+HEALTH_ENDPOINT="https://cortexdx.yourdomain.com/health"
 
 # Check primary region health
 if ! curl -f --max-time 10 "$HEALTH_ENDPOINT" > /dev/null 2>&1; then
@@ -1372,7 +1372,7 @@ if ! curl -f --max-time 10 "$HEALTH_ENDPOINT" > /dev/null 2>&1; then
   
   # Scale up secondary region
   kubectl --context="$SECONDARY_REGION" \
-    scale deployment insula-mcp-enterprise --replicas=5
+    scale deployment cortexdx-enterprise --replicas=5
   
   # Notify operations team
   curl -X POST "$SLACK_WEBHOOK" \
@@ -1393,12 +1393,12 @@ curl -X POST "$NOTIFICATION_API" \
   -d '{"message":"Maintenance starting in 30 minutes"}'
 
 # 2. Enable maintenance mode
-kubectl patch configmap insula-mcp-config \
+kubectl patch configmap cortexdx-config \
   -p '{"data":{"MAINTENANCE_MODE":"true"}}'
 
 # 3. Drain traffic gradually
 for i in {5..1}; do
-  kubectl scale deployment insula-mcp-enterprise --replicas=$i
+  kubectl scale deployment cortexdx-enterprise --replicas=$i
   sleep 60
 done
 
@@ -1408,14 +1408,14 @@ done
 ./scripts/cleanup-logs.sh
 
 # 5. Deploy updates
-kubectl set image deployment/insula-mcp-enterprise \
-  insula-mcp=brainwav/insula-mcp:latest
+kubectl set image deployment/cortexdx-enterprise \
+  cortexdx=brainwav/cortexdx:latest
 
 # 6. Scale back up
-kubectl scale deployment insula-mcp-enterprise --replicas=5
+kubectl scale deployment cortexdx-enterprise --replicas=5
 
 # 7. Disable maintenance mode
-kubectl patch configmap insula-mcp-config \
+kubectl patch configmap cortexdx-config \
   -p '{"data":{"MAINTENANCE_MODE":"false"}}'
 
 # 8. Verify health
@@ -1432,14 +1432,14 @@ echo "=== CPU Usage Analysis ==="
 kubectl top nodes | awk 'NR>1 {cpu+=$3} END {print "Average CPU:", cpu/NR "%"}'
 
 echo "=== Memory Usage Analysis ==="
-kubectl top pods -n insula-mcp --sort-by=memory
+kubectl top pods -n cortexdx --sort-by=memory
 
 echo "=== Storage Usage Analysis ==="
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   df -h /app/data /app/logs /app/models
 
 echo "=== Network Usage Analysis ==="
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   ss -tuln | grep :3000
 
 # Generate capacity report
@@ -1448,8 +1448,8 @@ cat > capacity-report.json <<EOF
   "timestamp": "$(date -Iseconds)",
   "cpu_usage": $(kubectl top nodes --no-headers | awk '{sum+=$3} END {print sum/NR}'),
   "memory_usage": $(kubectl top nodes --no-headers | awk '{sum+=$5} END {print sum/NR}'),
-  "pod_count": $(kubectl get pods -n insula-mcp --no-headers | wc -l),
-  "storage_usage": $(kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- df /app/data | awk 'NR==2 {print $5}' | tr -d '%')
+  "pod_count": $(kubectl get pods -n cortexdx --no-headers | wc -l),
+  "storage_usage": $(kubectl exec -n cortexdx deployment/cortexdx-enterprise -- df /app/data | awk 'NR==2 {print $5}' | tr -d '%')
 }
 EOF
 ```
@@ -1464,23 +1464,23 @@ EOF
 
 ```bash
 # Check container logs for startup errors
-docker logs --tail=50 insula-mcp
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise --tail=50
+docker logs --tail=50 cortexdx
+kubectl logs -n cortexdx deployment/cortexdx-enterprise --tail=50
 
 # Check container events and status
-kubectl describe pod -n insula-mcp <pod-name>
-kubectl get events -n insula-mcp --sort-by='.lastTimestamp'
+kubectl describe pod -n cortexdx <pod-name>
+kubectl get events -n cortexdx --sort-by='.lastTimestamp'
 
 # Verify resource constraints
 kubectl describe node <node-name>
-docker stats insula-mcp
+docker stats cortexdx
 
 # Check image pull issues
-kubectl describe pod -n insula-mcp <pod-name> | grep -A 10 "Events:"
+kubectl describe pod -n cortexdx <pod-name> | grep -A 10 "Events:"
 
 # Debug with interactive shell
 kubectl run debug-pod --rm -i --tty \
-  --image=brainwav/insula-mcp:latest \
+  --image=brainwav/cortexdx:latest \
   --restart=Never -- /bin/sh
 ```
 
@@ -1488,14 +1488,14 @@ kubectl run debug-pod --rm -i --tty \
 
 ```bash
 # Validate environment variables
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- env | sort
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- env | sort
 
 # Check configuration file syntax
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node -e "console.log(JSON.stringify(process.env, null, 2))"
 
 # Test configuration loading
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node -e "require('./dist/config').validate()"
 ```
 
@@ -1516,31 +1516,31 @@ ss -tulpn | grep 3000
 kubectl run curl-test --rm -i --tty \
   --image=curlimages/curl:latest \
   --restart=Never -- \
-  curl -v http://insula-mcp-service:80/health
+  curl -v http://cortexdx-service:80/health
 
 # Check service and endpoint configuration
-kubectl get svc,endpoints -n insula-mcp
-kubectl describe svc insula-mcp-service -n insula-mcp
+kubectl get svc,endpoints -n cortexdx
+kubectl describe svc cortexdx-service -n cortexdx
 ```
 
 **Network connectivity issues**:
 
 ```bash
 # Test DNS resolution
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   nslookup ollama-service
 
 # Check network policies
-kubectl get networkpolicy -n insula-mcp
-kubectl describe networkpolicy -n insula-mcp
+kubectl get networkpolicy -n cortexdx
+kubectl describe networkpolicy -n cortexdx
 
 # Test inter-service communication
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -v http://ollama-service:11434/api/tags
 
 # Check ingress configuration
-kubectl get ingress -n insula-mcp
-kubectl describe ingress insula-mcp-ingress -n insula-mcp
+kubectl get ingress -n cortexdx
+kubectl describe ingress cortexdx-ingress -n cortexdx
 ```
 
 #### LLM Backend Issues
@@ -1550,23 +1550,23 @@ kubectl describe ingress insula-mcp-ingress -n insula-mcp
 ```bash
 # Check Ollama service health
 curl http://ollama:11434/api/tags
-kubectl exec -n insula-mcp deployment/ollama -- \
+kubectl exec -n cortexdx deployment/ollama -- \
   curl http://localhost:11434/api/tags
 
 # Verify Ollama models
-kubectl exec -n insula-mcp deployment/ollama -- \
+kubectl exec -n cortexdx deployment/ollama -- \
   ollama list
 
 # Check Ollama logs
-kubectl logs -n insula-mcp deployment/ollama --tail=100
+kubectl logs -n cortexdx deployment/ollama --tail=100
 
 # Test model loading
-kubectl exec -n insula-mcp deployment/ollama -- \
+kubectl exec -n cortexdx deployment/ollama -- \
   ollama run llama2 "Hello, world!"
 
 # Verify environment variables
-docker exec insula-mcp env | grep OLLAMA
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- env | grep OLLAMA
+docker exec cortexdx env | grep OLLAMA
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- env | grep OLLAMA
 
 # Check resource allocation for GPU
 kubectl describe node | grep -A 5 "Allocated resources"
@@ -1579,14 +1579,14 @@ nvidia-smi  # On GPU nodes
 
 ```bash
 # Test database connectivity
-kubectl exec -n insula-mcp deployment/postgres -- \
+kubectl exec -n cortexdx deployment/postgres -- \
   pg_isready -U insula -d insula_mcp
 
 # Check database logs
-kubectl logs -n insula-mcp deployment/postgres --tail=100
+kubectl logs -n cortexdx deployment/postgres --tail=100
 
 # Test connection from application
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node -e "
     const { Client } = require('pg');
     const client = new Client(process.env.DATABASE_URL);
@@ -1594,7 +1594,7 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
   "
 
 # Check connection pool status
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl http://localhost:3000/debug/db-pool
 ```
 
@@ -1602,15 +1602,15 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 
 ```bash
 # Check persistent volume status
-kubectl get pv,pvc -n insula-mcp
-kubectl describe pvc insula-mcp-data-pvc -n insula-mcp
+kubectl get pv,pvc -n cortexdx
+kubectl describe pvc cortexdx-data-pvc -n cortexdx
 
 # Check disk space
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   df -h /app/data /app/logs /app/models
 
 # Verify file permissions
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   ls -la /app/data /app/logs /app/models
 
 # Check storage class and provisioner
@@ -1624,20 +1624,20 @@ kubectl describe storageclass standard
 
 ```bash
 # Check memory usage patterns
-kubectl top pods -n insula-mcp --sort-by=memory
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl top pods -n cortexdx --sort-by=memory
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node -e "console.log(process.memoryUsage())"
 
 # Analyze heap dumps
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node --inspect=0.0.0.0:9229 dist/server.js &
 
 # Check for memory leaks
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl http://localhost:3000/debug/memory
 
 # Monitor garbage collection
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+kubectl logs -n cortexdx deployment/cortexdx-enterprise | \
   grep -i "gc\|memory"
 ```
 
@@ -1645,16 +1645,16 @@ kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
 
 ```bash
 # Check CPU usage patterns
-kubectl top pods -n insula-mcp --sort-by=cpu
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl top pods -n cortexdx --sort-by=cpu
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   top -p $(pgrep node)
 
 # Profile CPU usage
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node --prof dist/server.js
 
 # Check for CPU-intensive operations
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+kubectl logs -n cortexdx deployment/cortexdx-enterprise | \
   grep -i "slow\|timeout\|performance"
 ```
 
@@ -1674,12 +1674,12 @@ curl -X POST https://$AUTH0_DOMAIN/oauth/token \
   }'
 
 # Verify JWT token validation
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -H "Authorization: Bearer $JWT_TOKEN" \
   http://localhost:3000/api/protected
 
 # Check Auth0 logs
-kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
+kubectl logs -n cortexdx deployment/cortexdx-enterprise | \
   grep -i "auth\|jwt\|token"
 ```
 
@@ -1692,15 +1692,15 @@ kubectl logs -n insula-mcp deployment/insula-mcp-enterprise | \
 curl http://prometheus:9090/api/v1/targets
 
 # Verify metrics endpoint
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl http://localhost:9090/metrics
 
 # Check OpenTelemetry configuration
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl http://localhost:3000/debug/otel
 
 # Test trace export
-kubectl logs -n insula-mcp deployment/otel-collector
+kubectl logs -n cortexdx deployment/otel-collector
 ```
 
 ### Diagnostic Tools and Scripts
@@ -1713,10 +1713,10 @@ kubectl logs -n insula-mcp deployment/otel-collector
 
 set -euo pipefail
 
-NAMESPACE="insula-mcp"
-SERVICE_NAME="insula-mcp-enterprise"
+NAMESPACE="cortexdx"
+SERVICE_NAME="cortexdx-enterprise"
 
-echo "🔍 Comprehensive Health Check for Insula MCP"
+echo "🔍 Comprehensive Health Check for CortexDx"
 echo "============================================="
 
 # Check Kubernetes resources
@@ -1731,7 +1731,7 @@ kubectl top pods -n $NAMESPACE
 
 # Check application health
 echo "🌐 Checking application health..."
-for pod in $(kubectl get pods -n $NAMESPACE -l app=insula-mcp -o name); do
+for pod in $(kubectl get pods -n $NAMESPACE -l app=cortexdx -o name); do
   echo "Testing $pod..."
   kubectl exec -n $NAMESPACE $pod -- curl -f http://localhost:3000/health || echo "❌ Health check failed for $pod"
 done
@@ -1762,10 +1762,10 @@ echo "✅ Health check completed"
 #!/bin/bash
 # performance-analysis.sh
 
-NAMESPACE="insula-mcp"
+NAMESPACE="cortexdx"
 DURATION="5m"
 
-echo "📈 Performance Analysis for Insula MCP"
+echo "📈 Performance Analysis for CortexDx"
 echo "======================================"
 
 # CPU and Memory usage over time
@@ -1775,7 +1775,7 @@ kubectl top pods -n $NAMESPACE --sort-by=memory
 
 # Application metrics
 echo "📊 Application metrics..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   curl -s http://localhost:9090/metrics | grep -E "(request_duration|error_rate|active_connections)"
 
 # Database performance
@@ -1789,7 +1789,7 @@ kubectl exec -n $NAMESPACE deployment/postgres -- \
 
 # Log analysis for errors
 echo "📝 Error analysis..."
-kubectl logs -n $NAMESPACE -l app=insula-mcp --since=$DURATION | \
+kubectl logs -n $NAMESPACE -l app=cortexdx --since=$DURATION | \
   grep -i error | tail -20
 
 echo "✅ Performance analysis completed"
@@ -1803,10 +1803,10 @@ echo "✅ Performance analysis completed"
 
 ```bash
 # 1. Backup current deployment
-./scripts/backup-insula-mcp.sh
+./scripts/backup-cortexdx.sh
 
 # 2. Review release notes
-curl -s https://api.github.com/repos/brainwav/insula-mcp/releases/latest | \
+curl -s https://api.github.com/repos/brainwav/cortexdx/releases/latest | \
   jq -r '.body'
 
 # 3. Test upgrade in staging environment
@@ -1821,7 +1821,7 @@ kubectl describe nodes | grep -A 5 "Allocated resources"
 
 #### Version Compatibility
 
-| Insula MCP | Node.js | Kubernetes | PostgreSQL | Redis |
+| CortexDx | Node.js | Kubernetes | PostgreSQL | Redis |
 |------------|---------|------------|------------|-------|
 | v1.0.x     | 18.x    | 1.24+      | 13+        | 6+    |
 | v1.1.x     | 20.x    | 1.25+      | 14+        | 7+    |
@@ -1833,31 +1833,31 @@ kubectl describe nodes | grep -A 5 "Allocated resources"
 
 ```bash
 # 1. Pull new image
-docker pull brainwav/insula-mcp:v1.2.0
+docker pull brainwav/cortexdx:v1.2.0
 
 # 2. Create backup
-docker exec insula-mcp tar czf - /app/data | \
+docker exec cortexdx tar czf - /app/data | \
   gzip > "backup-$(date +%Y%m%d).tar.gz"
 
 # 3. Stop current container gracefully
-docker kill -s SIGTERM insula-mcp
+docker kill -s SIGTERM cortexdx
 sleep 30
-docker stop insula-mcp
+docker stop cortexdx
 
 # 4. Remove old container
-docker rm insula-mcp
+docker rm cortexdx
 
 # 5. Start new container with same configuration
 docker run -d \
-  --name insula-mcp \
+  --name cortexdx \
   --env-file .env \
   -v insula-data:/app/data \
   -v insula-logs:/app/logs \
   -p 3000:3000 \
-  brainwav/insula-mcp:v1.2.0
+  brainwav/cortexdx:v1.2.0
 
 # 6. Verify upgrade
-docker logs -f insula-mcp
+docker logs -f cortexdx
 curl http://localhost:3000/health
 ```
 
@@ -1866,12 +1866,12 @@ curl http://localhost:3000/health
 ```bash
 # 1. Start new container on different port
 docker run -d \
-  --name insula-mcp-new \
+  --name cortexdx-new \
   --env-file .env \
   -v insula-data:/app/data \
   -v insula-logs:/app/logs \
   -p 3001:3000 \
-  brainwav/insula-mcp:v1.2.0
+  brainwav/cortexdx:v1.2.0
 
 # 2. Wait for new container to be ready
 while ! curl -f http://localhost:3001/health; do
@@ -1883,21 +1883,21 @@ done
 # (Update your load balancer configuration)
 
 # 4. Stop old container
-docker stop insula-mcp
-docker rm insula-mcp
+docker stop cortexdx
+docker rm cortexdx
 
 # 5. Rename new container
-docker rename insula-mcp-new insula-mcp
+docker rename cortexdx-new cortexdx
 
 # 6. Update port mapping
-docker stop insula-mcp
+docker stop cortexdx
 docker run -d \
-  --name insula-mcp-final \
+  --name cortexdx-final \
   --env-file .env \
   -v insula-data:/app/data \
   -v insula-logs:/app/logs \
   -p 3000:3000 \
-  brainwav/insula-mcp:v1.2.0
+  brainwav/cortexdx:v1.2.0
 ```
 
 ### Kubernetes Upgrade
@@ -1906,24 +1906,24 @@ docker run -d \
 
 ```bash
 # 1. Update deployment with new image
-kubectl set image deployment/insula-mcp-enterprise \
-  insula-mcp=brainwav/insula-mcp:v1.2.0 \
-  -n insula-mcp \
+kubectl set image deployment/cortexdx-enterprise \
+  cortexdx=brainwav/cortexdx:v1.2.0 \
+  -n cortexdx \
   --record
 
 # 2. Monitor rollout progress
-kubectl rollout status deployment/insula-mcp-enterprise -n insula-mcp -w
+kubectl rollout status deployment/cortexdx-enterprise -n cortexdx -w
 
 # 3. Verify pods are running new version
-kubectl get pods -n insula-mcp -o wide
-kubectl describe pod -n insula-mcp <pod-name> | grep Image
+kubectl get pods -n cortexdx -o wide
+kubectl describe pod -n cortexdx <pod-name> | grep Image
 
 # 4. Test application functionality
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -f http://localhost:3000/health
 
 # 5. Check application logs
-kubectl logs -n insula-mcp -l app=insula-mcp --tail=50
+kubectl logs -n cortexdx -l app=cortexdx --tail=50
 ```
 
 #### Blue-Green Deployment Upgrade
@@ -1933,14 +1933,14 @@ kubectl logs -n insula-mcp -l app=insula-mcp --tail=50
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: insula-mcp-rollout
-  namespace: insula-mcp
+  name: cortexdx-rollout
+  namespace: cortexdx
 spec:
   replicas: 5
   strategy:
     blueGreen:
-      activeService: insula-mcp-active
-      previewService: insula-mcp-preview
+      activeService: cortexdx-active
+      previewService: cortexdx-preview
       autoPromotionEnabled: false
       scaleDownDelaySeconds: 30
       prePromotionAnalysis:
@@ -1948,24 +1948,24 @@ spec:
         - templateName: success-rate
         args:
         - name: service-name
-          value: insula-mcp-preview
+          value: cortexdx-preview
       postPromotionAnalysis:
         templates:
         - templateName: success-rate
         args:
         - name: service-name
-          value: insula-mcp-active
+          value: cortexdx-active
   selector:
     matchLabels:
-      app: insula-mcp
+      app: cortexdx
   template:
     metadata:
       labels:
-        app: insula-mcp
+        app: cortexdx
     spec:
       containers:
-      - name: insula-mcp
-        image: brainwav/insula-mcp:v1.2.0
+      - name: cortexdx
+        image: brainwav/cortexdx:v1.2.0
 ```
 
 #### Canary Deployment Upgrade
@@ -1975,8 +1975,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: insula-mcp-canary
-  namespace: insula-mcp
+  name: cortexdx-canary
+  namespace: cortexdx
 spec:
   replicas: 10
   strategy:
@@ -1996,18 +1996,18 @@ spec:
         - templateName: response-time
         args:
         - name: service-name
-          value: insula-mcp-canary
+          value: cortexdx-canary
   selector:
     matchLabels:
-      app: insula-mcp
+      app: cortexdx
   template:
     metadata:
       labels:
-        app: insula-mcp
+        app: cortexdx
     spec:
       containers:
-      - name: insula-mcp
-        image: brainwav/insula-mcp:v1.2.0
+      - name: cortexdx
+        image: brainwav/cortexdx:v1.2.0
 ```
 
 ### Database Migration
@@ -2016,20 +2016,20 @@ spec:
 
 ```bash
 # 1. Create database backup
-kubectl exec -n insula-mcp deployment/postgres -- \
+kubectl exec -n cortexdx deployment/postgres -- \
   pg_dump -U insula insula_mcp | \
   gzip > "db-backup-$(date +%Y%m%d).sql.gz"
 
 # 2. Run database migrations
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   npm run migrate
 
 # 3. Verify migration status
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   npm run migrate:status
 
 # 4. Test database connectivity
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   node -e "require('./dist/db').testConnection()"
 ```
 
@@ -2069,21 +2069,21 @@ COMMIT;
 
 ```bash
 # 1. Check rollout history
-kubectl rollout history deployment/insula-mcp-enterprise -n insula-mcp
+kubectl rollout history deployment/cortexdx-enterprise -n cortexdx
 
 # 2. Rollback to previous version
-kubectl rollout undo deployment/insula-mcp-enterprise -n insula-mcp
+kubectl rollout undo deployment/cortexdx-enterprise -n cortexdx
 
 # 3. Rollback to specific revision
-kubectl rollout undo deployment/insula-mcp-enterprise \
-  --to-revision=2 -n insula-mcp
+kubectl rollout undo deployment/cortexdx-enterprise \
+  --to-revision=2 -n cortexdx
 
 # 4. Monitor rollback progress
-kubectl rollout status deployment/insula-mcp-enterprise -n insula-mcp
+kubectl rollout status deployment/cortexdx-enterprise -n cortexdx
 
 # 5. Verify rollback
-kubectl get pods -n insula-mcp -o wide
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl get pods -n cortexdx -o wide
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -f http://localhost:3000/health
 ```
 
@@ -2091,21 +2091,21 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 
 ```bash
 # 1. Stop application to prevent data corruption
-kubectl scale deployment insula-mcp-enterprise --replicas=0 -n insula-mcp
+kubectl scale deployment cortexdx-enterprise --replicas=0 -n cortexdx
 
 # 2. Restore database from backup
 gunzip -c "db-backup-$(date +%Y%m%d).sql.gz" | \
-  kubectl exec -i -n insula-mcp deployment/postgres -- \
+  kubectl exec -i -n cortexdx deployment/postgres -- \
   psql -U insula -d insula_mcp
 
 # 3. Restart application with previous version
-kubectl set image deployment/insula-mcp-enterprise \
-  insula-mcp=brainwav/insula-mcp:v1.1.0 -n insula-mcp
+kubectl set image deployment/cortexdx-enterprise \
+  cortexdx=brainwav/cortexdx:v1.1.0 -n cortexdx
 
-kubectl scale deployment insula-mcp-enterprise --replicas=5 -n insula-mcp
+kubectl scale deployment cortexdx-enterprise --replicas=5 -n cortexdx
 
 # 4. Verify rollback
-kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
+kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   curl -f http://localhost:3000/health
 ```
 
@@ -2119,37 +2119,37 @@ kubectl exec -n insula-mcp deployment/insula-mcp-enterprise -- \
 
 set -euo pipefail
 
-NAMESPACE="insula-mcp"
-SERVICE_URL="http://insula-mcp-service"
+NAMESPACE="cortexdx"
+SERVICE_URL="http://cortexdx-service"
 
 echo "🧪 Post-Upgrade Validation"
 echo "========================="
 
 # 1. Health check
 echo "🏥 Testing health endpoint..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   curl -f $SERVICE_URL/health
 
 # 2. API functionality
 echo "🔧 Testing API endpoints..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   curl -f -X POST $SERVICE_URL/api/diagnose \
   -H "Content-Type: application/json" \
   -d '{"target": "http://example.com"}'
 
 # 3. Database connectivity
 echo "🗄️ Testing database..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   node -e "require('./dist/db').testConnection()"
 
 # 4. LLM backend
 echo "🤖 Testing LLM backend..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   curl -f http://ollama-service:11434/api/tags
 
 # 5. Performance test
 echo "⚡ Performance test..."
-kubectl exec -n $NAMESPACE deployment/insula-mcp-enterprise -- \
+kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
   ab -n 100 -c 10 $SERVICE_URL/health
 
 echo "✅ Validation completed successfully"
