@@ -14,7 +14,7 @@ CortexDx is a monorepo containing:
 
 - **Core Package**: `packages/cortexdx/` - Main diagnostic tool and CLI
 - **Documentation**: Comprehensive guides in `packages/cortexdx/docs/`
-- **Project Rules**: Governance and standards in `.insula/rules/`
+- **Project Rules**: Governance and standards in `.cortexdx/rules/`
 - **Configuration**: Shared toolchain and quality gates
 
 ### Essential Reading
@@ -24,7 +24,7 @@ Before contributing, please review these **mandatory** documents:
 1. **[AGENTS.md](AGENTS.md)** - Operational instructions for all contributors (mandatory)
 2. **[CODESTYLE.md](CODESTYLE.md)** - Coding standards and formatting rules
 3. **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards and behavior expectations
-4. **[Project Vision](.insula/rules/vision.md)** - North star and roadmap alignment
+4. **[Project Vision](.cortexdx/rules/vision.md)** - North star and roadmap alignment
 
 ## 🛠️ Getting Started
 
@@ -119,7 +119,7 @@ cortexdx/
 │   ├── tests/                    # Test suites
 │   ├── docs/                     # Package documentation
 │   └── scripts/mock-servers/     # Test infrastructure
-├── .insula/rules/                # Project governance
+├── .cortexdx/rules/                # Project governance
 ├── AGENTS.md                     # Contributor requirements
 ├── CODESTYLE.md                  # Code standards
 ├── CODE_OF_CONDUCT.md           # Community guidelines
@@ -267,7 +267,7 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ### Project Governance
 
-- **[Project Vision](.insula/rules/vision.md)** - Goals, roadmap, and strategic direction
+- **[Project Vision](.cortexdx/rules/vision.md)** - Goals, roadmap, and strategic direction
 - **[AGENTS.md](AGENTS.md)** - Mandatory operational instructions
 - **[CODESTYLE.md](CODESTYLE.md)** - Code standards and toolchain requirements
 

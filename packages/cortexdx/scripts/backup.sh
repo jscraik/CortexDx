@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Insula MCP Backup Script
+# CortexDx Backup Script
 # Backs up conversation history, patterns, models, and configuration
 
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 # Configuration
 BACKUP_DIR="${BACKUP_DIR:-/app/backups}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_NAME="insula-mcp-backup-${TIMESTAMP}"
+BACKUP_NAME="cortexdx-backup-${TIMESTAMP}"
 BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
 
@@ -79,7 +79,7 @@ cat > "${BACKUP_PATH}/metadata.json" <<EOF
   "timestamp": "${TIMESTAMP}",
   "version": "$(node -p "require('/app/package.json').version" 2>/dev/null || echo 'unknown')",
   "hostname": "$(hostname)",
-  "tier": "${INSULA_MCP_TIER:-unknown}",
+  "tier": "${CORTEXDX_MCP_TIER:-unknown}",
   "backup_size": "$(du -sh "${BACKUP_PATH}" | cut -f1)",
   "includes_models": ${BACKUP_MODELS:-false}
 }
@@ -109,7 +109,7 @@ log "Backup completed: ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz (${FINAL_SIZE})"
 
 # Cleanup old backups
 log "Cleaning up backups older than ${RETENTION_DAYS} days..."
-find "${BACKUP_DIR}" -name "insula-mcp-backup-*.tar.gz" -type f -mtime +${RETENTION_DAYS} -delete || {
+find "${BACKUP_DIR}" -name "cortexdx-backup-*.tar.gz" -type f -mtime +${RETENTION_DAYS} -delete || {
     error "Failed to cleanup old backups"
 }
 

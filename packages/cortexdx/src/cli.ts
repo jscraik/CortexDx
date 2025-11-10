@@ -41,6 +41,7 @@ program
   .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
   .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
   .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
+  .option("--mcp-api-key <key>", "MCP API key for dual authentication")
   .option(
     "--budget-time <ms>",
     "per-plugin time budget",

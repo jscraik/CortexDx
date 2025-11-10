@@ -223,7 +223,7 @@ describe('InspectorAdapter', () => {
   });
 
   describe('convertFindings', () => {
-    it('should convert Inspector findings to Insula format', () => {
+    it('should convert Inspector findings to CortexDx format', () => {
       const inspectorFindings = [
         {
           id: 'test-1',

@@ -55,7 +55,7 @@ docker run -d \
   --name cortexdx \
   -p 3000:3000 \
   -e NODE_ENV=production \
-  -e INSULA_MCP_TIER=community \
+  -e CORTEXDX_MCP_TIER=community \
   brainwav/cortexdx:latest
 
 # Run Professional Edition
@@ -63,10 +63,10 @@ docker run -d \
   --name cortexdx-pro \
   -p 3000:3000 \
   -e NODE_ENV=production \
-  -e INSULA_MCP_TIER=professional \
-  -e INSULA_MCP_LICENSE_KEY=your-license-key \
-  -v insula-data:/app/data \
-  -v insula-models:/app/models \
+  -e CORTEXDX_MCP_TIER=professional \
+  -e CORTEXDX_MCP_LICENSE_KEY=your-license-key \
+  -v cortexdx-data:/app/data \
+  -v cortexdx-models:/app/models \
   brainwav/cortexdx:latest
 
 # Run Enterprise Edition
@@ -74,13 +74,13 @@ docker run -d \
   --name cortexdx-enterprise \
   -p 3000:3000 \
   -e NODE_ENV=production \
-  -e INSULA_MCP_TIER=enterprise \
-  -e INSULA_MCP_LICENSE_KEY=your-license-key \
+  -e CORTEXDX_MCP_TIER=enterprise \
+  -e CORTEXDX_MCP_LICENSE_KEY=your-license-key \
   -e AUTH0_DOMAIN=your-domain.auth0.com \
   -e AUTH0_CLIENT_ID=your-client-id \
   -e AUTH0_CLIENT_SECRET=your-client-secret \
-  -v insula-data:/app/data \
-  -v insula-models:/app/models \
+  -v cortexdx-data:/app/data \
+  -v cortexdx-models:/app/models \
   brainwav/cortexdx:latest
 ```
 
@@ -103,7 +103,7 @@ docker run -d \
   --name cortexdx-local \
   -p 3000:3000 \
   -e NODE_ENV=production \
-  -e INSULA_MCP_TIER=community \
+  -e CORTEXDX_MCP_TIER=community \
   --restart unless-stopped \
   --memory="512m" \
   --cpus="0.5" \
@@ -144,8 +144,8 @@ docker run -d \
   --memory-swap="1g" \
   --cpus="1.0" \
   --pids-limit 100 \
-  -v insula-data:/app/data:rw \
-  -v insula-logs:/app/logs:rw \
+  -v cortexdx-data:/app/data:rw \
+  -v cortexdx-logs:/app/logs:rw \
   cortexdx:production
 ```
 
@@ -157,7 +157,7 @@ docker run -d \
 
 ```env
 # License Configuration
-INSULA_LICENSE_KEY=your-license-key-here
+CORTEXDX_LICENSE_KEY=your-license-key-here
 
 # Auth0 Configuration (Enterprise only)
 AUTH0_DOMAIN=your-domain.auth0.com
@@ -445,13 +445,13 @@ defaults
     timeout server 50000ms
     option httplog
 
-frontend insula_mcp_frontend
+frontend cortexdx_mcp_frontend
     bind *:80
     bind *:443 ssl crt /etc/ssl/certs/cortexdx.pem
     redirect scheme https if !{ ssl_fc }
-    default_backend insula_mcp_backend
+    default_backend cortexdx_mcp_backend
 
-backend insula_mcp_backend
+backend cortexdx_mcp_backend
     balance roundrobin
     option httpchk GET /health
     http-check expect status 200
@@ -464,7 +464,7 @@ backend insula_mcp_backend
 
 ```nginx
 # /etc/nginx/sites-available/cortexdx
-upstream insula_mcp {
+upstream cortexdx_mcp {
     least_conn;
     server 10.0.1.10:3000 max_fails=3 fail_timeout=30s;
     server 10.0.1.11:3000 max_fails=3 fail_timeout=30s;
@@ -487,7 +487,7 @@ server {
     ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
 
     location / {
-        proxy_pass http://insula_mcp;
+        proxy_pass http://cortexdx_mcp;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -501,7 +501,7 @@ server {
     }
 
     location /health {
-        proxy_pass http://insula_mcp;
+        proxy_pass http://cortexdx_mcp;
         access_log off;
     }
 }
@@ -517,12 +517,12 @@ export NODE_OPTIONS="--max-old-space-size=2048 --optimize-for-size"
 export UV_THREADPOOL_SIZE=8
 
 # Enable clustering
-export INSULA_MCP_WORKERS=4
-export INSULA_MCP_CLUSTER_MODE=true
+export CORTEXDX_MCP_WORKERS=4
+export CORTEXDX_MCP_CLUSTER_MODE=true
 
 # Memory optimization
-export INSULA_MCP_CACHE_SIZE=256
-export INSULA_MCP_MAX_CONCURRENT_REQUESTS=200
+export CORTEXDX_MCP_CACHE_SIZE=256
+export CORTEXDX_MCP_MAX_CONCURRENT_REQUESTS=200
 ```
 
 #### Database Optimization
@@ -572,20 +572,20 @@ data:
 **Required**:
 
 - `NODE_ENV`: Set to `production` for production deployments
-- `INSULA_MCP_TIER`: `community`, `professional`, or `enterprise`
-- `INSULA_MCP_LICENSE_KEY`: License key (Professional/Enterprise only)
+- `CORTEXDX_MCP_TIER`: `community`, `professional`, or `enterprise`
+- `CORTEXDX_MCP_LICENSE_KEY`: License key (Professional/Enterprise only)
 
 **Application Settings**:
 
-- `INSULA_MCP_LOG_LEVEL`: `debug`, `info`, `warn`, `error` (default: `info`)
-- `INSULA_MCP_PORT`: Application port (default: `3000`)
-- `INSULA_MCP_HOST`: Bind address (default: `0.0.0.0`)
-- `INSULA_MCP_WORKERS`: Number of worker processes (default: CPU cores)
-- `INSULA_MCP_TIMEOUT`: Request timeout in milliseconds (default: `30000`)
+- `CORTEXDX_MCP_LOG_LEVEL`: `debug`, `info`, `warn`, `error` (default: `info`)
+- `CORTEXDX_MCP_PORT`: Application port (default: `3000`)
+- `CORTEXDX_MCP_HOST`: Bind address (default: `0.0.0.0`)
+- `CORTEXDX_MCP_WORKERS`: Number of worker processes (default: CPU cores)
+- `CORTEXDX_MCP_TIMEOUT`: Request timeout in milliseconds (default: `30000`)
 
 #### LLM Backend Configuration
 
-- `INSULA_MCP_LLM_BACKEND`: `ollama` (default: `ollama`)
+- `CORTEXDX_MCP_LLM_BACKEND`: `ollama` (default: `ollama`)
 - `OLLAMA_HOST`: Ollama endpoint (default: `http://localhost:11434`)
 - `OLLAMA_TIMEOUT`: Ollama request timeout (default: `60000`)
 
@@ -636,7 +636,7 @@ data:
 
 #### Development & Debug
 
-- `DEBUG`: Debug namespaces (e.g., `insula:*`)
+- `DEBUG`: Debug namespaces (e.g., `cortexdx:*`)
 - `PROFILING_ENABLED`: Enable CPU profiling (default: `false`)
 - `MEMORY_MONITORING`: Enable memory monitoring (default: `false`)
 - `SLOW_QUERY_THRESHOLD`: Log slow queries over N ms (default: `1000`)
@@ -688,13 +688,13 @@ data:
 ```bash
 # Docker volumes
 docker run --rm \
-  -v insula-data:/data \
+  -v cortexdx-data:/data \
   -v $(pwd):/backup \
-  alpine tar czf /backup/insula-data-backup.tar.gz /data
+  alpine tar czf /backup/cortexdx-data-backup.tar.gz /data
 
 # Kubernetes PVCs
 kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
-  tar czf - /app/data | gzip > insula-data-backup.tar.gz
+  tar czf - /app/data | gzip > cortexdx-data-backup.tar.gz
 ```
 
 #### Recovery
@@ -702,13 +702,13 @@ kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
 ```bash
 # Docker volumes
 docker run --rm \
-  -v insula-data:/data \
+  -v cortexdx-data:/data \
   -v $(pwd):/backup \
-  alpine tar xzf /backup/insula-data-backup.tar.gz -C /
+  alpine tar xzf /backup/cortexdx-data-backup.tar.gz -C /
 
 # Kubernetes PVCs
 kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
-  tar xzf - -C /app/data < insula-data-backup.tar.gz
+  tar xzf - -C /app/data < cortexdx-data-backup.tar.gz
 ```
 
 #### Automated Backups
@@ -801,10 +801,10 @@ exit 1
 
 ```bash
 # Environment variables for logging
-export INSULA_MCP_LOG_LEVEL=info
-export INSULA_MCP_LOG_FORMAT=json
-export INSULA_MCP_LOG_DESTINATION=stdout
-export INSULA_MCP_AUDIT_ENABLED=true
+export CORTEXDX_MCP_LOG_LEVEL=info
+export CORTEXDX_MCP_LOG_FORMAT=json
+export CORTEXDX_MCP_LOG_DESTINATION=stdout
+export CORTEXDX_MCP_AUDIT_ENABLED=true
 ```
 
 #### Docker Logging
@@ -917,13 +917,13 @@ scrape_configs:
 
 ```bash
 # Application metrics
-insula_mcp_requests_total{method="POST",status="200"}
-insula_mcp_request_duration_seconds{quantile="0.95"}
-insula_mcp_active_connections
-insula_mcp_llm_inference_duration_seconds
-insula_mcp_plugin_execution_duration_seconds
-insula_mcp_cache_hit_ratio
-insula_mcp_database_connections_active
+cortexdx_mcp_requests_total{method="POST",status="200"}
+cortexdx_mcp_request_duration_seconds{quantile="0.95"}
+cortexdx_mcp_active_connections
+cortexdx_mcp_llm_inference_duration_seconds
+cortexdx_mcp_plugin_execution_duration_seconds
+cortexdx_mcp_cache_hit_ratio
+cortexdx_mcp_database_connections_active
 
 # System metrics
 process_cpu_seconds_total
@@ -933,10 +933,10 @@ nodejs_heap_size_used_bytes
 nodejs_gc_duration_seconds
 
 # Business metrics
-insula_mcp_diagnostics_completed_total
-insula_mcp_findings_by_severity
-insula_mcp_license_usage_percentage
-insula_mcp_user_sessions_active
+cortexdx_mcp_diagnostics_completed_total
+cortexdx_mcp_findings_by_severity
+cortexdx_mcp_license_usage_percentage
+cortexdx_mcp_user_sessions_active
 ```
 
 #### OpenTelemetry Integration
@@ -995,7 +995,7 @@ service:
         "type": "graph",
         "targets": [
           {
-            "expr": "rate(insula_mcp_requests_total[5m])",
+            "expr": "rate(cortexdx_mcp_requests_total[5m])",
             "legendFormat": "{{method}} {{status}}"
           }
         ]
@@ -1005,7 +1005,7 @@ service:
         "type": "graph",
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m]))",
+            "expr": "histogram_quantile(0.95, rate(cortexdx_mcp_request_duration_seconds_bucket[5m]))",
             "legendFormat": "95th percentile"
           }
         ]
@@ -1015,7 +1015,7 @@ service:
         "type": "singlestat",
         "targets": [
           {
-            "expr": "rate(insula_mcp_requests_total{status=~\"5..\"}[5m]) / rate(insula_mcp_requests_total[5m])",
+            "expr": "rate(cortexdx_mcp_requests_total{status=~\"5..\"}[5m]) / rate(cortexdx_mcp_requests_total[5m])",
             "legendFormat": "Error Rate"
           }
         ]
@@ -1043,7 +1043,7 @@ groups:
       description: "CortexDx has been down for more than 1 minute"
 
   - alert: HighErrorRate
-    expr: rate(insula_mcp_requests_total{status=~"5.."}[5m]) / rate(insula_mcp_requests_total[5m]) > 0.05
+    expr: rate(cortexdx_mcp_requests_total{status=~"5.."}[5m]) / rate(cortexdx_mcp_requests_total[5m]) > 0.05
     for: 5m
     labels:
       severity: warning
@@ -1052,7 +1052,7 @@ groups:
       description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
 
   - alert: SlowResponseTime
-    expr: histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m])) > 2
+    expr: histogram_quantile(0.95, rate(cortexdx_mcp_request_duration_seconds_bucket[5m])) > 2
     for: 5m
     labels:
       severity: warning
@@ -1070,7 +1070,7 @@ groups:
       description: "Memory usage is {{ $value | humanize }}GB"
 
   - alert: LLMBackendUnavailable
-    expr: insula_mcp_llm_backend_available == 0
+    expr: cortexdx_mcp_llm_backend_available == 0
     for: 2m
     labels:
       severity: critical
@@ -1090,7 +1090,7 @@ groups:
       description: "CPU usage is {{ $value | humanizePercentage }}"
 
   - alert: DatabaseConnectionsHigh
-    expr: insula_mcp_database_connections_active > 80
+    expr: cortexdx_mcp_database_connections_active > 80
     for: 5m
     labels:
       severity: warning
@@ -1273,13 +1273,13 @@ RETENTION_DAYS=30
 mkdir -p "$BACKUP_DIR"
 
 # Database backup
-pg_dump -h postgres -U insula -d insula_mcp | \
+pg_dump -h postgres -U cortexdx -d cortexdx_mcp | \
   gzip > "$BACKUP_DIR/database_$DATE.sql.gz"
 
 # Application data backup
 kubectl exec -n cortexdx deployment/cortexdx-enterprise -- \
   tar czf - /app/data | \
-  aws s3 cp - "s3://insula-backups/data_$DATE.tar.gz"
+  aws s3 cp - "s3://cortexdx-backups/data_$DATE.tar.gz"
 
 # Configuration backup
 kubectl get configmap,secret -n cortexdx -o yaml | \
@@ -1300,7 +1300,7 @@ echo "Backup completed successfully: $DATE"
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: insula-postgres-cluster
+  name: cortexdx-postgres-cluster
 spec:
   instances: 3
   primaryUpdateStrategy: unsupervised
@@ -1313,8 +1313,8 @@ spec:
       
   bootstrap:
     initdb:
-      database: insula_mcp
-      owner: insula
+      database: cortexdx_mcp
+      owner: cortexdx
       
   storage:
     size: 100Gi
@@ -1337,10 +1337,10 @@ kubectl scale deployment cortexdx-enterprise --replicas=0
 
 # Restore database
 gunzip -c "/backups/cortexdx/database_$RESTORE_DATE.sql.gz" | \
-  psql -h postgres -U insula -d insula_mcp
+  psql -h postgres -U cortexdx -d cortexdx_mcp
 
 # Restore application data
-aws s3 cp "s3://insula-backups/data_$RESTORE_DATE.tar.gz" - | \
+aws s3 cp "s3://cortexdx-backups/data_$RESTORE_DATE.tar.gz" - | \
   kubectl exec -i -n cortexdx deployment/cortexdx-enterprise -- \
   tar xzf - -C /app
 
@@ -1580,7 +1580,7 @@ nvidia-smi  # On GPU nodes
 ```bash
 # Test database connectivity
 kubectl exec -n cortexdx deployment/postgres -- \
-  pg_isready -U insula -d insula_mcp
+  pg_isready -U cortexdx -d cortexdx_mcp
 
 # Check database logs
 kubectl logs -n cortexdx deployment/postgres --tail=100
@@ -1742,7 +1742,7 @@ kubectl exec -n $NAMESPACE deployment/$SERVICE_NAME -- \
   curl -f http://ollama-service:11434/api/tags || echo "❌ Ollama unavailable"
 
 kubectl exec -n $NAMESPACE deployment/postgres -- \
-  pg_isready -U insula -d insula_mcp || echo "❌ Database unavailable"
+  pg_isready -U cortexdx -d cortexdx_mcp || echo "❌ Database unavailable"
 
 # Check resource usage
 echo "📊 Checking resource usage..."
@@ -1781,7 +1781,7 @@ kubectl exec -n $NAMESPACE deployment/cortexdx-enterprise -- \
 # Database performance
 echo "🗄️ Database performance..."
 kubectl exec -n $NAMESPACE deployment/postgres -- \
-  psql -U insula -d insula_mcp -c "
+  psql -U cortexdx -d cortexdx_mcp -c "
     SELECT query, calls, total_time, mean_time 
     FROM pg_stat_statements 
     ORDER BY total_time DESC 
@@ -1851,8 +1851,8 @@ docker rm cortexdx
 docker run -d \
   --name cortexdx \
   --env-file .env \
-  -v insula-data:/app/data \
-  -v insula-logs:/app/logs \
+  -v cortexdx-data:/app/data \
+  -v cortexdx-logs:/app/logs \
   -p 3000:3000 \
   brainwav/cortexdx:v1.2.0
 
@@ -1868,8 +1868,8 @@ curl http://localhost:3000/health
 docker run -d \
   --name cortexdx-new \
   --env-file .env \
-  -v insula-data:/app/data \
-  -v insula-logs:/app/logs \
+  -v cortexdx-data:/app/data \
+  -v cortexdx-logs:/app/logs \
   -p 3001:3000 \
   brainwav/cortexdx:v1.2.0
 
@@ -1894,8 +1894,8 @@ docker stop cortexdx
 docker run -d \
   --name cortexdx-final \
   --env-file .env \
-  -v insula-data:/app/data \
-  -v insula-logs:/app/logs \
+  -v cortexdx-data:/app/data \
+  -v cortexdx-logs:/app/logs \
   -p 3000:3000 \
   brainwav/cortexdx:v1.2.0
 ```
@@ -2017,7 +2017,7 @@ spec:
 ```bash
 # 1. Create database backup
 kubectl exec -n cortexdx deployment/postgres -- \
-  pg_dump -U insula insula_mcp | \
+  pg_dump -U cortexdx cortexdx_mcp | \
   gzip > "db-backup-$(date +%Y%m%d).sql.gz"
 
 # 2. Run database migrations
@@ -2096,7 +2096,7 @@ kubectl scale deployment cortexdx-enterprise --replicas=0 -n cortexdx
 # 2. Restore database from backup
 gunzip -c "db-backup-$(date +%Y%m%d).sql.gz" | \
   kubectl exec -i -n cortexdx deployment/postgres -- \
-  psql -U insula -d insula_mcp
+  psql -U cortexdx -d cortexdx_mcp
 
 # 3. Restart application with previous version
 kubectl set image deployment/cortexdx-enterprise \

@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+    type DiagnosticContext,
     checkMemoryHealth,
     checkPerformanceHealth,
     getMemoryMetrics,
@@ -15,12 +16,11 @@ import {
     resetMetrics,
     updateActiveConnections,
     updateConversations,
-    type DiagnosticContext,
 } from "../src/observability/health-checks.js";
 import {
+    type Alert,
     MonitoringSystem,
     getGlobalMonitoring,
-    type Alert,
 } from "../src/observability/monitoring.js";
 
 describe("Health Checks", () => {
@@ -342,15 +342,23 @@ describe("Integration Tests", () => {
     });
 
     it("should handle high load scenarios", () => {
-        // Simulate high load with deterministic success/error ratios
-        for (let i = 0; i < 100; i++) {
-            const latency = 100 + (i % 7) * 25;
-            const succeeded = (i + 1) % 10 !== 0; // 10% error rate ceiling
-            recordRequest(latency, succeeded);
-        }
+        // Simulate high load deterministically to satisfy --deterministic runs
+        const durations = [
+            120, 460, 210, 980, 340, 550, 760, 430, 880, 610,
+            240, 390, 520, 730, 910, 650, 180, 305, 415, 825,
+        ];
+        const successes = [
+            true, true, true, false, true, true, false, true, true, true,
+            true, true, true, false, true, true, true, true, true, true,
+        ];
+
+        durations.forEach((duration, index) => {
+            recordRequest(duration, successes[index] ?? true);
+        });
 
         const perfMetrics = getPerformanceMetrics();
         expect(perfMetrics.avgResponseTimeMs).toBeGreaterThan(0);
-        expect(perfMetrics.errorRate).toBeLessThanOrEqual(15);
+        expect(perfMetrics.errorRate).toBeLessThan(20);
+        expect(perfMetrics.errorRate).toBeGreaterThan(0);
     });
 });

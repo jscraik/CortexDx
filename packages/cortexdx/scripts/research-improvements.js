@@ -183,7 +183,7 @@ async function researchBestPracticesAnalysis() {
 }
 
 async function main() {
-  console.log('🚀 Starting Academic Research for Insula MCP Improvements\n');
+  console.log('🚀 Starting Academic Research for CortexDx Improvements\n');
   
   const results = {
     interactiveDebugging: await researchInteractiveDebugging(),

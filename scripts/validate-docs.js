@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Advanced documentation validation script for Insula MCP
+ * Advanced documentation validation script for CortexDx
  * Validates documentation structure, cross-references, and content quality
  */
 
@@ -16,15 +16,15 @@ class DocumentationValidator {
     this.requiredFiles = [
       'README.md',
       'CONTRIBUTING.md',
-      'packages/insula-mcp/README.md',
-      'packages/insula-mcp/docs/GETTING_STARTED.md',
-      'packages/insula-mcp/docs/USER_GUIDE.md',
-      'packages/insula-mcp/docs/API_REFERENCE.md',
-      'packages/insula-mcp/docs/CONTRIBUTING.md',
-      'packages/insula-mcp/docs/TROUBLESHOOTING.md',
-      'packages/insula-mcp/docs/DEPLOYMENT.md',
-      'packages/insula-mcp/docs/IDE_INTEGRATION.md',
-      'packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md'
+      'packages/cortexdx/README.md',
+      'packages/cortexdx/docs/GETTING_STARTED.md',
+      'packages/cortexdx/docs/USER_GUIDE.md',
+      'packages/cortexdx/docs/API_REFERENCE.md',
+      'packages/cortexdx/docs/CONTRIBUTING.md',
+      'packages/cortexdx/docs/TROUBLESHOOTING.md',
+      'packages/cortexdx/docs/DEPLOYMENT.md',
+      'packages/cortexdx/docs/IDE_INTEGRATION.md',
+      'packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md'
     ];
   }
 

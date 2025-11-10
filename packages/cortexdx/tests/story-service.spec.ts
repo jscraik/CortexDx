@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { StoryService } from "../src/story/story-service.js";
 
 const manifest = {
-  server: { name: "insula-core" },
+  server: { name: "cortexdx-core" },
   tools: [{ name: "tool.analyze", depends_on: ["connector.edge"] }],
   connectors: [{ id: "connector.edge", target: "service.vector" }],
 };

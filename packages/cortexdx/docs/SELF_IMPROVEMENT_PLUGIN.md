@@ -312,7 +312,7 @@ pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
 # With conversation history
 pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
   --endpoint http://localhost:5001 \
-  --history .insula/conversation-history.json \
+  --history .cortexdx/conversation-history.json \
   --out reports/self-improvement.json
 ```
 
@@ -327,8 +327,8 @@ pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
 
 ### Environment Variables
 
-- `INSULA_INTERNAL_ENDPOINT`: Default Inspector endpoint
-- `INSULA_HISTORY_PATH`: Default conversation history path
+- `CORTEXDX_INTERNAL_ENDPOINT`: Default Inspector endpoint
+- `CORTEXDX_HISTORY_PATH`: Default conversation history path
 
 ## Finding Types
 

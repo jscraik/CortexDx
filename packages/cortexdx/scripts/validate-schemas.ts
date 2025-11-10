@@ -66,7 +66,7 @@ async function validateStorySchema() {
       {
         id: "action-validate",
         label: "Dry-run reprobe",
-        command: "insula-mcp story.reprobe --target origin",
+        command: "cortexdx story.reprobe --target origin",
         reversible: true,
       },
     ],

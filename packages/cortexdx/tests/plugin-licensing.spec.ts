@@ -86,7 +86,7 @@ describe("Compliance Monitor Plugin", () => {
 describe("Commercial Licensing Plugin", () => {
     it("should validate commercial license keys", () => {
         const license = {
-            key: "INSULA-PRO-12345",
+            key: "CORTEXDX-PRO-12345",
             tier: "professional",
             valid: true,
             expiresAt: new Date("2025-12-31")

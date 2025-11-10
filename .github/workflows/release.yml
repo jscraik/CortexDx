@@ -49,7 +49,7 @@ jobs:
               run: |
                   VERSION="${{ github.event.inputs.version || github.ref_name }}"
                   VERSION="${VERSION#v}"
-                  PACKAGE_VERSION=$(node -p "require('./packages/insula-mcp/package.json').version")
+                  PACKAGE_VERSION=$(node -p "require('./packages/cortexdx/package.json').version")
                   if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
                     echo "Version mismatch: package.json has $PACKAGE_VERSION, expected $VERSION"
                     exit 1
@@ -86,11 +86,11 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                   context: .
-                  file: packages/insula-mcp/Dockerfile.${{ matrix.tier }}
+                  file: packages/cortexdx/Dockerfile.${{ matrix.tier }}
                   push: true
                   tags: |
-                      brainwav/insula-mcp:${{ steps.version.outputs.version }}-${{ matrix.tier }}
-                      brainwav/insula-mcp:latest-${{ matrix.tier }}
+                      brainwav/cortexdx:${{ steps.version.outputs.version }}-${{ matrix.tier }}
+                      brainwav/cortexdx:latest-${{ matrix.tier }}
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
                   platforms: linux/amd64,linux/arm64
@@ -98,9 +98,9 @@ jobs:
             - name: Tag latest (community only)
               if: matrix.tier == 'community'
               run: |
-                  docker tag brainwav/insula-mcp:${{ steps.version.outputs.version }}-community \
-                             brainwav/insula-mcp:latest
-                  docker push brainwav/insula-mcp:latest
+                  docker tag brainwav/cortexdx:${{ steps.version.outputs.version }}-community \
+                             brainwav/cortexdx:latest
+                  docker push brainwav/cortexdx:latest
 
     publish-npm:
         name: Publish to NPM
@@ -126,11 +126,11 @@ jobs:
 
             - name: Build package
               run: pnpm build
-              working-directory: packages/insula-mcp
+              working-directory: packages/cortexdx
 
             - name: Publish to NPM
               run: npm publish --access public
-              working-directory: packages/insula-mcp
+              working-directory: packages/cortexdx
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -153,13 +153,13 @@ jobs:
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: v${{ steps.version.outputs.version }}
-                  name: Insula MCP v${{ steps.version.outputs.version }}
-                  body_path: packages/insula-mcp/RELEASE_NOTES.md
+                  name: CortexDx MCP v${{ steps.version.outputs.version }}
+                  body_path: packages/cortexdx/RELEASE_NOTES.md
                   draft: false
                   prerelease: false
                   files: |
-                      packages/insula-mcp/RELEASE_NOTES.md
-                      packages/insula-mcp/MIGRATION_GUIDE.md
+                      packages/cortexdx/RELEASE_NOTES.md
+                      packages/cortexdx/MIGRATION_GUIDE.md
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -181,13 +181,13 @@ jobs:
               with:
                   payload: |
                       {
-                        "text": "🎉 Insula MCP v${{ steps.version.outputs.version }} has been released!",
+                        "text": "🎉 CortexDx MCP v${{ steps.version.outputs.version }} has been released!",
                         "blocks": [
                           {
                             "type": "section",
                             "text": {
                               "type": "mrkdwn",
-                              "text": "*Insula MCP v${{ steps.version.outputs.version }} Released*\n\n✅ NPM Package Published\n✅ Docker Images Built\n✅ GitHub Release Created"
+                              "text": "*CortexDx MCP v${{ steps.version.outputs.version }} Released*\n\n✅ NPM Package Published\n✅ Docker Images Built\n✅ GitHub Release Created"
                             }
                           },
                           {
@@ -216,6 +216,6 @@ jobs:
                   echo "**Version:** v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "### Published Artifacts" >> $GITHUB_STEP_SUMMARY
-                  echo "- 📦 NPM: [@brainwav/insula-mcp@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@brainwav/insula-mcp)" >> $GITHUB_STEP_SUMMARY
-                  echo "- 🐳 Docker: [brainwav/insula-mcp:${{ steps.version.outputs.version }}](https://hub.docker.com/r/brainwav/insula-mcp)" >> $GITHUB_STEP_SUMMARY
+                  echo "- 📦 NPM: [@brainwav/cortexdx@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@brainwav/cortexdx)" >> $GITHUB_STEP_SUMMARY
+                  echo "- 🐳 Docker: [brainwav/cortexdx:${{ steps.version.outputs.version }}](https://hub.docker.com/r/brainwav/cortexdx)" >> $GITHUB_STEP_SUMMARY
                   echo "- 📝 GitHub: [Release Notes](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY

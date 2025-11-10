@@ -412,7 +412,7 @@ function createTestEmbeddingAdapter(): EmbeddingAdapter {
 
 function buildDeterministicVector(text: string): EmbeddingVector {
     const length = 16;
-    const base = text || "insula";
+    const base = text || "cortexdx";
     const values = Array.from({ length }, (_, index) => {
         const code = base.charCodeAt(index % base.length) ?? 32;
         return ((code % 97) / 97) + index * 0.01;

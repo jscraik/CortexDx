@@ -1,4 +1,4 @@
-# GitLab CI/CD Pipeline for Insula MCP
+# GitLab CI/CD Pipeline for CortexDx MCP
 # Copy this file to your repository root as .gitlab-ci.yml
 
 variables:
@@ -10,7 +10,7 @@ variables:
   # DOCKER_REGISTRY: registry.gitlab.com
   # DOCKER_IMAGE: $CI_REGISTRY_IMAGE
   # KUBECONFIG: (base64 encoded kubeconfig)
-  # INSULA_LICENSE_KEY: (your license key)
+  # CORTEXDX_LICENSE_KEY: (your license key)
 
 stages:
   - validate
@@ -27,7 +27,7 @@ cache:
   paths:
     - .pnpm-store
     - node_modules
-    - packages/insula-mcp/node_modules
+    - packages/cortexdx/node_modules
 
 # Validate stage
 lint:
@@ -56,7 +56,7 @@ build:
     - pnpm build
   artifacts:
     paths:
-      - packages/insula-mcp/dist
+      - packages/cortexdx/dist
     expire_in: 1 hour
   only:
     - merge_requests
@@ -98,7 +98,7 @@ test:
   script:
     - |
       docker build \
-        -f packages/insula-mcp/Dockerfile.${TIER} \
+        -f packages/cortexdx/Dockerfile.${TIER} \
         -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-${TIER} \
         -t ${CI_REGISTRY_IMAGE}:latest-${TIER} \
         --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
@@ -136,20 +136,20 @@ docker:enterprise:
     - helm version
   script:
     - |
-      helm upgrade --install insula-mcp-${TIER} \
-        ./packages/insula-mcp/kubernetes/helm/insula-mcp \
-        --namespace insula-mcp \
+      helm upgrade --install cortexdx-${TIER} \
+        ./packages/cortexdx/kubernetes/helm/cortexdx \
+        --namespace cortexdx \
         --create-namespace \
         --set tier=${TIER} \
         --set image.repository=${CI_REGISTRY_IMAGE} \
         --set image.tag=${CI_COMMIT_TAG}-${TIER} \
-        --set secrets.licenseKey="${INSULA_LICENSE_KEY}" \
+        --set secrets.licenseKey="${CORTEXDX_LICENSE_KEY}" \
         --set secrets.auth0Domain="${AUTH0_DOMAIN}" \
         --set secrets.auth0ClientId="${AUTH0_CLIENT_ID}" \
         --set secrets.auth0ClientSecret="${AUTH0_CLIENT_SECRET}" \
         --wait \
         --timeout 10m
-    - kubectl rollout status deployment/insula-mcp-${TIER} -n insula-mcp --timeout=5m
+    - kubectl rollout status deployment/cortexdx-${TIER} -n cortexdx --timeout=5m
   only:
     - tags
   when: manual
@@ -160,7 +160,7 @@ deploy:staging:community:
     TIER: community
   environment:
     name: staging/community
-    url: https://staging-community.insula-mcp.example.com
+    url: https://staging-community.cortexdx.example.com
 
 deploy:staging:professional:
   <<: *deploy
@@ -168,7 +168,7 @@ deploy:staging:professional:
     TIER: professional
   environment:
     name: staging/professional
-    url: https://staging-professional.insula-mcp.example.com
+    url: https://staging-professional.cortexdx.example.com
 
 deploy:staging:enterprise:
   <<: *deploy
@@ -176,7 +176,7 @@ deploy:staging:enterprise:
     TIER: enterprise
   environment:
     name: staging/enterprise
-    url: https://staging-enterprise.insula-mcp.example.com
+    url: https://staging-enterprise.cortexdx.example.com
 
 deploy:production:community:
   <<: *deploy
@@ -184,7 +184,7 @@ deploy:production:community:
     TIER: community
   environment:
     name: production/community
-    url: https://community.insula-mcp.example.com
+    url: https://community.cortexdx.example.com
   only:
     - tags
   when: manual
@@ -195,7 +195,7 @@ deploy:production:professional:
     TIER: professional
   environment:
     name: production/professional
-    url: https://professional.insula-mcp.example.com
+    url: https://professional.cortexdx.example.com
   only:
     - tags
   when: manual
@@ -206,7 +206,7 @@ deploy:production:enterprise:
     TIER: enterprise
   environment:
     name: production/enterprise
-    url: https://enterprise.insula-mcp.example.com
+    url: https://enterprise.cortexdx.example.com
   only:
     - tags
   when: manual

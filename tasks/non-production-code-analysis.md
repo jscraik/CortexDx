@@ -2,8 +2,8 @@
 
 **Generated:** November 10, 2025  
 **Scope:** All files outside of `tests/` directories  
-**Repository:** CortexDx (Insula MCP Diagnostic System)  
-**Specification Reference:** .kiro/specs/insula-mcp-diagnostic-system/ architectural requirements
+**Repository:** CortexDx (CortexDx Diagnostic System)  
+**Specification Reference:** .kiro/specs/cortexdx-diagnostic-system/ architectural requirements
 
 ## Executive Summary
 
@@ -53,7 +53,7 @@ Based on the .kiro specifications, this analysis identifies gaps between current
 
 ### 1.1 Mock Servers & Testing Utilities
 
-**Location:** `packages/insula-mcp/scripts/mock-servers/`
+**Location:** `packages/cortexdx/scripts/mock-servers/`
 
 - **`ok.ts`** - Simple HTTP mock server for testing (port 8088)
 - **`bad-cors.ts`** - CORS error simulation server
@@ -64,7 +64,7 @@ Based on the .kiro specifications, this analysis identifies gaps between current
 
 ### 1.2 Research & Development Scripts
 
-**Location:** `packages/insula-mcp/`
+**Location:** `packages/cortexdx/`
 
 - **`research-improvements.js`** - Academic research script for debugging improvements (216 lines)
   - Uses academic providers to research interactive debugging approaches
@@ -78,7 +78,7 @@ scripts/ or documented as experimental.
 
 ### 1.3 Internal Development Tools
 
-**Location:** `packages/insula-mcp/scripts/internal/`
+**Location:** `packages/cortexdx/scripts/internal/`
 
 - **`self-improvement.ts`** - Internal development tool (174 lines)
   - Automated code improvement system
@@ -91,7 +91,7 @@ scripts/ or documented as experimental.
 
 ### 2.1 Docker Configuration
 
-**Location:** `packages/insula-mcp/`
+**Location:** `packages/cortexdx/`
 
 - **`Dockerfile`** - Production Dockerfile (97 lines)
 - **`Dockerfile.community`** - Community edition variant
@@ -103,7 +103,7 @@ scripts/ or documented as experimental.
 
 ### 2.2 Deployment Scripts
 
-**Location:** `packages/insula-mcp/scripts/`
+**Location:** `packages/cortexdx/scripts/`
 
 - **`build-docker-images.sh`** - Docker image builder (90 lines)
 - **`quick-deploy.sh`** - Rapid deployment utility (205 lines)
@@ -117,14 +117,14 @@ scripts/ or documented as experimental.
 
 ### 3.1 Visual Studio Code Extension
 
-**Location:** `packages/insula-mcp/ide-extensions/vscode/`
+**Location:** `packages/cortexdx/ide-extensions/vscode/`
 
 - **`package.json`** - VS Code extension manifest (161 lines)
 - **`src/`** - Extension source code
 
 ### 3.2 IntelliJ Plugin
 
-**Location:** `packages/insula-mcp/ide-extensions/intellij/`
+**Location:** `packages/cortexdx/ide-extensions/intellij/`
 
 - **`plugin.xml`** - IntelliJ plugin configuration
 
@@ -141,12 +141,12 @@ scripts/ or documented as experimental.
 - **`sync-versions.js`** - Version synchronization across docs (307 lines)
 - **`validate-docs.js`** - Documentation validation (301 lines)
 
-**Recommendation:** Development maintenance tools, keep but consider moving to `packages/insula-mcp/scripts/` for
+**Recommendation:** Development maintenance tools, keep but consider moving to `packages/cortexdx/scripts/` for
 consistency.
 
 ### 4.2 Validation & Quality Tools
 
-**Location:** `packages/insula-mcp/scripts/`
+**Location:** `packages/cortexdx/scripts/`
 
 - **`validate-schemas.ts`** - Schema validation utility (87 lines)
 - **`accessibility/story-card.ts`** - A11y testing with Playwright/Axe (57 lines)
@@ -173,7 +173,7 @@ consistency.
 
 **Files identified:**
 
-- `packages/insula-mcp/server.log`
+- `packages/cortexdx/server.log`
 
 **Recommendation:** Add `*.log` to `.gitignore`.
 
@@ -286,7 +286,7 @@ Multiple features marked as "not yet fully implemented":
 2. **Implement or remove security TODOs** (Semgrep, ZAP, gitleaks)
 3. **Replace console.* with proper logging** in production paths
 4. **Move or clearly mark demo license data**
-5. **Execute systematic "insula" to "cortexdx" renaming**
+5. **Execute systematic "cortexdx" to "cortexdx" renaming**
 
 ### Medium Priority (Code Quality)
 
@@ -303,29 +303,29 @@ Multiple features marked as "not yet fully implemented":
 
 ## 10. Branding & Naming Consistency Issues
 
-### 10.1 Legacy "Insula" References
+### 10.1 Legacy "CortexDx" References
 
-The codebase contains extensive references to the legacy "insula" branding that should be updated to "cortexdx"
+The codebase contains extensive references to the legacy "cortexdx" branding that should be updated to "cortexdx"
 for consistency with the current project name.
 
 **Critical Files Requiring Renaming:**
 
 **Package Structure:**
 
-- `packages/insula-mcp/` → `packages/cortexdx/`
-- Package name in `package.json`: `@brainwav/insula-mcp` → `@brainwav/cortexdx`
+- `packages/cortexdx/` → `packages/cortexdx/`
+- Package name in `package.json`: `@brainwav/cortexdx` → `@brainwav/cortexdx`
 
 **Documentation & Configs:**
 
-- All references to `insula-mcp` in documentation files
-- GitHub workflow names (`insula-mcp.yml`)
-- Docker image names and environment variables (`INSULA_*`)
-- IDE extension names (`insula-mcp-vscode`)
+- All references to `cortexdx` in documentation files
+- GitHub workflow names (`cortexdx.yml`)
+- Docker image names and environment variables (`CORTEXDX_*`)
+- IDE extension names (`cortexdx-vscode`)
 
 **Source Code References:**
 
-- Service labels: `com.brainwav.insula-local-memory` → `com.brainwav.cortexdx-*`
-- Environment variables: `INSULA_*` → `CORTEXDX_*`
+- Service labels: `com.brainwav.cortexdx-local-memory` → `com.brainwav.cortexdx-*`
+- Environment variables: `CORTEXDX_*` → `CORTEXDX_*`
 - File paths in scripts and configurations
 - NPM package references and badges
 
@@ -333,10 +333,10 @@ for consistency with the current project name.
 
 ```bash
 # Directory structure
-mv packages/insula-mcp packages/cortexdx
+mv packages/cortexdx packages/cortexdx
 
 # Package.json updates
-"@brainwav/insula-mcp" → "@brainwav/cortexdx"
+"@brainwav/cortexdx" → "@brainwav/cortexdx"
 ```
 
 ## 11. Architectural Specification Compliance
@@ -451,12 +451,12 @@ For questions or clarifications, refer to AGENTS.md and .kiro/specs/ documentati
 
 # Environment variables
 
-INSULA_LICENSE_KEY → CORTEXDX_LICENSE_KEY
-INSULA_MCP_TIER → CORTEXDX_TIER
+CORTEXDX_LICENSE_KEY → CORTEXDX_LICENSE_KEY
+CORTEXDX_MCP_TIER → CORTEXDX_TIER
 
 # File references
 
-packages/insula-mcp/src → packages/cortexdx/src
+packages/cortexdx/src → packages/cortexdx/src
 
 ```
 
@@ -483,14 +483,14 @@ conventions throughout the codebase.
 The codebase contains a significant amount of legitimate development infrastructure (deployment scripts,
 IDE extensions, build tools) alongside some items requiring cleanup (empty files, TODOs, debug output).
 The main concerns include incomplete security features, extensive debug logging in production code paths,
-widespread legacy "insula" branding that needs systematic renaming, and significant architectural gaps
+widespread legacy "cortexdx" branding that needs systematic renaming, and significant architectural gaps
 compared to the FASTMCP v3 specification requirements.
 
 **Key Findings:**
 
 **Total Non-Production Files Identified:** 45+  
 **Critical Issues:** 9 (including branding consistency)  
-**Code Quality Issues:** 50+ console statements, 20+ TODOs, 100+ "insula" references  
+**Code Quality Issues:** 50+ console statements, 20+ TODOs, 100+ "cortexdx" references  
 **Legitimate Dev Infrastructure:** 35+ files (Docker, scripts, IDE tools)  
 **Architectural Gaps:** 6 major areas requiring specification compliance  
 **Implementation Priority:** High for plugin orchestration, LLM integration, and security framework
@@ -499,7 +499,7 @@ compared to the FASTMCP v3 specification requirements.
 
 1. **Immediate (High Priority):** Implement plugin orchestration and LLM backend integration per FASTMCP v3
 2. **Short-term:** Complete security framework integration (OWASP ASVS + MITRE ATLAS)
-3. **Medium-term:** Systematic "insula" to "cortexdx" branding update across all assets
+3. **Medium-term:** Systematic "cortexdx" to "cortexdx" branding update across all assets
 4. **Long-term:** Academic provider integration and commercial infrastructure deployment
 
 The architectural compliance analysis reveals that while the core diagnostic infrastructure is solid, 

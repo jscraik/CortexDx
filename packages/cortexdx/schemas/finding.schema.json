@@ -1,5 +1,5 @@
 {
-  "$id": "https://insula.local/schemas/finding.schema.json",
+  "$id": "https://cortexdx.local/schemas/finding.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": ["id", "source", "severity", "title", "precision"],

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Version Synchronization Script for Insula MCP Documentation
+ * Version Synchronization Script for CortexDx Documentation
  * Automatically synchronizes version references across documentation files
  */
 
@@ -10,7 +10,7 @@ const path = require('path');
 
 class VersionSynchronizer {
   constructor() {
-    this.packageJsonPath = 'packages/insula-mcp/package.json';
+    this.packageJsonPath = 'packages/cortexdx/package.json';
     this.changes = [];
     this.errors = [];
   }
@@ -69,7 +69,7 @@ class VersionSynchronizer {
     const originalContent = content;
 
     // Sync npm version badges
-    const versionBadgeRegex = /(https:\/\/img\.shields\.io\/npm\/v\/)(@brainwav\/insula-mcp)(\?[^)\s]*)?/g;
+    const versionBadgeRegex = /(https:\/\/img\.shields\.io\/npm\/v\/)(@brainwav\/cortexdx)(\?[^)\s]*)?/g;
     const newVersionBadgeUrl = `https://img.shields.io/npm/v/${versionInfo.name}`;
     
     content = content.replace(versionBadgeRegex, (match, prefix, packageName, suffix) => {
@@ -119,10 +119,10 @@ class VersionSynchronizer {
     });
 
     // Sync package name references
-    const packageNameRegex = /@brainwav\/insula-mcp@(\d+\.\d+\.\d+)/g;
+    const packageNameRegex = /@brainwav\/cortexdx@(\d+\.\d+\.\d+)/g;
     content = content.replace(packageNameRegex, (match, oldVersion) => {
       if (oldVersion !== versionInfo.version) {
-        const newMatch = `@brainwav/insula-mcp@${versionInfo.version}`;
+        const newMatch = `@brainwav/cortexdx@${versionInfo.version}`;
         this.addChange(filePath, match, newMatch, 'Updated package version reference');
         modified = true;
         return newMatch;
@@ -131,7 +131,7 @@ class VersionSynchronizer {
     });
 
     // Sync installation commands
-    const npmInstallRegex = /(npm install\s+@brainwav\/insula-mcp)(@\d+\.\d+\.\d+)?/g;
+    const npmInstallRegex = /(npm install\s+@brainwav\/cortexdx)(@\d+\.\d+\.\d+)?/g;
     content = content.replace(npmInstallRegex, (match, command, version) => {
       if (version && version !== `@${versionInfo.version}`) {
         const newMatch = `${command}@${versionInfo.version}`;
@@ -166,12 +166,12 @@ class VersionSynchronizer {
 
     const filesToSync = [
       'README.md',
-      'packages/insula-mcp/README.md',
-      'packages/insula-mcp/docs/GETTING_STARTED.md',
-      'packages/insula-mcp/docs/USER_GUIDE.md',
-      'packages/insula-mcp/docs/API_REFERENCE.md',
-      'packages/insula-mcp/docs/DEPLOYMENT.md',
-      'packages/insula-mcp/docs/IDE_INTEGRATION.md'
+      'packages/cortexdx/README.md',
+      'packages/cortexdx/docs/GETTING_STARTED.md',
+      'packages/cortexdx/docs/USER_GUIDE.md',
+      'packages/cortexdx/docs/API_REFERENCE.md',
+      'packages/cortexdx/docs/DEPLOYMENT.md',
+      'packages/cortexdx/docs/IDE_INTEGRATION.md'
     ];
 
     let totalModified = 0;

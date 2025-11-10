@@ -3,7 +3,7 @@ node = "20.11.1"
 pnpm = "9.12.2"
 
 [tasks.build]
-description = "Build Insula MCP via Nx"
+description = "Build CortexDx MCP via Nx"
 run = "pnpm build"
 
 [tasks.test]

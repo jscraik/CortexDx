@@ -11,7 +11,7 @@ describe('Web Interface', () => {
         const indexPath = join(__dirname, '../src/web/index.html');
         const content = await readFile(indexPath, 'utf-8');
 
-        expect(content).toContain('Insula MCP');
+        expect(content).toContain('CortexDx');
         expect(content).toContain('Development Interface');
     });
 
@@ -27,7 +27,7 @@ describe('Web Interface', () => {
         const appPath = join(__dirname, '../src/web/app.js');
         const content = await readFile(appPath, 'utf-8');
 
-        expect(content).toContain('InsulaMCPClient');
+        expect(content).toContain('CortexDxClient');
         expect(content).toContain('setupTabs');
     });
 

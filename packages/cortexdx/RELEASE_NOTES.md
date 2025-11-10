@@ -113,10 +113,10 @@ cd cortexdx/packages/cortexdx
 docker-compose up cortexdx-community
 
 # Start Professional Edition (requires license)
-INSULA_LICENSE_KEY=your-key docker-compose up cortexdx-professional
+CORTEXDX_LICENSE_KEY=your-key docker-compose up cortexdx-professional
 
 # Start Enterprise Edition (requires license and Auth0)
-INSULA_LICENSE_KEY=your-key \
+CORTEXDX_LICENSE_KEY=your-key \
 AUTH0_DOMAIN=your-domain.auth0.com \
 AUTH0_CLIENT_ID=your-client-id \
 AUTH0_CLIENT_SECRET=your-secret \
@@ -156,9 +156,9 @@ docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Run Professional Edition with Ollama
 docker run -p 3000:3000 \
-  -e INSULA_LICENSE_KEY=your-key \
+  -e CORTEXDX_LICENSE_KEY=your-key \
   -e OLLAMA_HOST=ollama:11434 \
-  -v insula-models:/app/models \
+  -v cortexdx-models:/app/models \
   brainwav/cortexdx:1.0.0-professional
 ```
 

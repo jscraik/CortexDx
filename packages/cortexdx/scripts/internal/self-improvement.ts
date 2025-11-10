@@ -31,9 +31,9 @@ interface CliOptions {
 
 function parseArgs(): CliOptions {
   const args = process.argv.slice(2);
-  let endpoint = process.env.INSULA_INTERNAL_ENDPOINT ?? "http://127.0.0.1:5001";
-  let projectRoot = "packages/insula-mcp";
-  let historyPath: string | undefined = process.env.INSULA_HISTORY_PATH;
+  let endpoint = process.env.CORTEXDX_INTERNAL_ENDPOINT ?? "http://127.0.0.1:5001";
+  let projectRoot = "packages/cortexdx";
+  let historyPath: string | undefined = process.env.CORTEXDX_HISTORY_PATH;
   let outPath: string | undefined;
   let projectType: ProjectType = "mcp-client";
   let language = "typescript";

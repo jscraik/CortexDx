@@ -1768,7 +1768,7 @@ export class DynamicPluginLoader {
 Create a well-structured plugin package for distribution:
 
 ```
-my-insula-plugin/
+my-cortexdx-plugin/
 ├── src/
 │   ├── index.ts                 # Main plugin exports
 │   ├── plugins/
@@ -1797,7 +1797,7 @@ my-insula-plugin/
 
 ```json
 {
-  "name": "@myorg/insula-plugin-custom",
+  "name": "@myorg/cortexdx-plugin-custom",
   "version": "1.0.0",
   "description": "Custom diagnostic and development plugins for CortexDx",
   "type": "module",
@@ -1843,12 +1843,12 @@ my-insula-plugin/
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/myorg/insula-plugin-custom.git"
+    "url": "https://github.com/myorg/cortexdx-plugin-custom.git"
   },
   "bugs": {
-    "url": "https://github.com/myorg/insula-plugin-custom/issues"
+    "url": "https://github.com/myorg/cortexdx-plugin-custom/issues"
   },
-  "homepage": "https://github.com/myorg/insula-plugin-custom#readme",
+  "homepage": "https://github.com/myorg/cortexdx-plugin-custom#readme",
   "peerDependencies": {
     "@brainwav/cortexdx": "^0.1.0"
   },
@@ -1938,7 +1938,7 @@ A comprehensive plugin package providing custom diagnostic and development capab
 ## Installation
 
 ```bash
-npm install @myorg/insula-plugin-custom
+npm install @myorg/cortexdx-plugin-custom
 ```
 
 ## Usage
@@ -1946,7 +1946,7 @@ npm install @myorg/insula-plugin-custom
 ### Basic Usage
 
 ```typescript
-import { myDiagnosticPlugin, myDevelopmentPlugin } from '@myorg/insula-plugin-custom';
+import { myDiagnosticPlugin, myDevelopmentPlugin } from '@myorg/cortexdx-plugin-custom';
 
 // Plugins are automatically discovered when imported
 // No additional registration required

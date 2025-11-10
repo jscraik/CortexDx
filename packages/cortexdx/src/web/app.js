@@ -1,5 +1,5 @@
-// Insula MCP Web Interface
-class InsulaMCPClient {
+// CortexDx Web Interface
+class CortexDxClient {
     constructor() {
         this.baseUrl = window.location.origin;
         this.sessionId = `session-${Date.now()}`;
@@ -290,7 +290,7 @@ class InsulaMCPClient {
     }
 
     loadConfiguration() {
-        const saved = localStorage.getItem('insula-mcp-config');
+        const saved = localStorage.getItem('cortexdx-config');
         if (saved) {
             const config = JSON.parse(saved);
             document.getElementById('llm-backend').value = config.llmBackend || 'ollama';
@@ -308,7 +308,7 @@ class InsulaMCPClient {
         };
 
         this.expertiseLevel = config.expertiseLevel;
-        localStorage.setItem('insula-mcp-config', JSON.stringify(config));
+        localStorage.setItem('cortexdx-config', JSON.stringify(config));
         
         alert('Configuration saved successfully!');
     }
@@ -316,5 +316,5 @@ class InsulaMCPClient {
 
 // Initialize the client when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.insulaClient = new InsulaMCPClient();
+    window.cortexDxClient = new CortexDxClient();
 });

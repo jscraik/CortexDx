@@ -249,7 +249,7 @@ cortexdx diagnose http://localhost:3000
 
 🎉 Your MCP server is healthy and compliant!
 
-📁 Detailed report saved to: reports/insula-report.md
+📁 Detailed report saved to: reports/cortexdx-report.md
 ```
 
 ### Step 5: Explore Advanced Features
@@ -510,14 +510,14 @@ Set these environment variables for global configuration:
 
 ```bash
 # Local AI backend preference
-export INSULA_LLM_BACKEND=ollama
-export INSULA_LLM_MODEL=llama3
+export CORTEXDX_LLM_BACKEND=ollama
+export CORTEXDX_LLM_MODEL=llama3
 
 # Default output directory
-export INSULA_OUTPUT_DIR=./reports
+export CORTEXDX_OUTPUT_DIR=./reports
 
 # Authentication for CI/CD
-export INSULA_AUTH_TOKEN=your-token-here
+export CORTEXDX_AUTH_TOKEN=your-token-here
 
 # Disable colors in CI
 export NO_COLOR=1

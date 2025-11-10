@@ -1,12 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { resolveAuthHeaders } from "./auth/auth0-handshake.js";
 import { type SandboxBudgets, runPlugins } from "./plugin-host.js";
 import { buildArcTddPlan } from "./report/arctdd.js";
 import { buildFilePlan } from "./report/fileplan.js";
 import { buildJsonReport } from "./report/json.js";
 import { buildMarkdownReport } from "./report/markdown.js";
 import type { Finding } from "./types.js";
-import { resolveAuthHeaders } from "./auth/auth0-handshake.js";
 
 interface DiagnoseOptions {
   out?: string;
@@ -23,6 +23,7 @@ interface DiagnoseOptions {
   auth0ClientSecret?: string;
   auth0Audience?: string;
   auth0Scope?: string;
+  mcpApiKey?: string;
 }
 
 export async function runDiagnose({
@@ -51,6 +52,7 @@ export async function runDiagnose({
     auth0ClientSecret: opts.auth0ClientSecret,
     auth0Audience: opts.auth0Audience,
     auth0Scope: opts.auth0Scope,
+    mcpApiKey: opts.mcpApiKey,
   });
 
   const { findings } = await runPlugins({

@@ -1,15 +1,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: insula-mcp
-  namespace: insula-mcp
+  name: cortexdx
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     release: prometheus
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: insula-mcp
+      app.kubernetes.io/name: cortexdx
   endpoints:
     - port: http
       path: /metrics
@@ -29,4 +29,4 @@ spec:
           action: drop
   namespaceSelector:
     matchNames:
-      - insula-mcp
+      - cortexdx

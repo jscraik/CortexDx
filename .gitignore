@@ -14,4 +14,4 @@ studio-wrapper-test.json
 cortex-test-report.json
 docs-maintenance-report.json
 docs-validation-report.json
-packages/insula-mcp/server.log
+packages/cortexdx/server.log

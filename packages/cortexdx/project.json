@@ -2,51 +2,57 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "cortexdx",
   "projectType": "library",
-  "sourceRoot": "packages/insula-mcp/src",
+  "sourceRoot": "packages/cortexdx/src",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp run build"
+        "command": "pnpm --dir packages/cortexdx run build"
       },
-      "outputs": ["{projectRoot}/dist"]
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp run test"
+        "command": "pnpm --dir packages/cortexdx run test"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp exec biome lint src"
+        "command": "pnpm --dir packages/cortexdx exec biome lint src"
       }
     },
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp exec biome format src"
+        "command": "pnpm --dir packages/cortexdx exec biome format src"
       }
     },
     "schema:check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp run schema:check"
+        "command": "pnpm --dir packages/cortexdx run schema:check"
       }
     },
     "axe:check": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp run axe:check"
+        "command": "pnpm --dir packages/cortexdx run axe:check"
       }
     },
     "doctor": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/insula-mcp run doctor"
+        "command": "pnpm --dir packages/cortexdx run doctor"
       }
     }
   },
-  "tags": ["diagnostics", "mcp", "stateless"]
+  "tags": [
+    "diagnostics",
+    "mcp",
+    "stateless"
+  ]
 }

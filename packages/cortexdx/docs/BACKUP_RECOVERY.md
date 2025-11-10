@@ -610,7 +610,7 @@ find /app/backups -name "*.tar.gz" -mtime +30 -delete
 
 ```bash
 # Fix permissions
-chown -R insula:insula /app/backups
+chown -R cortexdx:cortexdx /app/backups
 chmod 755 /app/backups
 ```
 

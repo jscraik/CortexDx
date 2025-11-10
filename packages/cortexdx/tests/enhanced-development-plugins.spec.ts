@@ -221,7 +221,7 @@ describe("Problem Resolver Enhancements (29.3)", () => {
             metadata: {
                 problemId: 'problem-456',
                 fixStrategy: 'refactor',
-                appliedBy: 'insula-mcp'
+                appliedBy: 'cortexdx'
             }
         };
 

@@ -1,0 +1,19 @@
+apiVersion: v2
+name: cortexdx
+description: CortexDx - Diagnostic Meta-Inspector for Model Context Protocol
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - mcp
+  - diagnostic
+  - ai
+  - llm
+  - development-tools
+home: https://github.com/brainwav/cortexdx
+sources:
+  - https://github.com/brainwav/cortexdx
+maintainers:
+  - name: brAInwav Team
+    email: support@brainwav.dev
+icon: https://brainwav.dev/assets/cortexdx-icon.png

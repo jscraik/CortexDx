@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification addresses the compliance gaps identified in the AGENTS.md compliance review for the Insula MCP
+This specification addresses the compliance gaps identified in the AGENTS.md compliance review for the CortexDx MCP
 project. The system currently has a C+ (70%) compliance rating with critical blocking issues in build stability and
 code quality enforcement. This feature will systematically resolve all identified gaps to achieve full AGENTS.md
 compliance, focusing first on unblocking development, then enforcing quality gates, improving processes and

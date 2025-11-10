@@ -1,8 +1,8 @@
 {
     "dashboard": {
-        "title": "Insula MCP - Overview",
+        "title": "CortexDx - Overview",
         "tags": [
-            "insula-mcp",
+            "cortexdx",
             "mcp",
             "diagnostics"
         ],
@@ -23,7 +23,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "up{job=\"insula-mcp\"}",
+                        "expr": "up{job=\"cortexdx\"}",
                         "legendFormat": "{{instance}}"
                     }
                 ],
@@ -76,7 +76,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "rate(insula_mcp_requests_total[5m])",
+                        "expr": "rate(cortexdx_mcp_requests_total[5m])",
                         "legendFormat": "{{method}} {{endpoint}}"
                     }
                 ],
@@ -102,7 +102,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "rate(insula_mcp_requests_total{status=~\"5..\"}[5m])",
+                        "expr": "rate(cortexdx_mcp_requests_total{status=~\"5..\"}[5m])",
                         "legendFormat": "{{status}} errors"
                     }
                 ],
@@ -161,11 +161,11 @@
                 },
                 "targets": [
                     {
-                        "expr": "histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m]))",
+                        "expr": "histogram_quantile(0.95, rate(cortexdx_mcp_request_duration_seconds_bucket[5m]))",
                         "legendFormat": "p95"
                     },
                     {
-                        "expr": "histogram_quantile(0.50, rate(insula_mcp_request_duration_seconds_bucket[5m]))",
+                        "expr": "histogram_quantile(0.50, rate(cortexdx_mcp_request_duration_seconds_bucket[5m]))",
                         "legendFormat": "p50"
                     }
                 ],
@@ -191,7 +191,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "container_memory_working_set_bytes{pod=~\"insula-mcp-.*\"} / 1024 / 1024",
+                        "expr": "container_memory_working_set_bytes{pod=~\"cortexdx-.*\"} / 1024 / 1024",
                         "legendFormat": "{{pod}}"
                     }
                 ],
@@ -217,7 +217,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "rate(container_cpu_usage_seconds_total{pod=~\"insula-mcp-.*\"}[5m]) * 100",
+                        "expr": "rate(container_cpu_usage_seconds_total{pod=~\"cortexdx-.*\"}[5m]) * 100",
                         "legendFormat": "{{pod}}"
                     }
                 ],
@@ -243,7 +243,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "histogram_quantile(0.95, rate(insula_mcp_llm_inference_duration_seconds_bucket[5m]))",
+                        "expr": "histogram_quantile(0.95, rate(cortexdx_mcp_llm_inference_duration_seconds_bucket[5m]))",
                         "legendFormat": "{{backend}} p95"
                     }
                 ],
@@ -269,7 +269,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "insula_mcp_active_sessions",
+                        "expr": "cortexdx_mcp_active_sessions",
                         "legendFormat": "Active"
                     }
                 ],
@@ -291,7 +291,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "rate(insula_mcp_pattern_matches_total[5m])",
+                        "expr": "rate(cortexdx_mcp_pattern_matches_total[5m])",
                         "legendFormat": "Matches/sec"
                     }
                 ],
@@ -313,7 +313,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "histogram_quantile(0.95, rate(insula_mcp_database_query_duration_seconds_bucket[5m]))",
+                        "expr": "histogram_quantile(0.95, rate(cortexdx_mcp_database_query_duration_seconds_bucket[5m]))",
                         "legendFormat": "p95"
                     }
                 ],
@@ -339,7 +339,7 @@
                 },
                 "targets": [
                     {
-                        "expr": "kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"insula-mcp-.*\"} / kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~\"insula-mcp-.*\"} * 100",
+                        "expr": "kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"cortexdx-.*\"} / kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~\"cortexdx-.*\"} * 100",
                         "legendFormat": "{{persistentvolumeclaim}}"
                     }
                 ],

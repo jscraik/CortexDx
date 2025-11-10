@@ -1409,7 +1409,7 @@ CortexDx supports configuration via `.cortexdx.json` file in your project root o
   "plugins": {
     "enabled": ["protocol", "security", "performance", "cors", "streaming"],
     "disabled": ["experimental-ai"],
-    "loadPath": ["./plugins", "./node_modules/@my-org/insula-plugins"],
+    "loadPath": ["./plugins", "./node_modules/@my-org/cortexdx-plugins"],
     "config": {
       "security-scanner": {
         "owaspLevel": "high",
@@ -1519,17 +1519,17 @@ Environment variables override configuration file settings and support variable 
 
 #### Core Variables
 
-- `INSULA_MCP_CONFIG`: Path to configuration file
-- `INSULA_MCP_LOG_LEVEL`: Log level (`debug`, `info`, `warn`, `error`)
-- `INSULA_MCP_CACHE_DIR`: Cache directory path
-- `INSULA_MCP_DATA_DIR`: Data directory path
+- `CORTEXDX_MCP_CONFIG`: Path to configuration file
+- `CORTEXDX_MCP_LOG_LEVEL`: Log level (`debug`, `info`, `warn`, `error`)
+- `CORTEXDX_MCP_CACHE_DIR`: Cache directory path
+- `CORTEXDX_MCP_DATA_DIR`: Data directory path
 
 #### LLM Variables
 
-- `INSULA_MCP_LLM_BACKEND`: LLM backend (must be `ollama`)
-- `INSULA_MCP_LLM_MODEL`: LLM model name
-- `INSULA_MCP_LLM_ENDPOINT`: LLM endpoint URL
-- `INSULA_MCP_LLM_TIMEOUT`: LLM request timeout
+- `CORTEXDX_MCP_LLM_BACKEND`: LLM backend (must be `ollama`)
+- `CORTEXDX_MCP_LLM_MODEL`: LLM model name
+- `CORTEXDX_MCP_LLM_ENDPOINT`: LLM endpoint URL
+- `CORTEXDX_MCP_LLM_TIMEOUT`: LLM request timeout
 
 #### Authentication Variables
 
@@ -1639,7 +1639,7 @@ CortexDx generates multiple output formats to support different use cases and in
 
 Machine-readable format for programmatic processing and CI/CD integration.
 
-**File**: `insula-findings.json`
+**File**: `cortexdx-findings.json`
 
 **Structure**:
 
@@ -1681,10 +1681,10 @@ Machine-readable format for programmatic processing and CI/CD integration.
 cortexdx diagnose http://localhost:3000 --out ./reports
 
 # Process with jq
-cat reports/insula-findings.json | jq '.findings[] | select(.severity == "blocker")'
+cat reports/cortexdx-findings.json | jq '.findings[] | select(.severity == "blocker")'
 
 # CI/CD integration
-if [ $(cat reports/insula-findings.json | jq '.findings[] | select(.severity == "blocker") | length') -gt 0 ]; then
+if [ $(cat reports/cortexdx-findings.json | jq '.findings[] | select(.severity == "blocker") | length') -gt 0 ]; then
   echo "Blocker issues found, failing build"
   exit 1
 fi
@@ -1694,7 +1694,7 @@ fi
 
 Human-readable format for documentation and reporting.
 
-**File**: `insula-report.md`
+**File**: `cortexdx-report.md`
 
 **Structure**:
 
@@ -1734,7 +1734,7 @@ _Data policy: read-only; optional redacted HAR if --har._
 
 Architecture Test-Driven Development format for technical implementation guidance.
 
-**File**: `insula-arctdd.md`
+**File**: `cortexdx-arctdd.md`
 
 **Structure**:
 
@@ -1816,7 +1816,7 @@ describe('CORS', () => {
 
 Unified diff format for automated code fixes.
 
-**File**: `insula-fileplan.patch`
+**File**: `cortexdx-fileplan.patch`
 
 **Structure**:
 
@@ -1856,17 +1856,17 @@ Unified diff format for automated code fixes.
 cortexdx diagnose http://localhost:3000 --file-plan
 
 # Apply patches (review first!)
-git apply reports/insula-fileplan.patch
+git apply reports/cortexdx-fileplan.patch
 
 # Or apply selectively
-patch -p1 < reports/insula-fileplan.patch
+patch -p1 < reports/cortexdx-fileplan.patch
 ```
 
 ### HAR Format
 
 HTTP Archive format for detailed network analysis (when `--har` flag is used).
 
-**File**: `insula-{timestamp}.har`
+**File**: `cortexdx-{timestamp}.har`
 
 **Features**:
 
@@ -1925,7 +1925,7 @@ When `--no-color` flag is used, ANSI color codes are stripped:
 
 - name: Check for blockers
   run: |
-    if [ $(jq '.findings[] | select(.severity == "blocker") | length' reports/insula-findings.json) -gt 0 ]; then
+    if [ $(jq '.findings[] | select(.severity == "blocker") | length' reports/cortexdx-findings.json) -gt 0 ]; then
       echo "::error::Blocker issues found"
       exit 1
     fi
@@ -1941,7 +1941,7 @@ When `--no-color` flag is used, ANSI color codes are stripped:
 
 ```javascript
 // Prometheus metrics from JSON output
-const findings = JSON.parse(fs.readFileSync('reports/insula-findings.json'));
+const findings = JSON.parse(fs.readFileSync('reports/cortexdx-findings.json'));
 const blockerCount = findings.findings.filter(f => f.severity === 'blocker').length;
 const majorCount = findings.findings.filter(f => f.severity === 'major').length;
 

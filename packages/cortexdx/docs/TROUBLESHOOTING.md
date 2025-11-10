@@ -679,7 +679,7 @@ ollama pull llama3.2:3b
 2. **Install plugin**:
 
    ```bash
-   npm install @myorg/insula-plugin-xyz
+   npm install @myorg/cortexdx-plugin-xyz
    ```
 
 3. **Register plugin**:
@@ -1042,10 +1042,10 @@ ollama pull llama3.2:3b
    cortexdx diagnose http://localhost:3000 --verbose --debug --har
    
    # Debug specific plugin
-   DEBUG=insula:plugin:* cortexdx diagnose http://localhost:3000
+   DEBUG=cortexdx:plugin:* cortexdx diagnose http://localhost:3000
    
    # Debug network requests
-   DEBUG=insula:http:* cortexdx diagnose http://localhost:3000
+   DEBUG=cortexdx:http:* cortexdx diagnose http://localhost:3000
    ```
 
 2. **Capture network traffic**:

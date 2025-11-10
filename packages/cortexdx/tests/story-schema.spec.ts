@@ -27,7 +27,7 @@ describe("story schema", () => {
       path: ["workspace", "connector", "tool"],
     },
     symptom: {
-      user_visible: "Users see delayed responses from Insula tools",
+      user_visible: "Users see delayed responses from CortexDx tools",
       technical: "Connector rpc latency exceeded threshold",
     },
     evidence: {
@@ -40,7 +40,7 @@ describe("story schema", () => {
       {
         id: "action-reprobe",
         label: "Run targeted reprobe",
-        command: "insula-mcp story.reprobe --target connector",
+        command: "cortexdx story.reprobe --target connector",
         reversible: true,
       },
     ],

@@ -27,9 +27,9 @@ const BROKEN_SERVER_PORT = 8089;
 
 beforeAll(async () => {
   // Start mock MCP servers for testing
-  okServer = spawn("tsx", ["packages/insula-mcp/scripts/mock-servers/ok.ts"]);
+  okServer = spawn("tsx", ["packages/cortexdx/scripts/mock-servers/ok.ts"]);
   brokenServer = spawn("tsx", [
-    "packages/insula-mcp/scripts/mock-servers/broken-sse.ts",
+    "packages/cortexdx/scripts/mock-servers/broken-sse.ts",
   ]);
 
   // Wait for servers to start

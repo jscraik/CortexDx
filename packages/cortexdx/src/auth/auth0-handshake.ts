@@ -17,6 +17,7 @@ const tokenCache = new Map<string, CachedToken>();
 
 /**
  * Build Authorization headers either from explicit --auth flags or by performing an Auth0 handshake.
+ * Also includes MCP API key if provided.
  */
 export async function resolveAuthHeaders(
   opts: {
@@ -26,40 +27,59 @@ export async function resolveAuthHeaders(
     auth0ClientSecret?: string;
     auth0Audience?: string;
     auth0Scope?: string;
+    mcpApiKey?: string;
   },
 ): Promise<Record<string, string> | undefined> {
   if (typeof opts.auth === "string" && opts.auth.trim().length > 0) {
-    return parseManualAuth(opts.auth);
+    return parseManualAuth(opts.auth, opts.mcpApiKey);
   }
 
   const config = resolveAuth0Config(opts);
-  if (!config) {
-    return undefined;
+  const headers: Record<string, string> = {};
+
+  if (config) {
+    const token = await getAuth0AccessToken(config);
+    headers.authorization = `Bearer ${token}`;
   }
 
-  const token = await getAuth0AccessToken(config);
-  return { authorization: `Bearer ${token}` };
+  // Check CLI option first, then environment variable
+  const mcpApiKey = opts.mcpApiKey || process.env.CORTEXDX_MCP_API_KEY;
+  if (mcpApiKey) {
+    headers["mcp-api-key"] = mcpApiKey;
+  }
+
+  return Object.keys(headers).length > 0 ? headers : undefined;
 }
 
-function parseManualAuth(value: string): Record<string, string> | undefined {
+function parseManualAuth(value: string, mcpApiKey?: string): Record<string, string> | undefined {
   const [schemeRaw, ...restParts] = value.split(":");
   if (!schemeRaw || restParts.length === 0) return undefined;
   const scheme = schemeRaw.toLowerCase();
+
+  const headers: Record<string, string> = {};
+
   if (scheme === "bearer") {
-    return { authorization: `Bearer ${restParts.join(":").trim()}` };
-  }
-  if (scheme === "basic") {
+    headers.authorization = `Bearer ${restParts.join(":").trim()}`;
+  } else if (scheme === "basic") {
     const [user, ...passwordParts] = restParts;
     if (!user || passwordParts.length === 0) return undefined;
     const credentials = Buffer.from(`${user}:${passwordParts.join(":")}`).toString("base64");
-    return { authorization: `Basic ${credentials}` };
-  }
-  if (scheme === "header") {
+    headers.authorization = `Basic ${credentials}`;
+  } else if (scheme === "header") {
     const [name, ...valueParts] = restParts;
     if (!name || valueParts.length === 0) return undefined;
-    return { [name]: valueParts.join(":") };
+    headers[name] = valueParts.join(":");
+  } else {
+    headers.authorization = `${schemeRaw} ${restParts.join(":")}`;
   }
-  return { authorization: `${schemeRaw} ${restParts.join(":")}` };
+
+  // Check CLI option first, then environment variable
+  const finalMcpApiKey = mcpApiKey || process.env.CORTEXDX_MCP_API_KEY;
+  if (finalMcpApiKey) {
+    headers["mcp-api-key"] = finalMcpApiKey;
+  }
+
+  return headers;
 }
 
 function resolveAuth0Config(

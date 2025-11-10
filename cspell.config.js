@@ -3,7 +3,7 @@ module.exports = {
   language: "en",
   words: [
     // Technical terms and project-specific vocabulary
-    "Insula",
+    "CortexDx",
     "MCP",
     "brAInwav",
     "ArcTDD",

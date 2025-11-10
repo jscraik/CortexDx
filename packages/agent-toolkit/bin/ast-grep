@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# brAInwav Agent-Toolkit: ast-grep wrapper
-# Resolves ast-grep from system PATH
-set -euo pipefail
-
-exec ast-grep "$@"

@@ -240,10 +240,10 @@ DRY_RUN=true ./scripts/publish-npm.sh 1.0.0
 ./scripts/quick-deploy.sh community
 
 # Professional Edition
-INSULA_LICENSE_KEY=your-key ./scripts/quick-deploy.sh professional
+CORTEXDX_LICENSE_KEY=your-key ./scripts/quick-deploy.sh professional
 
 # Enterprise Edition
-INSULA_LICENSE_KEY=your-key \
+CORTEXDX_LICENSE_KEY=your-key \
 AUTH0_DOMAIN=your-domain.auth0.com \
 AUTH0_CLIENT_ID=your-client-id \
 AUTH0_CLIENT_SECRET=your-secret \

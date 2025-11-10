@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <idea-plugin>
-    <id>io.brainwav.insula-mcp</id>
-    <name>Insula MCP</name>
+    <id>io.brainwav.cortexdx</id>
+    <name>CortexDx</name>
     <vendor email="support@brainwav.io" url="https://brainwav.io">brAInwav</vendor>
 
     <description><![CDATA[
@@ -35,90 +35,90 @@
         <!-- External Annotator for real-time diagnostics -->
         <externalAnnotator
                 language="TypeScript"
-                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+                implementationClass="io.brainwav.cortexdx.CortexDxExternalAnnotator"/>
         <externalAnnotator
                 language="JavaScript"
-                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+                implementationClass="io.brainwav.cortexdx.CortexDxExternalAnnotator"/>
         <externalAnnotator
                 language="Python"
-                implementationClass="io.brainwav.insula.InsulaExternalAnnotator"/>
+                implementationClass="io.brainwav.cortexdx.CortexDxExternalAnnotator"/>
 
         <!-- Completion Contributor -->
         <completion.contributor
                 language="TypeScript"
-                implementationClass="io.brainwav.insula.InsulaCompletionContributor"/>
+                implementationClass="io.brainwav.cortexdx.CortexDxCompletionContributor"/>
         <completion.contributor
                 language="JavaScript"
-                implementationClass="io.brainwav.insula.InsulaCompletionContributor"/>
+                implementationClass="io.brainwav.cortexdx.CortexDxCompletionContributor"/>
 
         <!-- Intention Actions (Quick Fixes) -->
         <intentionAction>
-            <className>io.brainwav.insula.intentions.AddInputSchemaIntention</className>
-            <category>Insula MCP</category>
+            <className>io.brainwav.cortexdx.intentions.AddInputSchemaIntention</className>
+            <category>CortexDx</category>
         </intentionAction>
         <intentionAction>
-            <className>io.brainwav.insula.intentions.FixJsonRpcVersionIntention</className>
-            <category>Insula MCP</category>
+            <className>io.brainwav.cortexdx.intentions.FixJsonRpcVersionIntention</className>
+            <category>CortexDx</category>
         </intentionAction>
         <intentionAction>
-            <className>io.brainwav.insula.intentions.AddErrorHandlingIntention</className>
-            <category>Insula MCP</category>
+            <className>io.brainwav.cortexdx.intentions.AddErrorHandlingIntention</className>
+            <category>CortexDx</category>
         </intentionAction>
 
         <!-- Code Formatter -->
         <formattingService
-                implementation="io.brainwav.insula.InsulaFormattingService"/>
+                implementation="io.brainwav.cortexdx.CortexDxFormattingService"/>
 
         <!-- Project Service -->
         <projectService
-                serviceImplementation="io.brainwav.insula.InsulaProjectService"/>
+                serviceImplementation="io.brainwav.cortexdx.CortexDxProjectService"/>
 
         <!-- Application Service -->
         <applicationService
-                serviceImplementation="io.brainwav.insula.InsulaApplicationService"/>
+                serviceImplementation="io.brainwav.cortexdx.CortexDxApplicationService"/>
 
         <!-- Settings -->
         <projectConfigurable
-                instance="io.brainwav.insula.settings.InsulaSettingsConfigurable"
-                displayName="Insula MCP"
-                id="insula.mcp.settings"/>
+                instance="io.brainwav.cortexdx.settings.CortexDxSettingsConfigurable"
+                displayName="CortexDx"
+                id="cortexdx.mcp.settings"/>
 
         <!-- Tool Window -->
         <toolWindow
-                id="Insula MCP"
+                id="CortexDx"
                 anchor="bottom"
-                icon="/icons/insula.svg"
-                factoryClass="io.brainwav.insula.toolwindow.InsulaToolWindowFactory"/>
+                icon="/icons/cortexdx.svg"
+                factoryClass="io.brainwav.cortexdx.toolwindow.CortexDxToolWindowFactory"/>
     </extensions>
 
     <actions>
         <!-- Main Menu Actions -->
-        <group id="InsulaMenu" text="Insula MCP" popup="true">
+        <group id="CortexDxMenu" text="CortexDx" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
 
             <action
-                    id="Insula.ValidateFile"
-                    class="io.brainwav.insula.actions.ValidateFileAction"
+                    id="CortexDx.ValidateFile"
+                    class="io.brainwav.cortexdx.actions.ValidateFileAction"
                     text="Validate Current File"
                     description="Validate MCP code in current file">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift V"/>
             </action>
 
             <action
-                    id="Insula.AnalyzeProject"
-                    class="io.brainwav.insula.actions.AnalyzeProjectAction"
+                    id="CortexDx.AnalyzeProject"
+                    class="io.brainwav.cortexdx.actions.AnalyzeProjectAction"
                     text="Analyze Project"
                     description="Analyze entire project for MCP issues"/>
 
             <action
-                    id="Insula.GenerateTests"
-                    class="io.brainwav.insula.actions.GenerateTestsAction"
+                    id="CortexDx.GenerateTests"
+                    class="io.brainwav.cortexdx.actions.GenerateTestsAction"
                     text="Generate Tests"
                     description="Generate test cases for MCP code"/>
 
             <action
-                    id="Insula.FormatCode"
-                    class="io.brainwav.insula.actions.FormatCodeAction"
+                    id="CortexDx.FormatCode"
+                    class="io.brainwav.cortexdx.actions.FormatCodeAction"
                     text="Format MCP Code"
                     description="Format code according to MCP best practices">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift F"/>
@@ -127,31 +127,31 @@
             <separator/>
 
             <action
-                    id="Insula.StartServer"
-                    class="io.brainwav.insula.actions.StartServerAction"
+                    id="CortexDx.StartServer"
+                    class="io.brainwav.cortexdx.actions.StartServerAction"
                     text="Start MCP Server"
-                    description="Start Insula MCP server"/>
+                    description="Start CortexDx server"/>
 
             <action
-                    id="Insula.StopServer"
-                    class="io.brainwav.insula.actions.StopServerAction"
+                    id="CortexDx.StopServer"
+                    class="io.brainwav.cortexdx.actions.StopServerAction"
                     text="Stop MCP Server"
-                    description="Stop Insula MCP server"/>
+                    description="Stop CortexDx server"/>
         </group>
 
         <!-- Editor Context Menu -->
-        <group id="InsulaEditorPopup">
+        <group id="CortexDxEditorPopup">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <separator/>
-            <reference ref="Insula.ValidateFile"/>
-            <reference ref="Insula.GenerateTests"/>
-            <reference ref="Insula.FormatCode"/>
+            <reference ref="CortexDx.ValidateFile"/>
+            <reference ref="CortexDx.GenerateTests"/>
+            <reference ref="CortexDx.FormatCode"/>
         </group>
     </actions>
 
     <applicationListeners>
         <listener
-                class="io.brainwav.insula.listeners.InsulaProjectListener"
+                class="io.brainwav.cortexdx.listeners.CortexDxProjectListener"
                 topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 </idea-plugin>

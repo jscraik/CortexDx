@@ -42,13 +42,13 @@ docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Professional Edition (requires license)
 docker run -p 3000:3000 \
-  -e INSULA_LICENSE_KEY=your-key \
+  -e CORTEXDX_LICENSE_KEY=your-key \
   -e OLLAMA_HOST=ollama:11434 \
   brainwav/cortexdx:1.0.0-professional
 
 # Enterprise Edition (requires license and Auth0)
 docker run -p 3000:3000 \
-  -e INSULA_LICENSE_KEY=your-key \
+  -e CORTEXDX_LICENSE_KEY=your-key \
   -e AUTH0_DOMAIN=your-domain.auth0.com \
   -e AUTH0_CLIENT_ID=your-client-id \
   -e AUTH0_CLIENT_SECRET=your-secret \
@@ -118,10 +118,10 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 ℹ️  [MINOR] Could not enumerate tools via JSON-RPC
 
 📊 Reports generated:
-  • reports/insula-report.md (human-readable)
-  • reports/insula-findings.json (machine-readable)
-  • reports/insula-arctdd.md (implementation plan)
-  • reports/insula-fileplan.patch (code diffs)
+  • reports/cortexdx-report.md (human-readable)
+  • reports/cortexdx-findings.json (machine-readable)
+  • reports/cortexdx-arctdd.md (implementation plan)
+  • reports/cortexdx-fileplan.patch (code diffs)
 
 🎯 Next steps: Review ArcTDD plan for remediation guidance
 ```
@@ -203,7 +203,7 @@ CortexDx includes comprehensive diagnostic suites covering all aspects of MCP im
 
 ### Narrative Stories (Preview)
 
-Set `INSULA_STORIES_ENABLED=true` to expose the experimental narrative diagnostics stack:
+Set `CORTEXDX_STORIES_ENABLED=true` to expose the experimental narrative diagnostics stack:
 
 - `story.list` returns normalized story payloads validated against `schemas/story.schema.yaml` and `src/story/story-schema.ts`.
 - `story.get` fetches a single story by id for UI consumers or MCP clients.
@@ -220,7 +220,7 @@ Vitest now enforces ≥70% line coverage for the story/anomaly/graph modules, en
 
 ## 📊 Output Formats
 
-### 1. Markdown Report (`insula-report.md`)
+### 1. Markdown Report (`cortexdx-report.md`)
 
 Human-readable diagnostic report with findings organized by severity:
 
@@ -234,7 +234,7 @@ Probe failed: HTTP 502
 - Evidence: url:https://mcp.example.com/events
 ```
 
-### 2. JSON Findings (`insula-findings.json`)
+### 2. JSON Findings (`cortexdx-findings.json`)
 
 Machine-readable structured data for automation:
 
@@ -255,7 +255,7 @@ Machine-readable structured data for automation:
 }
 ```
 
-### 3. ArcTDD Plan (`insula-arctdd.md`)
+### 3. ArcTDD Plan (`cortexdx-arctdd.md`)
 
 Test-driven implementation plan with prioritized remediation steps:
 
@@ -270,7 +270,7 @@ Test-driven implementation plan with prioritized remediation steps:
 3. Add keepalive: Send periodic heartbeat messages
 ```
 
-### 4. File Plan (`insula-fileplan.patch`)
+### 4. File Plan (`cortexdx-fileplan.patch`)
 
 Unified diff patches for direct code remediation:
 
@@ -329,11 +329,11 @@ OTEL_EXPORTER_OTLP_ENDPOINT=https://your-otel-collector.com
 OTEL_SERVICE_NAME=cortexdx
 
 # Plugin budgets (can also use CLI flags)
-INSULA_BUDGET_TIME=10000    # 10 seconds per plugin
-INSULA_BUDGET_MEM=128       # 128MB memory limit
+CORTEXDX_BUDGET_TIME=10000    # 10 seconds per plugin
+CORTEXDX_BUDGET_MEM=128       # 128MB memory limit
 
 # Debug logging
-DEBUG=insula:*              # Enable debug logging
+DEBUG=cortexdx:*            # Enable debug logging
 ```
 
 ### CI/CD Integration
@@ -436,20 +436,20 @@ cortexdx diagnose <endpoint> --deterministic --no-color
 
 # Generate machine-readable output only
 cortexdx diagnose <endpoint> --out reports
-cat reports/insula-findings.json | jq '.findings[].severity'
+cat reports/cortexdx-findings.json | jq '.findings[].severity'
 ```
 
 ### Debug Logging
 
 ```bash
 # Enable debug output
-DEBUG=insula:* cortexdx diagnose <endpoint>
+DEBUG=cortexdx:* cortexdx diagnose <endpoint>
 
 # Plugin-specific debugging
-DEBUG=insula:plugin:* cortexdx diagnose <endpoint>
+DEBUG=cortexdx:plugin:* cortexdx diagnose <endpoint>
 
 # Network debugging
-DEBUG=insula:adapter:* cortexdx diagnose <endpoint>
+DEBUG=cortexdx:adapter:* cortexdx diagnose <endpoint>
 ```
 
 ## 📚 Documentation

@@ -110,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Package Name**: Changed from `cortexdx` to `@brainwav/cortexdx`
-- **CLI Command**: Changed from `insula` to `cortexdx`
+- **CLI Command**: Changed from `cortexdx` to `cortexdx`
 - **Version**: Bumped to 1.0.0 for stable release
 - **Performance**: Improved response times across all operations
   - Conversational tasks: <2s

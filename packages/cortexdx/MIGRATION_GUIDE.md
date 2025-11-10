@@ -33,7 +33,7 @@ npm install @brainwav/cortexdx
 **Before (v0.x):**
 
 ```bash
-insula diagnose <endpoint>
+cortexdx diagnose <endpoint>
 ```
 
 **After (v1.0.0):**
@@ -44,7 +44,7 @@ cortexdx diagnose <endpoint>
 
 **Migration Steps:**
 
-1. Update all CLI commands to use `cortexdx` instead of `insula`
+1. Update all CLI commands to use `cortexdx` instead of `cortexdx`
 2. Update shell scripts and automation tools
 3. Update CI/CD pipeline configurations
 
@@ -108,8 +108,8 @@ docker pull brainwav/cortexdx:1.0.0-enterprise
 
 ```bash
 # Professional Tier
-INSULA_MCP_TIER=professional
-INSULA_LICENSE_KEY=your-license-key
+CORTEXDX_MCP_TIER=professional
+CORTEXDX_LICENSE_KEY=your-license-key
 OLLAMA_HOST=ollama:11434
 
 # Enterprise Tier (additional)
@@ -121,7 +121,7 @@ POSTGRES_PASSWORD=your-db-password
 
 **Migration Steps:**
 
-1. Set `INSULA_MCP_TIER` environment variable
+1. Set `CORTEXDX_MCP_TIER` environment variable
 2. Obtain and set license key for Professional/Enterprise tiers
 3. Configure Auth0 credentials for Enterprise tier
 4. Update deployment configurations with new variables
@@ -141,7 +141,7 @@ ollama pull llama3:8b
 ollama pull codellama:7b
 
 # Configure CortexDx
-export INSULA_MCP_LLM_BACKEND=ollama
+export CORTEXDX_MCP_LLM_BACKEND=ollama
 export OLLAMA_HOST=localhost:11434
 ```
 
@@ -164,10 +164,10 @@ cortexdx generate
 
 ```bash
 # Enable academic providers
-export INSULA_ACADEMIC_PROVIDERS=context7,vibe-check,semantic-scholar
+export CORTEXDX_ACADEMIC_PROVIDERS=context7,vibe-check,semantic-scholar
 
 # Configure license validation
-export INSULA_LICENSE_VALIDATION=strict
+export CORTEXDX_LICENSE_VALIDATION=strict
 ```
 
 **Usage:**
@@ -187,13 +187,13 @@ cortexdx validate-licenses --report
 1. Visit https://brainwav.io/cortexdx/pricing
 2. Choose Professional or Enterprise tier
 3. Complete purchase and receive license key
-4. Set `INSULA_LICENSE_KEY` environment variable
+4. Set `CORTEXDX_LICENSE_KEY` environment variable
 
 **Activating License:**
 
 ```bash
 # Set license key
-export INSULA_LICENSE_KEY=your-license-key
+export CORTEXDX_LICENSE_KEY=your-license-key
 
 # Verify activation
 cortexdx license verify
@@ -208,12 +208,12 @@ cortexdx license features
 
 ```bash
 # Enable pattern storage
-export INSULA_PATTERN_STORAGE=enabled
-export INSULA_PATTERN_DB=/app/data/patterns.db
+export CORTEXDX_PATTERN_STORAGE=enabled
+export CORTEXDX_PATTERN_DB=/app/data/patterns.db
 
 # Configure RAG system
-export INSULA_RAG_ENABLED=true
-export INSULA_EMBEDDING_MODEL=nomic-embed-text
+export CORTEXDX_RAG_ENABLED=true
+export CORTEXDX_EMBEDDING_MODEL=nomic-embed-text
 ```
 
 **Usage:**
@@ -244,7 +244,7 @@ npm install -g @brainwav/cortexdx@1.0.0
 
 ```bash
 # Before
-insula diagnose https://mcp.example.com
+cortexdx diagnose https://mcp.example.com
 
 # After
 cortexdx diagnose https://mcp.example.com
@@ -258,7 +258,7 @@ services:
   cortexdx:
     image: brainwav/cortexdx:1.0.0-community
     environment:
-      - INSULA_MCP_TIER=community
+      - CORTEXDX_MCP_TIER=community
 ```
 
 **Step 4: Test Migration**
@@ -295,10 +295,10 @@ ollama pull nomic-embed-text
 
 ```bash
 # Set environment variables
-export INSULA_MCP_TIER=professional
-export INSULA_LICENSE_KEY=your-license-key
+export CORTEXDX_MCP_TIER=professional
+export CORTEXDX_LICENSE_KEY=your-license-key
 export OLLAMA_HOST=localhost:11434
-export INSULA_MCP_LLM_BACKEND=ollama
+export CORTEXDX_MCP_LLM_BACKEND=ollama
 ```
 
 **Step 4: Update Docker Deployment**
@@ -309,12 +309,12 @@ services:
   cortexdx:
     image: brainwav/cortexdx:1.0.0-professional
     environment:
-      - INSULA_MCP_TIER=professional
-      - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - CORTEXDX_MCP_TIER=professional
+      - CORTEXDX_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}
       - OLLAMA_HOST=ollama:11434
     volumes:
-      - insula-models:/app/models
-      - insula-patterns:/app/patterns
+      - cortexdx-models:/app/models
+      - cortexdx-patterns:/app/patterns
   
   ollama:
     image: ollama/ollama:latest
@@ -361,8 +361,8 @@ docker-compose -f docker-compose.enterprise.yml up -d postgres redis ollama
 
 ```bash
 # Set all required variables
-export INSULA_MCP_TIER=enterprise
-export INSULA_LICENSE_KEY=your-license-key
+export CORTEXDX_MCP_TIER=enterprise
+export CORTEXDX_LICENSE_KEY=your-license-key
 export OLLAMA_HOST=ollama:11434
 export AUTH0_DOMAIN=your-domain.auth0.com
 export AUTH0_CLIENT_ID=your-client-id
@@ -379,15 +379,15 @@ services:
   cortexdx:
     image: brainwav/cortexdx:1.0.0-enterprise
     environment:
-      - INSULA_MCP_TIER=enterprise
-      - INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}
+      - CORTEXDX_MCP_TIER=enterprise
+      - CORTEXDX_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}
       - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
     volumes:
-      - insula-data:/app/data
-      - insula-models:/app/models
-      - insula-analytics:/app/analytics
+      - cortexdx-data:/app/data
+      - cortexdx-models:/app/models
+      - cortexdx-analytics:/app/analytics
     depends_on:
       - postgres
       - redis
@@ -444,7 +444,7 @@ cortexdx diagnose https://mcp.example.com --out new-reports
 
 ```bash
 # Enable pattern storage
-export INSULA_PATTERN_STORAGE=enabled
+export CORTEXDX_PATTERN_STORAGE=enabled
 
 # Initialize database
 cortexdx patterns init
@@ -460,7 +460,7 @@ cortexdx patterns init
 
 ```yaml
 - name: Run Diagnostics
-  run: npx insula diagnose ${{ secrets.MCP_ENDPOINT }}
+  run: npx cortexdx diagnose ${{ secrets.MCP_ENDPOINT }}
 ```
 
 **After (v1.0.0):**
@@ -469,7 +469,7 @@ cortexdx patterns init
 - name: Run Diagnostics
   run: npx @brainwav/cortexdx@1.0.0 diagnose ${{ secrets.MCP_ENDPOINT }}
   env:
-    INSULA_MCP_TIER: community
+    CORTEXDX_MCP_TIER: community
 ```
 
 ### GitLab CI
@@ -480,7 +480,7 @@ cortexdx patterns init
 test:
   script:
     - npm install -g cortexdx
-    - insula diagnose $MCP_ENDPOINT
+    - cortexdx diagnose $MCP_ENDPOINT
 ```
 
 **After (v1.0.0):**
@@ -491,7 +491,7 @@ test:
     - npm install -g @brainwav/cortexdx@1.0.0
     - cortexdx diagnose $MCP_ENDPOINT
   variables:
-    INSULA_MCP_TIER: community
+    CORTEXDX_MCP_TIER: community
 ```
 
 ### Jenkins
@@ -500,14 +500,14 @@ test:
 
 ```groovy
 sh 'npm install -g cortexdx'
-sh 'insula diagnose ${MCP_ENDPOINT}'
+sh 'cortexdx diagnose ${MCP_ENDPOINT}'
 ```
 
 **After (v1.0.0):**
 
 ```groovy
 sh 'npm install -g @brainwav/cortexdx@1.0.0'
-withEnv(['INSULA_MCP_TIER=community']) {
+withEnv(['CORTEXDX_MCP_TIER=community']) {
     sh 'cortexdx diagnose ${MCP_ENDPOINT}'
 }
 ```
@@ -545,12 +545,12 @@ spec:
       - name: cortexdx
         image: brainwav/cortexdx:1.0.0-professional
         env:
-        - name: INSULA_MCP_TIER
+        - name: CORTEXDX_MCP_TIER
           value: "professional"
-        - name: INSULA_LICENSE_KEY
+        - name: CORTEXDX_LICENSE_KEY
           valueFrom:
             secretKeyRef:
-              name: insula-secrets
+              name: cortexdx-secrets
               key: license-key
         volumeMounts:
         - name: models
@@ -560,10 +560,10 @@ spec:
       volumes:
       - name: models
         persistentVolumeClaim:
-          claimName: insula-models-pvc
+          claimName: cortexdx-models-pvc
       - name: patterns
         persistentVolumeClaim:
-          claimName: insula-patterns-pvc
+          claimName: cortexdx-patterns-pvc
 ```
 
 ## Troubleshooting
@@ -582,7 +582,7 @@ Error: Invalid license key for tier 'professional'
 
 ```bash
 # Verify license key format
-echo $INSULA_LICENSE_KEY
+echo $CORTEXDX_LICENSE_KEY
 
 # Re-verify license
 cortexdx license verify
@@ -681,8 +681,8 @@ cp backup/scripts/* scripts/
 **Step 4: Verify Rollback**
 
 ```bash
-insula --version
-insula diagnose https://mcp.example.com
+cortexdx --version
+cortexdx diagnose https://mcp.example.com
 ```
 
 ## Support

@@ -1,5 +1,5 @@
 {
-    // Markdownlint configuration for Insula MCP documentation
+    // Markdownlint configuration for CortexDx MCP documentation
     "config": {
         // Line length - allow longer lines for code examples and links
         "MD013": {
@@ -28,6 +28,6 @@
         "dist/**",
         "reports/**",
         "enhanced-reports/**",
-        "packages/insula-mcp/node_modules/**"
+        "packages/cortexdx/node_modules/**"
     ]
 }

@@ -26,7 +26,7 @@ This guide provides comprehensive instructions for integrating CortexDx into var
    DOCKER_USERNAME
    DOCKER_PASSWORD
    NPM_TOKEN
-   INSULA_LICENSE_KEY
+   CORTEXDX_LICENSE_KEY
    AUTH0_DOMAIN
    AUTH0_CLIENT_ID
    AUTH0_CLIENT_SECRET
@@ -92,7 +92,7 @@ jobs:
    DOCKER_REGISTRY
    DOCKER_IMAGE
    KUBECONFIG (base64 encoded, protected)
-   INSULA_LICENSE_KEY (protected, masked)
+   CORTEXDX_LICENSE_KEY (protected, masked)
    AUTH0_DOMAIN (protected)
    AUTH0_CLIENT_ID (protected)
    AUTH0_CLIENT_SECRET (protected, masked)

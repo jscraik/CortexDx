@@ -4,13 +4,13 @@ on:
     pull_request:
         paths:
             - "**.md"
-            - "packages/insula-mcp/docs/**"
+            - "packages/cortexdx/docs/**"
             - ".github/workflows/docs-validation.yml"
     push:
         branches: [main]
         paths:
             - "**.md"
-            - "packages/insula-mcp/docs/**"
+            - "packages/cortexdx/docs/**"
     workflow_dispatch:
 
 jobs:
@@ -66,15 +66,15 @@ jobs:
                   required_files=(
                     "README.md"
                     "CONTRIBUTING.md"
-                    "packages/insula-mcp/README.md"
-                    "packages/insula-mcp/docs/GETTING_STARTED.md"
-                    "packages/insula-mcp/docs/USER_GUIDE.md"
-                    "packages/insula-mcp/docs/API_REFERENCE.md"
-                    "packages/insula-mcp/docs/CONTRIBUTING.md"
-                    "packages/insula-mcp/docs/TROUBLESHOOTING.md"
-                    "packages/insula-mcp/docs/DEPLOYMENT.md"
-                    "packages/insula-mcp/docs/IDE_INTEGRATION.md"
-                    "packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md"
+                    "packages/cortexdx/README.md"
+                    "packages/cortexdx/docs/GETTING_STARTED.md"
+                    "packages/cortexdx/docs/USER_GUIDE.md"
+                    "packages/cortexdx/docs/API_REFERENCE.md"
+                    "packages/cortexdx/docs/CONTRIBUTING.md"
+                    "packages/cortexdx/docs/TROUBLESHOOTING.md"
+                    "packages/cortexdx/docs/DEPLOYMENT.md"
+                    "packages/cortexdx/docs/IDE_INTEGRATION.md"
+                    "packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md"
                   )
 
                   missing_files=()

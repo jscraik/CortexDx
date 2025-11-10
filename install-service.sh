@@ -14,7 +14,7 @@ SERVICE_NAME="com.brainwav.cortexdx"
 PLIST_FILE="${SERVICE_NAME}.plist"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
 REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
-PACKAGE_DIR="$REPO_ROOT/packages/insula-mcp"
+PACKAGE_DIR="$REPO_ROOT/packages/cortexdx"
 PLIST_TEMPLATE="$REPO_ROOT/$PLIST_FILE"
 LOG_DIR="/var/log"
 STDOUT_LOG="$LOG_DIR/cortexdx.log"
@@ -111,4 +111,4 @@ else
 fi
 
 echo ""
-echo -e "${BLUE}Tip:${NC} This LaunchAgent label is ${SERVICE_NAME}, so it will not conflict with .Cortex-OS profiles (com.brainwav.insula-local-memory)."
+echo -e "${BLUE}Tip:${NC} This LaunchAgent label is ${SERVICE_NAME}, so it will not conflict with .Cortex-OS profiles (com.brainwav.cortexdx-local-memory)."

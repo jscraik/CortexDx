@@ -1,5 +1,5 @@
---- a/packages/insula-mcp/src/providers/academic/arxiv.mcp.ts
-+++ b/packages/insula-mcp/src/providers/academic/arxiv.mcp.ts
+--- a/packages/cortexdx/src/providers/academic/arxiv.mcp.ts
++++ b/packages/cortexdx/src/providers/academic/arxiv.mcp.ts
 @@ -341,7 +341,16 @@ export class ArxivProvider implements AcademicProvider {
          const url = `${this.baseUrl}?${searchParams}`;
  

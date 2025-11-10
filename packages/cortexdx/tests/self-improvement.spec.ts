@@ -29,12 +29,12 @@ describe("Self-Improvement Plugin", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
-        sourceFiles: ["packages/insula-mcp/src/plugins/streaming-sse.ts"],
+        sourceFiles: ["packages/cortexdx/src/plugins/streaming-sse.ts"],
       },
     };
 
@@ -80,14 +80,14 @@ describe("Self-Improvement Plugin", () => {
         }),
       },
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-server",
         language: "typescript",
         dependencies: ["eventsource-parser", "@modelcontextprotocol/sdk"],
         configFiles: ["pnpm-lock.yaml", "tsconfig.json"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -106,12 +106,12 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
-        sourceFiles: ["packages/insula-mcp/src/adapters/sse.ts"], // Missing jsonrpc.ts
+        sourceFiles: ["packages/cortexdx/src/adapters/sse.ts"], // Missing jsonrpc.ts
       },
     };
 
@@ -129,12 +129,12 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
-        sourceFiles: ["packages/insula-mcp/src/adapters/jsonrpc.ts"], // Missing sse.ts
+        sourceFiles: ["packages/cortexdx/src/adapters/jsonrpc.ts"], // Missing sse.ts
       },
     };
 
@@ -149,12 +149,12 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk"],
         configFiles: ["pnpm-lock.yaml"],
-        sourceFiles: ["packages/insula-mcp/src/plugins/streaming-sse.ts"], // Missing both
+        sourceFiles: ["packages/cortexdx/src/plugins/streaming-sse.ts"], // Missing both
       },
     };
 
@@ -171,14 +171,14 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -196,14 +196,14 @@ describe("Dependency Validation (Req 15.2)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["eventsource-parser"], // Missing @modelcontextprotocol/sdk
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -221,14 +221,14 @@ describe("Dependency Validation (Req 15.2)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk"], // Missing eventsource-parser
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -244,14 +244,14 @@ describe("Dependency Validation (Req 15.2)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["vitest"], // Missing both required deps
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -268,14 +268,14 @@ describe("Dependency Validation (Req 15.2)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser", "vitest"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -298,14 +298,14 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
         { role: "user", content: "SSE events not received", timestamp: Date.now() },
       ],
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -327,14 +327,14 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
         { role: "user", content: "Batch request failed", timestamp: Date.now() },
       ],
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -355,14 +355,14 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
         { role: "user", content: "Initialize timeout", timestamp: Date.now() },
       ],
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -385,14 +385,14 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
         { role: "user", content: "SSE connection drops", timestamp: Date.now() },
       ],
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -414,14 +414,14 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
         { role: "user", content: "No issues detected", timestamp: Date.now() },
       ],
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -446,14 +446,14 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       ...baseContext(),
       request: requestMock,
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -480,14 +480,14 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       ...baseContext(),
       request: requestMock,
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -509,14 +509,14 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       endpoint: "http://localhost:5001/",
       request: requestMock,
       projectContext: {
-        name: "insula-mcp",
+        name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
         dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
-          "packages/insula-mcp/src/adapters/jsonrpc.ts",
-          "packages/insula-mcp/src/adapters/sse.ts",
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
         ],
       },
     };
@@ -566,13 +566,13 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
           }),
         },
         projectContext: {
-          name: "insula-mcp",
+          name: "cortexdx",
           type: "mcp-server",
           language: "typescript",
           dependencies: ["eventsource-parser"], // Missing @modelcontextprotocol/sdk
           configFiles: ["pnpm-lock.yaml", "tsconfig.json"],
           sourceFiles: [
-            "packages/insula-mcp/src/adapters/sse.ts", // Missing jsonrpc.ts
+            "packages/cortexdx/src/adapters/sse.ts", // Missing jsonrpc.ts
           ],
         },
       };
@@ -610,12 +610,12 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       const ctx: DevelopmentContext = {
         ...baseContext(),
         projectContext: {
-          name: "insula-mcp",
+          name: "cortexdx",
           type: "mcp-client",
           language: "typescript",
           dependencies: ["eventsource-parser"],
           configFiles: ["pnpm-lock.yaml"],
-          sourceFiles: ["packages/insula-mcp/src/plugins/streaming-sse.ts"],
+          sourceFiles: ["packages/cortexdx/src/plugins/streaming-sse.ts"],
         },
       };
 
@@ -651,12 +651,12 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       const ctx: DevelopmentContext = {
         ...baseContext(),
         projectContext: {
-          name: "insula-mcp",
+          name: "cortexdx",
           type: "mcp-client",
           language: "typescript",
           dependencies: ["eventsource-parser"],
           configFiles: ["pnpm-lock.yaml"],
-          sourceFiles: ["packages/insula-mcp/src/plugins/streaming-sse.ts"],
+          sourceFiles: ["packages/cortexdx/src/plugins/streaming-sse.ts"],
         },
       };
 

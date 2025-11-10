@@ -1,4 +1,4 @@
-# Documentation Maintenance Configuration for Insula MCP
+# Documentation Maintenance Configuration for CortexDx MCP
 # This file defines maintenance schedules, thresholds, and automated procedures
 
 maintenance:
@@ -31,14 +31,14 @@ maintenance:
     # Files that should contain current version references
     monitored_files:
       - README.md
-      - packages/insula-mcp/README.md
-      - packages/insula-mcp/docs/GETTING_STARTED.md
-      - packages/insula-mcp/docs/USER_GUIDE.md
-      - packages/insula-mcp/docs/API_REFERENCE.md
+      - packages/cortexdx/README.md
+      - packages/cortexdx/docs/GETTING_STARTED.md
+      - packages/cortexdx/docs/USER_GUIDE.md
+      - packages/cortexdx/docs/API_REFERENCE.md
 
     # Version patterns to check
     patterns:
-      - version_badges: "https://img.shields.io/npm/v/@brainwav/insula-mcp"
+      - version_badges: "https://img.shields.io/npm/v/@brainwav/cortexdx"
       - node_version: "node.*>=?\\d+\\.\\d+\\.\\d+"
       - package_version: "version\\s+\\d+\\.\\d+\\.\\d+"
 
@@ -106,7 +106,7 @@ maintenance:
     technology_versions:
       - name: "Node.js"
         pattern: "node.*\\d+\\.\\d+\\.\\d+"
-        current_source: "packages/insula-mcp/package.json"
+        current_source: "packages/cortexdx/package.json"
         current_path: "engines.node"
 
       - name: "npm packages"

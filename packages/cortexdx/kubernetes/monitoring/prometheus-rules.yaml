@@ -1,203 +1,203 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: insula-mcp-alerts
-  namespace: insula-mcp
+  name: cortexdx-alerts
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     release: prometheus
 spec:
   groups:
-    - name: insula-mcp.availability
+    - name: cortexdx.availability
       interval: 30s
       rules:
-        - alert: InsulaMCPDown
-          expr: up{job="insula-mcp"} == 0
+        - alert: CortexDxDown
+          expr: up{job="cortexdx"} == 0
           for: 5m
           labels:
             severity: critical
-            component: insula-mcp
+            component: cortexdx
           annotations:
-            summary: "Insula MCP instance is down"
-            description: "Insula MCP instance {{ $labels.instance }} has been down for more than 5 minutes."
+            summary: "CortexDx instance is down"
+            description: "CortexDx instance {{ $labels.instance }} has been down for more than 5 minutes."
 
-        - alert: InsulaMCPHighErrorRate
+        - alert: CortexDxHighErrorRate
           expr: |
-            rate(insula_mcp_requests_total{status=~"5.."}[5m])
+            rate(cortexdx_mcp_requests_total{status=~"5.."}[5m])
             /
-            rate(insula_mcp_requests_total[5m])
+            rate(cortexdx_mcp_requests_total[5m])
             > 0.05
           for: 5m
           labels:
             severity: warning
-            component: insula-mcp
+            component: cortexdx
           annotations:
             summary: "High error rate detected"
-            description: "Insula MCP instance {{ $labels.instance }} has error rate above 5% (current: {{ $value | humanizePercentage }})."
+            description: "CortexDx instance {{ $labels.instance }} has error rate above 5% (current: {{ $value | humanizePercentage }})."
 
-        - alert: InsulaMCPHealthCheckFailing
-          expr: insula_mcp_health_status != 1
+        - alert: CortexDxHealthCheckFailing
+          expr: cortexdx_mcp_health_status != 1
           for: 3m
           labels:
             severity: critical
-            component: insula-mcp
+            component: cortexdx
           annotations:
             summary: "Health check failing"
-            description: "Insula MCP instance {{ $labels.instance }} health check has been failing for 3 minutes."
+            description: "CortexDx instance {{ $labels.instance }} health check has been failing for 3 minutes."
 
-    - name: insula-mcp.performance
+    - name: cortexdx.performance
       interval: 30s
       rules:
-        - alert: InsulaMCPHighResponseTime
+        - alert: CortexDxHighResponseTime
           expr: |
             histogram_quantile(0.95,
-              rate(insula_mcp_request_duration_seconds_bucket[5m])
+              rate(cortexdx_mcp_request_duration_seconds_bucket[5m])
             ) > 2
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp
+            component: cortexdx
           annotations:
             summary: "High response time detected"
-            description: "Insula MCP instance {{ $labels.instance }} 95th percentile response time is above 2s (current: {{ $value }}s)."
+            description: "CortexDx instance {{ $labels.instance }} 95th percentile response time is above 2s (current: {{ $value }}s)."
 
-        - alert: InsulaMCPHighMemoryUsage
+        - alert: CortexDxHighMemoryUsage
           expr: |
             (
-              container_memory_working_set_bytes{pod=~"insula-mcp-.*"}
+              container_memory_working_set_bytes{pod=~"cortexdx-.*"}
               /
-              container_spec_memory_limit_bytes{pod=~"insula-mcp-.*"}
+              container_spec_memory_limit_bytes{pod=~"cortexdx-.*"}
             ) > 0.85
           for: 5m
           labels:
             severity: warning
-            component: insula-mcp
+            component: cortexdx
           annotations:
             summary: "High memory usage"
-            description: "Insula MCP pod {{ $labels.pod }} is using more than 85% of its memory limit (current: {{ $value | humanizePercentage }})."
+            description: "CortexDx pod {{ $labels.pod }} is using more than 85% of its memory limit (current: {{ $value | humanizePercentage }})."
 
-        - alert: InsulaMCPHighCPUUsage
+        - alert: CortexDxHighCPUUsage
           expr: |
-            rate(container_cpu_usage_seconds_total{pod=~"insula-mcp-.*"}[5m])
+            rate(container_cpu_usage_seconds_total{pod=~"cortexdx-.*"}[5m])
             /
-            container_spec_cpu_quota{pod=~"insula-mcp-.*"}
+            container_spec_cpu_quota{pod=~"cortexdx-.*"}
             * 100000 > 85
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp
+            component: cortexdx
           annotations:
             summary: "High CPU usage"
-            description: "Insula MCP pod {{ $labels.pod }} is using more than 85% of its CPU limit (current: {{ $value }}%)."
+            description: "CortexDx pod {{ $labels.pod }} is using more than 85% of its CPU limit (current: {{ $value }}%)."
 
-    - name: insula-mcp.llm
+    - name: cortexdx.llm
       interval: 30s
       rules:
-        - alert: InsulaMCPLLMBackendDown
-          expr: insula_mcp_llm_backend_status != 1
+        - alert: CortexDxLLMBackendDown
+          expr: cortexdx_mcp_llm_backend_status != 1
           for: 5m
           labels:
             severity: warning
-            component: insula-mcp-llm
+            component: cortexdx-llm
           annotations:
             summary: "LLM backend unavailable"
-            description: "Insula MCP instance {{ $labels.instance }} LLM backend ({{ $labels.backend }}) has been unavailable for 5 minutes."
+            description: "CortexDx instance {{ $labels.instance }} LLM backend ({{ $labels.backend }}) has been unavailable for 5 minutes."
 
-        - alert: InsulaMCPLLMHighLatency
+        - alert: CortexDxLLMHighLatency
           expr: |
             histogram_quantile(0.95,
-              rate(insula_mcp_llm_inference_duration_seconds_bucket[5m])
+              rate(cortexdx_mcp_llm_inference_duration_seconds_bucket[5m])
             ) > 5
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp-llm
+            component: cortexdx-llm
           annotations:
             summary: "High LLM inference latency"
-            description: "Insula MCP instance {{ $labels.instance }} LLM inference 95th percentile latency is above 5s (current: {{ $value }}s)."
+            description: "CortexDx instance {{ $labels.instance }} LLM inference 95th percentile latency is above 5s (current: {{ $value }}s)."
 
-    - name: insula-mcp.storage
+    - name: cortexdx.storage
       interval: 30s
       rules:
-        - alert: InsulaMCPDiskSpaceRunningOut
+        - alert: CortexDxDiskSpaceRunningOut
           expr: |
             (
-              kubelet_volume_stats_available_bytes{persistentvolumeclaim=~"insula-mcp-.*"}
+              kubelet_volume_stats_available_bytes{persistentvolumeclaim=~"cortexdx-.*"}
               /
-              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~"insula-mcp-.*"}
+              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~"cortexdx-.*"}
             ) < 0.15
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp-storage
+            component: cortexdx-storage
           annotations:
             summary: "Disk space running out"
             description: "PVC {{ $labels.persistentvolumeclaim }} has less than 15% free space (current: {{ $value | humanizePercentage }})."
 
-        - alert: InsulaMCPDiskSpaceCritical
+        - alert: CortexDxDiskSpaceCritical
           expr: |
             (
-              kubelet_volume_stats_available_bytes{persistentvolumeclaim=~"insula-mcp-.*"}
+              kubelet_volume_stats_available_bytes{persistentvolumeclaim=~"cortexdx-.*"}
               /
-              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~"insula-mcp-.*"}
+              kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~"cortexdx-.*"}
             ) < 0.05
           for: 5m
           labels:
             severity: critical
-            component: insula-mcp-storage
+            component: cortexdx-storage
           annotations:
             summary: "Disk space critical"
             description: "PVC {{ $labels.persistentvolumeclaim }} has less than 5% free space (current: {{ $value | humanizePercentage }})."
 
-    - name: insula-mcp.database
+    - name: cortexdx.database
       interval: 30s
       rules:
-        - alert: InsulaMCPDatabaseConnectionFailing
-          expr: insula_mcp_database_connection_status != 1
+        - alert: CortexDxDatabaseConnectionFailing
+          expr: cortexdx_mcp_database_connection_status != 1
           for: 3m
           labels:
             severity: critical
-            component: insula-mcp-database
+            component: cortexdx-database
           annotations:
             summary: "Database connection failing"
-            description: "Insula MCP instance {{ $labels.instance }} cannot connect to database for 3 minutes."
+            description: "CortexDx instance {{ $labels.instance }} cannot connect to database for 3 minutes."
 
-        - alert: InsulaMCPDatabaseSlowQueries
+        - alert: CortexDxDatabaseSlowQueries
           expr: |
             histogram_quantile(0.95,
-              rate(insula_mcp_database_query_duration_seconds_bucket[5m])
+              rate(cortexdx_mcp_database_query_duration_seconds_bucket[5m])
             ) > 1
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp-database
+            component: cortexdx-database
           annotations:
             summary: "Slow database queries"
-            description: "Insula MCP instance {{ $labels.instance }} database query 95th percentile is above 1s (current: {{ $value }}s)."
+            description: "CortexDx instance {{ $labels.instance }} database query 95th percentile is above 1s (current: {{ $value }}s)."
 
-    - name: insula-mcp.patterns
+    - name: cortexdx.patterns
       interval: 30s
       rules:
-        - alert: InsulaMCPPatternMatchingSlowdown
+        - alert: CortexDxPatternMatchingSlowdown
           expr: |
             histogram_quantile(0.95,
-              rate(insula_mcp_pattern_matching_duration_seconds_bucket[5m])
+              rate(cortexdx_mcp_pattern_matching_duration_seconds_bucket[5m])
             ) > 3
           for: 10m
           labels:
             severity: warning
-            component: insula-mcp-patterns
+            component: cortexdx-patterns
           annotations:
             summary: "Pattern matching slowdown"
-            description: "Insula MCP instance {{ $labels.instance }} pattern matching 95th percentile is above 3s (current: {{ $value }}s)."
+            description: "CortexDx instance {{ $labels.instance }} pattern matching 95th percentile is above 3s (current: {{ $value }}s)."
 
-        - alert: InsulaMCPPatternStorageGrowth
+        - alert: CortexDxPatternStorageGrowth
           expr: |
-            rate(insula_mcp_pattern_storage_size_bytes[1h]) > 10485760
+            rate(cortexdx_mcp_pattern_storage_size_bytes[1h]) > 10485760
           for: 1h
           labels:
             severity: info
-            component: insula-mcp-patterns
+            component: cortexdx-patterns
           annotations:
             summary: "High pattern storage growth"
-            description: "Insula MCP instance {{ $labels.instance }} pattern storage is growing at {{ $value | humanize }}B/s (>10MB/h)."
+            description: "CortexDx instance {{ $labels.instance }} pattern storage is growing at {{ $value | humanize }}B/s (>10MB/h)."

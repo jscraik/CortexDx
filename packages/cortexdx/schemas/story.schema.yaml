@@ -1,5 +1,5 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: https://github.com/jscraik/insula-mcp-diagnostic/schemas/story
+$id: https://github.com/jscraik/cortexdx-diagnostic/schemas/story
 $comment: Narrative diagnostic story payload exchanged between resources, tools, and UI surfaces.
 title: Narrative Diagnostic Story
 type: object

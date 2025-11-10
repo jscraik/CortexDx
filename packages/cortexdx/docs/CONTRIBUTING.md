@@ -19,7 +19,7 @@ Welcome to the CortexDx project! We're excited to have you contribute to our dia
 
 Before contributing, please familiarize yourself with:
 
-- **[Project Vision](../../../.insula/rules/vision.md)** - Our north star and roadmap
+- **[Project Vision](../../../.cortexdx/rules/vision.md)** - Our north star and roadmap
 - **[AGENTS.md](../../../AGENTS.md)** - Mandatory operational instructions for all contributors
 - **[CODESTYLE.md](../../../CODESTYLE.md)** - Coding standards and formatting rules
 
@@ -96,7 +96,7 @@ We follow **ArcTDD (Architecture-Test-Driven Development)** with strict guidelin
 
 ### 1. Planning Phase
 
-- Understand the relevant section in [vision.md](../../../.insula/rules/vision.md)
+- Understand the relevant section in [vision.md](../../../.cortexdx/rules/vision.md)
 - Break work into ≤7 steps
 - Ensure alignment with MCP-specific requirements
 
@@ -353,7 +353,7 @@ For security vulnerabilities:
 
 ### Related Documentation
 
-- **[Vision Document](../../../.insula/rules/vision.md)** - Project goals and roadmap
+- **[Vision Document](../../../.cortexdx/rules/vision.md)** - Project goals and roadmap
 - **[AGENTS.md](../../../AGENTS.md)** - Operational instructions (mandatory reading)
 - **[CODESTYLE.md](../../../CODESTYLE.md)** - Coding standards and toolchain
 - **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment guidance

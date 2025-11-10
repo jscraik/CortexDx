@@ -1,5 +1,5 @@
 /**
- * Insula MCP VS Code Extension
+ * CortexDx VS Code Extension
  * Provides real-time MCP validation and assistance
  */
 
@@ -14,22 +14,22 @@ import {
 let client: LanguageClient | undefined;
 
 export function activate(context: vscode.ExtensionContext): void {
-    console.log("Insula MCP extension activated");
+    console.log("CortexDx extension activated");
 
     // Register commands
     context.subscriptions.push(
-        vscode.commands.registerCommand("insula-mcp.validate", validateCurrentFile),
+        vscode.commands.registerCommand("cortexdx.validate", validateCurrentFile),
         vscode.commands.registerCommand(
-            "insula-mcp.analyzeProject",
+            "cortexdx.analyzeProject",
             analyzeProject,
         ),
         vscode.commands.registerCommand(
-            "insula-mcp.generateTests",
+            "cortexdx.generateTests",
             generateTests,
         ),
-        vscode.commands.registerCommand("insula-mcp.formatCode", formatCode),
-        vscode.commands.registerCommand("insula-mcp.startServer", startServer),
-        vscode.commands.registerCommand("insula-mcp.stopServer", stopServer),
+        vscode.commands.registerCommand("cortexdx.formatCode", formatCode),
+        vscode.commands.registerCommand("cortexdx.startServer", startServer),
+        vscode.commands.registerCommand("cortexdx.stopServer", stopServer),
     );
 
     // Start language client
@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Watch for configuration changes
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration((e) => {
-            if (e.affectsConfiguration("insula-mcp")) {
+            if (e.affectsConfiguration("cortexdx")) {
                 restartLanguageClient(context);
             }
         }),
@@ -55,7 +55,7 @@ export function deactivate(): Thenable<void> | undefined {
 async function startLanguageClient(
     context: vscode.ExtensionContext,
 ): Promise<void> {
-    const config = vscode.workspace.getConfiguration("insula-mcp");
+    const config = vscode.workspace.getConfiguration("cortexdx");
     const serverUrl = config.get<string>("server.url", "http://localhost:3000");
     const transport = config.get<string>("server.transport", "http");
 
@@ -92,18 +92,18 @@ async function startLanguageClient(
     };
 
     client = new LanguageClient(
-        "insula-mcp",
-        "Insula MCP",
+        "cortexdx",
+        "CortexDx",
         serverOptions,
         clientOptions,
     );
 
     try {
         await client.start();
-        vscode.window.showInformationMessage("Insula MCP: Connected to server");
+        vscode.window.showInformationMessage("CortexDx: Connected to server");
     } catch (error) {
         vscode.window.showErrorMessage(
-            `Insula MCP: Failed to connect to server: ${error}`,
+            `CortexDx: Failed to connect to server: ${error}`,
         );
     }
 }
@@ -266,13 +266,13 @@ async function formatCode(): Promise<void> {
 
 async function startServer(): Promise<void> {
     vscode.window.showInformationMessage(
-        "Starting Insula MCP server... (not yet implemented)",
+        "Starting CortexDx server... (not yet implemented)",
     );
 }
 
 async function stopServer(): Promise<void> {
     if (client) {
         await client.stop();
-        vscode.window.showInformationMessage("Insula MCP server stopped");
+        vscode.window.showInformationMessage("CortexDx server stopped");
     }
 }

@@ -13,7 +13,7 @@ import { composeStory } from "../src/story/story-composer.js";
 import { scoreConfidence } from "../src/story/confidence.js";
 
 const manifest = {
-  server: { name: "insula-core" },
+  server: { name: "cortexdx-core" },
   tools: [{ name: "tool.analyze", depends_on: ["connector.edge"] }],
   connectors: [{ id: "connector.edge", target: "service.vector" }],
   resources: [{ name: "service.vector" }],
@@ -21,7 +21,7 @@ const manifest = {
 
 const probes = {
   dependencies: [
-    { from: "insula-core", to: "tool.analyze", relation: "calls" },
+    { from: "cortexdx-core", to: "tool.analyze", relation: "calls" },
     { from: "tool.analyze", to: "connector.edge", relation: "depends_on" },
     { from: "connector.edge", to: "service.vector", relation: "streams" },
   ],
@@ -37,7 +37,7 @@ describe("dependency graph + story composer", () => {
         expect.objectContaining({ from: "connector.edge", to: "service.vector" }),
       ]),
     );
-    expect(longestPath(graph, "insula-core").pop()).toBe("service.vector");
+    expect(longestPath(graph, "cortexdx-core").pop()).toBe("service.vector");
   });
 
   it("detects latency and fallback anomalies deterministically", () => {
@@ -68,7 +68,7 @@ describe("dependency graph + story composer", () => {
 
     expect(story.trigger.kind).toBe("latency");
     expect(story.propagation.path).toEqual([
-      "insula-core",
+      "cortexdx-core",
       "tool.analyze",
       "connector.edge",
     ]);

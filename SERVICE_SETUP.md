@@ -1,6 +1,6 @@
 # CortexDx LaunchAgent Setup
 
-These scripts install CortexDx's MCP server as a macOS LaunchAgent. The generated plist uses the label `com.brainwav.cortexdx`, so it can live alongside the `.Cortex-OS` profiles (which use `com.brainwav.insula-local-memory`) without conflicts. Once installed, the service starts automatically on login and restarts if it crashes.
+These scripts install CortexDx's MCP server as a macOS LaunchAgent. The generated plist uses the label `com.brainwav.cortexdx`, so it can live alongside the `.Cortex-OS` profiles (which use `com.brainwav.cortexdx-local-memory`) without conflicts. Once installed, the service starts automatically on login and restarts if it crashes.
 
 ## Files
 
@@ -124,7 +124,7 @@ The service is configured to:
 3. Check project directory exists:
 
    ```bash
-   ls -la /Volumes/ExternalSSD/dev/CortexDx/packages/insula-mcp
+   ls -la /Volumes/ExternalSSD/dev/CortexDx/packages/cortexdx
    ```
 
 ### Port Already in Use

@@ -198,7 +198,7 @@ describe("Security Audit", () => {
 
         it("should use system keychain for secure storage", () => {
             const keychainConfig = {
-                service: "insula-mcp",
+                service: "cortexdx",
                 account: "oauth-credentials",
                 useSystemKeychain: true
             };

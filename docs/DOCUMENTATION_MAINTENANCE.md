@@ -1,6 +1,6 @@
 # Documentation Maintenance System
 
-This document provides a comprehensive guide to the automated documentation maintenance system for Insula MCP. The system ensures documentation remains current, accurate, and high-quality through automated checks, version synchronization, and proactive monitoring.
+This document provides a comprehensive guide to the automated documentation maintenance system for CortexDx. The system ensures documentation remains current, accurate, and high-quality through automated checks, version synchronization, and proactive monitoring.
 
 ## Overview
 
@@ -86,10 +86,10 @@ Automatically synchronizes version references across documentation files.
 **Monitored Files**:
 
 - `README.md`
-- `packages/insula-mcp/README.md`
-- `packages/insula-mcp/docs/GETTING_STARTED.md`
-- `packages/insula-mcp/docs/USER_GUIDE.md`
-- `packages/insula-mcp/docs/API_REFERENCE.md`
+- `packages/cortexdx/README.md`
+- `packages/cortexdx/docs/GETTING_STARTED.md`
+- `packages/cortexdx/docs/USER_GUIDE.md`
+- `packages/cortexdx/docs/API_REFERENCE.md`
 
 **Usage**:
 
@@ -400,4 +400,4 @@ For development convenience:
 
 ---
 
-This documentation maintenance system ensures that Insula MCP documentation remains a valuable, reliable resource for users while minimizing the manual effort required to maintain quality standards.
+This documentation maintenance system ensures that CortexDx documentation remains a valuable, reliable resource for users while minimizing the manual effort required to maintain quality standards.

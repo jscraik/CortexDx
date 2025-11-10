@@ -1,6 +1,6 @@
 # Documentation Maintenance Schedule
 
-This document defines the maintenance schedule and procedures for keeping Insula MCP documentation current, accurate, and high-quality.
+This document defines the maintenance schedule and procedures for keeping CortexDx documentation current, accurate, and high-quality.
 
 ## Maintenance Overview
 
@@ -169,7 +169,7 @@ If daily maintenance fails:
 
 **Process**:
 
-1. Extract current version from `packages/insula-mcp/package.json`
+1. Extract current version from `packages/cortexdx/package.json`
 2. Scan documentation files for version references
 3. Update version badges, installation commands, and text references
 4. Validate changes and generate report
@@ -177,10 +177,10 @@ If daily maintenance fails:
 **Files Monitored**:
 
 - `README.md`
-- `packages/insula-mcp/README.md`
-- `packages/insula-mcp/docs/GETTING_STARTED.md`
-- `packages/insula-mcp/docs/USER_GUIDE.md`
-- `packages/insula-mcp/docs/API_REFERENCE.md`
+- `packages/cortexdx/README.md`
+- `packages/cortexdx/docs/GETTING_STARTED.md`
+- `packages/cortexdx/docs/USER_GUIDE.md`
+- `packages/cortexdx/docs/API_REFERENCE.md`
 
 **Automation**: `scripts/sync-versions.js`
 
@@ -368,4 +368,4 @@ If daily maintenance fails:
 
 ---
 
-This maintenance schedule ensures that Insula MCP documentation remains accurate, current, and valuable to users while minimizing manual effort through intelligent automation.
+This maintenance schedule ensures that CortexDx documentation remains accurate, current, and valuable to users while minimizing manual effort through intelligent automation.

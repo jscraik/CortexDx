@@ -268,7 +268,7 @@ describe("Credential Manager", () => {
     let testStorageDir: string;
 
     beforeEach(() => {
-        testStorageDir = join(tmpdir(), `insula-test-${Date.now()}`);
+        testStorageDir = join(tmpdir(), `cortexdx-test-${Date.now()}`);
         credentialManager = new CredentialManager(testStorageDir);
     });
 
@@ -567,7 +567,7 @@ describe("OAuth Integration", () => {
         });
 
         it("should handle missing refresh token", async () => {
-            const testStorageDir = join(tmpdir(), `insula-test-${Date.now()}`);
+            const testStorageDir = join(tmpdir(), `cortexdx-test-${Date.now()}`);
             const testCredentialManager = new CredentialManager(testStorageDir);
 
             const credentials: Credentials = {

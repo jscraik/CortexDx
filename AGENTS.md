@@ -12,7 +12,7 @@ license: "Apache 2.0"
 
 **Scope:** This document governs every human and AI contributor working inside the CortexDx repository. The instructions below are mandatory unless a newer project-local `AGENTS.md` overrides a section. Failing to comply blocks merge.
 
-> 📌 **Read this first:** the canonical vision and PRD integration for this project lives at [`/.insula/rules/vision.md`](./.insula/rules/vision.md). Always keep your work aligned with that document.
+> 📌 **Read this first:** the canonical vision and PRD integration for this project lives at [`/.cortexdx/rules/vision.md`](./.cortexdx/rules/vision.md). Always keep your work aligned with that document.
 
 ---
 
@@ -24,7 +24,7 @@ license: "Apache 2.0"
    - `pnpm lint` → Biome lint (no warnings allowed)
    - `pnpm test` → Vitest + build dependency
    - `pnpm build` → tsup bundle verification
-4. **Keep Insula stateless & read-only.** Diagnostics must never mutate target MCP servers.
+4. **Keep CortexDx stateless & read-only.** Diagnostics must never mutate target MCP servers.
 5. **Named exports + ≤40-line functions.** No default exports, no giant functions. Split logic if needed.
 6. **Determinism & evidence.** Support `--deterministic`, attach evidence pointers to every finding, and respect OTEL/har settings.
 7. **WCAG 2.2 AA compliance.** CLI outputs must be screen-reader friendly (summary-first, no color-only cues).
@@ -37,7 +37,7 @@ license: "Apache 2.0"
 
 1. **This AGENTS.md** (repo root) — authoritative for CortexDx.
 2. **Nested `AGENTS.md` files** — may tighten rules for subdirectories.
-3. **Vision Doc** (`.insula/rules/vision.md`) — defines north star, roadmap, and non-goals.
+3. **Vision Doc** (`.cortexdx/rules/vision.md`) — defines north star, roadmap, and non-goals.
 4. **brAInwav Constitution + CODESTYLE** — global policies (branding, a11y, ArcTDD, governance).
 
 Whenever instructions conflict, obey the most specific rule that still honours higher-level mandates.
@@ -62,15 +62,15 @@ pnpm build               # tsup bundle & dts check
 
 Never substitute npm/yarn or bypass Nx target wrappers. Do not add global installs.
 
-### Local Memory profile toggle (Cortex ↔ Insula)
+### Local Memory profile toggle (Cortex ↔ CortexDx)
 
-Many Insula diagnostics rely on the Cortex Local Memory stack for Qdrant and
+Many CortexDx diagnostics rely on the Cortex Local Memory stack for Qdrant and
 MCP bridge parity. Before running workflows that must mirror Cortex behavior:
 
-1. From the `.Cortex-OS` repo root, run `pnpm mcp:profile insula` (wrapper for
+1. From the `.Cortex-OS` repo root, run `pnpm mcp:profile cortexdx` (wrapper for
    `scripts/launchd/toggle-local-memory.sh`). This bootouts any existing agent,
-   renders the Insula plist, and restarts launchd with the MCP-only profile.
-2. Verify the swap with `launchctl print gui/$UID/com.brainwav.insula-local-memory
+   renders the CortexDx plist, and restarts launchd with the MCP-only profile.
+2. Verify the swap with `launchctl print gui/$UID/com.brainwav.cortexdx-local-memory
    | rg -i state`, `lsof -i :3002` (should be empty), and `lsof -i :6333`
    (Qdrant stays up for semantic recall).
 3. After reproducing/diagnosing, return to the Cortex default via

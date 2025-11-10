@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines **mandatory coding standards** for the Insula MCP monorepo.  
+This document defines **mandatory coding standards** for the CortexDx monorepo.  
 All contributors and automation agents must follow these rules. CI enforces them via Nx targets and checks (Biome, ESLint **v9 flat config**, Ruff, Pyright, Clippy, pytest, mutation testing, Semgrep, supply-chain scanners).  
 **Baselines**: Node **24 Active LTS** (see [ADR 004](./docs/architecture/decisions/004-node-24-active-lts.md)), React **19**, Next.js **15**, Rust **2024 edition** (rustc ≥ **1.85**).
 
@@ -24,7 +24,7 @@ All contributors and automation agents must follow these rules. CI enforces them
 - **Apps/binaries/infrastructure services** must include **brAInwav** branding in outputs, **error messages**, and **logs**.  
 - **Shared libraries** SHOULD avoid hard-coded branding; when emitting logs, prefer a structured field `{ brand: "brAInwav" }` passed/injected by the caller.
 - Status claims in UIs, logs, or docs must be **evidence-backed by code** and passing checks.
-- The file `.insula/rules/RULES_OF_AI.md` is normative; this document complements it.
+- The file `.cortexdx/rules/RULES_OF_AI.md` is normative; this document complements it.
 
 **Detection**
 
@@ -44,13 +44,13 @@ All contributors and automation agents must follow these rules. CI enforces them
 - **DRY**: Shared logic lives in:
 
   - `src/lib/` (TypeScript)
-  - `apps/insula-py/lib/` (Python)
+  - `apps/cortexdx-py/lib/` (Python)
   - `crates/common/` (Rust)
 
 ---
 
 ## 2. Monorepo Task Orchestration (Nx “Smart” Mode)
-  - `apps/insula-py/lib/` (Python)
+  - `apps/cortexdx-py/lib/` (Python)
 
 - Explicit types at **all public API boundaries** (functions, modules, React props).
 - `strict: true` with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`.
@@ -107,7 +107,7 @@ All contributors and automation agents must follow these rules. CI enforces them
 
 **Purpose**: Standardized TypeScript configuration across all packages to ensure build consistency, enable incremental compilation, and support project references.
 
-**Templates**: Available in `.insula/templates/tsconfig/`
+**Templates**: Available in `.cortexdx/templates/tsconfig/`
 
 - `tsconfig.lib.json` - Standard library configuration
 - `tsconfig.spec.json` - Test configuration  
@@ -174,14 +174,14 @@ Packages with test files SHOULD use separate `tsconfig.spec.json`:
 
 ```bash
 # 1. Copy template
-cp .insula/templates/tsconfig/tsconfig.lib.json packages/my-package/tsconfig.json
+cp .cortexdx/templates/tsconfig/tsconfig.lib.json packages/my-package/tsconfig.json
 
 # 2. Adjust extends path (match your package depth)
 # packages/my-package/ → "../../tsconfig.base.json"
 # packages/services/my-package/ → "../../../tsconfig.base.json"
 
 # 3. Add test config if needed
-cp .insula/templates/tsconfig/tsconfig.spec.json packages/my-package/
+cp .cortexdx/templates/tsconfig/tsconfig.spec.json packages/my-package/
 
 # 4. Verify
 cd packages/my-package
@@ -333,11 +333,12 @@ See `docs/troubleshooting/typescript-config.md` for:
 
 ## 11. Automation & Agent-Toolkit (MANDATORY for agents)
 
-- Agents and automation **must** use `packages/agent-toolkit` for:
-  - Code search (`multiSearch`) instead of raw `grep/rg`
-  - Structural refactors/codemods
-  - Cross-language validation and pre-commit checks
-- Shell “Just” recipes are canonical entry points:
+- Agents and automation **must** use the Cortex-OS Agent Toolkit (maintained under
+  `~/.Cortex-OS/packages/agent-toolkit`). CortexDx no longer vendors a copy under
+  `packages/agent-toolkit`, so run toolkit workflows from the Cortex-OS repo or use
+  the published `@cortex-os/agent-toolkit` package as a dependency.
+- Shell “Just” recipes are still the canonical entry points (execute them from the
+  Cortex-OS repository):
   - `just scout "<pattern>" <path>`
   - `just codemod 'find(:[x])' 'replace(:[x])' <path>`
   - `just verify changed.txt`
@@ -475,7 +476,7 @@ See `docs/troubleshooting/typescript-config.md` for:
 - **Mise**: `.mise.toml` pins tool versions (Node 24 Active LTS, Python, uv, Rust; per [ADR-004](./docs/architecture/decisions/004-node-24-active-lts.md))
 - **CI**: `.github/workflows/*.yml` enforce gates (quality, security, supply chain, badges)
 - **ADRs**: `docs/adr/` (MADR template)
-- **brAInwav Rules**: `.insula/rules/RULES_OF_AI.md` (primary production standards)
+- **brAInwav Rules**: `.cortexdx/rules/RULES_OF_AI.md` (primary production standards)
 
 ---
 
@@ -493,6 +494,6 @@ See `docs/troubleshooting/typescript-config.md` for:
 - **Semgrep rule catalog**: See `semgrep/brAInwav.yml` (rules defined in [`security/semgrep/packs/brainwav-custom.yml`](security/semgrep/packs/brainwav-custom.yml)). These rules block `child_process.exec*` shell spawns, `NODE_TLS_REJECT_UNAUTHORIZED=0`, and AbortSignal gaps via `brainwav.async.fetch-missing-abort-signal`, `brainwav.async.fetch-options-missing-abort-signal`, `brainwav.async.axios-missing-cancellation`, and `brainwav.async.axios-options-missing-cancellation`.
 - **Testing/validation**: Regression tests live in [`security/semgrep/tests/abort-signal`](security/semgrep/tests/abort-signal) and run with `semgrep --test security/semgrep/packs/brainwav-custom.yml`.
 - **Exemption criteria**: Helper factories that already inject `signal` are exempt because the rules only match object literals.
-- **Waiver process**: Request waivers via `/.insula/waivers/` with Maintainer approval.
+- **Waiver process**: Request waivers via `/.cortexdx/waivers/` with Maintainer approval.
 - **Legacy ESLint profile** — [`.eslintrc.cjs`](./.eslintrc.cjs) enforces the 40-line ceiling (`max-lines-per-function`), naming conventions, and cross-domain import guards; overrides live in per-package `eslint.config.js` fragments and require a documented waiver before relaxing.
 - **Flat ESLint config** — [`eslint.config.js`](./eslint.config.js) layers SonarJS + `typescript-eslint` async safety checks; together with the `AbortSignal` mandate in §3 and the `scripts/ensure-eslint-flat-config.mjs` guard (runs before `pnpm lint:smart` and emits `reports/policy/flat-config-guard.json`), this is how CI verifies cancellation-ready async boundaries. Adjustments also flow through the waiver process above.

@@ -87,10 +87,10 @@ Quick deployment script for testing and development.
 ./scripts/quick-deploy.sh community
 
 # Deploy Professional Edition
-INSULA_LICENSE_KEY=your-key ./scripts/quick-deploy.sh professional
+CORTEXDX_LICENSE_KEY=your-key ./scripts/quick-deploy.sh professional
 
 # Deploy Enterprise Edition
-INSULA_LICENSE_KEY=your-key \
+CORTEXDX_LICENSE_KEY=your-key \
 AUTH0_DOMAIN=your-domain.auth0.com \
 AUTH0_CLIENT_ID=your-client-id \
 AUTH0_CLIENT_SECRET=your-secret \
@@ -107,7 +107,7 @@ VERSION=1.0.1 ./scripts/quick-deploy.sh community
 
 - `VERSION`: Docker image version (default: 1.0.0)
 - `PORT`: Host port to bind (default: 3000)
-- `INSULA_LICENSE_KEY`: License key (required for professional/enterprise)
+- `CORTEXDX_LICENSE_KEY`: License key (required for professional/enterprise)
 - `AUTH0_DOMAIN`: Auth0 domain (required for enterprise)
 - `AUTH0_CLIENT_ID`: Auth0 client ID (required for enterprise)
 - `AUTH0_CLIENT_SECRET`: Auth0 client secret (required for enterprise)
@@ -200,7 +200,7 @@ npx @brainwav/cortexdx@1.0.0 diagnose https://example.com
 curl http://localhost:3000/health
 
 # Test Professional tier
-INSULA_LICENSE_KEY=test-key ./scripts/quick-deploy.sh professional
+CORTEXDX_LICENSE_KEY=test-key ./scripts/quick-deploy.sh professional
 ```
 
 ## Troubleshooting

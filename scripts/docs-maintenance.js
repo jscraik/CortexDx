@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Documentation Maintenance System for Insula MCP
+ * Documentation Maintenance System for CortexDx
  * Handles automated maintenance tasks including version sync, outdated content detection,
  * and scheduled maintenance procedures
  */
@@ -15,7 +15,7 @@ class DocumentationMaintenance {
     this.errors = [];
     this.warnings = [];
     this.suggestions = [];
-    this.packageJsonPath = 'packages/insula-mcp/package.json';
+    this.packageJsonPath = 'packages/cortexdx/package.json';
     this.rootPackageJsonPath = 'package.json';
     this.maintenanceConfig = this.loadMaintenanceConfig();
   }
@@ -71,8 +71,8 @@ class DocumentationMaintenance {
         enabled: true,
         files: [
           'README.md',
-          'packages/insula-mcp/README.md',
-          'packages/insula-mcp/docs/GETTING_STARTED.md'
+          'packages/cortexdx/README.md',
+          'packages/cortexdx/docs/GETTING_STARTED.md'
         ]
       },
       freshness: {
@@ -114,7 +114,7 @@ class DocumentationMaintenance {
       const content = fs.readFileSync(filePath, 'utf8');
       
       // Check for version badges
-      const versionBadgeRegex = /https:\/\/img\.shields\.io\/npm\/v\/@brainwav\/insula-mcp/g;
+      const versionBadgeRegex = /https:\/\/img\.shields\.io\/npm\/v\/@brainwav\/cortexdx/g;
       const nodeVersionBadgeRegex = /https:\/\/img\.shields\.io\/badge\/node-[^-]+-/g;
       
       // Check if version is mentioned in text

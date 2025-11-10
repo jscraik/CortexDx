@@ -9,14 +9,14 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5_
 
 - [x] 2. Enhance package-level README.md
-  - Update packages/insula-mcp/README.md with package-specific information
+  - Update packages/cortexdx/README.md with package-specific information
   - Add detailed CLI usage examples and command reference
   - Include advanced configuration options and flags
   - Add troubleshooting section for common issues
   - _Requirements: 1.1, 1.2, 1.3, 4.1, 4.2_
 
 - [x] 3. Create comprehensive User Guide
-  - Write packages/insula-mcp/docs/USER_GUIDE.md with complete user documentation
+  - Write packages/cortexdx/docs/USER_GUIDE.md with complete user documentation
   - Include step-by-step installation instructions for all platforms
   - Add configuration examples for common use cases
   - Document all CLI commands with detailed explanations and examples
@@ -24,7 +24,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 4.4, 4.5_
 
 - [x] 4. Enhance API Reference documentation
-  - Update packages/insula-mcp/docs/API_REFERENCE.md with complete API documentation
+  - Update packages/cortexdx/docs/API_REFERENCE.md with complete API documentation
   - Document all CLI commands, options, and their behaviors
   - Add programmatic API documentation for library usage
   - Include configuration file schemas and validation rules
@@ -32,7 +32,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 - [x] 5. Create Contributing Guide
-  - Write packages/insula-mcp/docs/CONTRIBUTING.md for developer contributors
+  - Write packages/cortexdx/docs/CONTRIBUTING.md for developer contributors
   - Include development environment setup instructions
   - Document testing strategy and how to run different test suites
   - Explain code review process and quality standards
@@ -41,7 +41,7 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
 - [x] 6. Enhance Troubleshooting documentation
-  - Update packages/insula-mcp/docs/TROUBLESHOOTING.md with comprehensive problem-solving guide
+  - Update packages/cortexdx/docs/TROUBLESHOOTING.md with comprehensive problem-solving guide
   - Document common error messages and their solutions
   - Add debugging guidance and diagnostic commands
   - Include platform-specific troubleshooting steps
@@ -49,14 +49,14 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.5_
 
 - [x] 7. Update Getting Started guide
-  - Enhance packages/insula-mcp/docs/GETTING_STARTED.md with improved onboarding flow
+  - Enhance packages/cortexdx/docs/GETTING_STARTED.md with improved onboarding flow
   - Add prerequisite checking and system requirements
   - Include verification steps to confirm successful installation
   - Add first-time user walkthrough with expected outputs
   - _Requirements: 3.1, 3.2, 3.5_
 
 - [x] 8. Enhance Plugin Development documentation
-  - Update packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md with comprehensive plugin guide
+  - Update packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md with comprehensive plugin guide
   - Add detailed examples of plugin creation and testing
   - Document plugin API and interface requirements
   - Include best practices for plugin development
@@ -64,7 +64,7 @@
   - _Requirements: 4.2, 5.1, 5.2_
 
 - [x] 9. Update Deployment documentation
-  - Enhance packages/insula-mcp/docs/DEPLOYMENT.md with production deployment guidance
+  - Enhance packages/cortexdx/docs/DEPLOYMENT.md with production deployment guidance
   - Add Docker deployment examples and best practices
   - Include Kubernetes deployment configurations
   - Document environment variable configuration
@@ -72,7 +72,7 @@
   - _Requirements: 3.3, 4.5_
 
 - [x] 10. Enhance IDE Integration documentation
-  - Update packages/insula-mcp/docs/IDE_INTEGRATION.md with comprehensive IDE setup
+  - Update packages/cortexdx/docs/IDE_INTEGRATION.md with comprehensive IDE setup
   - Add VS Code extension configuration and usage
   - Include other IDE integration examples
   - Document debugging setup for different IDEs

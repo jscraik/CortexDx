@@ -10,8 +10,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@brainwav/insula-mcp": ["packages/insula-mcp/src/index.ts"],
-      "@brainwav/insula-mcp/*": ["packages/insula-mcp/src/*"]
+      "@brainwav/cortexdx": ["packages/cortexdx/src/index.ts"],
+      "@brainwav/cortexdx/*": ["packages/cortexdx/src/*"]
     }
   },
   "exclude": ["dist", "node_modules"]

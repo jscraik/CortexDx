@@ -20,7 +20,7 @@
 
 - ⚠️ Failed to load maintenance config: Cannot find module 'js-yaml'
 Require stack:
-- /Volumes/ExternalSSD/dev/insula-mcp/scripts/docs-maintenance.js
+- /Volumes/ExternalSSD/dev/cortexdx/scripts/docs-maintenance.js
 
 ## Recommended Actions
 

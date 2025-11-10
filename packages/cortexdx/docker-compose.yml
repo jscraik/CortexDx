@@ -1,27 +1,27 @@
-# Insula MCP Docker Compose Configuration
+# CortexDx Docker Compose Configuration
 # Supports Community, Professional, and Enterprise tiers
 
 version: '3.8'
 
 services:
   # Community Edition (Free)
-  insula-mcp-community:
+  cortexdx-community:
     build:
       context: ../..
-      dockerfile: packages/insula-mcp/Dockerfile
-    container_name: insula-mcp-community
+      dockerfile: packages/cortexdx/Dockerfile
+    container_name: cortexdx-community
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - INSULA_MCP_TIER=community
-      - INSULA_MCP_LOG_LEVEL=info
+      - CORTEXDX_MCP_TIER=community
+      - CORTEXDX_MCP_LOG_LEVEL=info
     volumes:
-      - insula-data-community:/app/data
-      - insula-logs-community:/app/logs
+      - cortexdx-data-community:/app/data
+      - cortexdx-logs-community:/app/logs
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
       interval: 30s
@@ -30,27 +30,27 @@ services:
       start_period: 40s
 
   # Professional Edition
-  insula-mcp-professional:
+  cortexdx-professional:
     build:
       context: ../..
-      dockerfile: packages/insula-mcp/Dockerfile
-    container_name: insula-mcp-professional
+      dockerfile: packages/cortexdx/Dockerfile
+    container_name: cortexdx-professional
     ports:
       - "3001:3000"
     environment:
       - NODE_ENV=production
-      - INSULA_MCP_TIER=professional
-      - INSULA_MCP_LOG_LEVEL=info
-      - INSULA_MCP_LICENSE_KEY=${INSULA_LICENSE_KEY}
-      - INSULA_MCP_LLM_BACKEND=ollama
+      - CORTEXDX_MCP_TIER=professional
+      - CORTEXDX_MCP_LOG_LEVEL=info
+      - CORTEXDX_MCP_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}
+      - CORTEXDX_MCP_LLM_BACKEND=ollama
       - OLLAMA_HOST=ollama:11434
     volumes:
-      - insula-data-pro:/app/data
-      - insula-logs-pro:/app/logs
-      - insula-models-pro:/app/models
+      - cortexdx-data-pro:/app/data
+      - cortexdx-logs-pro:/app/logs
+      - cortexdx-models-pro:/app/models
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     depends_on:
       - ollama
     healthcheck:
@@ -61,31 +61,31 @@ services:
       start_period: 40s
 
   # Enterprise Edition
-  insula-mcp-enterprise:
+  cortexdx-enterprise:
     build:
       context: ../..
-      dockerfile: packages/insula-mcp/Dockerfile
-    container_name: insula-mcp-enterprise
+      dockerfile: packages/cortexdx/Dockerfile
+    container_name: cortexdx-enterprise
     ports:
       - "3002:3000"
     environment:
       - NODE_ENV=production
-      - INSULA_MCP_TIER=enterprise
-      - INSULA_MCP_LOG_LEVEL=info
-      - INSULA_MCP_LICENSE_KEY=${INSULA_LICENSE_KEY}
-      - INSULA_MCP_LLM_BACKEND=ollama
+      - CORTEXDX_MCP_TIER=enterprise
+      - CORTEXDX_MCP_LOG_LEVEL=info
+      - CORTEXDX_MCP_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}
+      - CORTEXDX_MCP_LLM_BACKEND=ollama
       - OLLAMA_HOST=ollama:11434
       - AUTH0_DOMAIN=${AUTH0_DOMAIN}
       - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_ENDPOINT}
     volumes:
-      - insula-data-enterprise:/app/data
-      - insula-logs-enterprise:/app/logs
-      - insula-models-enterprise:/app/models
+      - cortexdx-data-enterprise:/app/data
+      - cortexdx-logs-enterprise:/app/logs
+      - cortexdx-models-enterprise:/app/models
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     depends_on:
       - ollama
       - postgres
@@ -99,14 +99,14 @@ services:
   # Ollama LLM Backend (Professional & Enterprise)
   ollama:
     image: ollama/ollama:latest
-    container_name: insula-ollama
+    container_name: cortexdx-ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama-models:/root/.ollama
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     deploy:
       resources:
         reservations:
@@ -118,18 +118,18 @@ services:
   # PostgreSQL (Enterprise only)
   postgres:
     image: postgres:16-alpine
-    container_name: insula-postgres
+    container_name: cortexdx-postgres
     environment:
-      - POSTGRES_DB=insula_mcp
-      - POSTGRES_USER=insula
+      - POSTGRES_DB=cortexdx_mcp
+      - POSTGRES_USER=cortexdx
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U insula"]
+      test: ["CMD-SHELL", "pg_isready -U cortexdx"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -137,13 +137,13 @@ services:
   # Redis Cache (Enterprise only)
   redis:
     image: redis:7-alpine
-    container_name: insula-redis
+    container_name: cortexdx-redis
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
     restart: unless-stopped
     networks:
-      - insula-network
+      - cortexdx-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -152,18 +152,18 @@ services:
 
 volumes:
   # Community volumes
-  insula-data-community:
-  insula-logs-community:
+  cortexdx-data-community:
+  cortexdx-logs-community:
   
   # Professional volumes
-  insula-data-pro:
-  insula-logs-pro:
-  insula-models-pro:
+  cortexdx-data-pro:
+  cortexdx-logs-pro:
+  cortexdx-models-pro:
   
   # Enterprise volumes
-  insula-data-enterprise:
-  insula-logs-enterprise:
-  insula-models-enterprise:
+  cortexdx-data-enterprise:
+  cortexdx-logs-enterprise:
+  cortexdx-models-enterprise:
   
   # Shared volumes
   ollama-models:
@@ -171,5 +171,5 @@ volumes:
   redis-data:
 
 networks:
-  insula-network:
+  cortexdx-network:
     driver: bridge

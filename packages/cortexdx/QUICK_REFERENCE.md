@@ -16,12 +16,12 @@ docker run -p 3000:3000 brainwav/cortexdx:1.0.0-community
 
 # Professional (License Required)
 docker run -p 3000:3000 \
-  -e INSULA_LICENSE_KEY=your-key \
+  -e CORTEXDX_LICENSE_KEY=your-key \
   brainwav/cortexdx:1.0.0-professional
 
 # Enterprise (License + Auth0 Required)
 docker run -p 3000:3000 \
-  -e INSULA_LICENSE_KEY=your-key \
+  -e CORTEXDX_LICENSE_KEY=your-key \
   -e AUTH0_DOMAIN=your-domain.auth0.com \
   brainwav/cortexdx:1.0.0-enterprise
 ```
@@ -90,23 +90,23 @@ cortexdx doctor
 ### Community
 
 ```bash
-INSULA_MCP_TIER=community
+CORTEXDX_MCP_TIER=community
 NODE_ENV=production
 ```
 
 ### Professional
 
 ```bash
-INSULA_MCP_TIER=professional
-INSULA_LICENSE_KEY=your-key
+CORTEXDX_MCP_TIER=professional
+CORTEXDX_LICENSE_KEY=your-key
 OLLAMA_HOST=localhost:11434
 ```
 
 ### Enterprise
 
 ```bash
-INSULA_MCP_TIER=enterprise
-INSULA_LICENSE_KEY=your-key
+CORTEXDX_MCP_TIER=enterprise
+CORTEXDX_LICENSE_KEY=your-key
 AUTH0_DOMAIN=your-domain.auth0.com
 AUTH0_CLIENT_ID=your-client-id
 AUTH0_CLIENT_SECRET=your-secret

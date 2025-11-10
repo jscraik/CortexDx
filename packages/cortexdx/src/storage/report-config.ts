@@ -75,12 +75,12 @@ export class ReportConfigManager {
     private loadFromEnvironment(): Partial<ReportConfig> {
         const config: Partial<ReportConfig> = {};
 
-        const storageRoot = envValue("CORTEXDX_REPORT_DIR", "INSULA_REPORT_DIR");
+        const storageRoot = envValue("CORTEXDX_REPORT_DIR");
         if (storageRoot) {
             config.storageRoot = storageRoot;
         }
 
-        const baseUrl = envValue("CORTEXDX_REPORT_URL", "INSULA_REPORT_URL");
+        const baseUrl = envValue("CORTEXDX_REPORT_URL");
         if (baseUrl) {
             config.baseUrl = baseUrl;
         }

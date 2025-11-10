@@ -1,6 +1,15 @@
-# Auth0 Setup for CortexDx
+# Auth0 & MCP API Key Setup for CortexDx
 
-This document contains the Auth0 configuration details for the CortexDx diagnostic tool.
+This document contains the Auth0 and MCP API key configuration details for the CortexDx diagnostic tool,
+which supports dual authentication.
+
+## Authentication Methods
+
+CortexDx supports multiple authentication methods:
+
+1. **Auth0 JWT Tokens** - OAuth2 client credentials flow for production systems
+2. **MCP API Keys** - Static API keys for MCP server authentication  
+3. **Dual Authentication** - Both Auth0 JWT + MCP API key for enhanced security
 
 ## Auth0 Application Configuration
 
@@ -30,24 +39,47 @@ This document contains the Auth0 configuration details for the CortexDx diagnost
 For production use, set these environment variables:
 
 ```bash
-# Values are managed in 1Password – never commit real secrets.
+# Auth0 credentials (managed in 1Password – never commit real secrets)
 export CORTEXDX_AUTH0_DOMAIN=brainwav.uk.auth0.com
 export CORTEXDX_AUTH0_CLIENT_ID="$(op read 'op://CortexDx/Auth0/Client ID')"
 export CORTEXDX_AUTH0_CLIENT_SECRET="$(op read 'op://CortexDx/Auth0/Client Secret')"
 export CORTEXDX_AUTH0_AUDIENCE=https://cortex-mcp.brainwav.io/mcp
+
+# MCP API key (managed in 1Password)
+export CORTEXDX_MCP_API_KEY="$(op read 'op://CortexDx/MCP API Key/password')"
 ```
 
 ## Usage
 
-With the environment variables set, run diagnostics against the authenticated Cortex MCP server:
+With the environment variables set, run diagnostics with different authentication methods:
+
+### Auth0 Only
 
 ```bash
 # Build the latest version
-pnpm --dir packages/insula-mcp run build
+pnpm --dir packages/cortexdx run build
 
-# Run diagnostic with Auth0 authentication
-node packages/insula-mcp/dist/cli.js diagnose https://cortex-mcp.brainwav.io/mcp \
-  --deterministic --full --out reports/auth0-prod
+# Run diagnostic with Auth0 authentication only
+node packages/cortexdx/dist/cli.js diagnose https://cortex-mcp.brainwav.io/mcp \
+  --deterministic --full --out reports/auth0-only
+```
+
+### MCP API Key Only
+
+```bash
+# Run diagnostic with MCP API key only
+node packages/cortexdx/dist/cli.js diagnose https://cortex-mcp.brainwav.io/mcp \
+  --mcp-api-key "$CORTEXDX_MCP_API_KEY" \
+  --deterministic --full --out reports/mcp-only
+```
+
+### Dual Authentication (Recommended)
+
+```bash
+# Run diagnostic with both Auth0 JWT + MCP API key
+node packages/cortexdx/dist/cli.js diagnose https://cortex-mcp.brainwav.io/mcp \
+  --mcp-api-key "$CORTEXDX_MCP_API_KEY" \
+  --deterministic --full --out reports/dual-auth
 ```
 
 ## Diagnostic Results

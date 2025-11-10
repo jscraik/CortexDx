@@ -97,7 +97,7 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                   context: .
-                  file: packages/insula-mcp/Dockerfile.${{ matrix.tier }}
+                  file: packages/cortexdx/Dockerfile.${{ matrix.tier }}
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
@@ -136,13 +136,13 @@ jobs:
 
             - name: Deploy with Helm
               run: |
-                  helm upgrade --install insula-mcp-${{ github.event.inputs.tier }} \
-                    ./packages/insula-mcp/kubernetes/helm/insula-mcp \
-                    --namespace insula-mcp \
+                  helm upgrade --install cortexdx-${{ github.event.inputs.tier }} \
+                    ./packages/cortexdx/kubernetes/helm/cortexdx \
+                    --namespace cortexdx \
                     --create-namespace \
                     --set tier=${{ github.event.inputs.tier }} \
                     --set image.tag=${{ github.ref_name }}-${{ github.event.inputs.tier }} \
-                    --set secrets.licenseKey="${{ secrets.INSULA_LICENSE_KEY }}" \
+                    --set secrets.licenseKey="${{ secrets.CORTEXDX_LICENSE_KEY }}" \
                     --set secrets.auth0Domain="${{ secrets.AUTH0_DOMAIN }}" \
                     --set secrets.auth0ClientId="${{ secrets.AUTH0_CLIENT_ID }}" \
                     --set secrets.auth0ClientSecret="${{ secrets.AUTH0_CLIENT_SECRET }}" \
@@ -151,14 +151,14 @@ jobs:
 
             - name: Verify deployment
               run: |
-                  kubectl rollout status deployment/insula-mcp-${{ github.event.inputs.tier }} \
-                    -n insula-mcp \
+                  kubectl rollout status deployment/cortexdx-${{ github.event.inputs.tier }} \
+                    -n cortexdx \
                     --timeout=5m
 
             - name: Run smoke tests
               run: |
-                  POD=$(kubectl get pod -n insula-mcp -l app.kubernetes.io/name=insula-mcp -o jsonpath="{.items[0].metadata.name}")
-                  kubectl exec -n insula-mcp $POD -- node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+                  POD=$(kubectl get pod -n cortexdx -l app.kubernetes.io/name=cortexdx -o jsonpath="{.items[0].metadata.name}")
+                  kubectl exec -n cortexdx $POD -- node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
     notify:
         name: Notify Deployment
@@ -178,7 +178,7 @@ jobs:
                             "type": "section",
                             "text": {
                               "type": "mrkdwn",
-                              "text": "*Insula MCP Deployment*\n\nEnvironment: ${{ github.event.inputs.environment }}\nTier: ${{ github.event.inputs.tier }}\nVersion: ${{ github.ref_name }}\nStatus: ${{ needs.deploy-kubernetes.result }}"
+                              "text": "*CortexDx Deployment*\n\nEnvironment: ${{ github.event.inputs.environment }}\nTier: ${{ github.event.inputs.tier }}\nVersion: ${{ github.ref_name }}\nStatus: ${{ needs.deploy-kubernetes.result }}"
                             }
                           }
                         ]

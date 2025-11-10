@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The Insula MCP codebase shows **partial implementation** of the AGENTS.md requirements. While the foundational architecture and tooling are in place, several critical mandates are not fully met. The project has strong bones but needs focused work on test coverage, build stability, and code quality enforcement.
+The CortexDx codebase shows **partial implementation** of the AGENTS.md requirements. While the foundational architecture and tooling are in place, several critical mandates are not fully met. The project has strong bones but needs focused work on test coverage, build stability, and code quality enforcement.
 
 **Overall Grade: C+ (70%)**
 
@@ -365,7 +365,7 @@ The codebase will be **fully compliant** when:
 
 ## Conclusion
 
-The Insula MCP project has a **solid foundation** but needs focused effort on **build stability, code quality, and process enforcement**. The architecture is sound, the tooling is correct, and the intent is clear. The main gaps are in **execution and enforcement** rather than design.
+The CortexDx project has a **solid foundation** but needs focused effort on **build stability, code quality, and process enforcement**. The architecture is sound, the tooling is correct, and the intent is clear. The main gaps are in **execution and enforcement** rather than design.
 
 **Priority:** Fix the build and lint issues immediately. Everything else depends on having a stable, working codebase.
 

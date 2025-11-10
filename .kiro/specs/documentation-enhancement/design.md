@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design outlines the comprehensive documentation structure for Insula MCP, ensuring professional presentation, GitHub compliance, and excellent user experience. The design focuses on creating a cohesive documentation ecosystem that serves different user personas effectively.
+This design outlines the comprehensive documentation structure for CortexDx MCP, ensuring professional presentation, GitHub compliance, and excellent user experience. The design focuses on creating a cohesive documentation ecosystem that serves different user personas effectively.
 
 ## Architecture
 
@@ -10,8 +10,8 @@ This design outlines the comprehensive documentation structure for Insula MCP, e
 
 ```text
 ├── README.md (Root - Project Overview)
-├── packages/insula-mcp/README.md (Package-specific)
-├── packages/insula-mcp/docs/
+├── packages/cortexdx/README.md (Package-specific)
+├── packages/cortexdx/docs/
 │   ├── GETTING_STARTED.md (Enhanced)
 │   ├── USER_GUIDE.md (New comprehensive guide)
 │   ├── API_REFERENCE.md (Enhanced)
@@ -61,7 +61,7 @@ This design outlines the comprehensive documentation structure for Insula MCP, e
 **Badge Sources**:
 
 - GitHub Actions: `https://github.com/{owner}/{repo}/workflows/{workflow}/badge.svg`
-- npm version: `https://img.shields.io/npm/v/@brainwav/insula-mcp`
+- npm version: `https://img.shields.io/npm/v/@brainwav/cortexdx`
 - License: `https://img.shields.io/badge/license-Apache%202.0-blue.svg`
 - Node.js: `https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg`
 

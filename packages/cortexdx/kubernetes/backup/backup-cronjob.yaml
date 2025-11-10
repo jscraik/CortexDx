@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: insula-mcp-backup
-  namespace: insula-mcp
+  name: cortexdx-backup
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     component: backup
 spec:
   # Run daily at 2 AM
@@ -17,14 +17,14 @@ spec:
       template:
         metadata:
           labels:
-            app: insula-mcp
+            app: cortexdx
             component: backup
         spec:
           restartPolicy: OnFailure
-          serviceAccountName: insula-mcp-backup
+          serviceAccountName: cortexdx-backup
           containers:
             - name: backup
-              image: brainwav/insula-mcp:latest-community
+              image: brainwav/cortexdx:latest-community
               command: ["/bin/bash", "/app/scripts/backup.sh"]
               env:
                 - name: BACKUP_DIR
@@ -72,36 +72,36 @@ spec:
           volumes:
             - name: data
               persistentVolumeClaim:
-                claimName: insula-mcp-data-pvc
+                claimName: cortexdx-data-pvc
             - name: patterns
               persistentVolumeClaim:
-                claimName: insula-mcp-patterns-pvc
+                claimName: cortexdx-patterns-pvc
             - name: models
               persistentVolumeClaim:
-                claimName: insula-mcp-models-pvc
+                claimName: cortexdx-models-pvc
             - name: config
               configMap:
-                name: insula-mcp-config
+                name: cortexdx-config
             - name: backups
               persistentVolumeClaim:
-                claimName: insula-mcp-backups-pvc
+                claimName: cortexdx-backups-pvc
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: insula-mcp-backup
-  namespace: insula-mcp
+  name: cortexdx-backup
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     component: backup
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: insula-mcp-backup
-  namespace: insula-mcp
+  name: cortexdx-backup
+  namespace: cortexdx
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/log"]
@@ -114,25 +114,25 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: insula-mcp-backup
-  namespace: insula-mcp
+  name: cortexdx-backup
+  namespace: cortexdx
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: insula-mcp-backup
+  name: cortexdx-backup
 subjects:
   - kind: ServiceAccount
-    name: insula-mcp-backup
-    namespace: insula-mcp
+    name: cortexdx-backup
+    namespace: cortexdx
 
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: insula-mcp-backups-pvc
-  namespace: insula-mcp
+  name: cortexdx-backups-pvc
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     component: backup
 spec:
   accessModes:
@@ -147,16 +147,16 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: backup-secrets
-  namespace: insula-mcp
+  namespace: cortexdx
   labels:
-    app: insula-mcp
+    app: cortexdx
     component: backup
 type: Opaque
 stringData:
   # Set your remote backup URL (S3, GCS, Azure Blob)
   # Examples:
-  # S3: s3://my-bucket/insula-mcp-backups
-  # GCS: gs://my-bucket/insula-mcp-backups
+  # S3: s3://my-bucket/cortexdx-backups
+  # GCS: gs://my-bucket/cortexdx-backups
   # Azure: https://myaccount.blob.core.windows.net/backups
   remote-url: ""
 

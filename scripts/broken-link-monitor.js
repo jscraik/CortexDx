@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Broken Link Detection and Reporting System for Insula MCP
+ * Broken Link Detection and Reporting System for CortexDx
  * Monitors documentation links and provides detailed reporting on link health
  */
 
@@ -53,7 +53,7 @@ class BrokenLinkMonitor {
         'example.org',
         '*.local'
       ],
-      userAgent: 'Insula-MCP-Link-Monitor/1.0'
+      userAgent: 'CortexDx-MCP-Link-Monitor/1.0'
     };
   }
 

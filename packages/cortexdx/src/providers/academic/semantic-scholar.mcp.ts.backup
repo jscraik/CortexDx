@@ -108,7 +108,7 @@ export interface MethodologyVerification {
 
 export class SemanticScholarProvider {
     private readonly baseUrl = "https://api.semanticscholar.org/graph/v1";
-    private readonly userAgent = "Insula-MCP/1.0.0 (Academic Research)";
+    private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     // Default fields for different query types

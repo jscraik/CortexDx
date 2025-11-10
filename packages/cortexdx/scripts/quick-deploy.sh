@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Quick deployment script for Insula MCP
+# Quick deployment script for CortexDx
 # Usage: ./scripts/quick-deploy.sh [tier] [options]
 
 set -euo pipefail
@@ -15,7 +15,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Insula MCP Quick Deploy${NC}"
+echo -e "${BLUE}🚀 CortexDx Quick Deploy${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -39,7 +39,7 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Check if container is already running
-CONTAINER_NAME="insula-mcp-${TIER}"
+CONTAINER_NAME="cortexdx-${TIER}"
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   echo -e "${YELLOW}⚠️  Container '${CONTAINER_NAME}' already exists${NC}"
   read -p "Remove existing container? (y/N) " -n 1 -r
@@ -56,25 +56,25 @@ fi
 # Pull latest image
 echo ""
 echo -e "${BLUE}📦 Pulling Docker image...${NC}"
-docker pull "brainwav/insula-mcp:${VERSION}-${TIER}"
+docker pull "brainwav/cortexdx:${VERSION}-${TIER}"
 
 # Prepare environment variables
-ENV_VARS="-e NODE_ENV=production -e INSULA_MCP_TIER=${TIER}"
+ENV_VARS="-e NODE_ENV=production -e CORTEXDX_MCP_TIER=${TIER}"
 
 # Tier-specific configuration
 case "$TIER" in
   professional)
     echo ""
     echo -e "${YELLOW}Professional tier requires:${NC}"
-    echo "  - License key (INSULA_LICENSE_KEY)"
+    echo "  - License key (CORTEXDX_LICENSE_KEY)"
     echo "  - Ollama backend (optional)"
     echo ""
     
-    if [ -z "${INSULA_LICENSE_KEY:-}" ]; then
+    if [ -z "${CORTEXDX_LICENSE_KEY:-}" ]; then
       read -p "Enter license key: " LICENSE_KEY
-      ENV_VARS="$ENV_VARS -e INSULA_LICENSE_KEY=${LICENSE_KEY}"
+      ENV_VARS="$ENV_VARS -e CORTEXDX_LICENSE_KEY=${LICENSE_KEY}"
     else
-      ENV_VARS="$ENV_VARS -e INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}"
+      ENV_VARS="$ENV_VARS -e CORTEXDX_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}"
     fi
     
     if [ -n "${OLLAMA_HOST:-}" ]; then
@@ -85,16 +85,16 @@ case "$TIER" in
   enterprise)
     echo ""
     echo -e "${YELLOW}Enterprise tier requires:${NC}"
-    echo "  - License key (INSULA_LICENSE_KEY)"
+    echo "  - License key (CORTEXDX_LICENSE_KEY)"
     echo "  - Auth0 credentials"
     echo "  - Database configuration"
     echo ""
     
-    if [ -z "${INSULA_LICENSE_KEY:-}" ]; then
+    if [ -z "${CORTEXDX_LICENSE_KEY:-}" ]; then
       read -p "Enter license key: " LICENSE_KEY
-      ENV_VARS="$ENV_VARS -e INSULA_LICENSE_KEY=${LICENSE_KEY}"
+      ENV_VARS="$ENV_VARS -e CORTEXDX_LICENSE_KEY=${LICENSE_KEY}"
     else
-      ENV_VARS="$ENV_VARS -e INSULA_LICENSE_KEY=${INSULA_LICENSE_KEY}"
+      ENV_VARS="$ENV_VARS -e CORTEXDX_LICENSE_KEY=${CORTEXDX_LICENSE_KEY}"
     fi
     
     if [ -z "${AUTH0_DOMAIN:-}" ]; then
@@ -124,21 +124,21 @@ esac
 # Create volumes
 echo ""
 echo -e "${BLUE}📁 Creating volumes...${NC}"
-docker volume create "insula-data-${TIER}" > /dev/null
-docker volume create "insula-logs-${TIER}" > /dev/null
+docker volume create "cortexdx-data-${TIER}" > /dev/null
+docker volume create "cortexdx-logs-${TIER}" > /dev/null
 
 if [[ "$TIER" != "community" ]]; then
-  docker volume create "insula-models-${TIER}" > /dev/null
-  docker volume create "insula-patterns-${TIER}" > /dev/null
+  docker volume create "cortexdx-models-${TIER}" > /dev/null
+  docker volume create "cortexdx-patterns-${TIER}" > /dev/null
 fi
 
 # Run container
 echo ""
 echo -e "${BLUE}🚀 Starting container...${NC}"
 
-VOLUME_MOUNTS="-v insula-data-${TIER}:/app/data -v insula-logs-${TIER}:/app/logs"
+VOLUME_MOUNTS="-v cortexdx-data-${TIER}:/app/data -v cortexdx-logs-${TIER}:/app/logs"
 if [[ "$TIER" != "community" ]]; then
-  VOLUME_MOUNTS="$VOLUME_MOUNTS -v insula-models-${TIER}:/app/models -v insula-patterns-${TIER}:/app/patterns"
+  VOLUME_MOUNTS="$VOLUME_MOUNTS -v cortexdx-models-${TIER}:/app/models -v cortexdx-patterns-${TIER}:/app/patterns"
 fi
 
 docker run -d \
@@ -147,7 +147,7 @@ docker run -d \
   $ENV_VARS \
   $VOLUME_MOUNTS \
   --restart unless-stopped \
-  "brainwav/insula-mcp:${VERSION}-${TIER}"
+  "brainwav/cortexdx:${VERSION}-${TIER}"
 
 # Wait for container to be healthy
 echo ""
@@ -177,7 +177,7 @@ fi
 # Success message
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✅ Insula MCP ${TIER} edition deployed successfully!${NC}"
+echo -e "${GREEN}✅ CortexDx ${TIER} edition deployed successfully!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}📊 Container Information:${NC}"
@@ -195,10 +195,10 @@ echo "  Shell:        docker exec -it ${CONTAINER_NAME} sh"
 echo ""
 echo -e "${BLUE}🧪 Test the deployment:${NC}"
 echo "  curl http://localhost:${PORT}/health"
-echo "  docker exec ${CONTAINER_NAME} insula-mcp --version"
+echo "  docker exec ${CONTAINER_NAME} cortexdx --version"
 echo ""
 echo -e "${BLUE}📚 Documentation:${NC}"
-echo "  Getting Started: https://docs.brainwav.io/insula-mcp/getting-started"
-echo "  User Guide:      https://docs.brainwav.io/insula-mcp/user-guide"
-echo "  API Reference:   https://docs.brainwav.io/insula-mcp/api-reference"
+echo "  Getting Started: https://docs.brainwav.io/cortexdx/getting-started"
+echo "  User Guide:      https://docs.brainwav.io/cortexdx/user-guide"
+echo "  API Reference:   https://docs.brainwav.io/cortexdx/api-reference"
 echo ""

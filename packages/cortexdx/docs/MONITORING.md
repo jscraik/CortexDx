@@ -26,37 +26,37 @@ CortexDx exposes Prometheus-compatible metrics for monitoring system health, per
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `insula_mcp_requests_total` | Counter | Total HTTP requests by method, endpoint, status |
-| `insula_mcp_request_duration_seconds` | Histogram | Request duration in seconds |
-| `insula_mcp_active_sessions` | Gauge | Number of active diagnostic sessions |
-| `insula_mcp_health_status` | Gauge | Health check status (1=healthy, 0=unhealthy) |
+| `cortexdx_mcp_requests_total` | Counter | Total HTTP requests by method, endpoint, status |
+| `cortexdx_mcp_request_duration_seconds` | Histogram | Request duration in seconds |
+| `cortexdx_mcp_active_sessions` | Gauge | Number of active diagnostic sessions |
+| `cortexdx_mcp_health_status` | Gauge | Health check status (1=healthy, 0=unhealthy) |
 
 ### LLM Metrics
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `insula_mcp_llm_backend_status` | Gauge | LLM backend status (1=ready, 0=unavailable) |
-| `insula_mcp_llm_inference_duration_seconds` | Histogram | LLM inference duration |
-| `insula_mcp_llm_tokens_processed_total` | Counter | Total tokens processed |
-| `insula_mcp_llm_model_loaded` | Gauge | Currently loaded model (1=loaded, 0=unloaded) |
+| `cortexdx_mcp_llm_backend_status` | Gauge | LLM backend status (1=ready, 0=unavailable) |
+| `cortexdx_mcp_llm_inference_duration_seconds` | Histogram | LLM inference duration |
+| `cortexdx_mcp_llm_tokens_processed_total` | Counter | Total tokens processed |
+| `cortexdx_mcp_llm_model_loaded` | Gauge | Currently loaded model (1=loaded, 0=unloaded) |
 
 ### Pattern Learning Metrics
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `insula_mcp_pattern_matches_total` | Counter | Total pattern matches |
-| `insula_mcp_pattern_matching_duration_seconds` | Histogram | Pattern matching duration |
-| `insula_mcp_pattern_storage_size_bytes` | Gauge | Pattern storage size in bytes |
-| `insula_mcp_patterns_stored_total` | Counter | Total patterns stored |
+| `cortexdx_mcp_pattern_matches_total` | Counter | Total pattern matches |
+| `cortexdx_mcp_pattern_matching_duration_seconds` | Histogram | Pattern matching duration |
+| `cortexdx_mcp_pattern_storage_size_bytes` | Gauge | Pattern storage size in bytes |
+| `cortexdx_mcp_patterns_stored_total` | Counter | Total patterns stored |
 
 ### Database Metrics
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `insula_mcp_database_connection_status` | Gauge | Database connection status (1=connected, 0=disconnected) |
-| `insula_mcp_database_query_duration_seconds` | Histogram | Database query duration |
-| `insula_mcp_database_connections_active` | Gauge | Active database connections |
-| `insula_mcp_database_pool_size` | Gauge | Database connection pool size |
+| `cortexdx_mcp_database_connection_status` | Gauge | Database connection status (1=connected, 0=disconnected) |
+| `cortexdx_mcp_database_query_duration_seconds` | Histogram | Database query duration |
+| `cortexdx_mcp_database_connections_active` | Gauge | Active database connections |
+| `cortexdx_mcp_database_pool_size` | Gauge | Database connection pool size |
 
 ### System Metrics
 
@@ -209,19 +209,19 @@ Create custom dashboards for specific use cases:
     {
       "title": "LLM Backend Status",
       "targets": [{
-        "expr": "insula_mcp_llm_backend_status"
+        "expr": "cortexdx_mcp_llm_backend_status"
       }]
     },
     {
       "title": "Inference Latency by Model",
       "targets": [{
-        "expr": "histogram_quantile(0.95, rate(insula_mcp_llm_inference_duration_seconds_bucket[5m]))"
+        "expr": "histogram_quantile(0.95, rate(cortexdx_mcp_llm_inference_duration_seconds_bucket[5m]))"
       }]
     },
     {
       "title": "Tokens Processed",
       "targets": [{
-        "expr": "rate(insula_mcp_llm_tokens_processed_total[5m])"
+        "expr": "rate(cortexdx_mcp_llm_tokens_processed_total[5m])"
       }]
     }
   ]
@@ -254,7 +254,7 @@ Create custom dashboards for specific use cases:
 
 ```yaml
 - alert: CortexDxMCPHighResponseTime
-  expr: histogram_quantile(0.95, rate(insula_mcp_request_duration_seconds_bucket[5m])) > 2
+  expr: histogram_quantile(0.95, rate(cortexdx_mcp_request_duration_seconds_bucket[5m])) > 2
   for: 10m
   labels:
     severity: warning
@@ -475,7 +475,7 @@ curl 'http://localhost:9090/api/v1/query?query=YOUR_QUERY'
 
 ### Metric Naming
 
-- Use consistent naming: `insula_mcp_<component>_<metric>_<unit>`
+- Use consistent naming: `cortexdx_mcp_<component>_<metric>_<unit>`
 - Include units in metric names: `_seconds`, `_bytes`, `_total`
 - Use labels for dimensions, not metric names
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design addresses the systematic resolution of AGENTS.md compliance gaps in the Insula MCP project. The solution
+This design addresses the systematic resolution of AGENTS.md compliance gaps in the CortexDx MCP project. The solution
 is organized into four phases that progressively build upon each other: Phase 1 unblocks development by fixing critical
 build and lint issues, Phase 2 enforces quality gates through automated tooling, Phase 3 improves processes and
 documentation, and Phase 4 implements advanced compliance features. This phased approach ensures that foundational

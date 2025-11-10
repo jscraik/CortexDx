@@ -1,6 +1,6 @@
 {
-    "name": "insula-mcp-vscode",
-    "displayName": "Insula MCP",
+    "name": "cortexdx-vscode",
+    "displayName": "CortexDx",
     "description": "Real-time MCP validation and assistance for Visual Studio Code",
     "version": "1.0.0",
     "publisher": "brainwav",
@@ -28,14 +28,14 @@
     "main": "./out/extension.js",
     "contributes": {
         "configuration": {
-            "title": "Insula MCP",
+            "title": "CortexDx",
             "properties": {
-                "insula-mcp.server.url": {
+                "cortexdx.server.url": {
                     "type": "string",
                     "default": "http://localhost:3000",
-                    "description": "URL of the Insula MCP server"
+                    "description": "URL of the CortexDx server"
                 },
-                "insula-mcp.server.transport": {
+                "cortexdx.server.transport": {
                     "type": "string",
                     "enum": [
                         "http",
@@ -45,32 +45,32 @@
                     "default": "http",
                     "description": "Transport protocol for MCP communication"
                 },
-                "insula-mcp.diagnostics.enabled": {
+                "cortexdx.diagnostics.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable real-time diagnostics"
                 },
-                "insula-mcp.diagnostics.delay": {
+                "cortexdx.diagnostics.delay": {
                     "type": "number",
                     "default": 500,
                     "description": "Delay in milliseconds before running diagnostics"
                 },
-                "insula-mcp.completions.enabled": {
+                "cortexdx.completions.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable code completions"
                 },
-                "insula-mcp.quickFixes.enabled": {
+                "cortexdx.quickFixes.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable quick fixes"
                 },
-                "insula-mcp.formatting.enabled": {
+                "cortexdx.formatting.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Enable code formatting"
                 },
-                "insula-mcp.formatting.onSave": {
+                "cortexdx.formatting.onSave": {
                     "type": "boolean",
                     "default": false,
                     "description": "Format code on save"
@@ -79,39 +79,39 @@
         },
         "commands": [
             {
-                "command": "insula-mcp.validate",
-                "title": "Insula MCP: Validate Current File"
+                "command": "cortexdx.validate",
+                "title": "CortexDx: Validate Current File"
             },
             {
-                "command": "insula-mcp.analyzeProject",
-                "title": "Insula MCP: Analyze Project"
+                "command": "cortexdx.analyzeProject",
+                "title": "CortexDx: Analyze Project"
             },
             {
-                "command": "insula-mcp.generateTests",
-                "title": "Insula MCP: Generate Tests"
+                "command": "cortexdx.generateTests",
+                "title": "CortexDx: Generate Tests"
             },
             {
-                "command": "insula-mcp.formatCode",
-                "title": "Insula MCP: Format Code"
+                "command": "cortexdx.formatCode",
+                "title": "CortexDx: Format Code"
             },
             {
-                "command": "insula-mcp.startServer",
-                "title": "Insula MCP: Start Server"
+                "command": "cortexdx.startServer",
+                "title": "CortexDx: Start Server"
             },
             {
-                "command": "insula-mcp.stopServer",
-                "title": "Insula MCP: Stop Server"
+                "command": "cortexdx.stopServer",
+                "title": "CortexDx: Stop Server"
             }
         ],
         "keybindings": [
             {
-                "command": "insula-mcp.validate",
+                "command": "cortexdx.validate",
                 "key": "ctrl+shift+v",
                 "mac": "cmd+shift+v",
                 "when": "editorTextFocus"
             },
             {
-                "command": "insula-mcp.formatCode",
+                "command": "cortexdx.formatCode",
                 "key": "ctrl+shift+f",
                 "mac": "cmd+shift+f",
                 "when": "editorTextFocus"

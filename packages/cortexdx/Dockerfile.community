@@ -1,4 +1,4 @@
-# Insula MCP Production Dockerfile - Community Edition
+# CortexDx Production Dockerfile - Community Edition
 # Optimized multi-stage build for minimal image size and fast startup
 
 # Stage 1: Dependencies
@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Copy package files for dependency installation
 COPY package.json pnpm-lock.yaml ./
-COPY packages/insula-mcp/package.json ./packages/insula-mcp/
+COPY packages/cortexdx/package.json ./packages/cortexdx/
 
 # Install pnpm globally
 RUN npm install -g pnpm@9.12.2
@@ -26,15 +26,15 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/insula-mcp/node_modules ./packages/insula-mcp/node_modules
+COPY --from=deps /app/packages/cortexdx/node_modules ./packages/cortexdx/node_modules
 
 # Copy source code
-COPY packages/insula-mcp ./packages/insula-mcp
+COPY packages/cortexdx ./packages/cortexdx
 COPY tsconfig.base.json ./
 COPY package.json pnpm-lock.yaml ./
 
 # Build the application
-WORKDIR /app/packages/insula-mcp
+WORKDIR /app/packages/cortexdx
 RUN npm install -g pnpm@9.12.2 && pnpm build
 
 # Remove dev dependencies and rebuild for production only
@@ -51,29 +51,29 @@ RUN apk add --no-cache \
     && apk upgrade --no-cache
 
 # Create non-root user with specific UID/GID
-RUN addgroup -g 1001 -S insula && \
-    adduser -S -D -H -u 1001 -h /app -s /sbin/nologin -G insula -g insula insula
+RUN addgroup -g 1001 -S cortexdx && \
+    adduser -S -D -H -u 1001 -h /app -s /sbin/nologin -G cortexdx -g cortexdx cortexdx
 
 WORKDIR /app
 
 # Copy only production artifacts
-COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/dist ./dist
-COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/package.json ./
-COPY --from=builder --chown=insula:insula /app/packages/insula-mcp/node_modules ./node_modules
+COPY --from=builder --chown=cortexdx:cortexdx /app/packages/cortexdx/dist ./dist
+COPY --from=builder --chown=cortexdx:cortexdx /app/packages/cortexdx/package.json ./
+COPY --from=builder --chown=cortexdx:cortexdx /app/packages/cortexdx/node_modules ./node_modules
 
 # Create directories for data persistence with proper permissions
 RUN mkdir -p /app/data /app/logs /app/reports /app/config && \
-    chown -R insula:insula /app && \
+    chown -R cortexdx:cortexdx /app && \
     chmod 755 /app/data /app/logs /app/reports /app/config
 
 # Set environment variables for optimization
 ENV NODE_ENV=production \
     NODE_OPTIONS="--max-old-space-size=512" \
-    INSULA_MCP_TIER=community \
-    INSULA_MCP_LOG_LEVEL=info
+    CORTEXDX_MCP_TIER=community \
+    CORTEXDX_MCP_LOG_LEVEL=info
 
 # Switch to non-root user
-USER insula
+USER cortexdx
 
 # Expose HTTP port
 EXPOSE 3000
@@ -89,7 +89,7 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "--enable-source-maps", "dist/server.js"]
 
 # Labels for metadata
-LABEL org.opencontainers.image.title="Insula MCP Community Edition" \
+LABEL org.opencontainers.image.title="CortexDx Community Edition" \
       org.opencontainers.image.description="MCP diagnostic and development assistant - Community tier" \
       org.opencontainers.image.vendor="brAInwav" \
       org.opencontainers.image.version="1.0.0" \

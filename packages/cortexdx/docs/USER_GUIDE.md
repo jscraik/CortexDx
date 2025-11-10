@@ -163,10 +163,10 @@ cortexdx diagnose https://mcp.example.com
 cortexdx diagnose https://mcp.example.com --full --out reports
 
 # This generates:
-# - reports/insula-report.md (human-readable)
-# - reports/insula-findings.json (machine-readable)
-# - reports/insula-arctdd.md (implementation plan)
-# - reports/insula-fileplan.patch (code fixes)
+# - reports/cortexdx-report.md (human-readable)
+# - reports/cortexdx-findings.json (machine-readable)
+# - reports/cortexdx-arctdd.md (implementation plan)
+# - reports/cortexdx-fileplan.patch (code fixes)
 ```
 
 #### 3. Interactive Development Mode
@@ -531,7 +531,7 @@ cortexdx best-practices https://mcp.example.com
 cortexdx best-practices --code ./src --focus security,performance
 
 # Use organization standards
-cortexdx best-practices --code ./src --standards .insula-standards.json
+cortexdx best-practices --code ./src --standards .cortexdx-standards.json
 ```
 
 #### `tutorial <topic>`
@@ -604,7 +604,7 @@ cortexdx compare <old> <new>
 cortexdx diagnose https://api.example.com --out reports-before
 # ... make changes ...
 cortexdx diagnose https://api.example.com --out reports-after
-cortexdx compare reports-before/insula-findings.json reports-after/insula-findings.json
+cortexdx compare reports-before/cortexdx-findings.json reports-after/cortexdx-findings.json
 ```
 
 ## Configuration
@@ -666,17 +666,17 @@ Configure CortexDx using environment variables:
 
 ```bash
 # Core settings
-export INSULA_CONFIG_FILE=".cortexdx.json"
-export INSULA_OUTPUT_DIR="./reports"
-export INSULA_LOG_LEVEL="info"
+export CORTEXDX_CONFIG_FILE=".cortexdx.json"
+export CORTEXDX_OUTPUT_DIR="./reports"
+export CORTEXDX_LOG_LEVEL="info"
 
 # Authentication
-export INSULA_DEFAULT_AUTH="bearer:${API_TOKEN}"
-export INSULA_USER_AGENT="MyOrg-CortexDx/1.0"
+export CORTEXDX_DEFAULT_AUTH="bearer:${API_TOKEN}"
+export CORTEXDX_USER_AGENT="MyOrg-CortexDx/1.0"
 
 # Plugin budgets
-export INSULA_BUDGET_TIME="15000"
-export INSULA_BUDGET_MEM="256"
+export CORTEXDX_BUDGET_TIME="15000"
+export CORTEXDX_BUDGET_MEM="256"
 
 # OpenTelemetry
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://jaeger:4318"
@@ -684,7 +684,7 @@ export OTEL_SERVICE_NAME="cortexdx"
 export OTEL_RESOURCE_ATTRIBUTES="service.version=0.1.0,environment=production"
 
 # Debug logging
-export DEBUG="insula:*"
+export DEBUG="cortexdx:*"
 export DEBUG_COLORS="true"
 ```
 
@@ -928,8 +928,8 @@ jobs:
       - name: Check Quality Gate
         run: |
           # Parse findings and fail on major issues
-          MAJOR_COUNT=$(jq '.findings | map(select(.severity == "major")) | length' reports/insula-findings.json)
-          BLOCKER_COUNT=$(jq '.findings | map(select(.severity == "blocker")) | length' reports/insula-findings.json)
+          MAJOR_COUNT=$(jq '.findings | map(select(.severity == "major")) | length' reports/cortexdx-findings.json)
+          BLOCKER_COUNT=$(jq '.findings | map(select(.severity == "blocker")) | length' reports/cortexdx-findings.json)
           
           echo "Found $BLOCKER_COUNT blocker(s) and $MAJOR_COUNT major issue(s)"
           
@@ -949,8 +949,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const findings = JSON.parse(fs.readFileSync('reports/insula-findings.json', 'utf8'));
-            const report = fs.readFileSync('reports/insula-report.md', 'utf8');
+            const findings = JSON.parse(fs.readFileSync('reports/cortexdx-findings.json', 'utf8'));
+            const report = fs.readFileSync('reports/cortexdx-report.md', 'utf8');
             
             const summary = findings.findings.reduce((acc, f) => {
               acc[f.severity] = (acc[f.severity] || 0) + 1;
@@ -1003,14 +1003,14 @@ mcp-diagnostics:
         --out reports
     - |
       # Check for blockers and majors
-      BLOCKER_COUNT=$(jq '.findings | map(select(.severity == "blocker")) | length' reports/insula-findings.json)
+      BLOCKER_COUNT=$(jq '.findings | map(select(.severity == "blocker")) | length' reports/cortexdx-findings.json)
       if [ "$BLOCKER_COUNT" -gt 0 ]; then
         echo "Quality gate failed: $BLOCKER_COUNT blocker(s) found"
         exit 1
       fi
   artifacts:
     reports:
-      junit: reports/insula-junit.xml
+      junit: reports/cortexdx-junit.xml
     paths:
       - reports/
     expire_in: 1 week
@@ -1056,7 +1056,7 @@ pipeline {
                         alwaysLinkToLastBuild: true,
                         keepAll: true,
                         reportDir: 'reports',
-                        reportFiles: 'insula-report.html',
+                        reportFiles: 'cortexdx-report.html',
                         reportName: 'MCP Diagnostic Report'
                     ])
                 }
@@ -1066,7 +1066,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 script {
-                    def findings = readJSON file: 'reports/insula-findings.json'
+                    def findings = readJSON file: 'reports/cortexdx-findings.json'
                     def blockers = findings.findings.findAll { it.severity == 'blocker' }.size()
                     def majors = findings.findings.findAll { it.severity == 'major' }.size()
                     
@@ -1125,7 +1125,7 @@ services:
       timeout: 10s
       retries: 3
 
-  insula-diagnostics:
+  cortexdx-diagnostics:
     image: node:20-alpine
     depends_on:
       mcp-server:
@@ -1177,7 +1177,7 @@ cortexdx diagnose https://mcp.example.com \
         "type": "stat",
         "targets": [
           {
-            "expr": "rate(insula_diagnostics_total{status=\"success\"}[5m])"
+            "expr": "rate(cortexdx_diagnostics_total{status=\"success\"}[5m])"
           }
         ]
       },
@@ -1186,7 +1186,7 @@ cortexdx diagnose https://mcp.example.com \
         "type": "piechart",
         "targets": [
           {
-            "expr": "sum by (severity) (insula_findings_total)"
+            "expr": "sum by (severity) (cortexdx_findings_total)"
           }
         ]
       },
@@ -1195,7 +1195,7 @@ cortexdx diagnose https://mcp.example.com \
         "type": "graph",
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, rate(insula_plugin_duration_seconds_bucket[5m]))"
+            "expr": "histogram_quantile(0.95, rate(cortexdx_plugin_duration_seconds_bucket[5m]))"
           }
         ]
       }
@@ -1310,7 +1310,7 @@ WEBHOOK_URL="$2"
 cortexdx diagnose "$ENDPOINT" --out reports --deterministic
 
 # Parse results
-FINDINGS=$(cat reports/insula-findings.json)
+FINDINGS=$(cat reports/cortexdx-findings.json)
 BLOCKER_COUNT=$(echo "$FINDINGS" | jq '.findings | map(select(.severity == "blocker")) | length')
 MAJOR_COUNT=$(echo "$FINDINGS" | jq '.findings | map(select(.severity == "major")) | length')
 
@@ -1350,7 +1350,7 @@ const axios = require('axios');
 const fs = require('fs');
 
 async function sendTeamsNotification(endpoint, webhookUrl) {
-  const findings = JSON.parse(fs.readFileSync('reports/insula-findings.json', 'utf8'));
+  const findings = JSON.parse(fs.readFileSync('reports/cortexdx-findings.json', 'utf8'));
   
   const summary = findings.findings.reduce((acc, f) => {
     acc[f.severity] = (acc[f.severity] || 0) + 1;
@@ -1393,7 +1393,7 @@ sendTeamsNotification(process.argv[2], process.argv[3]);
 
 CortexDx generates multiple output formats to serve different use cases and audiences.
 
-### 1. Markdown Report (`insula-report.md`)
+### 1. Markdown Report (`cortexdx-report.md`)
 
 Human-readable diagnostic report optimized for developers and stakeholders.
 
@@ -1479,7 +1479,7 @@ Human-readable diagnostic report optimized for developers and stakeholders.
 *Generated by CortexDx v0.1.0 • brAInwav • Apache 2.0*
 ```
 
-### 2. JSON Findings (`insula-findings.json`)
+### 2. JSON Findings (`cortexdx-findings.json`)
 
 Machine-readable structured data for automation and integration.
 
@@ -1552,7 +1552,7 @@ Machine-readable structured data for automation and integration.
 }
 ```
 
-### 3. ArcTDD Implementation Plan (`insula-arctdd.md`)
+### 3. ArcTDD Implementation Plan (`cortexdx-arctdd.md`)
 
 Test-driven development plan with prioritized remediation steps.
 
@@ -1734,7 +1734,7 @@ cortexdx compare initial-findings.json validation-findings.json
 
 ```
 
-### 4. File Plan (`insula-fileplan.patch`)
+### 4. File Plan (`cortexdx-fileplan.patch`)
 
 Unified diff patches for direct code remediation.
 
@@ -1789,7 +1789,7 @@ Unified diff patches for direct code remediation.
  });
 ```
 
-### 5. JUnit XML (`insula-junit.xml`)
+### 5. JUnit XML (`cortexdx-junit.xml`)
 
 Test results format for CI/CD integration.
 
@@ -1822,7 +1822,7 @@ Test results format for CI/CD integration.
 </testsuites>
 ```
 
-### 6. SARIF Security Report (`insula-security.sarif`)
+### 6. SARIF Security Report (`cortexdx-security.sarif`)
 
 Static Analysis Results Interchange Format for security tools.
 
@@ -2180,7 +2180,7 @@ cortexdx diagnose http://localhost:3000 \
 
 # Use evidence for debugging
 cortexdx debug "SSE not working" \
-  --errors evidence/insula.har \
+  --errors evidence/cortexdx.har \
   --configs .cortexdx.json
 ```
 
@@ -2359,7 +2359,7 @@ A: Verify the endpoint URL, check network connectivity with `cortexdx doctor`, a
 
 **Q: How do I debug plugin failures?**
 
-A: Enable debug logging with `DEBUG=insula:plugin:* cortexdx diagnose <endpoint>` to see detailed plugin execution information.
+A: Enable debug logging with `DEBUG=cortexdx:plugin:* cortexdx diagnose <endpoint>` to see detailed plugin execution information.
 
 **Q: The tool reports false positives. How do I handle them?**
 

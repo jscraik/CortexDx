@@ -1,6 +1,6 @@
 # Documentation Validation
 
-This document describes the documentation validation system for Insula MCP, which ensures consistent, high-quality documentation across the project.
+This document describes the documentation validation system for CortexDx, which ensures consistent, high-quality documentation across the project.
 
 ## Overview
 
@@ -123,15 +123,15 @@ The following files must exist and be properly maintained:
 
 ### Package Level
 
-- `packages/insula-mcp/README.md` - Package-specific documentation
-- `packages/insula-mcp/docs/GETTING_STARTED.md` - Installation and setup
-- `packages/insula-mcp/docs/USER_GUIDE.md` - User documentation
-- `packages/insula-mcp/docs/API_REFERENCE.md` - API documentation
-- `packages/insula-mcp/docs/CONTRIBUTING.md` - Development guidelines
-- `packages/insula-mcp/docs/TROUBLESHOOTING.md` - Common issues and solutions
-- `packages/insula-mcp/docs/DEPLOYMENT.md` - Deployment instructions
-- `packages/insula-mcp/docs/IDE_INTEGRATION.md` - IDE setup and integration
-- `packages/insula-mcp/docs/PLUGIN_DEVELOPMENT.md` - Plugin development guide
+- `packages/cortexdx/README.md` - Package-specific documentation
+- `packages/cortexdx/docs/GETTING_STARTED.md` - Installation and setup
+- `packages/cortexdx/docs/USER_GUIDE.md` - User documentation
+- `packages/cortexdx/docs/API_REFERENCE.md` - API documentation
+- `packages/cortexdx/docs/CONTRIBUTING.md` - Development guidelines
+- `packages/cortexdx/docs/TROUBLESHOOTING.md` - Common issues and solutions
+- `packages/cortexdx/docs/DEPLOYMENT.md` - Deployment instructions
+- `packages/cortexdx/docs/IDE_INTEGRATION.md` - IDE setup and integration
+- `packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md` - Plugin development guide
 
 ## Best Practices
 

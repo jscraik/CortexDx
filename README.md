@@ -85,10 +85,10 @@ bundled service scripts:
 
 The plist template renders with your absolute paths and the label stays
 `com.brainwav.cortexdx`, so it can co-exist with `.Cortex-OS`'s
-`com.brainwav.insula-local-memory` profile. See `SERVICE_SETUP.md` for details
+`com.brainwav.cortexdx-local-memory` profile. See `SERVICE_SETUP.md` for details
 and environment overrides like `PORT=5002 ./install-service.sh`.
 
-#### Optional: reuse `.Cortex-OS` toggle (Cortex ↔ Insula)
+#### Optional: reuse `.Cortex-OS` toggle (Cortex ↔ CortexDx)
 
 If you prefer the shared profile switcher that ships with `.Cortex-OS`, you can
 still flip between Cortex profiles:
@@ -104,8 +104,8 @@ correct plist, bootouts the previous LaunchAgent, and bootstraps the new one via
 `launchctl`. Confirm the active profile before diagnostics:
 
 ```bash
-launchctl print gui/$UID/com.brainwav.insula-local-memory | rg -i state
-lsof -i :3002   # should be empty for Insula profile
+launchctl print gui/$UID/com.brainwav.cortexdx-local-memory | rg -i state
+lsof -i :3002   # should be empty for CortexDx profile
 lsof -i :6333   # Qdrant should listen in both profiles
 ```
 

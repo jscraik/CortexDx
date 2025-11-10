@@ -8,7 +8,7 @@ const story = StorySchema.parse({
   timestamp: "2025-11-08T05:00:00.000Z",
   scope: "connector",
   trigger: { kind: "latency", details: "Connector latency > 600ms" },
-  propagation: { path: ["insula-core", "tool.analyze", "connector.edge"] },
+  propagation: { path: ["cortexdx-core", "tool.analyze", "connector.edge"] },
   symptom: {
     user_visible: "Tool replies are delayed",
     technical: "Connector edge exceeded latency budget",
@@ -23,7 +23,7 @@ const story = StorySchema.parse({
     {
       id: "action-reprobe-connector",
       label: "Run reprobe",
-      command: "insula-mcp story.reprobe --target connector.edge",
+      command: "cortexdx story.reprobe --target connector.edge",
       reversible: true,
     },
   ],

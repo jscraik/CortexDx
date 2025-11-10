@@ -48,7 +48,7 @@ export interface ArxivCategory {
 
 export class ArxivProvider {
     private readonly baseUrl = "http://export.arxiv.org/api/query";
-    private readonly userAgent = "Insula-MCP/1.0.0 (Academic Research)";
+    private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
     private readonly licenseValidator: LicenseValidatorPlugin;
 
     // arXiv subject classifications

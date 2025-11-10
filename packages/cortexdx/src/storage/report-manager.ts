@@ -67,8 +67,8 @@ const firstAvailableEnv = (...keys: string[]): string | undefined => {
 };
 
 const DEFAULT_CONFIG: ReportConfig = {
-    storageRoot: firstAvailableEnv("CORTEXDX_REPORT_DIR", "INSULA_REPORT_DIR") || "./reports",
-    baseUrl: firstAvailableEnv("CORTEXDX_REPORT_URL", "INSULA_REPORT_URL") || "http://localhost:5001/reports",
+    storageRoot: firstAvailableEnv("CORTEXDX_REPORT_DIR") || "./reports",
+    baseUrl: firstAvailableEnv("CORTEXDX_REPORT_URL") || "http://localhost:5001/reports",
     organizationStrategy: "date",
     retentionDays: 30,
     enableCompression: false,

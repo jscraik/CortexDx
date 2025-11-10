@@ -1,0 +1,78 @@
+name: CortexDx Diagnose
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      MCP_ENDPOINT: ${{ secrets.MCP_ENDPOINT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install
+        run: pnpm i --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Diagnose (Quick)
+        id: diag
+        continue-on-error: true
+        run: |
+          EP="${MCP_ENDPOINT:-https://example.invalid}"
+          node packages/cortexdx/dist/cli.js diagnose "$EP" --out reports || echo "non-zero exit captured"
+        shell: bash
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cortexdx-reports
+          path: |
+            reports/cortexdx-report.md
+            reports/cortexdx-findings.json
+            reports/cortexdx-arctdd.md
+            reports/cortexdx-fileplan.patch
+          if-no-files-found: warn
+
+      - name: Generate lightweight SBOM (npm tree)
+        run: |
+          mkdir -p artifacts
+          npm ls --all > artifacts/npm-tree.txt || true
+        shell: bash
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-lite
+          path: artifacts/npm-tree.txt
+          if-no-files-found: ignore
+
+      - name: Fail if BLOCKER/MAJOR
+        run: |
+          CODE=$(node -e 'process.exitCode=0;try{const f=require("./reports/cortexdx-findings.json");const b=f.findings.some(x=>x.severity==="blocker");const m=f.findings.some(x=>x.severity==="major");process.exit((b&&1)||(m&&2)||0)}catch(e){console.log("no findings file; skipping");}')
+          echo "exit-code=$CODE"
+          exit $CODE
+        shell: bash

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Insula MCP Restore Script
+# CortexDx Restore Script
 # Restores conversation history, patterns, models, and configuration from backup
 
 set -euo pipefail
@@ -24,7 +24,7 @@ error() {
 if [ $# -eq 0 ]; then
     error "Usage: $0 <backup-file.tar.gz>"
     error "Available backups:"
-    ls -lh "${BACKUP_DIR}"/insula-mcp-backup-*.tar.gz 2>/dev/null || echo "  No backups found"
+    ls -lh "${BACKUP_DIR}"/cortexdx-backup-*.tar.gz 2>/dev/null || echo "  No backups found"
     exit 1
 fi
 
@@ -81,10 +81,10 @@ if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
     exit 0
 fi
 
-# Stop Insula MCP service if running
+# Stop CortexDx service if running
 if command -v systemctl &> /dev/null; then
-    log "Stopping Insula MCP service..."
-    systemctl stop insula-mcp || true
+    log "Stopping CortexDx service..."
+    systemctl stop cortexdx || true
 fi
 
 # Backup current data before restore
@@ -142,13 +142,13 @@ fi
 
 # Set proper permissions
 log "Setting permissions..."
-chown -R insula:insula "${DATA_DIR}" "${PATTERNS_DIR}" "${CONFIG_DIR}" 2>/dev/null || true
-[ -d "${MODELS_DIR}" ] && chown -R insula:insula "${MODELS_DIR}" 2>/dev/null || true
+chown -R cortexdx:cortexdx "${DATA_DIR}" "${PATTERNS_DIR}" "${CONFIG_DIR}" 2>/dev/null || true
+[ -d "${MODELS_DIR}" ] && chown -R cortexdx:cortexdx "${MODELS_DIR}" 2>/dev/null || true
 
-# Start Insula MCP service
+# Start CortexDx service
 if command -v systemctl &> /dev/null; then
-    log "Starting Insula MCP service..."
-    systemctl start insula-mcp || {
+    log "Starting CortexDx service..."
+    systemctl start cortexdx || {
         error "Failed to start service"
         exit 1
     }
