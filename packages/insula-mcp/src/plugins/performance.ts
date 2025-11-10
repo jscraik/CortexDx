@@ -3,42 +3,55 @@ import { PySpyAdapter } from "../adapters/pyspy-adapter.js";
 import { withSpan } from "../observability/otel.js";
 import { FlameGraphGenerator } from "../report/flamegraph.js";
 import type {
+  DiagnosticContext,
   DiagnosticPlugin,
   Finding,
   PerformanceMetrics,
+  TransportTranscript,
 } from "../types.js";
+
+export interface HttpMetrics {
+  latencyMs: number;
+  status?: number;
+}
+
+export interface SseMetrics {
+  firstEventMs?: number;
+  heartbeatMs?: number;
+  jitterMs?: number;
+}
+
+export interface WebSocketMetrics {
+  messageCount: number;
+  maxGapMs?: number;
+  reconnects: number;
+}
+
+export interface PerformanceSummary {
+  http?: HttpMetrics;
+  sse?: SseMetrics;
+  websocket?: WebSocketMetrics;
+}
+
+export interface PerformanceMeasurementOptions {
+  harness?: PerformanceHarness;
+}
+
+interface PerformanceHarness {
+  now: () => number;
+  fetch: typeof fetch;
+  sseProbe: DiagnosticContext["sseProbe"];
+  transcript: () => TransportTranscript | null;
+  headers: () => Record<string, string>;
+}
 
 export const PerformancePlugin: DiagnosticPlugin = {
   id: "performance",
   title: "Baseline Latency / Timeouts",
   order: 500,
   async run(ctx) {
-    const t0 = Date.now();
-    try {
-      await ctx.jsonrpc<unknown>("rpc.ping");
-    } catch (error) {
-      ctx.logger("[brAInwav] performance ping failed", error);
-    }
-    const sessionHeaders = ctx.transport?.headers?.() ?? ctx.headers ?? {};
-    await fetch(ctx.endpoint, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        accept: "application/json, text/event-stream",
-        ...sessionHeaders,
-      },
-      body: "{}",
-    }).catch(() => undefined);
-    const duration = Date.now() - t0;
-    const finding: Finding = {
-      id: "perf.sample",
-      area: "performance",
-      severity: "info",
-      title: "Sample latency",
-      description: `${duration}ms (single POST)`,
-      evidence: [{ type: "url", ref: ctx.endpoint }],
-    };
-    return [finding];
+    const metrics = await measureTransports(ctx);
+    return buildPerformanceFindings(metrics, ctx.endpoint);
   },
 };
 
@@ -128,6 +141,175 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
     return findings;
   },
 };
+
+export async function measureTransports(
+  ctx: DiagnosticContext,
+  options: PerformanceMeasurementOptions = {},
+): Promise<PerformanceSummary> {
+  const harness = options.harness ?? createHarness(ctx);
+  const [http, sse] = await Promise.all([
+    measureHttp(ctx, harness),
+    measureSse(ctx, harness),
+  ]);
+  const websocket = measureWebSocket(harness.transcript());
+  return { http, sse, websocket };
+}
+
+export function buildPerformanceFindings(
+  summary: PerformanceSummary,
+  endpoint: string,
+): Finding[] {
+  const findings: Finding[] = [];
+  if (summary.http) {
+    findings.push({
+      id: "perf.http.latency",
+      area: "performance",
+      severity: "info",
+      title: "HTTP latency",
+      description: `${summary.http.latencyMs.toFixed(1)}ms latency (status ${summary.http.status ?? "n/a"})`,
+      evidence: [{ type: "url", ref: `${endpoint}#http` }],
+    });
+  }
+  if (summary.sse) {
+    findings.push({
+      id: "perf.sse.metrics",
+      area: "performance",
+      severity: "info",
+      title: "SSE timing",
+      description: buildSseDescription(summary.sse),
+      evidence: [{ type: "url", ref: `${endpoint}#sse` }],
+    });
+  }
+  if (summary.websocket) {
+    findings.push({
+      id: "perf.websocket.activity",
+      area: "performance",
+      severity: "info",
+      title: "WebSocket activity",
+      description: buildWebSocketDescription(summary.websocket),
+      evidence: [{ type: "url", ref: `${endpoint}#websocket` }],
+    });
+  }
+  return findings;
+}
+
+function createHarness(ctx: DiagnosticContext): PerformanceHarness {
+  const baseHeaders = ctx.transport?.headers?.() ?? ctx.headers ?? {};
+  return {
+    now: () => performance.now(),
+    fetch: (input, init) => fetch(input, init),
+    sseProbe: ctx.sseProbe,
+    transcript: () => ctx.transport?.transcript() ?? null,
+    headers: () => ({ ...baseHeaders }),
+  };
+}
+
+async function measureHttp(
+  ctx: DiagnosticContext,
+  harness: PerformanceHarness,
+): Promise<HttpMetrics | undefined> {
+  return await withSpan("performance.http", { endpoint: ctx.endpoint }, async () => {
+    const headers = {
+      "content-type": "application/json",
+      accept: "application/json, text/event-stream",
+      ...harness.headers(),
+    };
+    const started = harness.now();
+    let status: number | undefined;
+    try {
+      const response = await harness.fetch(ctx.endpoint, {
+        method: "POST",
+        headers,
+        body: "{}",
+      });
+      status = response.status;
+    } catch {
+      status = undefined;
+    }
+    const latencyMs = harness.now() - started;
+    return { latencyMs, status };
+  });
+}
+
+async function measureSse(
+  ctx: DiagnosticContext,
+  harness: PerformanceHarness,
+): Promise<SseMetrics | undefined> {
+  return await withSpan("performance.sse", { endpoint: ctx.endpoint }, async () => {
+    try {
+      const result = await harness.sseProbe(ctx.endpoint, {
+        timeoutMs: 5000,
+        headers: harness.headers(),
+      });
+      return {
+        firstEventMs: result.firstEventMs,
+        heartbeatMs: result.heartbeatMs,
+        jitterMs: calculateSseJitter(result.firstEventMs, result.heartbeatMs),
+      };
+    } catch {
+      return undefined;
+    }
+  });
+}
+
+function measureWebSocket(transcript: TransportTranscript | null): WebSocketMetrics | undefined {
+  if (!transcript) {
+    return undefined;
+  }
+  const exchanges = transcript.exchanges ?? [];
+  if (exchanges.length === 0) {
+    return undefined;
+  }
+  const timestamps = exchanges
+    .map((exchange) => Date.parse(exchange.timestamp))
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+  let maxGap = 0;
+  for (let i = 1; i < timestamps.length; i++) {
+    const gap = timestamps[i] - timestamps[i - 1];
+    if (gap > maxGap) {
+      maxGap = gap;
+    }
+  }
+  const reconnects = exchanges.filter((exchange) => exchange.method === "CONNECT").length - 1;
+  const messageCount = exchanges.filter((exchange) => exchange.method !== "CONNECT").length;
+  return {
+    messageCount,
+    maxGapMs: maxGap,
+    reconnects: Math.max(0, reconnects),
+  };
+}
+
+function calculateSseJitter(firstEvent?: number, heartbeat?: number): number | undefined {
+  if (firstEvent === undefined || heartbeat === undefined) {
+    return undefined;
+  }
+  const jitter = Math.abs(heartbeat - firstEvent);
+  return Number.isFinite(jitter) ? jitter : undefined;
+}
+
+function buildSseDescription(metrics: SseMetrics): string {
+  const parts: string[] = [];
+  if (metrics.firstEventMs !== undefined) {
+    parts.push(`first event ${metrics.firstEventMs}ms`);
+  }
+  if (metrics.heartbeatMs !== undefined) {
+    parts.push(`heartbeat ${metrics.heartbeatMs}ms`);
+  }
+  if (metrics.jitterMs !== undefined) {
+    parts.push(`jitter ${metrics.jitterMs}ms`);
+  }
+  return parts.join(", ") || "No SSE activity recorded";
+}
+
+function buildWebSocketDescription(metrics: WebSocketMetrics): string {
+  const parts = [`messages ${metrics.messageCount}`];
+  if (metrics.maxGapMs !== undefined) {
+    parts.push(`max gap ${metrics.maxGapMs}ms`);
+  }
+  parts.push(`reconnects ${metrics.reconnects}`);
+  return parts.join(", ");
+}
 
 async function performRealTimeMonitoring(
   ctx: import("../types.js").DiagnosticContext,

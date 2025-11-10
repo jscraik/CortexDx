@@ -4,6 +4,7 @@
  * Requirement 12.5: Maintain conversation context across sessions
  */
 
+import Database from "better-sqlite3";
 import type {
     ChatMessage,
     ConversationSession,
@@ -33,9 +34,13 @@ export interface ConversationExport {
 export class ConversationStorage {
     private storage = new Map<string, StoredConversation>();
     private persistencePath?: string;
+    private db?: Database;
 
     constructor(persistencePath?: string) {
         this.persistencePath = persistencePath;
+        if (persistencePath) {
+            this.initializeDatabase(persistencePath);
+        }
     }
 
     /**
@@ -54,8 +59,8 @@ export class ConversationStorage {
 
         this.storage.set(session.id, stored);
 
-        if (this.persistencePath) {
-            await this.persistToDisk();
+        if (this.db) {
+            this.persistToDatabase(stored);
         }
     }
 
@@ -94,8 +99,8 @@ export class ConversationStorage {
     async deleteConversation(sessionId: string): Promise<boolean> {
         const deleted = this.storage.delete(sessionId);
 
-        if (deleted && this.persistencePath) {
-            await this.persistToDisk();
+        if (deleted && this.db) {
+            this.deleteFromDatabase(sessionId);
         }
 
         return deleted;
@@ -136,8 +141,10 @@ export class ConversationStorage {
             imported++;
         }
 
-        if (this.persistencePath && imported > 0) {
-            await this.persistToDisk();
+        if (this.db && imported > 0) {
+            for (const conversation of exportData.conversations) {
+                this.persistToDatabase(conversation);
+            }
         }
 
         return imported;
@@ -157,8 +164,8 @@ export class ConversationStorage {
             }
         }
 
-        if (cleaned > 0 && this.persistencePath) {
-            await this.persistToDisk();
+        if (cleaned > 0 && this.db) {
+            this.deleteOlderThan(now - maxAgeMs);
         }
 
         return cleaned;
@@ -195,39 +202,100 @@ export class ConversationStorage {
      * Restore sessions from disk on startup
      */
     async restoreFromDisk(): Promise<number> {
-        if (!this.persistencePath) {
+        return this.restoreFromSQLite();
+    }
+
+    async restoreFromSQLite(): Promise<number> {
+        if (!this.db) {
             return 0;
         }
 
         try {
-            // In a real implementation, this would read from SQLite or JSON file
-            // For now, we'll use a simple JSON file approach
-            const fs = await import("node:fs/promises");
-            const data = await fs.readFile(this.persistencePath, "utf-8");
-            const exportData: ConversationExport = JSON.parse(data);
-
-            return await this.importConversations(exportData);
+            const rows = this.db.prepare(
+                "SELECT id, plugin_id as pluginId, context, state, start_time as startTime, last_activity as lastActivity, messages FROM conversations",
+            ).all();
+            let restored = 0;
+            for (const row of rows as StoredConversation[]) {
+                this.storage.set(row.id, {
+                    id: row.id,
+                    pluginId: row.pluginId,
+                    context: row.context,
+                    state: row.state,
+                    startTime: row.startTime,
+                    lastActivity: row.lastActivity,
+                    messages: row.messages,
+                });
+                restored++;
+            }
+            return restored;
         } catch (error) {
-            // File doesn't exist or is invalid - that's okay on first run
+            console.error("Failed to restore conversations from SQLite", error);
             return 0;
         }
     }
 
-    /**
-     * Persist current state to disk
-     */
-    private async persistToDisk(): Promise<void> {
-        if (!this.persistencePath) {
+    private initializeDatabase(path: string): void {
+        try {
+            this.db = new Database(path);
+            this.db.pragma("journal_mode = WAL");
+            this.db.prepare(
+                `CREATE TABLE IF NOT EXISTS conversations (
+                    id TEXT PRIMARY KEY,
+                    plugin_id TEXT NOT NULL,
+                    context TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    start_time INTEGER NOT NULL,
+                    last_activity INTEGER NOT NULL,
+                    messages TEXT NOT NULL
+                )`,
+            ).run();
+        } catch (error) {
+            console.error("Failed to initialize conversation database", error);
+            this.db = undefined;
+        }
+    }
+
+    private persistToDatabase(conversation: StoredConversation): void {
+        if (!this.db) {
             return;
         }
+        try {
+            this.db.prepare(
+                `INSERT INTO conversations (id, plugin_id, context, state, start_time, last_activity, messages)
+                 VALUES (@id, @pluginId, @context, @state, @startTime, @lastActivity, @messages)
+                 ON CONFLICT(id) DO UPDATE SET
+                    plugin_id=excluded.plugin_id,
+                    context=excluded.context,
+                    state=excluded.state,
+                    start_time=excluded.start_time,
+                    last_activity=excluded.last_activity,
+                    messages=excluded.messages`,
+            ).run(conversation);
+        } catch (error) {
+            console.error("Failed to persist conversation", error);
+        }
+    }
 
-        const exportData = await this.exportConversations();
-        const fs = await import("node:fs/promises");
-        await fs.writeFile(
-            this.persistencePath,
-            JSON.stringify(exportData, null, 2),
-            "utf-8",
-        );
+    private deleteFromDatabase(sessionId: string): void {
+        if (!this.db) {
+            return;
+        }
+        try {
+            this.db.prepare("DELETE FROM conversations WHERE id = ?").run(sessionId);
+        } catch (error) {
+            console.error("Failed to delete conversation", error);
+        }
+    }
+
+    private deleteOlderThan(threshold: number): void {
+        if (!this.db) {
+            return;
+        }
+        try {
+            this.db.prepare("DELETE FROM conversations WHERE last_activity < ?").run(threshold);
+        } catch (error) {
+            console.error("Failed to cleanup old conversations", error);
+        }
     }
 
     /**

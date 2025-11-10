@@ -1,22 +1,23 @@
-import { unlink } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ConversationStorage } from "../src/storage/conversation-storage.js";
 import type { ConversationSession, DevelopmentContext } from "../src/types.js";
 
 describe("Conversation Storage Tests", () => {
-    const testPersistencePath = "/tmp/test-conversations.json";
+    let persistenceDir: string;
+    let testPersistencePath: string;
     let storage: ConversationStorage;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        persistenceDir = await mkdtemp(join(tmpdir(), "insula-conv-"));
+        testPersistencePath = join(persistenceDir, "conversations.sqlite");
         storage = new ConversationStorage(testPersistencePath);
     });
 
     afterEach(async () => {
-        try {
-            await unlink(testPersistencePath);
-        } catch {
-            // File might not exist
-        }
+        await rm(persistenceDir, { recursive: true, force: true });
     });
 
     describe("Basic Storage Operations", () => {
@@ -304,7 +305,7 @@ describe("Conversation Storage Tests", () => {
 
             // Create a new storage instance to simulate restart
             const newStorage = new ConversationStorage(testPersistencePath);
-            const restored = await newStorage.restoreFromDisk();
+            const restored = await newStorage.restoreFromSQLite();
 
             expect(restored).toBe(1);
 

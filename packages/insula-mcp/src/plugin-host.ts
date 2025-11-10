@@ -4,7 +4,17 @@ import { fileURLToPath } from "node:url";
 import { httpAdapter } from "./adapters/http.js";
 import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
 import { createInspectorSession, type SharedSessionState } from "./context/inspector-session.js";
-import type { ConversationalPlugin, DevelopmentContext, DevelopmentPlugin, DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding, TransportTranscript } from "./types.js";
+import type {
+  ConversationalPlugin,
+  DevelopmentContext,
+  DevelopmentPlugin,
+  DiagnosticArtifacts,
+  DiagnosticContext,
+  DiagnosticPlugin,
+  EvidencePointer,
+  Finding,
+  TransportTranscript,
+} from "./types.js";
 
 export interface SandboxBudgets {
   timeMs: number;
@@ -182,7 +192,52 @@ function createFallbackCtx(
     sseProbe: session.sseProbe,
     evidence: (ev: EvidencePointer) => console.log("[evidence]", ev),
     deterministic,
-    transport: session.transport
+    transport: session.transport,
+    artifacts: loadArtifactsFromEnv(),
+  };
+}
+
+function loadArtifactsFromEnv(): DiagnosticArtifacts | undefined {
+  const raw =
+    process.env.CORTEXDX_MANIFESTS_JSON ?? process.env.INSULA_MANIFESTS_JSON;
+  if (!raw) return undefined;
+
+  if (!process.env.CORTEXDX_MANIFESTS_JSON && process.env.INSULA_MANIFESTS_JSON) {
+    console.warn(
+      "CORTEXDX_MANIFESTS_JSON is not set; falling back to deprecated INSULA_MANIFESTS_JSON",
+    );
+  }
+  try {
+    const data = JSON.parse(raw) as Array<unknown>;
+    if (!Array.isArray(data)) {
+      return undefined;
+    }
+    const dependencyManifests = data
+      .map((item) => normalizeManifestArtifact(item))
+      .filter((artifact): artifact is DiagnosticArtifacts["dependencyManifests"][number] => artifact !== null);
+    if (dependencyManifests.length === 0) {
+      return undefined;
+    }
+    return { dependencyManifests };
+  } catch (error) {
+    console.warn("Failed to parse CortexDx manifest artifact payload", error);
+    return undefined;
+  }
+}
+
+function normalizeManifestArtifact(value: unknown): DiagnosticArtifacts["dependencyManifests"][number] | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const candidate = value as { name?: unknown; encoding?: unknown; content?: unknown };
+  if (typeof candidate.name !== "string" || typeof candidate.content !== "string") {
+    return null;
+  }
+  const encoding = candidate.encoding === "base64" ? "base64" : "utf-8";
+  return {
+    name: candidate.name,
+    encoding,
+    content: candidate.content,
   };
 }
 
@@ -305,6 +360,10 @@ function handleWorkerMessage(
       .catch((err) => finish(err instanceof Error ? err : new Error(String(err))));
   }
 }
+
+export const __test = {
+  loadArtifactsFromEnv,
+};
 
 function isWorkerMessage(value: unknown): value is WorkerMessage {
   if (typeof value !== "object" || value === null) return false;

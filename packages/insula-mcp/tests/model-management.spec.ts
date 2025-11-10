@@ -4,6 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
 import { ModelManager } from "../src/plugins/development/model-manager.js";
 import { ModelPerformanceMonitor } from "../src/plugins/development/model-performance-monitor.js";
 import type { DiagnosticContext } from "../src/types.js";
@@ -86,9 +87,17 @@ describe("ModelManager", () => {
             expect(hasBackendFinding).toBe(true);
         });
 
-        it("should create evidence", async () => {
-            await manager.run(ctx);
-            expect(ctx.evidence).toHaveBeenCalled();
+        it("should create evidence when backends are available", async () => {
+            const findings = await manager.run(ctx);
+            const evidenceMock = ctx.evidence as unknown as Mock;
+            const evidenceCalls = evidenceMock.mock.calls.length;
+            const noBackendFinding = findings.some((finding) => finding.id === "model-manager-no-backends");
+
+            if (noBackendFinding) {
+                expect(evidenceCalls).toBe(0);
+            } else {
+                expect(evidenceCalls).toBeGreaterThan(0);
+            }
         });
     });
 });

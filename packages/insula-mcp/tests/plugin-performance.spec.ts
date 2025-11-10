@@ -1,94 +1,147 @@
-/**
- * Performance Plugin Test Suite
- * Tests for performance-related plugins and response time validation
- */
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+    PerformancePlugin,
+    buildPerformanceFindings,
+    measureTransports,
+    type PerformanceMeasurementOptions,
+} from "../src/plugins/performance.js";
+import type { DiagnosticContext, TransportTranscript } from "../src/types.js";
 
-import { describe, expect, it } from "vitest";
-import type { DiagnosticContext } from "../src/types.js";
+interface FakeHarnessOptions {
+    httpLatency?: number;
+    sse?: { firstEventMs?: number; heartbeatMs?: number };
+    websocketGaps?: number[];
+    status?: number;
+}
 
-const mockContext: DiagnosticContext = {
-    endpoint: "http://localhost:3000",
-    logger: () => { },
-    request: async () => ({ data: [], total: 0 }),
-    jsonrpc: async () => ({}),
-    sseProbe: async () => ({ ok: true }),
-    evidence: () => { },
-    deterministic: true
-};
+function createFakeHarness(options: FakeHarnessOptions = {}) {
+    let tick = 0;
+    const latency = options.httpLatency ?? 25;
+    return {
+        now: () => {
+            const current = tick;
+            tick += latency;
+            return current;
+        },
+        fetch: vi.fn(async () => new Response("{}", { status: options.status ?? 200 })),
+        sseProbe: vi.fn(async () => ({
+            ok: true,
+            firstEventMs: options.sse?.firstEventMs,
+            heartbeatMs: options.sse?.heartbeatMs,
+        })),
+        transcript: (): TransportTranscript => buildTranscript(options.websocketGaps ?? []),
+        headers: () => ({}),
+    };
+}
 
-describe("Performance Profiler Plugin", () => {
-    it("should measure response times with millisecond precision", async () => {
-        const start = performance.now();
-        await mockContext.jsonrpc("test");
-        const duration = performance.now() - start;
-
-        expect(duration).toBeGreaterThanOrEqual(0);
-        expect(typeof duration).toBe("number");
-    });
-
-    it("should identify performance bottlenecks", () => {
-        const metrics = {
-            responseTime: 150,
-            threshold: 100
+function buildTranscript(gaps: number[]): TransportTranscript {
+    let cursor = 0;
+    const exchanges = gaps.map((gap, index) => {
+        cursor += gap;
+        return {
+            method: index === 0 ? "CONNECT" : "MESSAGE",
+            timestamp: new Date(cursor).toISOString(),
         };
-        const isBottleneck = metrics.responseTime > metrics.threshold;
-        expect(isBottleneck).toBe(true);
     });
+    return { sessionId: "ws", exchanges } as TransportTranscript;
+}
 
-    it("should track real-time monitoring intervals", () => {
-        const monitoringInterval = 1000; // 1 second
-        expect(monitoringInterval).toBe(1000);
-        expect(monitoringInterval).toBeGreaterThan(0);
+function buildMeasurementOptions(options: FakeHarnessOptions): PerformanceMeasurementOptions {
+    const harness = createFakeHarness(options);
+    return {
+        harness,
+    };
+}
+
+beforeEach(() => {
+    vi.restoreAllMocks();
+});
+
+describe("measureTransports", () => {
+    it("captures latency and transport metrics deterministically", async () => {
+        const ctx = createDiagnosticContext();
+        const options = buildMeasurementOptions({
+            httpLatency: 30,
+            sse: { firstEventMs: 120, heartbeatMs: 45 },
+            websocketGaps: [0, 50, 120, 200],
+        });
+
+        const metrics = await measureTransports(ctx, options);
+
+        expect(metrics.http?.latencyMs).toBe(30);
+        expect(metrics.sse?.firstEventMs).toBe(120);
+        expect(metrics.sse?.heartbeatMs).toBe(45);
+        expect(metrics.sse?.jitterMs).toBe(75);
+        expect(metrics.websocket?.maxGapMs).toBe(200);
     });
 });
 
-describe("Performance Testing Plugin", () => {
-    it("should validate response time requirements", () => {
-        const requirements = {
-            llmResponse: 2000,      // <2s
-            licenseCheck: 3000,     // <3s
-            protocolAnalysis: 30000, // <30s
-            debugging: 10000        // <10s
-        };
+describe("buildPerformanceFindings", () => {
+    it("emits findings with evidence for each transport", () => {
+        const findings = buildPerformanceFindings({
+            http: { latencyMs: 40, status: 200 },
+            sse: { firstEventMs: 120, heartbeatMs: 60, jitterMs: 15 },
+            websocket: { messageCount: 3, maxGapMs: 80, reconnects: 0 },
+        }, "https://mcp.local");
 
-        expect(requirements.llmResponse).toBeLessThanOrEqual(2000);
-        expect(requirements.licenseCheck).toBeLessThanOrEqual(3000);
-        expect(requirements.protocolAnalysis).toBeLessThanOrEqual(30000);
-    });
-
-    it("should measure throughput and load capacity", () => {
-        const loadMetrics = {
-            requestsPerSecond: 100,
-            concurrentConnections: 50,
-            averageResponseTime: 50
-        };
-
-        expect(loadMetrics.requestsPerSecond).toBeGreaterThan(0);
-        expect(loadMetrics.concurrentConnections).toBeGreaterThan(0);
-        expect(loadMetrics.averageResponseTime).toBeLessThan(1000);
+        expect(findings).toHaveLength(3);
+        expect(findings.map((f) => f.area)).toEqual([
+            "performance",
+            "performance",
+            "performance",
+        ]);
+        expect(findings[0]?.evidence[0]?.ref).toContain("http");
+        expect(findings[1]?.description).toContain("jitter");
+        expect(findings[2]?.description).toContain("messages");
     });
 });
 
-describe("Rate Limit Plugin", () => {
-    it("should enforce rate limiting thresholds", () => {
-        const rateLimit = {
-            maxRequests: 100,
-            windowMs: 60000, // 1 minute
-            currentRequests: 95
+describe("PerformancePlugin", () => {
+    it("uses harness metrics when running in deterministic tests", async () => {
+        const ctx = createDiagnosticContext();
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValue(new Response("{}", { status: 200 }));
+        const nowValues = [0, 30, 30];
+        const nowMock = vi.spyOn(performance, "now").mockImplementation(() => {
+            const next = nowValues.shift();
+            return next ?? 30;
+        });
+        const sseProbeMock = vi.fn().mockResolvedValue({
+            ok: true,
+            firstEventMs: 120,
+            heartbeatMs: 45,
+        });
+        ctx.sseProbe = sseProbeMock;
+        ctx.transport = {
+            transcript: () => buildTranscript([0, 50, 120, 200]),
+            headers: () => ({}),
         };
 
-        const isNearLimit = rateLimit.currentRequests >= rateLimit.maxRequests * 0.9;
-        expect(isNearLimit).toBe(true);
-    });
+        const findings = await PerformancePlugin.run(ctx);
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(sseProbeMock).toHaveBeenCalledTimes(1);
+        expect(findings).toHaveLength(3);
+        expect(findings.every((finding) => finding.area === "performance")).toBe(true);
+        expect(findings.map((finding) => finding.id)).toEqual([
+            "perf.http.latency",
+            "perf.sse.metrics",
+            "perf.websocket.activity",
+        ]);
 
-    it("should track request counts per time window", () => {
-        const requestLog = [
-            { timestamp: Date.now() - 5000, count: 10 },
-            { timestamp: Date.now() - 3000, count: 15 },
-            { timestamp: Date.now() - 1000, count: 20 }
-        ];
-
-        const totalRequests = requestLog.reduce((sum, log) => sum + log.count, 0);
-        expect(totalRequests).toBe(45);
+        fetchMock.mockRestore();
+        nowMock.mockRestore();
     });
 });
+
+function createDiagnosticContext(): DiagnosticContext {
+    return {
+        endpoint: "https://mcp.local", 
+        logger: vi.fn(),
+        request: vi.fn(),
+        jsonrpc: vi.fn().mockResolvedValue({}),
+        sseProbe: vi.fn().mockResolvedValue({ ok: true }),
+        evidence: vi.fn(),
+        deterministic: true,
+    };
+}

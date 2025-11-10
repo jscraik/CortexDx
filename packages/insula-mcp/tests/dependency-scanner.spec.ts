@@ -4,11 +4,17 @@
  * Requirements: 21.1, 21.2, 21.3, 21.4, 21.5
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DependencyScannerPlugin } from "../src/plugins/dependency-scanner.js";
 import { CVEScanner } from "../src/security/cve-scanner.js";
 import { DependencyRecommendations } from "../src/security/dependency-recommendations.js";
 import { FlictIntegration } from "../src/security/flict-integration.js";
 import { SBOMGenerator, type PackageManifest } from "../src/security/sbom-generator.js";
+import type { DiagnosticContext } from "../src/types.js";
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 describe("Dependency Scanner Plugin", () => {
     describe("SBOM Generation (Req 21.1)", () => {
@@ -126,7 +132,14 @@ describe("Dependency Scanner Plugin", () => {
 
     describe("CVE Scanning (Req 21.3)", () => {
         it("should scan components for CVEs", async () => {
-            const scanner = new CVEScanner();
+            const scanner = new CVEScanner({
+                fetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: async () => ({
+                        vulns: [],
+                    }),
+                }) as unknown as typeof fetch,
+            });
 
             const components = [
                 {
@@ -144,7 +157,22 @@ describe("Dependency Scanner Plugin", () => {
         });
 
         it("should calculate risk levels correctly", async () => {
-            const scanner = new CVEScanner();
+            const scanner = new CVEScanner({
+                fetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: async () => ({
+                        vulns: [
+                            {
+                                id: "OSV-123",
+                                severity: [{ type: "CVSS_V3", score: "9.1" }],
+                                summary: "Critical issue",
+                                affected: [],
+                                references: [],
+                            },
+                        ],
+                    }),
+                }) as unknown as typeof fetch,
+            });
 
             const components = [
                 {
@@ -164,7 +192,33 @@ describe("Dependency Scanner Plugin", () => {
         });
 
         it("should generate remediation recommendations", async () => {
-            const scanner = new CVEScanner();
+            const scanner = new CVEScanner({
+                fetch: vi.fn().mockResolvedValue({
+                    ok: true,
+                    json: async () => ({
+                        vulns: [
+                            {
+                                id: "OSV-456",
+                                severity: [{ type: "CVSS_V3", score: "6.5" }],
+                                summary: "Moderate issue",
+                                affected: [
+                                    {
+                                        ranges: [
+                                            {
+                                                events: [
+                                                    { introduced: "0" },
+                                                    { fixed: "1.2.0" },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                                references: [{ url: "https://example.com/cve" }],
+                            },
+                        ],
+                    }),
+                }) as unknown as typeof fetch,
+            });
 
             const components = [
                 {
@@ -181,6 +235,82 @@ describe("Dependency Scanner Plugin", () => {
                 expect(match.remediationRecommendations).toBeDefined();
                 expect(Array.isArray(match.remediationRecommendations)).toBe(true);
             }
+        });
+        it("should reuse cached OSV responses for identical components", async () => {
+            const fetchMock = vi.fn().mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                    vulns: [
+                        {
+                            id: "OSV-789",
+                            severity: [{ type: "CVSS_V3", score: "5.0" }],
+                            summary: "Sample vulnerability",
+                            affected: [],
+                            references: [],
+                        },
+                    ],
+                }),
+            });
+
+            const scanner = new CVEScanner({ fetch: fetchMock as unknown as typeof fetch, ttlMs: 60_000 });
+            const component = {
+                type: "library" as const,
+                name: "cached-package",
+                version: "1.0.0",
+                purl: "pkg:npm/cached-package@1.0.0",
+            };
+
+            await scanner.scanComponents([component]);
+            await scanner.scanComponents([component]);
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it("should emit fallback results when OSV is unavailable", async () => {
+            const fetchMock = vi.fn().mockResolvedValue({ ok: false });
+            const scanner = new CVEScanner({ fetch: fetchMock as unknown as typeof fetch });
+            const component = {
+                type: "library" as const,
+                name: "offline-package",
+                version: "1.0.0",
+                purl: "pkg:npm/offline-package@1.0.0",
+            };
+
+            const result = await scanner.scanComponents([component]);
+            expect(result.totalCVEs).toBe(0);
+        });
+    });
+
+    describe("Manifest ingestion", () => {
+        it("should generate findings from uploaded manifests", async () => {
+            const ctx: DiagnosticContext = {
+                endpoint: "https://example.mcp",
+                logger: vi.fn(),
+                request: vi.fn(),
+                jsonrpc: vi.fn().mockResolvedValue({}),
+                sseProbe: vi.fn().mockResolvedValue({ ok: true }),
+                evidence: vi.fn(),
+                deterministic: true,
+                artifacts: {
+                    dependencyManifests: [
+                        {
+                            name: "package.json",
+                            encoding: "utf-8",
+                            content: JSON.stringify({
+                                name: "demo",
+                                version: "1.0.0",
+                                dependencies: { axios: "^1.6.0" },
+                            }),
+                        },
+                    ],
+                },
+            };
+
+            const findings = await DependencyScannerPlugin.run(ctx);
+            const sbomFinding = findings.find((finding) => finding.id.startsWith("sbom-generated"));
+
+            expect(sbomFinding).toBeDefined();
+            expect(sbomFinding?.evidence[0]?.ref).toBe("package.json");
         });
     });
 
