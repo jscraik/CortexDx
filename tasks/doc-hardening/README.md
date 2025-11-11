@@ -15,6 +15,7 @@
 - **Traceability**: [`verification/trace.log`](./verification/trace.log) lists exact command invocations and notable outcomes.
 - **Automation metadata**: [`json/memory-ids.json`](./json/memory-ids.json) seeds downstream workflows.
 
+> **Note:** Evidence file names use the compact ISO-8601 format `YYYYMMDDTHHMMSSZ` (e.g., `20251110T234206Z`) for filesystem compatibility, while `trace.log` uses the extended format `YYYY-MM-DDTHH:MM:SSZ` (e.g., `2025-11-10T23:42:08Z`) for human readability.
 ## Next Steps
 - Investigate failing Vitest suites surfaced in `20251110T234206Z-pnpm-test.log` before promoting the evidence bundle to governance sign-off.
 - Extend `reports/` with summarized findings or dashboards once remediation work begins.
