@@ -1,0 +1,111 @@
+Scope: all 2 workspace projects
+ WARN  Moving @biomejs/biome that was installed by a different package manager to "node_modules/.ignored"
+ WARN  Moving @nx/js that was installed by a different package manager to "node_modules/.ignored"
+ WARN  Moving nx that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @types/better-sqlite3 that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @vitest/coverage-v8 that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @types/node that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @types/ws that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @axe-core/playwright that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving jsdom that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving playwright that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving rimraf that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving tsup that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving tsx that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving typescript that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving vitest that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving yaml that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @clinic/bubbleprof that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @clinic/doctor that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @clinic/flame that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @langchain/core that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @langchain/langgraph that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @modelcontextprotocol/inspector that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @modelcontextprotocol/sdk that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving @opentelemetry/api that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving better-sqlite3 that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving clinic that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving commander that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving eventsource-parser that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving kleur that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving pino that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving ws that was installed by a different package manager to "node_modules/.ignored"
+packages/insula-mcp                      |  WARN  Moving zod that was installed by a different package manager to "node_modules/.ignored"
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 18, reused 0, downloaded 8, added 0
+Progress: resolved 30, reused 0, downloaded 20, added 0
+Progress: resolved 30, reused 0, downloaded 29, added 0
+Progress: resolved 31, reused 0, downloaded 29, added 0
+Progress: resolved 31, reused 0, downloaded 30, added 0
+Progress: resolved 32, reused 0, downloaded 30, added 0
+Progress: resolved 61, reused 0, downloaded 43, added 0
+Progress: resolved 85, reused 0, downloaded 59, added 0
+
+   ╭───────────────────────────────────────────────────────────────────╮
+   │                                                                   │
+   │                Update available! 9.12.2 → 10.21.0.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.21.0   │
+   │              Run "pnpm add -g @pnpm/exe" to update.               │
+   │                                                                   │
+   │         Follow @pnpmjs for updates: https://x.com/pnpmjs          │
+   │                                                                   │
+   ╰───────────────────────────────────────────────────────────────────╯
+
+Progress: resolved 111, reused 0, downloaded 85, added 0
+Progress: resolved 137, reused 0, downloaded 110, added 0
+Progress: resolved 164, reused 0, downloaded 133, added 0
+ WARN  GET https://registry.npmjs.org/@babel/preset-typescript/-/preset-typescript-7.28.5.tgz error (ERR_PNPM_FETCH_502). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 216, reused 0, downloaded 173, added 0
+Progress: resolved 252, reused 0, downloaded 210, added 0
+Progress: resolved 295, reused 0, downloaded 252, added 0
+Progress: resolved 328, reused 0, downloaded 285, added 0
+Progress: resolved 362, reused 0, downloaded 316, added 0
+Progress: resolved 402, reused 0, downloaded 355, added 0
+Progress: resolved 444, reused 0, downloaded 394, added 0
+Progress: resolved 512, reused 0, downloaded 424, added 0
+Progress: resolved 566, reused 0, downloaded 468, added 0
+Progress: resolved 619, reused 0, downloaded 515, added 0
+Progress: resolved 655, reused 0, downloaded 550, added 0
+Progress: resolved 717, reused 0, downloaded 609, added 0
+Progress: resolved 769, reused 0, downloaded 659, added 0
+Progress: resolved 842, reused 0, downloaded 703, added 0
+Progress: resolved 893, reused 0, downloaded 753, added 0
+Progress: resolved 959, reused 0, downloaded 817, added 0
+Progress: resolved 1037, reused 0, downloaded 886, added 0
+Progress: resolved 1100, reused 0, downloaded 947, added 0
+ WARN  GET https://registry.npmjs.org/fill-range/-/fill-range-7.1.1.tgz error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 1153, reused 0, downloaded 999, added 0
+Progress: resolved 1208, reused 0, downloaded 1044, added 0
+Progress: resolved 1253, reused 0, downloaded 1089, added 0
+Progress: resolved 1306, reused 0, downloaded 1140, added 0
+Progress: resolved 1340, reused 0, downloaded 1203, added 0
+ WARN  GET https://registry.npmjs.org/inline-source-map error (502). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 1341, reused 0, downloaded 1250, added 0
+Progress: resolved 1341, reused 0, downloaded 1256, added 0
+Progress: resolved 1341, reused 0, downloaded 1257, added 0
+Progress: resolved 1341, reused 0, downloaded 1258, added 0
+Progress: resolved 1342, reused 0, downloaded 1258, added 0
+ WARN  9 deprecated subdependencies found: glob@7.2.3, har-validator@5.1.5, inflight@1.0.6, node-domexception@1.0.0, request@2.88.2, rimraf@3.0.2, source-map@0.8.0-beta.0, sourcemap-codec@1.4.8, uuid@3.4.0
+Packages: +1259
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1342, reused 0, downloaded 1258, added 973
+Progress: resolved 1342, reused 0, downloaded 1259, added 1259, done
+.../esbuild@0.21.5/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.25.12/node_modules/esbuild postinstall$ node install.js
+.../node_modules/@biomejs/biome postinstall$ node scripts/postinstall.js
+.../node_modules/better-sqlite3 install$ prebuild-install || node-gyp rebuild --release
+.../.pnpm/nx@19.8.4/node_modules/nx postinstall$ node ./bin/post-install
+.../esbuild@0.25.12/node_modules/esbuild postinstall: Done
+.../esbuild@0.21.5/node_modules/esbuild postinstall: Done
+.../node_modules/@biomejs/biome postinstall: Done
+.../node_modules/better-sqlite3 install: Done
+.../.pnpm/nx@19.8.4/node_modules/nx postinstall: Done
+.../es5-ext@0.10.64/node_modules/es5-ext postinstall$  node -e "try{require('./_postinstall')}catch(e){}" || exit 0
+.../es5-ext@0.10.64/node_modules/es5-ext postinstall: Done
+
+devDependencies:
++ @biomejs/biome 1.9.4 (2.3.4 is available)
++ @nx/js 19.8.4 (22.0.3 is available)
++ nx 19.8.4 (22.0.3 is available)
+
+Done in 1m 1.1s

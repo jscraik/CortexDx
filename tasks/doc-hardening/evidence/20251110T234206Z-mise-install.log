@@ -1,0 +1,21 @@
+mise mise 2025.10.16 by @jdx install
+mise node@20.11.1    install
+mise node@20.11.1    download node-v20.11.1-linux-x64.tar.gz
+mise pnpm@9.12.2     install
+mise pnpm@9.12.2     download pnpm-linux-x64
+gpg: Signature made Wed Feb 14 17:32:40 2024 UTC
+gpg:                using RSA key 890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4
+gpg: Good signature from "RafaelGSS <rafael.nunu@hotmail.com>" [expired]
+mise node@20.11.1    checksum node-v20.11.1-linux-x64.tar.gz
+mise node@20.11.1    record size node-v20.11.1-linux-x64.tar.gz
+mise node@20.11.1    extract node-v20.11.1-linux-x64.tar.gz
+mise node@20.11.1    node -v
+mise node@20.11.1    v20.11.1
+mise node@20.11.1    npm -v
+mise node@20.11.1    10.2.4
+mise node@20.11.1  ✓ installed
+mise pnpm@9.12.2     generate checksum pnpm-linux-x64
+mise pnpm@9.12.2     record size pnpm-linux-x64
+mise pnpm@9.12.2     extract pnpm-linux-x64
+mise pnpm@9.12.2   ✓ installed
+mise mise 2025.10.16 by @jdx ✓ done
