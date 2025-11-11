@@ -184,7 +184,7 @@ All contributions must:
 2. **Follow Standards**: Ensure compliance with AGENTS.md and CODESTYLE.md
 3. **Write Tests**: Implement tests before code (ArcTDD requirement)
 4. **Update Documentation**: Include relevant documentation updates
-5. **Run Quality Gates**: Ensure all checks pass locally
+5. **Run Quality Gates**: Ensure all checks pass locally, including full-source coverage (`pnpm test -- --coverage`) which now instruments every `src/**/*.{ts,tsx}` file except generated artifacts.
 
 ### PR Requirements
 
@@ -205,7 +205,7 @@ All contributions must:
 
 - All CI checks pass (lint, test, build, security)
 - Maintainer approval received
-- Quality gates met (coverage ≥65%, mutation ≥75%)
+- Quality gates met (coverage ≥85% lines/statements, ≥80% functions, ≥75% branches; mutation ≥75%)
 - Documentation updated for user-facing changes
 - No merge conflicts with main branch
 

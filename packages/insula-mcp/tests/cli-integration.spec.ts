@@ -141,7 +141,7 @@ describe('CLI Self-Healing Commands', () => {
           method: 'POST',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'User-Agent': expect.stringContaining('Insula'),
+            'User-Agent': expect.stringContaining('CortexDx'),
           }),
         })
       );
@@ -542,7 +542,7 @@ describe('CLI Self-Healing Commands', () => {
           method: 'POST',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'User-Agent': expect.stringContaining('Insula'),
+            'User-Agent': expect.stringContaining('CortexDx'),
           }),
         })
       );

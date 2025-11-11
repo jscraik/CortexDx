@@ -8,9 +8,15 @@ import type {
   ProjectContext,
 } from "../../types.js";
 
-const HANDSHAKE_FILES = [
-  "packages/cortexdx/src/adapters/jsonrpc.ts",
-  "packages/cortexdx/src/adapters/sse.ts",
+const HANDSHAKE_FILE_OPTIONS: Array<readonly [string, ...string[]]> = [
+  [
+    "packages/insula-mcp/src/adapters/jsonrpc.ts",
+    "packages/cortexdx/src/adapters/jsonrpc.ts",
+  ],
+  [
+    "packages/insula-mcp/src/adapters/sse.ts",
+    "packages/cortexdx/src/adapters/sse.ts",
+  ],
 ];
 
 const REQUIRED_DEPENDENCIES = [
@@ -27,7 +33,10 @@ const SIGNAL_KEYWORDS = [
 function evaluateHandshake(project?: ProjectContext): Finding | null {
   const files = project?.sourceFiles ?? [];
   if (files.length === 0) return null;
-  const missing = HANDSHAKE_FILES.filter((file) => !files.includes(file));
+  const fileSet = new Set(files);
+  const missing = HANDSHAKE_FILE_OPTIONS.flatMap((options) =>
+    options.some((candidate) => fileSet.has(candidate)) ? [] : [options[0]]
+  );
   if (missing.length === 0) return null;
   return {
     id: "self_improvement.handshake_gaps",

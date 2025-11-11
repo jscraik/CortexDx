@@ -697,7 +697,7 @@ describe("MCP Tool Exposure (Req 17.1, 17.5)", () => {
 
     it("should include execute plugin tool", () => {
         const tools = createPluginOrchestrationTools();
-        const executeTool = tools.find((t) => t.name === "insula_execute_plugin");
+        const executeTool = tools.find((t) => t.name === "cortexdx_execute_plugin");
 
         expect(executeTool).toBeDefined();
         expect(executeTool?.inputSchema.properties).toHaveProperty("pluginId");
@@ -707,7 +707,7 @@ describe("MCP Tool Exposure (Req 17.1, 17.5)", () => {
     it("should include execute parallel tool", () => {
         const tools = createPluginOrchestrationTools();
         const parallelTool = tools.find(
-            (t) => t.name === "insula_execute_parallel",
+            (t) => t.name === "cortexdx_execute_parallel",
         );
 
         expect(parallelTool).toBeDefined();
@@ -723,7 +723,7 @@ describe("MCP Tool Exposure (Req 17.1, 17.5)", () => {
 
     it("should execute plugin tool", async () => {
         const tools = createPluginOrchestrationTools();
-        const executeTool = tools.find((t) => t.name === "insula_execute_plugin");
+        const executeTool = tools.find((t) => t.name === "cortexdx_execute_plugin");
 
         if (!executeTool) {
             throw new Error("Execute plugin tool not found");
@@ -746,7 +746,7 @@ describe("MCP Tool Exposure (Req 17.1, 17.5)", () => {
 
     it("should return structured diagnostic results", async () => {
         const tools = createPluginOrchestrationTools();
-        const executeTool = tools.find((t) => t.name === "insula_execute_plugin");
+        const executeTool = tools.find((t) => t.name === "cortexdx_execute_plugin");
 
         if (!executeTool) {
             throw new Error("Execute plugin tool not found");

@@ -83,7 +83,7 @@ describe("Report Management Tests", () => {
             const metadata = await reportManager.storeReport(report);
             const retrieved = await reportManager.retrieveReport(metadata.id, "markdown");
 
-            expect(retrieved).toContain("# Insula MCP Diagnostic Report");
+            expect(retrieved).toContain("# CortexDx Diagnostic Report");
             expect(retrieved).toContain("test-session-3");
             expect(retrieved).toContain("performance-test");
         });
@@ -102,7 +102,7 @@ describe("Report Management Tests", () => {
             const retrieved = await reportManager.retrieveReport(metadata.id, "html");
 
             expect(retrieved).toContain("<!DOCTYPE html>");
-            expect(retrieved).toContain("Insula MCP Diagnostic Report");
+            expect(retrieved).toContain("CortexDx Diagnostic Report");
             expect(retrieved).toContain("test-session-4");
         });
     });
