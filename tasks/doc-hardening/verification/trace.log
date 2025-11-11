@@ -1,0 +1,10 @@
+2025-11-10T23:41:50Z COMMAND: mise trust
+2025-11-10T23:42:08Z COMMAND: mise install
+2025-11-10T23:42:15Z COMMAND: node --version
+2025-11-10T23:42:24Z COMMAND: mise exec -- pnpm --version
+2025-11-10T23:42:28Z COMMAND: mise exec -- pnpm exec nx --version
+2025-11-10T23:42:32Z COMMAND: mise exec -- pnpm install
+2025-11-10T23:43:38Z COMMAND: mise exec -- pnpm lint
+2025-11-10T23:43:45Z COMMAND: mise exec -- pnpm test
+2025-11-10T23:45:44Z NOTE: pnpm test aborted via SIGINT after failures (see evidence log)
+2025-11-10T23:45:47Z COMMAND: mise exec -- pnpm build

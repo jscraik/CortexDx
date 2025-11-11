@@ -22,6 +22,7 @@ alwaysApply: true
   - Evidence link (comment URL or screenshot): __________________________________
   - Multi-package guard respected (`skip-release` absent when >1 published package changes): ✅ / Needs fix
 - [ ] **[BLOCKER] Vibe-check evidence:** Logs include `brAInwav-vibe-check` for plan→act gates with `--with-academic-research` flag and research evidence in `logs/academic-research/findings.json`.
+- [ ] **Doc-hardening evidence archived:** Reviewer confirms the PR links to the latest timestamped logs under `tasks/doc-hardening/evidence/` (lint/test/build) and cites `tasks/doc-hardening/verification/trace.log` for command provenance.
 - [ ] **[BLOCKER] Time Freshness Guard:** Dates in PR/specs are anchored to harness "today" and expressed in ISO-8601; no ambiguous "yesterday/last week".
 - [ ] **[BLOCKER] Danger cleared:** PR body contains Narrated diff, full Evidence Triplet, and `CHARTER_SHA256`; `blocked:charter` label absent.
 - [ ] **[BLOCKER] Charter propagation verified:** If `/.cortex/rules/CHARTER_FRAGMENT.md` or related governance docs change, confirm `pnpm charter:inject` + `pnpm charter:validate` ran, CODESTYLE/reviewer docs were updated, and the Danger comment links to the Apply Waiver workflow. Evidence pointer: ____________________

@@ -1,0 +1,237 @@
+
+> cortexdx-workspace@ test /workspace/CortexDx
+> NX_CLOUD=false nx run cortexdx:test
+
+
+ NX   Running target test for project cortexdx and 1 task it depends on:
+
+
+
+> nx run cortexdx:build
+
+> pnpm --dir packages/insula-mcp run build
+
+
+> @brainwav/cortexdx@1.0.0 build /workspace/CortexDx/packages/insula-mcp
+> tsup
+
+[34mCLI[39m Building entry: src/cli.ts, src/index.ts, src/server.ts, src/adapters/stdio-wrapper.ts, src/plugins/index.ts, src/workers/sandbox.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.0
+[34mCLI[39m Using tsup config: /workspace/CortexDx/packages/insula-mcp/tsup.config.ts
+[34mCLI[39m Target: node20
+[34mCLI[39m Cleaning output folder
+[34mESM[39m Build start
+[34mDTS[39m Build start
+[32mESM[39m [1mdist/adapters/stdio-wrapper.js     [22m[32m8.82 KB[39m
+[32mESM[39m [1mdist/index.js                      [22m[32m191.72 KB[39m
+[32mESM[39m [1mdist/workers/sandbox.js            [22m[32m126.31 KB[39m
+[32mESM[39m [1mdist/plugins/index.js              [22m[32m271.22 KB[39m
+[32mESM[39m [1mdist/cli.js                        [22m[32m318.41 KB[39m
+[32mESM[39m [1mdist/server.js                     [22m[32m629.29 KB[39m
+[32mESM[39m [1mdist/adapters/stdio-wrapper.js.map [22m[32m16.58 KB[39m
+[32mESM[39m [1mdist/index.js.map                  [22m[32m505.67 KB[39m
+[32mESM[39m [1mdist/workers/sandbox.js.map        [22m[32m374.82 KB[39m
+[32mESM[39m [1mdist/plugins/index.js.map          [22m[32m680.98 KB[39m
+[32mESM[39m [1mdist/cli.js.map                    [22m[32m709.72 KB[39m
+[32mESM[39m [1mdist/server.js.map                 [22m[32m1.29 MB[39m
+[32mESM[39m ⚡️ Build success in 716ms
+✓ Web assets copied to dist/web
+[32mDTS[39m ⚡️ Build success in 10718ms
+[32mDTS[39m [1mdist/cli.d.ts                    [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist/server.d.ts                 [22m[32m346.00 B[39m
+[32mDTS[39m [1mdist/adapters/stdio-wrapper.d.ts [22m[32m1.08 KB[39m
+[32mDTS[39m [1mdist/plugins/index.d.ts          [22m[32m6.08 KB[39m
+[32mDTS[39m [1mdist/index.d.ts                  [22m[32m9.59 KB[39m
+[32mDTS[39m [1mdist/workers/sandbox.d.ts        [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist/types-BNYemhKS.d.ts         [22m[32m12.29 KB[39m
+
+> nx run cortexdx:test
+
+> pnpm --dir packages/insula-mcp run test
+
+
+> @brainwav/cortexdx@1.0.0 test /workspace/CortexDx/packages/insula-mcp
+> vitest --run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90m/workspace/CortexDx/packages/insula-mcp[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m tests/langgraph-integration.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 738[2mms[22m[39m
+ [32m✓[39m tests/pattern-learning-system.spec.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 783[2mms[22m[39m
+ [31m❯[39m tests/plugin-orchestration.spec.ts [2m([22m[2m32 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[90m 49[2mms[22m[39m
+[31m   [31m×[31m MCP Tool Exposure (Req 17.1, 17.5)[2m > [22mshould include execute plugin tool[90m 9[2mms[22m[31m[39m
+[31m     → expected undefined to be defined[39m
+[31m   [31m×[31m MCP Tool Exposure (Req 17.1, 17.5)[2m > [22mshould include execute parallel tool[90m 1[2mms[22m[31m[39m
+[31m     → expected undefined to be defined[39m
+[31m   [31m×[31m MCP Tool Exposure (Req 17.1, 17.5)[2m > [22mshould execute plugin tool[90m 0[2mms[22m[31m[39m
+[31m     → Execute plugin tool not found[39m
+[31m   [31m×[31m MCP Tool Exposure (Req 17.1, 17.5)[2m > [22mshould return structured diagnostic results[90m 0[2mms[22m[31m[39m
+[31m     → Execute plugin tool not found[39m
+ [32m✓[39m tests/security-audit.spec.ts [2m([22m[2m42 tests[22m[2m)[22m[90m 25[2mms[22m[39m
+ [31m❯[39m tests/self-improvement.spec.ts [2m([22m[2m22 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 50[2mms[22m[39m
+[31m   [31m×[31m Handshake Instrumentation Analysis (Req 15.1)[2m > [22mdetects missing jsonrpc.ts adapter file[90m 20[2mms[22m[31m[39m
+[31m     → expected [ { type: 'file', …(1) }, …(1) ] to have a length of 1 but got 2[39m
+[31m   [31m×[31m Handshake Instrumentation Analysis (Req 15.1)[2m > [22mdoes not flag when all adapter files are present[90m 3[2mms[22m[31m[39m
+[31m     → expected { …(8) } to be undefined[39m
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mResponse Time Requirements[2m > [22m[2mshould complete simple operations in <2s
+[22m[39mNo LLM adapter available, skipping performance test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mResponse Time Requirements[2m > [22m[2mshould start conversation in <2s
+[22m[39mNo LLM adapter available, skipping performance test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mResponse Time Requirements[2m > [22m[2mshould analyze code in <5s
+[22m[39mNo LLM adapter available, skipping performance test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mResponse Time Requirements[2m > [22m[2mshould explain errors in <5s
+[22m[39mNo LLM adapter available, skipping performance test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mResponse Time Requirements[2m > [22m[2mshould generate solutions in <10s
+[22m[39mNo LLM adapter available, skipping performance test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mModel Selection and Routing[2m > [22m[2mshould select appropriate model for development tasks
+[22m[39mNo LLM adapter available, skipping model selection test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mModel Selection and Routing[2m > [22m[2mshould select appropriate model for debugging tasks
+[22m[39mNo LLM adapter available, skipping model selection test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mModel Selection and Routing[2m > [22m[2mshould select appropriate model for learning tasks
+[22m[39mNo LLM adapter available, skipping model selection test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mConversation Context Maintenance[2m > [22m[2mshould maintain context across multiple conversation turns
+[22m[39mNo LLM adapter available, skipping context test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mConversation Context Maintenance[2m > [22m[2mshould track session metrics correctly
+[22m[39mNo LLM adapter available, skipping session metrics test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mConversation Context Maintenance[2m > [22m[2mshould handle multiple concurrent sessions
+[22m[39mNo LLM adapter available, skipping concurrent session test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mConversation Context Maintenance[2m > [22m[2mshould preserve conversation history within session
+[22m[39mNo LLM adapter available, skipping history test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mPerformance Optimization Features[2m > [22m[2mshould cache responses for identical requests
+[22m[39mNo LLM adapter available, skipping cache test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mPerformance Optimization Features[2m > [22m[2mshould respect response timeout configuration
+[22m[39mNo LLM adapter available, skipping timeout test
+
+[90mstdout[2m | tests/llm-integration.spec.ts[2m > [22m[2mLLM Performance Validation[2m > [22m[2mPerformance Optimization Features[2m > [22m[2mshould track average response times per session
+[22m[39mNo LLM adapter available, skipping metrics test
+
+ [32m✓[39m tests/llm-integration.spec.ts [2m([22m[2m20 tests[22m[2m)[22m[90m 132[2mms[22m[39m
+ [32m✓[39m tests/enhanced-protocol-validator.spec.ts [2m([22m[2m32 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m✓[39m tests/user-acceptance.spec.ts [2m([22m[2m44 tests[22m[2m)[22m[90m 125[2mms[22m[39m
+ [32m✓[39m tests/oauth-authentication.spec.ts [2m([22m[2m24 tests[22m[2m)[22m[90m 151[2mms[22m[39m
+ [31m❯[39m tests/report-management.spec.ts [2m([22m[2m23 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 628[2mms[22m[39m
+[31m   [31m×[31m Report Management Tests[2m > [22mReport Storage[2m > [22mshould retrieve a report in Markdown format[90m 41[2mms[22m[31m[39m
+[31m     → expected '# CortexDx Diagnostic Report (brAInwa…' to contain '# Insula MCP Diagnostic Report'[39m
+[31m   [31m×[31m Report Management Tests[2m > [22mReport Storage[2m > [22mshould retrieve a report in HTML format[90m 44[2mms[22m[31m[39m
+[31m     → expected '<!DOCTYPE html>\n<html lang="en">\n<h…' to contain 'Insula MCP Diagnostic Report'[39m
+ [32m✓[39m tests/performance-benchmarking.spec.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 754[2mms[22m[39m
+   [33m[2m✓[22m[39m Performance Benchmarking[2m > [22mPerformance Profiling Requirements[2m > [22mshould provide real-time monitoring with 1-second intervals (Req 5.4) [33m302[2mms[22m[39m
+ [32m✓[39m tests/pattern-storage.spec.ts [2m([22m[2m15 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m✓[39m tests/dependency-scanner.spec.ts [2m([22m[2m19 tests[22m[2m)[22m[90m 179[2mms[22m[39m
+ [32m✓[39m tests/enhanced-security-scanner.spec.ts [2m([22m[2m38 tests[22m[2m)[22m[90m 35[2mms[22m[39m
+ [32m✓[39m tests/e2e-conversational-flow.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 2038[2mms[22m[39m
+ [31m❯[39m tests/cli-integration.spec.ts [2m([22m[2m28 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[90m 238[2mms[22m[39m
+[31m   [31m×[31m CLI Self-Healing Commands[2m > [22mheal command[2m > [22mshould run heal endpoint with correct parameters[90m 18[2mms[22m[31m[39m
+[31m     → expected "spy" to be called with arguments: [ 'https://example.com/webhook', …(1) ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[2m    "https://example.com/webhook",[22m
+[32m-   ObjectContaining {[90m
+[32m-     "headers": ObjectContaining {[90m
+[31m+   Object {[90m
+[31m+     "body": "{\"type\":\"endpoint_diagnosis\",\"endpoint\":\"http://localhost:3000\",\"findings\":[{\"id\":\"inspector_handshake-0\",\"area\":\"protocol\",\"severity\":\"info\",\"title\":\"Inspector: protocol\",\"description\":\"Probe handshake executed successfully\",\"evidence\":[{\"raw\":{\"probe\":\"handshake\",\"endpoint\":\"http://localhost:3000\"}}],\"tags\":[\"inspector\",\"protocol\",\"auto-generated\"],\"inspectorData\":{\"probe\":\"handshake\",\"endpoint\":\"http://localhost:3000\"},\"requiresLLMAnalysis\":true},{\"id\":\"inspector_security-1\",\"area\":\"security\",\"severity\":\"major\",\"title\":\"Inspector: security\",\"description\":\"Probe security executed successfully\",\"evidence\":[{\"raw\":{\"probe\":\"security\",\"endpoint\":\"http://localhost:3000\"}}],\"tags\":[\"inspector\",\"security\",\"auto-generated\"],\"inspectorData\":{\"probe\":\"security\",\"endpoint\":\"http://localhost:3000\"},\"requiresLLMAnalysis\":true}],\"timestamp\":\"2025-11-10T23:44:18.148Z\"}",[90m
+[31m+     "headers": Object {[90m
+[2m        "Content-Type": "application/json",[22m
+[32m-       "User-Agent": StringContaining "Insula",[90m
+[31m+       "User-Agent": "CortexDx-Self-Healing/1.0",[90m
+[2m      },[22m
+[2m      "method": "POST",[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[31m   [31m×[31m CLI Self-Healing Commands[2m > [22mWebhook Integration[2m > [22mshould send webhook notifications for heal endpoint[90m 2[2mms[22m[31m[39m
+[31m     → expected "spy" to be called with arguments: [ 'https://example.com/webhook', …(1) ][90m
+
+Received: 
+
+[1m  1st spy call:
+
+[22m[2m  Array [[22m
+[2m    "https://example.com/webhook",[22m
+[32m-   ObjectContaining {[90m
+[32m-     "headers": ObjectContaining {[90m
+[31m+   Object {[90m
+[31m+     "body": "{\"type\":\"endpoint_diagnosis\",\"endpoint\":\"http://localhost:3000\",\"findings\":[{\"id\":\"inspector_handshake-0\",\"area\":\"protocol\",\"severity\":\"info\",\"title\":\"Inspector: protocol\",\"description\":\"Probe handshake executed successfully\",\"evidence\":[{\"raw\":{\"probe\":\"handshake\",\"endpoint\":\"http://localhost:3000\"}}],\"tags\":[\"inspector\",\"protocol\",\"auto-generated\"],\"inspectorData\":{\"probe\":\"handshake\",\"endpoint\":\"http://localhost:3000\"},\"requiresLLMAnalysis\":true},{\"id\":\"inspector_protocol-1\",\"area\":\"protocol\",\"severity\":\"info\",\"title\":\"Inspector: protocol\",\"description\":\"Probe protocol executed successfully\",\"evidence\":[{\"raw\":{\"probe\":\"protocol\",\"endpoint\":\"http://localhost:3000\"}}],\"tags\":[\"inspector\",\"protocol\",\"auto-generated\"],\"inspectorData\":{\"probe\":\"protocol\",\"endpoint\":\"http://localhost:3000\"},\"requiresLLMAnalysis\":true}],\"timestamp\":\"2025-11-10T23:44:18.238Z\"}",[90m
+[31m+     "headers": Object {[90m
+[2m        "Content-Type": "application/json",[22m
+[32m-       "User-Agent": StringContaining "Insula",[90m
+[31m+       "User-Agent": "CortexDx-Self-Healing/1.0",[90m
+[2m      },[22m
+[2m      "method": "POST",[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[90mstdout[2m | tests/self-healing.spec.ts[2m > [22m[2mTemplateEngine[2m > [22m[2mrollbackChanges[2m > [22m[2mshould rollback changes successfully
+[22m[39m[TemplateEngine] Rolled back: test-file.ts
+
+ [32m✓[39m tests/self-healing.spec.ts [2m([22m[2m23 tests[22m[2m)[22m[90m 36[2mms[22m[39m
+ [32m✓[39m tests/academic-provider-license-integration.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m✓[39m tests/enhanced-development-plugins.spec.ts [2m([22m[2m26 tests[22m[2m)[22m[90m 17[2mms[22m[39m
+ [32m✓[39m tests/self-healing-api.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 669[2mms[22m[39m
+   [33m[2m✓[22m[39m Self-Healing API Endpoints[2m > [22mPOST /api/v1/self-diagnose[2m > [22mshould run self-diagnosis successfully [33m579[2mms[22m[39m
+ [32m✓[39m tests/model-management.spec.ts [2m([22m[2m22 tests[22m[2m)[22m[90m 80[2mms[22m[39m
+ [32m✓[39m tests/cross-platform.spec.ts [2m([22m[2m40 tests[22m[2m)[22m[90m 28[2mms[22m[39m
+ [32m✓[39m tests/rag-system.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m tests/unified-flamegraph.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 31[2mms[22m[39m
+ [32m✓[39m tests/pyspy-integration.spec.ts [2m([22m[2m17 tests[22m[2m)[22m[90m 102[2mms[22m[39m
+ [32m✓[39m tests/conversation-storage.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 127[2mms[22m[39m
+ [32m✓[39m tests/clinic-integration.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 18[2mms[22m[39m
+ [32m✓[39m tests/health-monitoring.spec.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 628[2mms[22m[39m
+ [32m✓[39m tests/academic-provider-integration.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m tests/commercial-deployment.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 11[2mms[22m[39m
+ [32m✓[39m tests/integration-workflow.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/commercial-security.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m tests/mcp-protocol-compliance.spec.ts [2m([22m[2m21 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m tests/plugin-development.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m tests/academic-providers.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 15[2mms[22m[39m
+ [32m✓[39m tests/plugin-licensing.spec.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/plugin-performance.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 44[2mms[22m[39m
+ [32m✓[39m tests/story.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m tests/plugin-security.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m tests/plugin-host-env.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/transport-session.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/web-interface.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/plugin-core.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m tests/exa-provider.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m tests/story-schema.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 34[2mms[22m[39m
+ [32m✓[39m tests/self-healing/ollama-reasoner.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m tests/self-healing/security-scanner-adapter.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m tests/self-healing/findings.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 8[2mms[22m[39m
+ [32m✓[39m tests/story-card.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 102[2mms[22m[39m
+ [32m✓[39m tests/permissioning.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m tests/story-service.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 13[2mms[22m[39m
+ [32m✓[39m tests/prompts.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 19[2mms[22m[39m
+ [32m✓[39m tests/story-tools.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32m✓[39m tests/self-healing/graph.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 57[2mms[22m[39m
+ [2m[90m↓[39m[22m tests/llm-performance.spec.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [32m✓[39m tests/e2e.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/jsonrpc-batch.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/sse-reconnect.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/cors.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/sandbox-timeout.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m tests/sse.spec.ts [2m([22m[2m1 test[22m[2m)[22m[90m 3[2mms[22m[39m

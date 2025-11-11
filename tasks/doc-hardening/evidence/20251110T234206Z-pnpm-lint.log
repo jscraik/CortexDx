@@ -1,0 +1,16 @@
+
+> cortexdx-workspace@ lint /workspace/CortexDx
+> NX_CLOUD=false nx run cortexdx:lint
+
+
+> nx run cortexdx:lint
+
+> pnpm --dir packages/insula-mcp exec biome lint src
+
+Checked 190 files in 303ms. No fixes applied.
+
+
+
+ NX   Successfully ran target lint for project cortexdx
+
+
