@@ -50,7 +50,7 @@ export default defineConfig({
         "src/web/**",
         "src/workers/**",
       ],
-      // Default thresholds align with the governance mandate (85/80/75). Set VITEST_WEAK_COVERAGE=true
+      // Default thresholds align with the governance mandate (85/85/80/75). Set VITEST_WEAK_COVERAGE=true
       // locally to use the relaxed floor while backfilling tests without blocking CI.
       thresholds: governanceThresholds,
       reportsDirectory: "reports/coverage",
