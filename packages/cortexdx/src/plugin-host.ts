@@ -1,9 +1,9 @@
 import { Worker } from "node:worker_threads";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { httpAdapter } from "./adapters/http.js";
 import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
 import { createInspectorSession, type SharedSessionState } from "./context/inspector-session.js";
+import { loadArtifactsFromEnv } from "./context/artifacts.js";
 import type {
   ConversationalPlugin,
   DevelopmentContext,
@@ -15,6 +15,10 @@ import type {
   Finding,
   TransportTranscript,
 } from "./types.js";
+import { createDiagnosticContext } from "./context/context-factory.js";
+import { getLlmAdapter } from "./ml/router.js";
+import { createDeterministicSeed } from "./utils/deterministic.js";
+import { recordFindingsForLearning } from "./learning/pattern-feedback-loop.js";
 
 export interface SandboxBudgets {
   timeMs: number;
@@ -47,9 +51,19 @@ export async function runPlugins({
 
   await bootstrapSession(endpoint, authHeaders, sharedSession);
 
-  const fallbackCtx = createFallbackCtx(endpoint, deterministic, authHeaders, {
-    preinitialized: sharedSession.initialized,
-    sharedState: sharedSession,
+  const deterministicSeed = deterministic ? createDeterministicSeed(`${endpoint}:${suites.join(",")}`) : undefined;
+  const llmAdapter = await getLlmAdapter({ deterministicSeed });
+
+  const fallbackCtx = createDiagnosticContext({
+    endpoint,
+    deterministic,
+    deterministicSeed,
+    headers: authHeaders,
+    sessionOptions: {
+      preinitialized: sharedSession.initialized,
+      sharedState: sharedSession,
+    },
+    llm: llmAdapter,
   });
 
   for (const plugin of plugins) {
@@ -80,6 +94,8 @@ export async function runPlugins({
       });
     }
   }
+
+  await recordFindingsForLearning({ endpoint, findings, deterministic });
   return { findings };
 }
 
@@ -163,90 +179,12 @@ async function bootstrapSession(
   }
 }
 
-function createFallbackCtx(
-  endpoint: string,
-  deterministic: boolean,
-  headers: Record<string, string>,
-  sessionOptions?: { preinitialized?: boolean; sharedState?: SharedSessionState },
-): DiagnosticContext {
-  const session = createInspectorSession(endpoint, headers, sessionOptions);
-  const baseHeaders = headers ?? {};
-  return {
-    endpoint,
-    headers: baseHeaders,
-    logger: (...args: unknown[]) => console.log("[brAInwav]", ...args),
-    request: (input, init) => {
-      const mergedHeaders =
-        Object.keys(baseHeaders).length === 0 && !init?.headers
-          ? init?.headers
-          : {
-              ...baseHeaders,
-              ...(init?.headers as Record<string, string> | undefined),
-            };
-      const nextInit = mergedHeaders
-        ? { ...(init ?? {}), headers: mergedHeaders }
-        : init;
-      return httpAdapter(input, nextInit);
-    },
-    jsonrpc: session.jsonrpc,
-    sseProbe: session.sseProbe,
-    evidence: (ev: EvidencePointer) => console.log("[evidence]", ev),
-    deterministic,
-    transport: session.transport,
-    artifacts: loadArtifactsFromEnv(),
-  };
-}
-
-function loadArtifactsFromEnv(): DiagnosticArtifacts | undefined {
-  const raw =
-    process.env.CORTEXDX_MANIFESTS_JSON ?? process.env.INSULA_MANIFESTS_JSON;
-  if (!raw) return undefined;
-
-  if (!process.env.CORTEXDX_MANIFESTS_JSON && process.env.INSULA_MANIFESTS_JSON) {
-    console.warn(
-      "CORTEXDX_MANIFESTS_JSON is not set; falling back to deprecated INSULA_MANIFESTS_JSON",
-    );
-  }
-  try {
-    const data = JSON.parse(raw) as Array<unknown>;
-    if (!Array.isArray(data)) {
-      return undefined;
-    }
-    const dependencyManifests = data
-      .map((item) => normalizeManifestArtifact(item))
-      .filter((artifact): artifact is DiagnosticArtifacts["dependencyManifests"][number] => artifact !== null);
-    if (dependencyManifests.length === 0) {
-      return undefined;
-    }
-    return { dependencyManifests };
-  } catch (error) {
-    console.warn("Failed to parse CortexDx manifest artifact payload", error);
-    return undefined;
-  }
-}
-
-function normalizeManifestArtifact(value: unknown): DiagnosticArtifacts["dependencyManifests"][number] | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-  const candidate = value as { name?: unknown; encoding?: unknown; content?: unknown };
-  if (typeof candidate.name !== "string" || typeof candidate.content !== "string") {
-    return null;
-  }
-  const encoding = candidate.encoding === "base64" ? "base64" : "utf-8";
-  return {
-    name: candidate.name,
-    encoding,
-    content: candidate.content,
-  };
-}
-
 async function runWithSandbox(
   pluginId: string,
   endpoint: string,
   deterministic: boolean,
   budgets: SandboxBudgets,
-  fallbackCtx: ReturnType<typeof createFallbackCtx>,
+  fallbackCtx: DiagnosticContext,
   headers: Record<string, string>,
   sharedSession: SharedSessionState,
 ): Promise<Finding[]> {
@@ -425,7 +363,7 @@ export function getConversationalPlugins(): ConversationalPlugin[] {
 }
 
 function resolveWorkerUrl(name: string): URL {
-  const distJs = new URL(`../../dist/workers/${name}.js`, import.meta.url);
+  const distJs = new URL(`../dist/workers/${name}.js`, import.meta.url);
   if (existsSync(fileURLToPath(distJs))) {
     return distJs;
   }

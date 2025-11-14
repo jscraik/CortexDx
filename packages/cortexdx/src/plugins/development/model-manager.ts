@@ -91,16 +91,16 @@ export class ModelManager implements DiagnosticPlugin {
       // Check available backends
       const backends = await this.getAvailableBackends();
       if (backends.length === 0) {
-        findings.push({
-          id: "model-manager-no-backends",
-          area: "Model Management",
-          severity: "blocker",
-          title: "No LLM Backends Available",
-          description: "No local LLM backends (Ollama, MLX) are available",
-          evidence: [{ type: "log", ref: "model-manager-backends-check" }],
-          confidence: 1.0,
-          recommendation: "Install Ollama or MLX to enable local LLM features",
-        });
+      findings.push({
+        id: "model-manager-no-backends",
+        area: "Model Management",
+        severity: "blocker",
+        title: "No LLM Backends Available",
+        description: "No local LLM backend (Ollama) is available",
+        evidence: [{ type: "log", ref: "model-manager-backends-check" }],
+        confidence: 1.0,
+        recommendation: "Install and start Ollama to enable local LLM features",
+      });
         return findings;
       }
 

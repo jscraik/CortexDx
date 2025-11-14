@@ -469,7 +469,7 @@ const ollama = createOllamaAdapter({
 // Use adapter
 const response = await ollama.complete('Explain MCP protocol');
 
-// CortexDx supports the Ollama backend exclusively. Remove any legacy MLX integrations to avoid runtime errors.
+// CortexDx supports the Ollama backend exclusively. Remove any legacy local adapters to avoid runtime errors.
 ```
 
 ## Plugin Development
@@ -1283,7 +1283,7 @@ cortexdx doctor
 
 - Node.js version compatibility
 - Required dependencies availability
-- LLM backend status (Ollama, MLX)
+- LLM backend status (Ollama)
 - Network connectivity
 - System requirements
 - Configuration validity
@@ -1295,7 +1295,6 @@ cortexdx doctor
 [brAInwav] Doctor: Node v20.11.1 ✓
 [brAInwav] Doctor: Dependencies ✓
 [brAInwav] Doctor: Ollama available ✓
-[brAInwav] Doctor: MLX available (Apple Silicon) ✓
 [brAInwav] Doctor: Network connectivity ✓
 ```
 

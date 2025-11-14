@@ -4,8 +4,8 @@
  * Requirements: 3.1, 5.1, 6.1
  */
 
-import type { McpTool } from "../types.js";
 import { isStoryFeatureEnabled } from "../story/feature-flag.js";
+import type { McpTool } from "../types.js";
 
 const baseDiagnosticTools: McpTool[] = [
   {
@@ -415,7 +415,15 @@ const storyPayloadSchema = {
 
 const actionResultSchema = {
   type: "object",
-  required: ["action", "target", "message", "reversible", "ok", "performedAt", "dryRun"],
+  required: [
+    "action",
+    "target",
+    "message",
+    "reversible",
+    "ok",
+    "performedAt",
+    "dryRun",
+  ],
   properties: {
     action: { type: "string" },
     target: { type: "string" },
@@ -436,14 +444,10 @@ const storyTools: McpTool[] = [
       type: "object",
       properties: {
         limit: { type: "number", minimum: 1, maximum: 20 },
-        includeEvidence: { type: "boolean", description: "Include evidence arrays" },
-      },
-    },
-    outputSchema: {
-      type: "object",
-      required: ["stories"],
-      properties: {
-        stories: { type: "array", items: storyPayloadSchema },
+        includeEvidence: {
+          type: "boolean",
+          description: "Include evidence arrays",
+        },
       },
     },
   },
@@ -457,13 +461,6 @@ const storyTools: McpTool[] = [
       },
       required: ["id"],
     },
-    outputSchema: {
-      type: "object",
-      required: ["story"],
-      properties: {
-        story: { anyOf: [storyPayloadSchema, { type: "null" }] },
-      },
-    },
   },
   {
     name: "story.reprobe",
@@ -474,13 +471,6 @@ const storyTools: McpTool[] = [
         target: { type: "string" },
       },
       required: ["target"],
-    },
-    outputSchema: {
-      type: "object",
-      required: ["result"],
-      properties: {
-        result: actionResultSchema,
-      },
     },
   },
 ];

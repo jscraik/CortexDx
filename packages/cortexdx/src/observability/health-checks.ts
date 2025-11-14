@@ -54,6 +54,16 @@ export interface OperationMetrics {
     conversationsActive: number;
 }
 
+export interface QuickHealthPayload {
+    status: "healthy" | "degraded" | "unhealthy";
+    service: string;
+    version: string;
+    providers: string[];
+    timestamp: string;
+    responseTimeMs: number;
+    subsystems: Record<string, unknown>;
+}
+
 export interface HealthCheckConfig {
     enableDetailedChecks: boolean;
     timeout: number;
@@ -178,6 +188,33 @@ export const getOperationMetrics = (): OperationMetrics => {
         conversationsActive: metrics.conversationsActive,
     };
 };
+
+export function buildQuickHealthPayload(params: {
+    providers: string[];
+    responseTimeMs: number;
+    stateDbPath: string;
+    stateDbExists: boolean;
+}): QuickHealthPayload {
+    return {
+        status: "healthy",
+        service: "CortexDx Server",
+        version: "1.0.0",
+        providers: params.providers,
+        timestamp: new Date().toISOString(),
+        responseTimeMs: params.responseTimeMs,
+        subsystems: {
+            stateDb: {
+                path: params.stateDbPath,
+                exists: params.stateDbExists,
+            },
+            providers: {
+                count: params.providers.length,
+            },
+            performance: getPerformanceMetrics(),
+            operations: getOperationMetrics(),
+        },
+    };
+}
 
 /**
  * Check memory health

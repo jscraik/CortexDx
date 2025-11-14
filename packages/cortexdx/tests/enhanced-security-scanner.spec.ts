@@ -277,10 +277,9 @@ describe("gitleaks Secrets Scanner Integration (Req 20.4)", () => {
 });
 
 describe("OWASP ZAP DAST Integration (Req 20.5)", () => {
-    const flagKeys = ["CORTEXDX_ENABLE_ZAP", "INSULA_ENABLE_ZAP"] as const;
+    const flagKeys = ["CORTEXDX_ENABLE_ZAP"] as const;
     const originalEnv: Record<(typeof flagKeys)[number], string | undefined> = {
         CORTEXDX_ENABLE_ZAP: undefined,
-        INSULA_ENABLE_ZAP: undefined,
     };
     const originalFetch = globalThis.fetch;
 
@@ -365,22 +364,6 @@ describe("OWASP ZAP DAST Integration (Req 20.5)", () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(result.scanType).toBe("baseline");
         expect(result.executionTime).toBeGreaterThanOrEqual(0);
-    });
-
-    it("should fall back to INSULA_ENABLE_ZAP with warning", async () => {
-        process.env.INSULA_ENABLE_ZAP = "1";
-        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
-        const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ alerts: [] }) });
-        globalThis.fetch = fetchMock as unknown as typeof fetch;
-
-        const zap = new ZAPIntegration();
-        const result = await zap.fullScan("http://example.com");
-
-        expect(warnSpy).toHaveBeenCalledWith(
-            "CORTEXDX_ENABLE_ZAP is not set; falling back to deprecated INSULA_ENABLE_ZAP",
-        );
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(result.scanType).toBe("full");
     });
 
     it("should remain disabled when no flags are set", async () => {

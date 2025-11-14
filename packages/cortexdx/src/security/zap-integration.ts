@@ -261,13 +261,7 @@ export class ZAPIntegration {
         if (typeof this.config.enabled === "boolean") {
             return this.config.enabled;
         }
-        const flag =
-            process.env.CORTEXDX_ENABLE_ZAP ?? process.env.INSULA_ENABLE_ZAP ?? "0";
-        if (!process.env.CORTEXDX_ENABLE_ZAP && process.env.INSULA_ENABLE_ZAP) {
-            console.warn(
-                "CORTEXDX_ENABLE_ZAP is not set; falling back to deprecated INSULA_ENABLE_ZAP",
-            );
-        }
+        const flag = process.env.CORTEXDX_ENABLE_ZAP ?? "0";
         return flag === "1";
     }
 }

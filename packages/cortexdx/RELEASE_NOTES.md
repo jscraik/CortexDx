@@ -10,7 +10,7 @@ We're excited to announce the first stable release of CortexDx, a comprehensive 
 
 #### 1. Enhanced LLM Integration System
 
-- **Local-First AI**: Complete local LLM support with Ollama, MLX, and llama.cpp backends
+- **Local-First AI**: Ollama-powered local LLM support with deterministic seeding
 - **Conversational Development**: Natural language interface for MCP development
 - **Multi-Backend Support**: Automatic model selection based on task requirements
 - **Performance Optimized**: Sub-2-second response times for most operations
@@ -194,7 +194,7 @@ See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for detailed migration instructions
 
 ### Limitations
 
-1. **MLX Backend**: Currently optimized for Apple Silicon only
+1. **Local Backend**: Ollama must be running locally (legacy secondary backends were removed in v1.0)
 2. **Model Size**: Large models (>13B parameters) may require significant memory
 3. **Academic Providers**: Rate limits apply to external API calls
 4. **Windows Support**: Some features may have limited support on Windows

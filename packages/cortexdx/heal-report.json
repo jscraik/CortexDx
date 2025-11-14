@@ -1,0 +1,98 @@
+{
+  "endpoint": "http://localhost:3000",
+  "timestamp": "2025-11-11T23:26:56.459Z",
+  "findings": [
+    {
+      "id": "inspector_handshake-0",
+      "area": "protocol",
+      "severity": "info",
+      "title": "Inspector: protocol",
+      "description": "Probe handshake executed successfully",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "unknown"
+        }
+      ],
+      "tags": [
+        "inspector",
+        "protocol",
+        "auto-generated"
+      ],
+      "inspectorData": {
+        "probe": "handshake",
+        "endpoint": "http://localhost:3000"
+      },
+      "requiresLLMAnalysis": true
+    },
+    {
+      "id": "inspector_security-1",
+      "area": "security",
+      "severity": "major",
+      "title": "Inspector: security",
+      "description": "Probe security executed successfully",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "unknown"
+        }
+      ],
+      "tags": [
+        "inspector",
+        "security",
+        "auto-generated"
+      ],
+      "inspectorData": {
+        "probe": "security",
+        "endpoint": "http://localhost:3000"
+      },
+      "requiresLLMAnalysis": true
+    }
+  ],
+  "inspectorReport": {
+    "jobId": "inspector_1762903616459_0zij9h7rlmi",
+    "endpoint": "http://localhost:3000",
+    "startedAt": "2025-11-11T23:26:56.459Z",
+    "finishedAt": "2025-11-11T23:26:56.459Z",
+    "findings": [
+      {
+        "id": "handshake-0",
+        "severity": "info",
+        "area": "protocol",
+        "description": "Probe handshake executed successfully",
+        "evidence": {
+          "raw": {
+            "probe": "handshake",
+            "endpoint": "http://localhost:3000"
+          }
+        },
+        "raw": {
+          "probe": "handshake",
+          "endpoint": "http://localhost:3000"
+        }
+      },
+      {
+        "id": "security-1",
+        "severity": "major",
+        "area": "security",
+        "description": "Probe security executed successfully",
+        "evidence": {
+          "raw": {
+            "probe": "security",
+            "endpoint": "http://localhost:3000"
+          }
+        },
+        "raw": {
+          "probe": "security",
+          "endpoint": "http://localhost:3000"
+        }
+      }
+    ],
+    "metrics": {
+      "ms": 0,
+      "probesRun": 2,
+      "failures": 1
+    },
+    "traceId": "self-healing-1762903616459"
+  }
+}

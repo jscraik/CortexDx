@@ -10,9 +10,19 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@brainwav/cortexdx": ["packages/cortexdx/src/index.ts"],
-      "@brainwav/cortexdx/*": ["packages/cortexdx/src/*"]
-    }
+      "@brainwav/cortexdx": [
+        "packages/cortexdx/src/index.ts"
+      ],
+      "@brainwav/cortexdx/*": [
+        "packages/cortexdx/src/*"
+      ]
+    },
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
-  "exclude": ["dist", "node_modules"]
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

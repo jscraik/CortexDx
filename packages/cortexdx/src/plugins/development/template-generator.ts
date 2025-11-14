@@ -3,7 +3,7 @@
  * Generates customizable MCP server templates for different use cases and organizations
  * Requirements: 1.2, 1.4, 10.1
  * Performance: <5s response time
- * 
+ *
  * ENHANCEMENTS (Req 24.6):
  * - Template marketplace with sharing and discovery features
  * - Template versioning aligned with MCP releases
@@ -68,16 +68,16 @@ interface TemplatePreview {
 
 interface FileTreeNode {
   name: string;
-  type: 'file' | 'directory';
+  type: "file" | "directory";
   path: string;
   children?: FileTreeNode[];
   size?: number;
-  action: 'create' | 'update' | 'delete';
+  action: "create" | "update" | "delete";
 }
 
 interface FileDiff {
   path: string;
-  action: 'create' | 'update' | 'delete';
+  action: "create" | "update" | "delete";
   oldContent?: string;
   newContent?: string;
   additions: number;
@@ -105,7 +105,7 @@ interface SecurityPolicy {
 }
 
 interface PolicyViolation {
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   rule: string;
   message: string;
   file?: string;
@@ -155,7 +155,13 @@ export const TemplateGeneratorPlugin: DevelopmentPlugin = {
           title: `${templateType} template available`,
           description: `I can generate a ${language} ${templateType} template with best practices and team conventions.`,
           evidence: [{ type: "file", ref: "project-root" }],
-          recommendation: `Generate a customized ${templateType} template that includes:\n- Standard project structure\n- MCP protocol implementation\n- Tool definitions and handlers\n- Configuration files\n- Testing setup\n- Documentation`,
+          recommendation: `Generate a customized ${templateType} template that includes:
+- Standard project structure
+- MCP protocol implementation
+- Tool definitions and handlers
+- Configuration files
+- Testing setup
+- Documentation`,
           remediation: {
             filePlan: generateTemplatePlan(templateType, language),
             steps: [
@@ -450,79 +456,83 @@ class TemplateMarketplaceManager {
   private initializeDefaultTemplates(): void {
     // Add default verified templates
     const basicServer: MarketplaceTemplate = {
-      id: 'basic-mcp-server',
-      name: 'Basic MCP Server',
-      description: 'Minimal MCP server with essential features',
-      author: 'CortexDx Team',
-      version: '1.0.0',
-      mcpVersion: '2024-11-05',
-      category: 'server',
-      tags: ['basic', 'starter', 'typescript'],
+      id: "basic-mcp-server",
+      name: "Basic MCP Server",
+      description: "Minimal MCP server with essential features",
+      author: "CortexDx Team",
+      version: "1.0.0",
+      mcpVersion: "2024-11-05",
+      category: "server",
+      tags: ["basic", "starter", "typescript"],
       downloads: 1250,
       rating: 4.8,
       verified: true,
       lastUpdated: new Date(),
       files: [],
-      dependencies: ['@modelcontextprotocol/sdk'],
-      securityScore: 95
+      dependencies: ["@modelcontextprotocol/sdk"],
+      securityScore: 95,
     };
 
     const apiConnector: MarketplaceTemplate = {
-      id: 'api-connector',
-      name: 'API-to-MCP Connector',
-      description: 'Convert REST APIs to MCP tools automatically',
-      author: 'CortexDx Team',
-      version: '1.2.0',
-      mcpVersion: '2024-11-05',
-      category: 'connector',
-      tags: ['api', 'rest', 'connector', 'typescript'],
+      id: "api-connector",
+      name: "API-to-MCP Connector",
+      description: "Convert REST APIs to MCP tools automatically",
+      author: "CortexDx Team",
+      version: "1.2.0",
+      mcpVersion: "2024-11-05",
+      category: "connector",
+      tags: ["api", "rest", "connector", "typescript"],
       downloads: 890,
       rating: 4.6,
       verified: true,
       lastUpdated: new Date(),
       files: [],
-      dependencies: ['@modelcontextprotocol/sdk', 'axios'],
-      securityScore: 92
+      dependencies: ["@modelcontextprotocol/sdk", "axios"],
+      securityScore: 92,
     };
 
     this.templates.set(basicServer.id, basicServer);
     this.templates.set(apiConnector.id, apiConnector);
   }
 
-  async searchTemplates(query: string, filters?: {
-    category?: string;
-    tags?: string[];
-    minRating?: number;
-    verifiedOnly?: boolean;
-  }): Promise<MarketplaceTemplate[]> {
+  async searchTemplates(
+    query: string,
+    filters?: {
+      category?: string;
+      tags?: string[];
+      minRating?: number;
+      verifiedOnly?: boolean;
+    },
+  ): Promise<MarketplaceTemplate[]> {
     let results = Array.from(this.templates.values());
 
     // Apply search query
     if (query) {
       const lowerQuery = query.toLowerCase();
-      results = results.filter(t =>
-        t.name.toLowerCase().includes(lowerQuery) ||
-        t.description.toLowerCase().includes(lowerQuery) ||
-        t.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+      results = results.filter(
+        (t) =>
+          t.name.toLowerCase().includes(lowerQuery) ||
+          t.description.toLowerCase().includes(lowerQuery) ||
+          t.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)),
       );
     }
 
     // Apply filters
     if (filters) {
       if (filters.category) {
-        results = results.filter(t => t.category === filters.category);
+        results = results.filter((t) => t.category === filters.category);
       }
       if (filters.tags && filters.tags.length > 0) {
-        results = results.filter(t =>
-          filters.tags?.some(tag => t.tags.includes(tag))
+        results = results.filter((t) =>
+          filters.tags?.some((tag) => t.tags.includes(tag)),
         );
       }
       if (filters.minRating) {
         const minRating = filters.minRating;
-        results = results.filter(t => t.rating >= minRating);
+        results = results.filter((t) => t.rating >= minRating);
       }
       if (filters.verifiedOnly) {
-        results = results.filter(t => t.verified);
+        results = results.filter((t) => t.verified);
       }
     }
 
@@ -538,7 +548,9 @@ class TemplateMarketplaceManager {
     return this.templates.get(id);
   }
 
-  async publishTemplate(template: MarketplaceTemplate): Promise<{ success: boolean; message: string }> {
+  async publishTemplate(
+    template: MarketplaceTemplate,
+  ): Promise<{ success: boolean; message: string }> {
     // Validate template before publishing
     const validation = await this.validateTemplateForPublishing(template);
     if (!validation.valid) {
@@ -547,32 +559,35 @@ class TemplateMarketplaceManager {
 
     // Add to marketplace
     this.templates.set(template.id, template);
-    return { success: true, message: 'Template published successfully' };
+    return { success: true, message: "Template published successfully" };
   }
 
-  private async validateTemplateForPublishing(template: MarketplaceTemplate): Promise<{ valid: boolean; message: string }> {
+  private async validateTemplateForPublishing(
+    template: MarketplaceTemplate,
+  ): Promise<{ valid: boolean; message: string }> {
     // Check required fields
     if (!template.name || !template.description || !template.version) {
-      return { valid: false, message: 'Missing required fields' };
+      return { valid: false, message: "Missing required fields" };
     }
 
     // Check security score
     if (template.securityScore < 70) {
-      return { valid: false, message: 'Security score too low (minimum 70)' };
+      return { valid: false, message: "Security score too low (minimum 70)" };
     }
 
     // Check for malicious patterns
-    const hasMaliciousCode = template.files.some(f =>
-      f.content.includes('eval(') ||
-      f.content.includes('exec(') ||
-      f.content.match(/password\s*=\s*["'][^"']+["']/)
+    const hasMaliciousCode = template.files.some(
+      (f) =>
+        f.content.includes("eval(") ||
+        f.content.includes("exec(") ||
+        f.content.match(/password\s*=\s*["'][^"']+["']/),
     );
 
     if (hasMaliciousCode) {
-      return { valid: false, message: 'Potentially malicious code detected' };
+      return { valid: false, message: "Potentially malicious code detected" };
     }
 
-    return { valid: true, message: 'Template validation passed' };
+    return { valid: true, message: "Template validation passed" };
   }
 }
 
@@ -586,38 +601,50 @@ class TemplateVersionManager {
     return this.versions.get(templateId) || [];
   }
 
-  async getLatestVersion(templateId: string, mcpVersion?: string): Promise<TemplateVersion | undefined> {
+  async getLatestVersion(
+    templateId: string,
+    mcpVersion?: string,
+  ): Promise<TemplateVersion | undefined> {
     const versions = await this.getVersions(templateId);
 
     if (mcpVersion) {
       // Find latest version compatible with specified MCP version
-      const compatible = versions.filter(v => v.mcpVersion === mcpVersion);
-      return compatible.sort((a, b) =>
-        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      const compatible = versions.filter((v) => v.mcpVersion === mcpVersion);
+      return compatible.sort(
+        (a, b) =>
+          new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
       )[0];
     }
 
     // Return absolute latest version
-    return versions.sort((a, b) =>
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+    return versions.sort(
+      (a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
     )[0];
   }
 
-  async addVersion(templateId: string, version: TemplateVersion): Promise<void> {
+  async addVersion(
+    templateId: string,
+    version: TemplateVersion,
+  ): Promise<void> {
     const versions = this.versions.get(templateId) || [];
     versions.push(version);
     this.versions.set(templateId, versions);
   }
 
-  async checkForUpdates(templateId: string, currentVersion: string): Promise<{
+  async checkForUpdates(
+    templateId: string,
+    currentVersion: string,
+  ): Promise<{
     hasUpdate: boolean;
     latestVersion?: string;
     breaking: boolean;
     changelog?: string[];
   }> {
     const versions = await this.getVersions(templateId);
-    const latest = versions.sort((a, b) =>
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+    const latest = versions.sort(
+      (a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
     )[0];
 
     if (!latest || latest.version === currentVersion) {
@@ -628,7 +655,7 @@ class TemplateVersionManager {
       hasUpdate: true,
       latestVersion: latest.version,
       breaking: latest.breaking,
-      changelog: latest.changelog
+      changelog: latest.changelog,
     };
   }
 }
@@ -639,7 +666,7 @@ class TemplateVersionManager {
 async function generateLivePreview(
   template: MarketplaceTemplate,
   targetPath: string,
-  existingFiles: string[]
+  existingFiles: string[],
 ): Promise<TemplatePreview> {
   const fileTree: FileTreeNode[] = [];
   const diffs: FileDiff[] = [];
@@ -655,20 +682,20 @@ async function generateLivePreview(
     const exists = existingFiles.includes(fullPath);
 
     // Add to file tree
-    addToFileTree(fileTree, file.path, exists ? 'update' : 'create');
+    addToFileTree(fileTree, file.path, exists ? "update" : "create");
 
     // Generate diff
     const diff: FileDiff = {
       path: file.path,
-      action: exists ? 'update' : 'create',
+      action: exists ? "update" : "create",
       newContent: file.content,
-      additions: file.content.split('\n').length,
-      deletions: 0
+      additions: file.content.split("\n").length,
+      deletions: 0,
     };
 
     if (exists) {
       // Simulate existing content for diff
-      diff.oldContent = '// Existing content\n';
+      diff.oldContent = "// Existing content\n";
       diff.deletions = 1;
       filesUpdated++;
     } else {
@@ -687,33 +714,37 @@ async function generateLivePreview(
     filesDeleted,
     totalAdditions,
     totalDeletions,
-    estimatedSize: template.files.reduce((sum, f) => sum + f.content.length, 0)
+    estimatedSize: template.files.reduce((sum, f) => sum + f.content.length, 0),
   };
 
   return { fileTree, diffs, summary };
 }
 
-function addToFileTree(tree: FileTreeNode[], path: string, action: 'create' | 'update' | 'delete'): void {
-  const parts = path.split('/');
+function addToFileTree(
+  tree: FileTreeNode[],
+  path: string,
+  action: "create" | "update" | "delete",
+): void {
+  const parts = path.split("/");
   let current = tree;
 
   for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
+    const part = parts[i] || "";
     const isFile = i === parts.length - 1;
 
-    let node = current.find(n => n.name === part);
+    let node = current.find((n) => n.name === part);
     if (!node) {
       node = {
         name: part,
-        type: isFile ? 'file' : 'directory',
-        path: parts.slice(0, i + 1).join('/'),
+        type: isFile ? "file" : "directory",
+        path: parts.slice(0, i + 1).join("/"),
         action,
-        children: isFile ? undefined : []
+        children: isFile ? undefined : [],
       };
       current.push(node);
     }
 
-    if (!isFile && node.children) {
+    if (!isFile && node && node.children) {
       current = node.children;
     }
   }
@@ -724,7 +755,7 @@ function addToFileTree(tree: FileTreeNode[], path: string, action: 'create' | 'u
  */
 async function validateAgainstSecurityPolicy(
   template: MarketplaceTemplate,
-  policy: SecurityPolicy
+  policy: SecurityPolicy,
 ): Promise<PolicyViolation[]> {
   const violations: PolicyViolation[] = [];
 
@@ -733,10 +764,10 @@ async function validateAgainstSecurityPolicy(
     const license = await getLicenseForPackage(dep);
     if (license && !policy.allowedLicenses.includes(license)) {
       violations.push({
-        severity: 'error',
-        rule: 'allowed-licenses',
+        severity: "error",
+        rule: "allowed-licenses",
         message: `Dependency ${dep} uses forbidden license: ${license}`,
-        suggestion: `Use packages with allowed licenses: ${policy.allowedLicenses.join(', ')}`
+        suggestion: `Use packages with allowed licenses: ${policy.allowedLicenses.join(", ")}`,
       });
     }
   }
@@ -745,28 +776,28 @@ async function validateAgainstSecurityPolicy(
   for (const dep of template.dependencies) {
     if (policy.forbiddenPackages.includes(dep)) {
       violations.push({
-        severity: 'error',
-        rule: 'forbidden-packages',
+        severity: "error",
+        rule: "forbidden-packages",
         message: `Forbidden package detected: ${dep}`,
-        suggestion: 'Remove this package or use an approved alternative'
+        suggestion: "Remove this package or use an approved alternative",
       });
     }
   }
 
   // Check file headers
   for (const file of template.files) {
-    if (file.path.endsWith('.ts') || file.path.endsWith('.js')) {
-      const hasRequiredHeaders = policy.requiredHeaders.every(header =>
-        file.content.includes(header)
+    if (file.path.endsWith(".ts") || file.path.endsWith(".js")) {
+      const hasRequiredHeaders = policy.requiredHeaders.every((header) =>
+        file.content.includes(header),
       );
 
       if (!hasRequiredHeaders) {
         violations.push({
-          severity: 'warning',
-          rule: 'required-headers',
+          severity: "warning",
+          rule: "required-headers",
           message: `File ${file.path} missing required headers`,
           file: file.path,
-          suggestion: `Add required headers: ${policy.requiredHeaders.join(', ')}`
+          suggestion: `Add required headers: ${policy.requiredHeaders.join(", ")}`,
         });
       }
     }
@@ -776,11 +807,11 @@ async function validateAgainstSecurityPolicy(
   for (const file of template.files) {
     if (file.content.length > policy.maxFileSize) {
       violations.push({
-        severity: 'warning',
-        rule: 'max-file-size',
+        severity: "warning",
+        rule: "max-file-size",
         message: `File ${file.path} exceeds maximum size (${policy.maxFileSize} bytes)`,
         file: file.path,
-        suggestion: 'Split large files into smaller modules'
+        suggestion: "Split large files into smaller modules",
       });
     }
   }
@@ -791,11 +822,11 @@ async function validateAgainstSecurityPolicy(
       const secrets = scanForSecrets(file.content);
       for (const secret of secrets) {
         violations.push({
-          severity: 'error',
-          rule: 'no-secrets',
+          severity: "error",
+          rule: "no-secrets",
           message: `Potential secret detected in ${file.path}: ${secret.type}`,
           file: file.path,
-          suggestion: 'Remove hardcoded secrets and use environment variables'
+          suggestion: "Remove hardcoded secrets and use environment variables",
         });
       }
     }
@@ -804,41 +835,51 @@ async function validateAgainstSecurityPolicy(
   return violations;
 }
 
-async function getLicenseForPackage(packageName: string): Promise<string | undefined> {
+async function getLicenseForPackage(
+  packageName: string,
+): Promise<string | undefined> {
   // Simulate license lookup
   const licenses: Record<string, string> = {
-    '@modelcontextprotocol/sdk': 'MIT',
-    'axios': 'MIT',
-    'express': 'MIT',
-    'some-gpl-package': 'GPL-3.0'
+    "@modelcontextprotocol/sdk": "MIT",
+    axios: "MIT",
+    express: "MIT",
+    "some-gpl-package": "GPL-3.0",
   };
   return licenses[packageName];
 }
 
-function scanForSecrets(content: string): Array<{ type: string; value: string }> {
+function scanForSecrets(
+  content: string,
+): Array<{ type: string; value: string }> {
   const secrets: Array<{ type: string; value: string }> = [];
 
   // Check for API keys
-  const apiKeyPattern = /api[_-]?key\s*[:=]\s*["']([^"']+)["']/gi;
+  const apiKeyPattern = /api[_-]?key\s*[:=]\s*["']([^"']+) ["']/gi;
   let match = apiKeyPattern.exec(content);
   while (match) {
-    secrets.push({ type: 'API Key', value: match[1] });
+    if (match[1]) {
+      secrets.push({ type: "API Key", value: match[1] });
+    }
     match = apiKeyPattern.exec(content);
   }
 
   // Check for passwords
-  const passwordPattern = /password\s*[:=]\s*["']([^"']+)["']/gi;
+  const passwordPattern = /password\s*[:=]\s*["']([^"']+) ["']/gi;
   match = passwordPattern.exec(content);
   while (match) {
-    secrets.push({ type: 'Password', value: match[1] });
+    if (match[1]) {
+      secrets.push({ type: "Password", value: match[1] });
+    }
     match = passwordPattern.exec(content);
   }
 
   // Check for tokens
-  const tokenPattern = /token\s*[:=]\s*["']([^"']+)["']/gi;
+  const tokenPattern = /token\s*[:=]\s*["']([^"']+) ["']/gi;
   match = tokenPattern.exec(content);
   while (match) {
-    secrets.push({ type: 'Token', value: match[1] });
+    if (match[1]) {
+      secrets.push({ type: "Token", value: match[1] });
+    }
     match = tokenPattern.exec(content);
   }
 

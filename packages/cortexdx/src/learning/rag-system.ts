@@ -18,7 +18,13 @@ import {
   createProblemDocument,
   createSolutionDocument,
 } from "../storage/vector-storage.js";
-import type { Problem, Solution } from "../types.js";
+import type {
+  Problem,
+  ProblemType,
+  Severity,
+  Solution,
+  SolutionType,
+} from "../types.js";
 import type { PatternMatcher } from "./pattern-recognition.js";
 
 export interface RagConfig {
@@ -129,7 +135,17 @@ export class RagSystem {
       normalize: true,
     });
 
-    const document = createProblemDocument(problem, embedding);
+    const defaultEmbedding = {
+      values: [],
+      dimensions: 0,
+      model: "default",
+      timestamp: Date.now(),
+    };
+
+    const document = createProblemDocument(
+      problem,
+      embedding ?? defaultEmbedding,
+    );
     await this.vectorStorage.addDocument(document);
   }
 
@@ -144,7 +160,18 @@ export class RagSystem {
       normalize: true,
     });
 
-    const document = createSolutionDocument(solution, problem, embedding);
+    const defaultEmbedding = {
+      values: [],
+      dimensions: 0,
+      model: "default",
+      timestamp: Date.now(),
+    };
+
+    const document = createSolutionDocument(
+      solution,
+      problem,
+      embedding ?? defaultEmbedding,
+    );
     await this.vectorStorage.addDocument(document);
   }
 
@@ -160,11 +187,18 @@ export class RagSystem {
       normalize: true,
     });
 
+    const defaultEmbedding = {
+      values: [],
+      dimensions: 0,
+      model: "default",
+      timestamp: Date.now(),
+    };
+
     const document = createPatternDocument(
       pattern.id,
       pattern.problemSignature,
       pattern.solution,
-      embedding,
+      embedding ?? defaultEmbedding,
       pattern.successCount,
       pattern.confidence,
     );
@@ -185,6 +219,11 @@ export class RagSystem {
       text: this.extractProblemText(problem),
       normalize: true,
     });
+
+    // If embedding failed, return empty results
+    if (!queryEmbedding) {
+      return [];
+    }
 
     const searchOptions: SearchOptions = {
       topK: options?.topK || this.config.topK,
@@ -219,6 +258,11 @@ export class RagSystem {
       text: this.extractProblemText(problem),
       normalize: true,
     });
+
+    // If embedding failed, return empty results
+    if (!queryEmbedding) {
+      return [];
+    }
 
     const searchOptions: SearchOptions = {
       topK: options?.topK || this.config.topK,
@@ -321,9 +365,10 @@ export class RagSystem {
         existingPattern.id,
         resolutionTime,
       );
-      existingPattern = await this.patternStorage.loadPattern(
+      const loadedPattern = await this.patternStorage.loadPattern(
         existingPattern.id,
       );
+      existingPattern = loadedPattern ?? undefined;
       if (existingPattern) {
         await this.indexPattern(existingPattern);
       }
@@ -360,7 +405,7 @@ export class RagSystem {
       totalSolutions: vectorStats.documentsByType.solution || 0,
       totalPatterns: vectorStats.documentsByType.pattern || 0,
       embeddingModel: currentModel?.name || "unknown",
-      embeddingBackend: this.embeddingAdapter?.backend,
+      embeddingBackend: this.embeddingAdapter?.backend ?? "unknown",
       vectorStorageStats: {
         totalDocuments: vectorStats.totalDocuments,
         documentsByType: vectorStats.documentsByType,
@@ -406,6 +451,11 @@ export class RagSystem {
       text: this.extractProblemText(problem),
       normalize: true,
     });
+
+    // If embedding failed, return empty results
+    if (!queryEmbedding) {
+      return [];
+    }
 
     const searchOptions: SearchOptions = {
       topK: options?.topK || this.config.topK,
@@ -498,13 +548,8 @@ export class RagSystem {
     // Reconstruct problem from metadata
     return {
       id: doc.id.replace("problem_", ""),
-      type: doc.metadata.problemType || "unknown",
-      severity:
-        (doc.metadata.context.severity as
-          | "low"
-          | "medium"
-          | "high"
-          | "critical") || "medium",
+      type: (doc.metadata.problemType as ProblemType) || "code",
+      severity: (doc.metadata.context.severity as Severity) || "major",
       description: doc.metadata.text,
       userFriendlyDescription: doc.metadata.text,
       context: doc.metadata.context as never,
@@ -530,7 +575,7 @@ export class RagSystem {
     // Reconstruct solution from metadata
     return {
       id: doc.metadata.solutionId || doc.id.replace("solution_", ""),
-      type: (doc.metadata.context.solutionType as string) || "automated",
+      type: (doc.metadata.context.solutionType as SolutionType) || "automated",
       confidence: doc.metadata.confidence || 0.5,
       description: doc.metadata.text,
       userFriendlyDescription: doc.metadata.text,
@@ -538,12 +583,16 @@ export class RagSystem {
       codeChanges: [],
       configChanges: [],
       testingStrategy: {
+        type: "manual",
+        tests: [],
+        coverage: 0,
         automated: false,
-        testCases: [],
       },
       rollbackPlan: {
         steps: [],
+        automated: false,
         backupRequired: false,
+        riskLevel: "low",
       },
     };
   }
@@ -570,12 +619,16 @@ export class RagSystem {
         codeChanges: [],
         configChanges: [],
         testingStrategy: {
+          type: "manual",
+          tests: [],
+          coverage: 0,
           automated: false,
-          testCases: [],
         },
         rollbackPlan: {
           steps: [],
+          automated: false,
           backupRequired: false,
+          riskLevel: "low",
         },
       },
       successCount: doc.metadata.successCount || 0,

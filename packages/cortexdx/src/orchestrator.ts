@@ -6,10 +6,12 @@ import { buildArcTddPlan } from "./report/arctdd.js";
 import { buildFilePlan } from "./report/fileplan.js";
 import { buildJsonReport } from "./report/json.js";
 import { buildMarkdownReport } from "./report/markdown.js";
+import { storeConsolidatedReport } from "./report/consolidated-report.js";
 import type { Finding } from "./types.js";
 
 interface DiagnoseOptions {
   out?: string;
+  reportOut?: string;
   full?: boolean;
   suites?: string;
   deterministic?: boolean;
@@ -24,6 +26,8 @@ interface DiagnoseOptions {
   auth0Audience?: string;
   auth0Scope?: string;
   mcpApiKey?: string;
+  auth0DeviceCode?: boolean;
+  auth0DeviceCodeEndpoint?: string;
 }
 
 export async function runDiagnose({
@@ -36,6 +40,7 @@ export async function runDiagnose({
   const outDir = String(opts.out ?? "reports");
   mkdirSync(outDir, { recursive: true });
   const t0 = Date.now();
+  const sessionId = `diagnose-${Date.now().toString(36)}`;
 
   const suites = typeof opts.suites === "string" && opts.suites.length > 0
     ? opts.suites.split(",").map((s) => s.trim()).filter(Boolean)
@@ -53,6 +58,9 @@ export async function runDiagnose({
     auth0Audience: opts.auth0Audience,
     auth0Scope: opts.auth0Scope,
     mcpApiKey: opts.mcpApiKey,
+    auth0DeviceCode: opts.auth0DeviceCode,
+    auth0DeviceCodeEndpoint: opts.auth0DeviceCodeEndpoint,
+    onDeviceCodePrompt: logDeviceCodePrompt,
   });
 
   const { findings } = await runPlugins({
@@ -68,10 +76,25 @@ export async function runDiagnose({
     endpoint,
     inspectedAt: new Date().toISOString(),
     durationMs: Date.now() - t0,
-    node: process.version
+    node: process.version,
+    sessionId,
   };
 
   writeArtifacts(outDir, stamp, findings);
+
+  await storeConsolidatedReport(opts.reportOut, {
+    sessionId,
+    diagnosticType: "diagnose",
+    endpoint,
+    inspectedAt: stamp.inspectedAt,
+    durationMs: stamp.durationMs,
+    findings,
+    tags: suites,
+    metadata: {
+      budgets,
+      deterministic: Boolean(opts.deterministic),
+    },
+  });
 
   const hasBlocker = findings.some((f) => f.severity === "blocker");
   const hasMajor = findings.some((f) => f.severity === "major");
@@ -97,4 +120,10 @@ function coerceNumber(value: number | string | undefined): number | undefined {
     if (!Number.isNaN(parsed)) return parsed;
   }
   return undefined;
+}
+
+function logDeviceCodePrompt(userCode: string, verificationUri: string): void {
+  console.log(
+    `[Auth0 Device Code] Visit ${verificationUri} and enter code ${userCode} to continue authentication.`,
+  );
 }

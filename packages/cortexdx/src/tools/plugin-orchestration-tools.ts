@@ -4,6 +4,7 @@
  * Requirements: 17.1, 17.5
  */
 
+import { ensureDefaultPluginWorkflows } from "../orchestration/default-workflows.js";
 import { getPluginOrchestrator, type PluginWorkflow, type WorkflowStage } from "../orchestration/plugin-orchestrator.js";
 import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolResult } from "../types.js";
 
@@ -11,6 +12,7 @@ import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolRe
  * Create MCP tools for plugin orchestration
  */
 export function createPluginOrchestrationTools(): McpTool[] {
+    ensureDefaultPluginWorkflows(getPluginOrchestrator());
     return [
         // Execute single plugin
         {
@@ -301,6 +303,7 @@ export async function executePluginOrchestrationTool(
     context: DiagnosticContext | DevelopmentContext,
 ): Promise<McpToolResult> {
     const orchestrator = getPluginOrchestrator();
+    ensureDefaultPluginWorkflows(orchestrator);
 
     switch (tool.name) {
         case "cortexdx_execute_plugin":

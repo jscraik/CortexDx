@@ -1,0 +1,82 @@
+[
+    {
+        "file": "packages/mcp-server/src/config/model-registry.ts",
+        "line": 102,
+        "end_line": 102,
+        "severity": "high",
+        "category": "environment|configuration",
+        "description": "Hardcoded absolute path to user's home directory prevents portability across systems. This violates production deployment standards and makes the code non-portable for other developers or production environments.",
+        "evidence": "configPath: string = '/Users/jamiecraik/.Cortex-OS/config/ollama-models.json',",
+        "fix": "configPath: string = process.env.CORTEX_MODELS_CONFIG ?? resolve(process.env.CORTEX_REPO_ROOT ?? process.cwd(), 'config/ollama-models.json'),",
+        "tests_to_add": "Test that ModelRegistry.getInstance() resolves config path from CORTEX_MODELS_CONFIG environment variable when set",
+        "rule": "custom-hardcoded-paths",
+        "standards": [
+            "codestyle:environment-config",
+            "governance:agentic-coding#production-readiness"
+        ]
+    },
+    {
+        "file": "packages/mcp-server/src/config/model-registry.ts",
+        "line": 132,
+        "end_line": 132,
+        "severity": "medium",
+        "category": "environment|configuration",
+        "description": "Hardcoded fallback path to specific user directory should use environment variable or be removed. The workspace-aware search should handle resolution without user-specific fallback.",
+        "evidence": "'/Users/jamiecraik/.Cortex-OS',",
+        "fix": "Remove this specific fallback and rely on CORTEX_REPO_ROOT environment variable or workspace resolution",
+        "tests_to_add": "Test that config resolution works without user-specific hardcoded path when CORTEX_REPO_ROOT is set",
+        "rule": "custom-hardcoded-paths",
+        "standards": [
+            "codestyle:environment-config",
+            "governance:agentic-coding#portability"
+        ]
+    },
+    {
+        "file": "packages/mcp-server/src/config/model-registry.ts",
+        "line": 158,
+        "end_line": 158,
+        "severity": "low",
+        "category": "async|performance",
+        "description": "Synchronous file I/O (readFileSync) blocks the event loop. For production systems, consider async version with AbortSignal support for graceful cancellation.",
+        "evidence": "const contents = readFileSync(resolved, 'utf8');",
+        "fix": "Consider async version: const contents = await readFile(resolved, { encoding: 'utf8', signal });\nUpdate method signature to async and accept optional AbortSignal parameter.",
+        "tests_to_add": "Test that loadConfig can be cancelled via AbortSignal timeout",
+        "rule": "prefer-async-fs",
+        "standards": [
+            "codestyle:async-patterns",
+            "governance:agentic-coding#performance"
+        ]
+    },
+    {
+        "file": "packages/mcp-server/src/config/hybrid.ts",
+        "line": 174,
+        "end_line": 178,
+        "severity": "low",
+        "category": "error-handling",
+        "description": "Silent catch block swallows errors without logging context. Even when falling through to legacy config, the reason for ModelRegistry failure should be logged for debugging.",
+        "evidence": "} catch {\n\t\t// Fall through to legacy config\n\t}",
+        "fix": "} catch (error) {\n\t\tlogger?.debug(\n\t\t\tcreateBrandedLog('model_registry_fallback', { error: String(error) }),\n\t\t\t'ModelRegistry unavailable, using legacy config'\n\t\t);\n\t}",
+        "tests_to_add": "Test that fallback to legacy config logs appropriate debug message when ModelRegistry fails",
+        "rule": "no-empty-catch",
+        "standards": [
+            "codestyle:error-handling",
+            "governance:agentic-coding#observability"
+        ]
+    },
+    {
+        "file": "packages/mcp-server/src/config/hybrid.ts",
+        "line": 195,
+        "end_line": 199,
+        "severity": "low",
+        "category": "error-handling",
+        "description": "Silent catch block in selectOllamaModelForTask swallows errors without logging. Same observability issue as deriveOllamaPrewarmModels.",
+        "evidence": "} catch {\n\t\t// Fall through to legacy config\n\t}",
+        "fix": "Same as previous issue: add logger?.debug() with brAInwav branded log",
+        "tests_to_add": "Test that model selection fallback logs debug message when ModelRegistry fails",
+        "rule": "no-empty-catch",
+        "standards": [
+            "codestyle:error-handling",
+            "governance:agentic-coding#observability"
+        ]
+    }
+]

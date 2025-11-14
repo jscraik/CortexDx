@@ -133,6 +133,7 @@ export interface ConversationContext {
   mcpContext?: MCPContext;
   codeContext?: string;
   problemContext?: Problem;
+  deterministicSeed?: number;
 }
 
 export interface MCPContext {
@@ -451,6 +452,7 @@ export interface DiagnosticContext {
   llm?: LlmAdapter | null;
   evidence: (ev: EvidencePointer) => void;
   deterministic?: boolean;
+  deterministicSeed?: number;
   transport?: TransportState;
   artifacts?: DiagnosticArtifacts;
 }
@@ -496,6 +498,11 @@ export interface DevelopmentContext extends DiagnosticContext {
   userExpertiseLevel: "beginner" | "intermediate" | "expert";
   projectContext?: ProjectContext;
   conversationHistory: ChatMessage[];
+  requireAcademicInsights?: boolean;
+  memoryCheck?: {
+    path: string;
+    thresholdMb: number;
+  };
 }
 
 export interface ProjectContext {
@@ -507,6 +514,7 @@ export interface ProjectContext {
   dependencies: string[];
   configFiles: string[];
   sourceFiles: string[];
+  rootPath?: string;
 }
 
 // Enhanced plugin interfaces
@@ -569,6 +577,7 @@ export interface McpToolResult {
     mimeType?: string;
   }>;
   isError?: boolean;
+  structuredContent?: unknown[];
 }
 
 // License validation interfaces

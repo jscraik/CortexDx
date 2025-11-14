@@ -1,15 +1,16 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createOllamaAdapter } from '../src/adapters/index.js';
 import { LlmOrchestrator, createLlmOrchestrator } from '../src/ml/orchestrator.js';
 import { getEnhancedLlmAdapter, pickLocalLLM } from '../src/ml/router.js';
 import type { Constraints, ConversationContext, DiagnosticContext, Problem } from '../src/types.js';
+import { describeIntegration } from './utils/test-mode.js';
 
 let originalEnableLocalLLM: string | undefined;
 let initializeAdaptersSpy: { mockRestore: () => void } | undefined;
 
 beforeAll(() => {
-    originalEnableLocalLLM = process.env.INSULA_ENABLE_LOCAL_LLM;
-    process.env.INSULA_ENABLE_LOCAL_LLM = 'false';
+    originalEnableLocalLLM = process.env.CORTEXDX_ENABLE_LOCAL_LLM;
+    process.env.CORTEXDX_ENABLE_LOCAL_LLM = 'false';
     initializeAdaptersSpy = vi
         .spyOn(
             LlmOrchestrator.prototype as unknown as { initializeAdapters: () => Promise<void> },
@@ -21,9 +22,9 @@ beforeAll(() => {
 afterAll(() => {
     initializeAdaptersSpy?.mockRestore();
     if (originalEnableLocalLLM === undefined) {
-        delete process.env.INSULA_ENABLE_LOCAL_LLM;
+        delete process.env.CORTEXDX_ENABLE_LOCAL_LLM;
     } else {
-        process.env.INSULA_ENABLE_LOCAL_LLM = originalEnableLocalLLM;
+        process.env.CORTEXDX_ENABLE_LOCAL_LLM = originalEnableLocalLLM;
     }
 });
 
@@ -62,11 +63,42 @@ describe('LLM Integration', () => {
     });
 });
 
-describe('LLM Performance Validation', () => {
+describeIntegration('LLM Performance Validation', () => {
     let mockContext: DiagnosticContext;
     let orchestrator: ReturnType<typeof createLlmOrchestrator> | null;
+    let fetchSpy: ReturnType<typeof vi.spyOn> | undefined;
+
+    const mockResponse = (body: unknown): Response =>
+        ({
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: async () => body,
+        }) as Response;
 
     beforeEach(() => {
+        const fetchTarget = globalThis as { fetch: typeof fetch };
+        fetchSpy = vi
+            .spyOn(fetchTarget, 'fetch')
+            .mockImplementation(async (input: RequestInfo | URL) => {
+                const url =
+                    typeof input === 'string'
+                        ? input
+                        : input instanceof URL
+                          ? input.toString()
+                          : (input as Request).url;
+                if (url.includes('/api/generate')) {
+                    return mockResponse({ response: 'mock-response', done: true });
+                }
+                if (url.includes('/v1/chat/completions')) {
+                    return mockResponse({ choices: [{ message: { content: 'mock-chat-response' } }] });
+                }
+                if (url.includes('/api/tags')) {
+                    return mockResponse({ models: [{ name: 'llama3.2' }] });
+                }
+                return mockResponse({});
+            });
+
         mockContext = {
             endpoint: 'http://localhost:3000',
             headers: { 'user-id': 'test-user' },
@@ -96,7 +128,7 @@ describe('LLM Performance Validation', () => {
 
     describe('Response Time Requirements', () => {
         it('should complete simple operations in <2s', async () => {
-            const adapter = await getEnhancedLlmAdapter();
+        const adapter = await mlRouter.getEnhancedLlmAdapter();
             if (!adapter) {
                 console.log('No LLM adapter available, skipping performance test');
                 expect(true).toBe(true); // Pass test when no adapter available
@@ -593,5 +625,12 @@ describe('LLM Performance Validation', () => {
 
             await orchestrator.endSession(sessionId);
         }, 20000);
+
+    });
+
+    afterEach(() => {
+        orchestrator = null;
+        fetchSpy?.mockRestore();
+        vi.restoreAllMocks();
     });
 });

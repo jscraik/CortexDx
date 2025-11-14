@@ -13,6 +13,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describeIntegration } from "./utils/test-mode.js";
 import {
     ClinicJsPerformanceProfilerPlugin,
     EnhancedPerformanceProfilerPlugin,
@@ -36,7 +37,7 @@ function createMockContext(): DiagnosticContext {
     };
 }
 
-describe("Enhanced Performance Profiler Plugin", () => {
+describeIntegration("Enhanced Performance Profiler Plugin", () => {
     let ctx: DiagnosticContext;
 
     beforeEach(() => {

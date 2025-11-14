@@ -9,6 +9,10 @@ import { TemplateEngine } from '../src/template-engine/engine.js';
 import { MonitoringScheduler } from '../src/healing/scheduler.js';
 import { getTemplate, getTemplateRecommendations } from '../src/templates/fix-templates.js';
 import type { DevelopmentContext, Finding } from '../src/types.js';
+import { describeIntegration } from './utils/test-mode.js';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 // Mock development context for testing
 const createMockContext = (): DevelopmentContext => ({
@@ -24,6 +28,7 @@ const createMockContext = (): DevelopmentContext => ({
   conversationHistory: [],
 });
 
+describeIntegration('Self-Healing Suite', () => {
 describe('AutoHealer', () => {
   let healer: AutoHealer;
   let mockContext: DevelopmentContext;
@@ -452,6 +457,31 @@ describe('MonitoringScheduler', () => {
       expect(importedJobs[0].config.endpoint).toBe('http://localhost:3000');
     });
   });
+
+  describe('persistence', () => {
+    it('should persist state to disk', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'monitoring-state-'));
+      const statePath = join(tempDir, 'state.json');
+      await scheduler.configurePersistence(statePath);
+
+      scheduler.addJob({
+        endpoint: 'http://localhost:8080',
+        schedule: '*/5 * * * *',
+        probes: ['handshake'],
+        autoHeal: false,
+        enabled: true,
+      });
+
+      // Allow async persistence to flush
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const snapshot = JSON.parse(readFileSync(statePath, 'utf-8'));
+      expect(snapshot.jobs).toHaveLength(1);
+      expect(snapshot.jobs[0].config.endpoint).toBe('http://localhost:8080');
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+  });
 });
 
 describe('Template System Integration', () => {
@@ -540,4 +570,5 @@ describe('Error Handling', () => {
     expect(result.summary.severity).toBe('failed');
     expect(result.summary.message).toContain('Self-healing failed');
   });
+});
 });

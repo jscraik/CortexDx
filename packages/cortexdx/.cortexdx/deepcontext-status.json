@@ -1,0 +1,58 @@
+{
+  "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx",
+    "state": "not_indexed",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2025-11-14T03:05:39.195Z",
+    "remoteStatusText": "status",
+    "codexContextDir": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextExists": false,
+    "indexedCodebasesExists": false
+  },
+  "/tmp/repo": {
+    "codebasePath": "/tmp/repo",
+    "state": "not_indexed",
+    "summary": "No DeepContext index artifacts detected; status: index cleared; missing /tmp/repo/.codex-context",
+    "updatedAt": "2025-11-14T03:05:39.197Z",
+    "remoteStatusText": "index cleared",
+    "codexContextDir": "/tmp/repo/.codex-context",
+    "codexContextExists": false,
+    "indexedCodebasesExists": false
+  },
+  "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo": {
+    "codebasePath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo",
+    "state": "ready",
+    "summary": "DeepContext index ready; status: ready",
+    "updatedAt": "2025-11-11T23:04:14.694Z",
+    "remoteStatusText": "ready",
+    "codexContextDir": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/.codex-context",
+    "codexContextExists": true,
+    "indexedCodebasesPath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/.codex-context/indexed-codebases.json",
+    "indexedCodebasesExists": true,
+    "indexedCodebasesSnapshot": "[{\"path\":\"/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo\"}]"
+  },
+  "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo": {
+    "codebasePath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo",
+    "state": "ready",
+    "summary": "DeepContext index ready; status: ready",
+    "updatedAt": "2025-11-11T23:16:10.501Z",
+    "remoteStatusText": "ready",
+    "codexContextDir": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/.codex-context",
+    "codexContextExists": true,
+    "indexedCodebasesPath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/.codex-context/indexed-codebases.json",
+    "indexedCodebasesExists": true,
+    "indexedCodebasesSnapshot": "[{\"path\":\"/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo\"}]"
+  },
+  "/Users/jamiecraik/CortexDx": {
+    "codebasePath": "/Users/jamiecraik/CortexDx",
+    "state": "ready",
+    "summary": "DeepContext index ready; status: 📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx\n**Namespace**: mcp_6be9939989f16e18\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n**Success Rate**: 0% (0/1367 chunks)\n**Log File**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`\n\n## 📚 **All Indexed Codebases** (1)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n   - **Success Rate**: 0% (0/1367 chunks)\n   - **Processing Time**: 6.7m\n   - **Log**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`",
+    "updatedAt": "2025-11-13T08:23:32.095Z",
+    "remoteStatusText": "📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx\n**Namespace**: mcp_6be9939989f16e18\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n**Success Rate**: 0% (0/1367 chunks)\n**Log File**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`\n\n## 📚 **All Indexed Codebases** (1)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n   - **Success Rate**: 0% (0/1367 chunks)\n   - **Processing Time**: 6.7m\n   - **Log**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`",
+    "codexContextDir": "/Users/jamiecraik/CortexDx/.codex-context",
+    "codexContextExists": true,
+    "indexedCodebasesPath": "/Users/jamiecraik/CortexDx/.codex-context/indexed-codebases.json",
+    "indexedCodebasesExists": true,
+    "indexedCodebasesSnapshot": "[\n  [\n    \"/Users/jamiecraik/CortexDx\",\n    {\n      \"path\": \"/Users/jamiecraik/CortexDx\",\n      \"namespace\": \"mcp_6be9939989f16e18\",\n      \"totalChunks\": 1367,\n      \"indexedAt\": \"2025-11-12T21:12:11.814Z\"\n    }\n  ]\n]"
+  }
+}

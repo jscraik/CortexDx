@@ -23,10 +23,9 @@ if (!internals) {
 
 const { loadArtifactsFromEnv } = internals;
 
-const manifestEnvKeys = ["CORTEXDX_MANIFESTS_JSON", "INSULA_MANIFESTS_JSON"] as const;
+const manifestEnvKeys = ["CORTEXDX_MANIFESTS_JSON"] as const;
 const originalEnv: Record<(typeof manifestEnvKeys)[number], string | undefined> = {
   CORTEXDX_MANIFESTS_JSON: undefined,
-  INSULA_MANIFESTS_JSON: undefined,
 };
 
 beforeEach(() => {
@@ -71,25 +70,9 @@ describe("loadArtifactsFromEnv", () => {
     });
   });
 
-  it("should fall back to INSULA_MANIFESTS_JSON and warn", () => {
-    process.env.INSULA_MANIFESTS_JSON = JSON.stringify([
-      { name: "pom.xml", content: "<project />" },
-    ]);
-
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
-      // silence during test
-    });
-
+  it("returns undefined when manifests are not provided", () => {
+    delete process.env.CORTEXDX_MANIFESTS_JSON;
     const artifacts = loadArtifactsFromEnv();
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      "CORTEXDX_MANIFESTS_JSON is not set; falling back to deprecated INSULA_MANIFESTS_JSON",
-    );
-    expect(artifacts?.dependencyManifests).toHaveLength(1);
-    expect(artifacts?.dependencyManifests?.[0]).toMatchObject({
-      name: "pom.xml",
-      encoding: "utf-8",
-      content: "<project />",
-    });
+    expect(artifacts).toBeUndefined();
   });
 });

@@ -38,7 +38,12 @@
     <true/>
 
     <key>KeepAlive</key>
-    <true/>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
 
     <key>ThrottleInterval</key>
     <integer>10</integer>
@@ -61,7 +66,17 @@
     <key>SoftResourceLimits</key>
     <dict>
         <key>NumberOfFiles</key>
-        <integer>1024</integer>
+        <integer>2048</integer>
+        <key>ResidentSetSize</key>
+        <integer>1342177280</integer>
+    </dict>
+
+    <key>HardResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>4096</integer>
+        <key>ResidentSetSize</key>
+        <integer>1610612736</integer>
     </dict>
 
     <!-- User Context -->

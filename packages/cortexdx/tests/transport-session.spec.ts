@@ -11,14 +11,18 @@ import { createInspectorSession } from "../src/context/inspector-session.js";
 
 const originalFetch = globalThis.fetch;
 
-function createResponse(body: unknown, headers: Record<string, string> = {}): Response {
+function createResponse(
+  body: unknown,
+  headers: Record<string, string> = {},
+): Response {
   return {
     ok: true,
     status: 200,
     json: async () => body,
     text: async () => JSON.stringify(body),
     headers: {
-      get: (name: string) => headers[name] ?? headers[name.toLowerCase()] ?? null,
+      get: (name: string) =>
+        headers[name] ?? headers[name.toLowerCase()] ?? null,
     } as Headers,
   } as Response;
 }
@@ -36,11 +40,13 @@ describe("Inspector session", () => {
       .fn()
       .mockResolvedValueOnce(
         createResponse(
-          { result: { serverInfo: { name: "FastMCP" } } },
+          { jsonrpc: "2.0", result: { serverInfo: { name: "FastMCP" } } },
           { "mcp-session-id": "session-123" },
         ),
       )
-      .mockResolvedValueOnce(createResponse({ result: { tools: [] } }));
+      .mockResolvedValueOnce(
+        createResponse({ jsonrpc: "2.0", result: { tools: [] } }),
+      );
 
     globalThis.fetch = fetchMock as typeof fetch;
 
@@ -50,7 +56,13 @@ describe("Inspector session", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const transcript = session.transport.transcript();
     expect(transcript.sessionId).toBe("session-123");
-    expect(transcript.initialize?.response?.result?.serverInfo?.name).toBe("FastMCP");
+    expect(
+      (
+        transcript.initialize?.response as unknown as {
+          result?: { serverInfo?: { name?: string } };
+        }
+      )?.result?.serverInfo?.name,
+    ).toBe("FastMCP");
     expect(transcript.exchanges).toHaveLength(1);
     expect(transcript.exchanges[0].method).toBe("tools/list");
   });
@@ -60,7 +72,7 @@ describe("Inspector session", () => {
       .fn()
       .mockResolvedValueOnce(
         createResponse(
-          { result: { serverInfo: { name: "FastMCP" } } },
+          { jsonrpc: "2.0", result: { serverInfo: { name: "FastMCP" } } },
           { "mcp-session-id": "session-999" },
         ),
       );
@@ -68,8 +80,16 @@ describe("Inspector session", () => {
 
     const sseProbeMock = sseProbe as unknown as ReturnType<typeof vi.fn>;
     sseProbeMock
-      .mockResolvedValueOnce({ ok: false, reason: "HTTP 404", resolvedUrl: "http://x/events" })
-      .mockResolvedValueOnce({ ok: true, firstEventMs: 12, resolvedUrl: "http://x/sse" });
+      .mockResolvedValueOnce({
+        ok: false,
+        reason: "HTTP 404",
+        resolvedUrl: "http://x/events",
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        firstEventMs: 12,
+        resolvedUrl: "http://x/sse",
+      });
 
     const session = createInspectorSession("http://example.com/mcp");
     const result = await session.sseProbe("http://example.com/events");

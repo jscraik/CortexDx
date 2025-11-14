@@ -141,12 +141,7 @@ export interface PackageManifest {
   type:
     | "npm"
     | "pip"
-    | "maven"
-    | "gradle"
-    | "cargo"
-    | "go"
-    | "composer"
-    | "nuget";
+    | "maven";
   path: string;
   content: string;
 }
@@ -324,8 +319,9 @@ export class SBOMGenerator {
         if (!trimmed || trimmed.startsWith("#")) continue;
 
         const match = trimmed.match(/^([a-zA-Z0-9_-]+)([=<>!]+)(.+)$/);
-        if (match) {
-          const [, name, , version] = match;
+        if (match?.[1] && match?.[3]) {
+          const name = match[1];
+          const version = match[3];
           components.push(this.createPipComponent(name, version, options));
         }
       }
@@ -386,15 +382,21 @@ export class SBOMGenerator {
 
     // Basic XML parsing for Maven dependencies
     // In production, use a proper XML parser
-    const dependencyMatches = manifest.content.matchAll(
-      /<dependency>[\s\S]*?<groupId>(.*?)<\/groupId>[\s\S]*?<artifactId>(.*?)<\/artifactId>[\s\S]*?<version>(.*?)<\/version>[\s\S]*?<\/dependency>/g,
+    const dependencyMatches = Array.from(
+      manifest.content.matchAll(
+        /<dependency>[\s\S]*?<groupId>(.*?)<\/groupId>[\s\S]*?<artifactId>(.*?)<\/artifactId>[\s\S]*?<version>(.*?)<\/version>[\s\S]*?<\/dependency>/g,
+      ),
     );
 
     for (const match of dependencyMatches) {
-      const [, groupId, artifactId, version] = match;
-      components.push(
-        this.createMavenComponent(groupId, artifactId, version, options),
-      );
+      if (match[1] && match[2] && match[3]) {
+        const groupId = match[1];
+        const artifactId = match[2];
+        const version = match[3];
+        components.push(
+          this.createMavenComponent(groupId, artifactId, version, options),
+        );
+      }
     }
 
     return components;

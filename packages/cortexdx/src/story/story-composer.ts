@@ -1,7 +1,7 @@
-import type { DepGraph, Node } from "../graph/dependency-graph.js";
 import type { Event } from "../anomaly/rules.js";
+import type { DepGraph } from "../graph/dependency-graph.js";
 import { scoreConfidence } from "./confidence.js";
-import { StorySchema, type Story } from "./story-schema.js";
+import { type Story, StorySchema } from "./story-schema.js";
 
 export type StoryComposeOptions = {
   defaultScope?: Story["scope"];
@@ -15,7 +15,10 @@ const TRIGGER_KIND_MAP: Record<Event["kind"], Story["trigger"]["kind"]> = {
   fallback: "fallback",
 };
 
-const ACTION_DEFINITIONS: Record<Event["kind"], { id: string; label: string; command: string }> = {
+const ACTION_DEFINITIONS: Record<
+  Event["kind"],
+  { id: string; label: string; command: string }
+> = {
   latency: {
     id: "action-reprobe",
     label: "Run targeted reprobe",
@@ -45,7 +48,9 @@ export function composeStory(
 ): Story {
   const path = derivePath(graph, event.target);
   const scope = inferScope(graph, event.target, options.defaultScope);
-  const timestamp = new Date(options.deterministicNow ?? event.at).toISOString();
+  const timestamp = new Date(
+    options.deterministicNow ?? event.at,
+  ).toISOString();
   const evidence = normalizeEvidence(event.meta);
   const story: Story = {
     id: buildStoryId(event),
@@ -59,29 +64,45 @@ export function composeStory(
     symptom: buildSymptom(event, scope),
     evidence,
     confidence: scoreConfidence(event, { pathLength: path.length, evidence }),
-    suggested_actions: buildActions(event, path[path.length - 1] ?? event.target),
+    suggested_actions: buildActions(
+      event,
+      path[path.length - 1] ?? event.target,
+    ),
   };
 
   return StorySchema.parse(story);
 }
 
-function derivePath(graph: DepGraph, target: string, trail = new Set<string>()): string[] {
+function derivePath(
+  graph: DepGraph,
+  target: string,
+  trail = new Set<string>(),
+): string[] {
   if (trail.has(target)) {
     return [target];
   }
-  const parents = graph.edges.filter((edge) => edge.to === target).map((edge) => edge.from);
+  const parents = graph.edges
+    .filter((edge) => edge.to === target)
+    .map((edge) => edge.from);
   if (parents.length === 0) {
     return [target];
   }
 
-  return parents.reduce<string[]>((best, parent) => {
-    const branch = derivePath(graph, parent, new Set(trail).add(target));
-    const candidate = [...branch, target];
-    return candidate.length > best.length ? candidate : best;
-  }, [target]);
+  return parents.reduce<string[]>(
+    (best, parent) => {
+      const branch = derivePath(graph, parent, new Set(trail).add(target));
+      const candidate = [...branch, target];
+      return candidate.length > best.length ? candidate : best;
+    },
+    [target],
+  );
 }
 
-function inferScope(graph: DepGraph, target: string, fallback: Story["scope"] | undefined): Story["scope"] {
+function inferScope(
+  graph: DepGraph,
+  target: string,
+  fallback: Story["scope"] | undefined,
+): Story["scope"] {
   const node = graph.nodes.find((item) => item.id === target);
   if (node?.type) {
     return (node.type === "service" ? "server" : node.type) as Story["scope"];
@@ -107,7 +128,10 @@ function normalizeEvidence(meta: Record<string, unknown>): Story["evidence"] {
   };
 }
 
-function buildActions(event: Event, target: string): Story["suggested_actions"] {
+function buildActions(
+  event: Event,
+  target: string,
+): Story["suggested_actions"] {
   const definition = ACTION_DEFINITIONS[event.kind];
   if (!definition) {
     return [];
@@ -147,7 +171,7 @@ function buildSymptom(event: Event, scope: Story["scope"]): Story["symptom"] {
     case "errors":
       return {
         user_visible: `${prefix} requests started failing intermittently`,
-        technical: `Error rate delta ${(event.meta.delta ?? 0) * 100}%`,
+        technical: `Error rate delta ${(((event.meta.delta as number | undefined) ?? 0) * 100).toFixed(2)}%`,
       };
     case "fallback":
       return {
@@ -163,6 +187,7 @@ function buildSymptom(event: Event, scope: Story["scope"]): Story["symptom"] {
 }
 
 function buildStoryId(event: Event): string {
-  const normalizedTarget = event.target.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "target";
+  const normalizedTarget =
+    event.target.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "target";
   return `story-${event.kind}-${normalizedTarget}-${Math.abs(event.at)}`;
 }

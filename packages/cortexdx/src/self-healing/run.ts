@@ -2,15 +2,15 @@ import fs from "node:fs";
 import path from "node:path";
 import type { NormalizedFinding } from "./findings.js";
 import { runSelfHealingGraph } from "./graph.js";
-import { PromptCache } from "./prompt-cache.js";
 import { generateReasoningSummary } from "./ollama-reasoner.js";
+import { PromptCache } from "./prompt-cache.js";
 
 export interface SelfHealingRunOptions {
   outputDir: string;
   deterministic: boolean;
   model: string;
   plugins: string[];
-  timestamp: string;
+  timestamp?: string;
   dryRun: boolean;
   endpoint: string;
 }
@@ -20,7 +20,9 @@ export interface RunResult {
   markdownPath: string;
 }
 
-export async function executeSelfHealingRun(options: SelfHealingRunOptions): Promise<RunResult> {
+export async function executeSelfHealingRun(
+  options: SelfHealingRunOptions,
+): Promise<RunResult> {
   fs.mkdirSync(options.outputDir, { recursive: true });
 
   const graphResult = await runSelfHealingGraph({
@@ -31,7 +33,9 @@ export async function executeSelfHealingRun(options: SelfHealingRunOptions): Pro
   const normalizedFindings = graphResult.findings;
   const severitySummary = computeSeveritySummary(normalizedFindings);
 
-  const cache = new PromptCache(path.join(process.cwd(), "reports", "_cache", "ollama"));
+  const cache = new PromptCache(
+    path.join(process.cwd(), "reports", "_cache", "ollama"),
+  );
   const analysis = await generateReasoningSummary(normalizedFindings, {
     cache,
     deterministic: options.deterministic,
@@ -70,7 +74,11 @@ export async function executeSelfHealingRun(options: SelfHealingRunOptions): Pro
   };
 
   const summaryPath = path.join(options.outputDir, "summary.json");
-  fs.writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`, "utf-8");
+  fs.writeFileSync(
+    summaryPath,
+    `${JSON.stringify(summary, null, 2)}\n`,
+    "utf-8",
+  );
 
   const markdownPath = path.join(options.outputDir, "summary.md");
   fs.writeFileSync(
@@ -126,8 +134,10 @@ function buildMarkdownReport(
       lines.push(
         `- [${finding.severity.toUpperCase()}] ${finding.title} (${finding.source})`,
         `  - Location: ${finding.location?.file ?? "n/a"}`,
-        finding.recommendation ? `  - Recommendation: ${finding.recommendation}` : undefined,
       );
+      if (finding.recommendation) {
+        lines.push(`  - Recommendation: ${finding.recommendation}`);
+      }
     }
   }
 

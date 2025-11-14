@@ -1,4 +1,4 @@
-# Vibe Check Oversight Gate — CortexDx MCP Governance
+# Vibe Check Oversight Gate — Cortex-OS Governance
 
 **Status:** Authoritative  
 **Scope:** All human and AI agent executions (planning → action)  
@@ -22,35 +22,27 @@ The Vibe Check MCP gate provides mandatory human-in-the-loop oversight before an
 
 ### 2.1 Academic Research Integration (Mandatory)
 
-Before running vibe check, all implementation plans MUST be enhanced with academic research and validated for license compliance by using the academic MCP providers that ship with CortexDx (Wikidata, arXiv, Semantic Scholar, OpenAlex, Context7, EXA, Vibe Check). Invoke the tool definitions in `packages/cortexdx/src/tools/academic-integration-tools.ts` via your preferred MCP client (CortexDx CLI, `curl`, or another MCP-aware agent), capture the JSON-RPC transcripts, and store them under `~/.cortexdx/tasks/<slug>/logs/academic-research/`. A minimal example using `validate_architecture_academic`:
+Before running vibe check, all implementation plans MUST be enhanced with academic research and validated for license compliance using the built-in MCP providers.
 
-```bash
-curl -s ${ACADEMIC_MCP_URL:-http://127.0.0.1:3029}/mcp \
-  -H 'Content-Type: application/json' \
-  -d '{
-        "jsonrpc":"2.0",
-        "id":"acad-001",
-        "method":"tools/call",
-        "params":{
-          "name":"validate_architecture_academic",
-          "arguments":{
-            "architectureSpec":"<plan summary>",
-            "researchDomains":["distributed systems","security"],
-            "includeLicenseValidation":true,
-            "checkCodeQuality":true
-          }
-        }
-      }' \
-  | tee ~/.cortexdx/tasks/<slug>/logs/academic-research/validate_architecture_academic.json
+**Available Academic MCP Providers:**
+
+- **Wikidata MCP** (Port 3029): Vector search for entities, properties, and relationships via `mcp_wikidata_*` tools
+- **arXiv MCP** (Port 3041): Semantic search for recent papers and technical approaches via `mcp_arxiv_*` tools
+- **Semantic Scholar API**: Identify proven solutions and highly-cited approaches via HTTP client
+- **OpenAlex API**: Discover broad research patterns and collaborations via HTTP client
+- **Context7 MCP**: Access domain-specific knowledge and best practices via `mcp_context7_*` tools
+
+**Research Workflow:**
+Use MCP tools directly in your AI agent workflow:
+
+```typescript
+// Example: Query academic sources via MCP
+await mcpClient.callTool('mcp_wikidata_vector_search', { query: '<concept>' });
+await mcpClient.callTool('mcp_arxiv_search', { query: '<research topic>' });
+await mcpClient.callTool('mcp_context7_get-library-docs', { context7CompatibleLibraryID: '<lib>' });
 ```
 
-**Research Requirements:**
-
-- **Wikidata Vector Search**: Query relevant entities, properties, and relationships (Port 3029)
-- **arXiv Semantic Search**: Find recent papers and technical approaches (Port 3041)
-- **Semantic Scholar**: Identify proven solutions and highly-cited approaches (HTTP API)
-- **OpenAlex**: Discover broad research patterns and collaborations (HTTP API)
-- **Context7**: Access domain-specific knowledge and best practices (HTTP API client with caching)
+Store findings in `~/.Cortex-OS/tasks/<slug>/logs/academic-research/findings.json`
 
 **License Validation Requirements:**
 
@@ -72,24 +64,51 @@ curl -s ${ACADEMIC_MCP_URL:-http://127.0.0.1:3029}/mcp \
 
 ## 3. Invocation Requirements
 
-### 3.1 CLI Shortcut
+### 3.1 MCP Tool Invocation
 
-Use the bundled Vibe Check MCP provider at `${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}` (tools `vibe_check`, `vibe_learn`). Submit a `tools/call` request containing the current goal, ≤7-step plan, academic evidence pointers, and OWASP LLM control mapping; save the JSON response under `~/.cortexdx/tasks/<slug>/logs/vibe-check/<session-id>.json`. A `curl` invocation identical to the JSON-RPC example in §3.3 is sufficient; CLI wrappers are optional as long as the stored transcript shows the provider’s approval.
+Invoke the `vibe_check` MCP tool directly from your AI agent:
+
+```typescript
+// Call vibe_check MCP tool
+const response = await mcpClient.callTool('vibe_check', {
+  goal: '<task summary>',
+  plan: '1. Step one. 2. Step two. ... (max 7 steps)',
+  sessionId: '<task-slug>-<timestamp>'
+});
+
+// Save response to evidence
+fs.writeFileSync(
+  '~/.Cortex-OS/tasks/<slug>/logs/vibe-check/initial.json',
+  JSON.stringify(response, null, 2)
+);
+```
 
 **Parameters:**
 
-- `--goal` — concise task objective (≤ 140 chars).
-- `--plan` — ordered steps (≤ 7, numbered). Use `--plan-file` to stream from disk. Link each step to the relevant control ID(s) from `/.cortexdx/rules/llm-threat-controls.md` when elevated risk is identified.
-- `--session` — stable identifier (task slug + timestamp is recommended).
-- `--save` — required; stores canonical JSON under `logs/vibe-check/` in the task directory.
-- `--with-academic-research` — automatically runs academic research queries to enhance the plan
-- `--validate-licenses` — enables license validation for academic content (mandatory)
-- `--risk-threshold` — maximum allowed risk level (default: review)
-- The script automatically sets `Accept: application/json, text/event-stream` and emits the `brAInwav-vibe-check` log marker.
+- `goal` — concise task objective (≤ 140 chars)
+- `plan` — ordered steps (≤ 7, numbered). Link each step to the relevant control ID(s) from `/.cortexdx/rules/llm-threat-controls.md` when elevated risk is identified
+- `sessionId` — stable identifier (task slug + timestamp is recommended)
+
+**Important Notes:**
+
+- The Vibe Check MCP server must be running on `${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}`
+- Academic research should be performed BEFORE calling `vibe_check` using the available MCP tools
+- Store the raw response in `logs/vibe-check/` in the task directory
+- The response automatically includes the `brAInwav-vibe-check` log marker
+
+**Connector Outage Protocol**
+
+- When any academic MCP connector is unavailable, check connector health via `/health` endpoints:
+  - Wikidata MCP: `curl ${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health`
+  - arXiv MCP: `curl ${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health`
+  - Vibe Check MCP: `curl ${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}/health`
+- Document the outage in a waiver JSON at `logs/academic-research/<slug>-<timestamp>-waiver.json` with `[brAInwav]` branding
+- Record the waiver pointer in `run-manifest.json` and schedule a follow-up check within 72 hours
+- Plans submitted to Oversight must surface outstanding uncertainties (e.g., connector uptime, attestation tooling) so reviewers can challenge mitigations early
 
 **Enhanced Plan Format with Research Integration:**
 
-```text
+```
 Plan for: "Implement API rate limiting"
 1. Research rate limiting patterns and best practices (Research-backed: arXiv:2301.12345, Semantic Scholar citations: 156)
 2. Design token bucket algorithm based on academic standards (Research-backed: Context7 patterns)
@@ -111,7 +130,7 @@ Plan for: "Implement API rate limiting"
 
 ### 3.2 Server Setup
 
-The Vibe Check MCP server is now included in the CortexDx MCP monorepo:
+The Vibe Check MCP server is now included in the Cortex-OS monorepo:
 
 ```bash
 # Local development setup

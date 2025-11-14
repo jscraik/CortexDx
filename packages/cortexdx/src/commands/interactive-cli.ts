@@ -11,6 +11,11 @@ import {
   formatOutput,
   parseCSV,
 } from "./cli-utils.js";
+import { runAcademicResearch, selectConfiguredProviders } from "../research/academic-researcher.js";
+import {
+  DeepContextClient,
+  resolveDeepContextApiKey,
+} from "../deepcontext/client.js";
 
 interface InteractiveModeOptions {
   expertise: string;
@@ -69,6 +74,9 @@ interface TutorialOptions {
   expertise: string;
   lang: string;
   exercises: boolean;
+  research?: boolean;
+  researchProviders?: string;
+  researchLimit?: string;
 }
 
 /**
@@ -680,36 +688,11 @@ export const runCreateTutorial = async (
   progress.start();
 
   try {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    progress.update("Creating step-by-step guide");
-
-    if (opts.exercises) {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      progress.update("Generating exercises");
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    progress.update("Adding code examples");
-
+    await simulateTutorialWork(progress, opts);
     progress.stop();
 
-    console.log(
-      formatOutput("\n✓ Tutorial created successfully!", "success", true),
-    );
-    console.log(formatOutput(`\nTopic: ${topic}`, "info", true));
-    console.log(
-      formatOutput(`Expertise Level: ${opts.expertise}`, "info", true),
-    );
-    console.log(formatOutput(`Language: ${opts.lang}`, "info", true));
-
-    console.log(
-      formatOutput(
-        "\nNote: Tutorial creation is not yet fully implemented. This is a preview.",
-        "warning",
-        true,
-      ),
-    );
-
+    const research = await gatherTutorialResearch(topic, opts);
+    printTutorialSummary(topic, opts, research);
     return 0;
   } catch (error) {
     progress.stop();
@@ -723,6 +706,49 @@ export const runCreateTutorial = async (
     return 1;
   }
 };
+
+async function simulateTutorialWork(
+  progress: ReturnType<typeof createProgressIndicator>,
+  opts: TutorialOptions,
+): Promise<void> {
+  const steps = [
+    { label: "Creating step-by-step guide", delay: 200 },
+    ...(opts.exercises ? [{ label: "Generating exercises", delay: 150 }] : []),
+    { label: "Adding code examples", delay: 150 },
+  ];
+  for (const step of steps) {
+    await pause(step.delay);
+    progress.update(step.label);
+  }
+}
+
+function printTutorialSummary(
+  topic: string,
+  opts: TutorialOptions,
+  research: TutorialResearch | null,
+): void {
+  console.log(formatOutput("\n✓ Tutorial created successfully!", "success", true));
+  console.log(formatOutput(`\nTopic: ${topic}`, "info", true));
+  console.log(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
+  console.log(formatOutput(`Language: ${opts.lang}`, "info", true));
+
+  printListSection("\nOutline:", buildTutorialOutline(topic, opts.expertise, research));
+  printCodeSection(opts.lang, topic);
+
+  if (opts.exercises) {
+    printListSection("\nExercises:", buildTutorialExercises(topic, research));
+  }
+
+  printResearchSection(research);
+
+  console.log(
+    formatOutput(
+      "\nNote: Tutorial creation is not yet fully implemented. This is a preview.",
+      "warning",
+      true,
+    ),
+  );
+}
 
 /**
  * Explain MCP concept
@@ -787,3 +813,188 @@ export const runExplainConcept = async (
     return 1;
   }
 };
+
+interface TutorialResearch {
+  highlights: string[];
+  deepContextSnippets: string[];
+  artifactsDir?: string;
+}
+
+async function gatherTutorialResearch(
+  topic: string,
+  opts: TutorialOptions,
+): Promise<TutorialResearch | null> {
+  if (opts.research === false) {
+    return null;
+  }
+  try {
+    const requested = opts.researchProviders
+      ? parseCSV(opts.researchProviders)
+      : undefined;
+    const { ready, missing } = selectConfiguredProviders(requested);
+    if (missing.length) {
+      console.warn(
+        "[Tutorial] Skipping providers with missing env vars:",
+        missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
+      );
+    }
+    if (ready.length === 0) {
+      console.warn(
+        "[Tutorial] Academic research probe disabled (no configured providers).",
+      );
+      return null;
+    }
+    const limit = parseTutorialLimit(opts.researchLimit);
+    const report = await runAcademicResearch({
+      topic,
+      limit,
+      deterministic: true,
+      providers: ready,
+    });
+    if (report.summary.totalFindings === 0) {
+      return null;
+    }
+    const highlights = report.providers
+      .flatMap((provider) =>
+        provider.findings.slice(0, 1).map(
+          (finding) =>
+            `${provider.providerName}: ${finding.title} (${finding.severity})`,
+        ),
+      )
+      .slice(0, 3);
+    const deepContextSnippets = await gatherDeepContextSnippets(topic);
+    return {
+      highlights,
+      deepContextSnippets,
+      artifactsDir: report.artifacts?.dir,
+    };
+  } catch (error) {
+    console.warn(
+      "[Tutorial] Skipping academic research probe:",
+      error instanceof Error ? error.message : String(error),
+    );
+    return null;
+  }
+}
+
+function parseTutorialLimit(value?: string): number {
+  if (!value) return 2;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? 2 : Math.max(1, parsed);
+}
+
+async function gatherDeepContextSnippets(topic: string): Promise<string[]> {
+  try {
+    const apiKey = resolveDeepContextApiKey();
+    if (!apiKey) {
+      return [];
+    }
+    const client = new DeepContextClient({
+      wildcardApiKey: apiKey,
+      logger: () => undefined,
+    });
+    const result = await client.searchCodebase(
+      process.cwd(),
+      `${topic} MCP tutorial`,
+      3,
+    );
+    return result.matches.slice(0, 3).map((match) => {
+      const snippet = match.content?.replace(/\s+/g, " ").trim() ?? "";
+      return `${match.file_path}:${match.start_line}-${match.end_line} — ${snippet.slice(0, 120)}`;
+    });
+  } catch (error) {
+    console.warn(
+      "[Tutorial] DeepContext search failed:",
+      error instanceof Error ? error.message : String(error),
+    );
+    return [];
+  }
+}
+
+function buildTutorialOutline(
+  topic: string,
+  expertise: TutorialOptions["expertise"],
+  research: TutorialResearch | null,
+): string[] {
+  const outline = [
+    `Frame the scenario: ${topic} diagnostic workflow.`,
+    "Wire the CLI output into self-improvement or LangGraph orchestration.",
+    "Attach evidence pointers (files, links, DeepContext) to every finding.",
+  ];
+  if (expertise === "beginner") {
+    outline.unshift("Review MCP handshake basics and CLI invocation.");
+  } else if (expertise === "expert") {
+    outline.push("Cross-link findings to governance packs and mitigation playbooks.");
+  }
+  if (research?.highlights.length) {
+    outline.push(`Incorporate research insight: ${research.highlights[0]}`);
+  }
+  return outline;
+}
+
+function buildTutorialExercises(
+  topic: string,
+  research: TutorialResearch | null,
+): string[] {
+  const exercises = [
+    `Implement a deterministic probe for ${topic} and capture severity deltas.`,
+    "Extend the snippet to emit remediation hints per finding.",
+  ];
+  if (research?.deepContextSnippets.length) {
+    exercises.push(
+      `Refactor the code at ${research.deepContextSnippets[0]} to integrate the tutorial's best practice.`,
+    );
+  }
+  return exercises;
+}
+
+function printListSection(title: string, entries: string[]): void {
+  if (!entries.length) return;
+  console.log(formatOutput(title, "info", true));
+  for (const entry of entries) {
+    console.log(formatOutput(`• ${entry}`, "info", true));
+  }
+}
+
+function printCodeSection(language: string | undefined, topic: string): void {
+  const snippet = createTutorialSnippet(language ?? "typescript", topic);
+  console.log(formatOutput("\nKey Snippet:", "info", true));
+  console.log(snippet);
+}
+
+function createTutorialSnippet(lang: string, topic: string): string {
+  const header = `\`\`\`${lang}`;
+  const body =
+    lang === "python"
+      ? [
+          "def run_diagnostic(endpoint: str) -> None:",
+          "    from cortexdx import diagnose",
+          "    result = diagnose(endpoint, suites=['protocol', 'security'])",
+          "    for finding in result.findings:",
+          "        print(f\"{finding.severity}: {finding.title}\")",
+        ]
+      : [
+          "import { runDiagnose } from '@brainwav/cortexdx';",
+          "",
+          "async function runTutorialProbe(endpoint: string) {",
+          "  const result = await runDiagnose({",
+          "    endpoint, suites: 'protocol,security', deterministic: true,",
+          "  });",
+          "  console.log(`Findings for ${endpoint}: ${result}`);",
+          "}",
+        ];
+  return `${header}\n// Focus: ${topic}\n${body.join("\n")}\n\`\`\``;
+}
+
+function printResearchSection(research: TutorialResearch | null): void {
+  if (!research) return;
+  printListSection("\nResearch Highlights:", research.highlights);
+  if (research.artifactsDir) {
+    console.log(formatOutput(`Artifacts: ${research.artifactsDir}`, "info", true));
+  }
+  printListSection("\nDeepContext References:", research.deepContextSnippets);
+}
+
+async function pause(durationMs: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, durationMs));
+}

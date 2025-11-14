@@ -97,7 +97,8 @@ export class FlictIntegration {
       }
     }
 
-    return [...new Set(suggestions)];
+    // Use a more compatible way to remove duplicates
+    return Array.from(new Set(suggestions));
   }
 
   /**
@@ -165,21 +166,37 @@ export class FlictIntegration {
 
     const conflicts: LicenseConflict[] = [];
 
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const compatible = await this.areLicensesCompatible(
-          licenses[i],
-          licenses[j],
-        );
-        matrix[i][j] = compatible;
-        matrix[j][i] = compatible;
+    // Use a more explicit approach to avoid TypeScript errors
+    for (let i = 0; i < n && i < licenses.length; i++) {
+      const license1 = licenses[i];
+      // Skip if license1 is undefined
+      if (license1 === undefined) {
+        continue;
+      }
+
+      for (let j = i + 1; j < n && j < licenses.length; j++) {
+        const license2 = licenses[j];
+        // Skip if license2 is undefined
+        if (license2 === undefined) {
+          continue;
+        }
+
+        const compatible = await this.areLicensesCompatible(license1, license2);
+
+        // Use a safer way to access matrix elements
+        const rowI = matrix[i];
+        const rowJ = matrix[j];
+        if (rowI !== undefined && rowJ !== undefined) {
+          rowI[j] = compatible;
+          rowJ[i] = compatible;
+        }
 
         if (!compatible) {
           conflicts.push({
-            license1: licenses[i],
-            license2: licenses[j],
+            license1,
+            license2,
             conflictType: "INCOMPATIBLE",
-            description: `${licenses[i]} and ${licenses[j]} are incompatible`,
+            description: `${license1} and ${license2} are incompatible`,
             severity: "HIGH",
           });
         }
@@ -317,13 +334,23 @@ export class FlictIntegration {
     const conflicts: LicenseConflict[] = [];
 
     for (let i = 0; i < licenses.length; i++) {
+      // Ensure we have a valid license at index i
+      if (i >= licenses.length) continue;
+      const license1 = licenses[i];
+      if (license1 === undefined) continue;
+
       for (let j = i + 1; j < licenses.length; j++) {
-        if (!this.areCopyleftLicensesCompatible(licenses[i], licenses[j])) {
+        // Ensure we have a valid license at index j
+        if (j >= licenses.length) continue;
+        const license2 = licenses[j];
+        if (license2 === undefined) continue;
+
+        if (!this.areCopyleftLicensesCompatible(license1, license2)) {
           conflicts.push({
-            license1: licenses[i],
-            license2: licenses[j],
+            license1,
+            license2,
             conflictType: "COPYLEFT_CONFLICT",
-            description: `Copyleft licenses ${licenses[i]} and ${licenses[j]} are incompatible`,
+            description: `Copyleft licenses ${license1} and ${license2} are incompatible`,
             severity: "HIGH",
             resolution:
               "Choose dependencies with compatible licenses or obtain dual-licensing",
@@ -339,6 +366,9 @@ export class FlictIntegration {
    * Get most restrictive license
    */
   private getMostRestrictiveLicense(licenses: string[]): string {
+    // Handle empty array case
+    if (licenses.length === 0) return "UNKNOWN";
+
     const restrictiveness = {
       "AGPL-3.0": 5,
       "GPL-3.0": 4,
@@ -350,10 +380,12 @@ export class FlictIntegration {
       "EPL-1.0": 2,
     };
 
-    let mostRestrictive = licenses[0];
+    const firstLicense = licenses[0];
+    let mostRestrictive = firstLicense !== undefined ? firstLicense : "UNKNOWN";
     let maxRestriction = 0;
 
     for (const license of licenses) {
+      if (license === undefined) continue;
       for (const [key, value] of Object.entries(restrictiveness)) {
         if (license.includes(key) && value > maxRestriction) {
           maxRestriction = value;
@@ -435,7 +467,8 @@ export class FlictIntegration {
       );
     }
 
-    return [...new Set(recommendations)];
+    // Use a more compatible way to remove duplicates
+    return Array.from(new Set(recommendations));
   }
 
   /**

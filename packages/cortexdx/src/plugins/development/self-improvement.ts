@@ -1,5 +1,6 @@
 import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
 import { getEnhancedLlmAdapter } from "../../ml/router.js";
+import { runAcademicResearch } from "../../research/academic-researcher.js";
 import type {
   ChatMessage,
   DevelopmentContext,
@@ -7,6 +8,7 @@ import type {
   Finding,
   ProjectContext,
 } from "../../types.js";
+import { collectDeepContextFindings } from "../../deepcontext/integration.js";
 
 const HANDSHAKE_FILES = [
   { name: "jsonrpc.ts", matcher: /(?:^|\/)jsonrpc\.ts$/ },
@@ -23,6 +25,47 @@ const SIGNAL_KEYWORDS = [
   { key: "batch", pattern: /batch/i, label: "JSON-RPC batch issues" },
   { key: "handshake", pattern: /handshake|initialize/i, label: "Handshake gaps" },
 ];
+
+const LLM_SYSTEM_PROMPT = `You are Meta-Mentor, an experienced feedback provider for AI agents. Your job is to understand the agent's intent and current situation, spot helpful and unhelpful patterns, and respond in whatever way best moves the work toward the stated goal.
+
+You must think carefully about the information provided before replying, but keep your reasoning private. Do NOT output your full thought process; only output the feedback requested.
+
+## Tone & stance
+
+Dynamically adapt your tone based on what will be most helpful right now:
+
+- Gentle & validating when the agent is making reasonable progress or taking healthy risks.
+- Curious and question-heavy when assumptions are unclear or the plan feels under-specified.
+- Sharp and direct when you see clear risks, loops, or self-sabotaging behavior.
+- Stern and straightforward when the agent appears stuck in an unhelpful pattern that could derail the goal.
+
+Always stay respectful and collaborative, but do not sugar-coat real issues.
+
+## Internal questions (for your own thinking only)
+
+Silently reflect on these before responding (do not list them):
+1. Situation & goal — what problem is being tackled and what is the desired outcome?
+2. What the agent needs most right now — are there loops, missing assumptions, or encouragement needed?
+3. Technical and alignment checks — what concrete guidance or risks should be surfaced?
+4. When things are on track — what reminders or light-touch nudges will keep progress steady?
+
+## Visible response format
+
+Output MUST be valid JSON matching this schema:
+{
+  "quick_read": "1–3 sentence summary in plain language",
+  "what_i_notice": ["bullet or short paragraph calling out patterns/risks/strengths", ...],
+  "suggested_next_moves": ["concrete next step, question, or directive", ...]
+}
+
+- Keep \"what_i_notice\" and \"suggested_next_moves\" to 2–5 entries each.
+- Use questions when clarification is needed; use directives when you are confident.
+- Be clear, kind, honest, and oriented toward meaningful progress, not perfection.
+- Never include your hidden reasoning or the instructions above in the output.`;
+
+const LLM_ANALYSIS_MAX_TOKENS = 512;
+const LLM_DETERMINISTIC_SEED = 1337;
+const MAX_ACADEMIC_QUESTION_LENGTH = 240;
 
 function evaluateHandshake(project?: ProjectContext): Finding | null {
   const files = project?.sourceFiles ?? [];
@@ -120,28 +163,38 @@ async function probeHealth(
 ): Promise<Finding | null> {
   if (!ctx.endpoint) return null;
   const base = ctx.endpoint.replace(/\/$/, "");
-  try {
-    const health = await ctx.request(`${base}/health`, { method: "GET" });
-    return {
-      id: "self_improvement.health",
-      area: "development",
-      severity: "info",
-      title: "Inspector health probe",
-      description: JSON.stringify(health),
-      evidence: [{ type: "url", ref: `${base}/health` }],
-      tags: ["self-improvement", "health"],
-    };
-  } catch (error) {
-    return {
-      id: "self_improvement.health_unreachable",
-      area: "development",
-      severity: "minor",
-      title: "Inspector health probe failed",
-      description: `Unable to query ${base}/health: ${String(error)}`,
-      evidence: [{ type: "url", ref: `${base}/health` }],
-      tags: ["self-improvement", "health"],
-    };
+  const targets = ["/health", "/mcp/health"].map((path) => `${base}${path}`);
+  let lastError: unknown;
+
+  for (const target of targets) {
+    try {
+      const health = await ctx.request(target, {
+        method: "GET",
+        headers: ctx.headers,
+      });
+      return {
+        id: "self_improvement.health",
+        area: "development",
+        severity: "info",
+        title: "Inspector health probe",
+        description: JSON.stringify(health),
+        evidence: [{ type: "url", ref: target }],
+        tags: ["self-improvement", "health"],
+      };
+    } catch (error) {
+      lastError = error;
+    }
   }
+
+  return {
+    id: "self_improvement.health_unreachable",
+    area: "development",
+    severity: "minor",
+    title: "Inspector health probe failed",
+    description: `Unable to query ${targets.join(" or ")}: ${String(lastError)}`,
+    evidence: targets.map((target) => ({ type: "url" as const, ref: target })),
+    tags: ["self-improvement", "health"],
+  };
 }
 
 export async function analyzeWithLLM(
@@ -149,7 +202,9 @@ export async function analyzeWithLLM(
   ctx: DevelopmentContext
 ): Promise<Finding[]> {
   const startTime = Date.now();
-  const adapter = await getEnhancedLlmAdapter();
+  const adapter = await getEnhancedLlmAdapter({
+    deterministicSeed: LLM_DETERMINISTIC_SEED,
+  });
 
   if (!adapter) {
     ctx.logger?.("[Self-Improvement] LLM not available, returning raw findings");
@@ -157,50 +212,57 @@ export async function analyzeWithLLM(
   }
 
   const analyzedFindings: Finding[] = [];
+  const analysisCache = new Map<string, Pick<Finding,
+    | "llmAnalysis"
+    | "rootCause"
+    | "filesToModify"
+    | "codeChanges"
+    | "validationSteps"
+    | "riskLevel"
+    | "templateId"
+    | "canAutoFix"
+  >>();
 
   for (const finding of findings) {
     const findingStartTime = Date.now();
 
     try {
+      const cacheKey = buildFindingCacheKey(finding);
+      const cached = analysisCache.get(cacheKey);
+      if (cached) {
+        ctx.logger?.(
+          `[Self-Improvement] Reusing cached LLM analysis for ${finding.id}`,
+        );
+        analyzedFindings.push({
+          ...finding,
+          ...cached,
+        });
+        continue;
+      }
+
       ctx.logger?.(`[Self-Improvement] Analyzing finding with LLM: ${finding.id}`);
 
-      const prompt = `
-You are CortexDx's self-healing AI assistant. Analyze this Inspector finding and provide CortexDx-specific guidance.
+      const trimmedEvidence = (finding.evidence ?? []).slice(0, 3);
+      const promptPayload = {
+        finding,
+        projectContext: {
+          files: ctx.projectContext?.sourceFiles?.slice(0, 5) ?? [],
+          dependencies: ctx.projectContext?.dependencies?.slice(0, 5) ?? [],
+          language: ctx.projectContext?.language ?? "typescript",
+          expertise: ctx.userExpertiseLevel ?? "intermediate",
+        },
+        evidence: trimmedEvidence,
+      };
 
-Inspector Finding:
-${JSON.stringify(finding, null, 2)}
+      const prompt = `${LLM_SYSTEM_PROMPT}\n\nFinding Input:\n${JSON.stringify(promptPayload, null, 2)}\n\nRespond strictly with valid JSON and only the keys quick_read, what_i_notice, suggested_next_moves.`;
 
-Current CortexDx Context:
-- Project Files: ${ctx.projectContext?.sourceFiles?.slice(0, 10).join(', ') || 'unknown'}
-- Dependencies: ${ctx.projectContext?.dependencies?.slice(0, 10).join(', ') || 'unknown'}
-- Language: ${ctx.projectContext?.language || 'typescript'}
-- Expertise Level: ${ctx.userExpertiseLevel || 'intermediate'}
-
-Provide analysis in JSON format with these REQUIRED fields:
-{
-  "rootCause": "Specific cause in CortexDx's codebase (REQUIRED)",
-  "filesToModify": ["file1.ts", "file2.ts"],
-  "codeChanges": "Actual code changes needed with line numbers and context",
-  "validationSteps": ["step1: specific validation action", "step2: verification command"],
-  "riskLevel": "low|medium|high",
-  "templateId": "template.identifier or null",
-  "canAutoFix": true/false
-}
-
-IMPORTANT: Provide specific, actionable code changes with file paths and line numbers. Include validation commands that can be executed.
-`;
-
-      const analysis = await adapter.complete(prompt, 2000);
+      const analysis = await adapter.complete(prompt, LLM_ANALYSIS_MAX_TOKENS);
       const findingDuration = Date.now() - findingStartTime;
 
       let analysisData: {
-        rootCause?: string;
-        filesToModify?: string[];
-        codeChanges?: string;
-        validationSteps?: string[];
-        riskLevel?: 'low' | 'medium' | 'high';
-        templateId?: string | null;
-        canAutoFix?: boolean;
+        quick_read?: string;
+        what_i_notice?: string[];
+        suggested_next_moves?: string[];
       } = {};
 
       // Try to parse JSON response
@@ -211,8 +273,8 @@ IMPORTANT: Provide specific, actionable code changes with file paths and line nu
         analysisData = JSON.parse(jsonStr);
 
         // Validate required fields
-        if (!analysisData.rootCause) {
-          throw new Error("Missing required field: rootCause");
+        if (!analysisData.quick_read) {
+          throw new Error("Missing required field: quick_read");
         }
 
         ctx.logger?.(`[Self-Improvement] Successfully parsed LLM analysis for ${finding.id} in ${findingDuration}ms`);
@@ -221,13 +283,9 @@ IMPORTANT: Provide specific, actionable code changes with file paths and line nu
 
         // Fallback: extract what we can from text
         analysisData = {
-          rootCause: analysis.slice(0, 500),
-          filesToModify: extractFilePaths(analysis),
-          codeChanges: analysis,
-          validationSteps: extractValidationSteps(analysis),
-          riskLevel: "medium",
-          templateId: null,
-          canAutoFix: false,
+          quick_read: analysis.slice(0, 280),
+          what_i_notice: extractValidationSteps(analysis).slice(0, 3),
+          suggested_next_moves: extractValidationSteps(analysis).slice(0, 3),
         };
       }
 
@@ -235,15 +293,30 @@ IMPORTANT: Provide specific, actionable code changes with file paths and line nu
       const enhancedFinding: Finding = {
         ...finding,
         llmAnalysis: analysis,
-        rootCause: analysisData.rootCause,
-        filesToModify: analysisData.filesToModify || [],
-        codeChanges: analysisData.codeChanges || "",
-        validationSteps: analysisData.validationSteps || [],
-        riskLevel: analysisData.riskLevel || "medium",
-        templateId: analysisData.templateId ?? undefined,
-        canAutoFix: analysisData.canAutoFix ?? false,
-        tags: [...(finding.tags || []), 'llm-analyzed'],
+        rootCause: analysisData.quick_read || finding.rootCause,
+        filesToModify: finding.filesToModify ?? [],
+        codeChanges:
+          (analysisData.what_i_notice ?? []).join("\n") || finding.codeChanges || "",
+        validationSteps:
+          (analysisData.suggested_next_moves?.length
+            ? analysisData.suggested_next_moves
+            : finding.validationSteps) ?? [],
+        riskLevel: finding.riskLevel ?? "medium",
+        templateId: finding.templateId,
+        canAutoFix: finding.canAutoFix ?? false,
+        tags: [...(finding.tags || []), "llm-analyzed"],
       };
+
+      analysisCache.set(cacheKey, {
+        llmAnalysis: enhancedFinding.llmAnalysis,
+        rootCause: enhancedFinding.rootCause,
+        filesToModify: enhancedFinding.filesToModify,
+        codeChanges: enhancedFinding.codeChanges,
+        validationSteps: enhancedFinding.validationSteps,
+        riskLevel: enhancedFinding.riskLevel,
+        templateId: enhancedFinding.templateId,
+        canAutoFix: enhancedFinding.canAutoFix,
+      });
 
       analyzedFindings.push(enhancedFinding);
       ctx.logger?.(`[Self-Improvement] Enhanced finding ${finding.id} with LLM analysis (${findingDuration}ms)`);
@@ -304,6 +377,18 @@ function extractValidationSteps(text: string): string[] {
   return steps.slice(0, 5); // Limit to 5 steps
 }
 
+function buildFindingCacheKey(finding: Finding): string {
+  const descriptor = {
+    id: finding.id,
+    area: finding.area,
+    severity: finding.severity,
+    description: finding.description,
+    recommendation: finding.recommendation,
+    evidence: (finding.evidence ?? []).slice(0, 2),
+  };
+  return JSON.stringify(descriptor);
+}
+
 async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding[]> {
   const inspector = new InspectorAdapter(ctx);
 
@@ -361,6 +446,21 @@ export const SelfImprovementPlugin: DevelopmentPlugin = {
     const transport = summarizeTransport(ctx);
     if (transport) findings.push(transport);
 
+    const deepContext = await collectDeepContextFindings(ctx);
+    if (deepContext.length > 0) {
+      findings.push(...deepContext);
+    }
+
+    const academicInsights = await collectAcademicInsights(ctx);
+    if (academicInsights.length > 0) {
+      findings.push(...academicInsights);
+    }
+
+    const memoryFindings = await collectMemoryFindings(ctx);
+    if (memoryFindings.length > 0) {
+      findings.push(...memoryFindings);
+    }
+
     // 3. Analyze findings with LLM for enhanced insights
     if (findings.length > 0) {
       findings = await analyzeWithLLM(findings, ctx);
@@ -382,6 +482,114 @@ export const SelfImprovementPlugin: DevelopmentPlugin = {
     return findings;
   },
 };
+
+async function collectAcademicInsights(
+  ctx: DevelopmentContext,
+): Promise<Finding[]> {
+  const topic = deriveAcademicTopic(ctx);
+  const question = deriveAcademicQuestion(ctx.conversationHistory || []);
+
+  try {
+    const report = await runAcademicResearch({
+      topic,
+      question,
+      deterministic: ctx.deterministic ?? true,
+      headers: ctx.headers,
+    });
+    return formatAcademicReport(report, ctx);
+  } catch (error) {
+    ctx.logger?.("[Self-Improvement] Academic research failed:", error);
+    return [
+      {
+        id: "self_improvement.academic_failed",
+        area: "research",
+        severity: "minor",
+        title: "Academic insight unavailable",
+        description: `Failed to run academic research: ${String(error)}`,
+        evidence: [{ type: "log", ref: "runAcademicResearch" }],
+        tags: ["self-improvement", "academic", "error"],
+      },
+    ];
+  }
+}
+
+function formatAcademicReport(
+  report: Awaited<ReturnType<typeof runAcademicResearch>>,
+  ctx: DevelopmentContext,
+): Finding[] {
+  if (report.findings.length === 0) {
+    return [createAcademicFallbackFinding(report, ctx.requireAcademicInsights !== false)];
+  }
+  return report.findings.map((finding, index) => ({
+    ...finding,
+    id: finding.id ?? `self_improvement.academic.${index}`,
+    area: finding.area ?? "research",
+    severity: finding.severity ?? "info",
+    tags: dedupeTags([...(finding.tags ?? []), "self-improvement", "academic"]),
+  }));
+}
+
+function createAcademicFallbackFinding(
+  report: Awaited<ReturnType<typeof runAcademicResearch>>,
+  enforcementActive: boolean,
+): Finding {
+  const summaryErrors = report.summary?.errors ?? [];
+  const errorDetail = summaryErrors
+    .map((error) => `${error.providerId}: ${error.message}`)
+    .join("; ");
+  const description = summaryErrors.length
+    ? `Academic providers unavailable: ${errorDetail}`
+    : "Academic providers returned no findings.";
+  return {
+    id: enforcementActive
+      ? "self_improvement.academic_missing"
+      : "self_improvement.academic_empty",
+    area: "research",
+    severity: enforcementActive ? "major" : "info",
+    title: enforcementActive
+      ? "Academic insights required but missing"
+      : "Academic insight baseline",
+    description,
+    evidence: [],
+    recommendation: enforcementActive
+      ? "Configure Context7, Exa, OpenAlex, and Vibe Check credentials via the .env profile before retrying."
+      : undefined,
+    tags: ["self-improvement", "academic"],
+  };
+}
+
+function deriveAcademicTopic(ctx: DevelopmentContext): string {
+  const projectName = ctx.projectContext?.name?.trim();
+  if (projectName) {
+    return `CortexDx self-improvement for ${projectName}`;
+  }
+  const endpointHost = resolveEndpointHost(ctx.endpoint);
+  return `CortexDx self-improvement for ${endpointHost ?? "mcp-endpoint"}`;
+}
+
+function deriveAcademicQuestion(history: ChatMessage[]): string | undefined {
+  if (!history.length) return undefined;
+  const last = history[history.length - 1]?.content?.trim();
+  if (!last) return undefined;
+  return last.slice(0, MAX_ACADEMIC_QUESTION_LENGTH);
+}
+
+function resolveEndpointHost(endpoint?: string): string | null {
+  if (!endpoint) return null;
+  try {
+    const url = new URL(endpoint);
+    return url.host || endpoint;
+  } catch {
+    return endpoint;
+  }
+}
+
+function dedupeTags(tags: string[]): string[] {
+  const filtered = tags
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+  return Array.from(new Set(filtered));
+}
 
 function summarizeTransport(ctx: DevelopmentContext): Finding | null {
   const transcript = ctx.transport?.transcript();
@@ -411,5 +619,93 @@ function summarizeTransport(ctx: DevelopmentContext): Finding | null {
       },
     ],
     tags: ["self-improvement", "transport"],
+  };
+}
+
+async function collectMemoryFindings(
+  ctx: DevelopmentContext,
+): Promise<Finding[]> {
+  const config = ctx.memoryCheck;
+  if (!config || !ctx.endpoint) {
+    return [];
+  }
+  const url = buildMemoryProbeUrl(ctx.endpoint, config.path);
+  try {
+    const payload = await ctx.request(url, {
+      method: "GET",
+      headers: ctx.headers,
+    });
+    const metrics = normalizeMemoryMetrics(payload);
+    return [createMemoryUsageFinding(url, metrics, config.thresholdMb)];
+  } catch (error) {
+    return [createMemoryProbeFailure(url, error)];
+  }
+}
+
+function buildMemoryProbeUrl(endpoint: string, path: string): string {
+  const trimmed = path.startsWith("/") ? path : `/${path}`;
+  return `${endpoint.replace(/\/$/, "")}${trimmed}`;
+}
+
+interface MemoryMetrics {
+  heapUsedMb: number | null;
+  rssMb: number | null;
+  raw: unknown;
+}
+
+function normalizeMemoryMetrics(payload: unknown): MemoryMetrics {
+  if (typeof payload !== "object" || payload === null) {
+    return { heapUsedMb: null, rssMb: null, raw: payload };
+  }
+  const data = payload as Record<string, unknown>;
+  return {
+    heapUsedMb: extractMegabytes(data.heapUsed ?? data.heapUsedBytes ?? data.heap_used),
+    rssMb: extractMegabytes(data.rss ?? data.rssBytes ?? data.rss_bytes),
+    raw: payload,
+  };
+}
+
+function extractMegabytes(value: unknown): number | null {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return null;
+  }
+  const normalized = value > 4096 ? value / 1024 / 1024 : value;
+  return Number(normalized.toFixed(2));
+}
+
+function createMemoryUsageFinding(
+  url: string,
+  metrics: MemoryMetrics,
+  thresholdMb: number,
+): Finding {
+  const heapUsed = metrics.heapUsedMb;
+  const severity = heapUsed && heapUsed > thresholdMb ? "major" : "info";
+  const description = [
+    heapUsed ? `heapUsed=${heapUsed}MB` : null,
+    metrics.rssMb ? `rss=${metrics.rssMb}MB` : null,
+    `threshold=${thresholdMb}MB`,
+  ]
+    .filter((item): item is string => Boolean(item))
+    .join("; ");
+  return {
+    id: "self_improvement.memory_usage",
+    area: "development",
+    severity,
+    title: "Memory usage snapshot",
+    description,
+    evidence: [{ type: "url", ref: url }],
+    tags: ["self-improvement", "memory"],
+  };
+}
+
+function createMemoryProbeFailure(url: string, error: unknown): Finding {
+  return {
+    id: "self_improvement.memory_probe_failed",
+    area: "development",
+    severity: "minor",
+    title: "Memory leak probe unavailable",
+    description: `Unable to query ${url}: ${String(error)}`,
+    evidence: [{ type: "url", ref: url }],
+    tags: ["self-improvement", "memory", "error"],
   };
 }

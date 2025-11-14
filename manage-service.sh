@@ -78,7 +78,7 @@ service_status() {
         echo -e "${GREEN}✅ Service is running${NC}"
         echo ""
         echo -e "${BLUE}Service Details:${NC}"
-        launchctl print "$SERVICE_TARGET" | rg -E "state|pid" || true
+        launchctl print "$SERVICE_TARGET" | rg -e "state" -e "pid" || true
         echo ""
         echo -e "${BLUE}Test Connection:${NC}"
         if curl -s http://127.0.0.1:5001/health > /dev/null; then

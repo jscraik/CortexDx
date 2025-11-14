@@ -24,7 +24,7 @@ Based on the .kiro specifications, this analysis identifies gaps between current
 ### LLM Integration Readiness
 
 - **Current Status**: Basic LLM adapter interface in place
-- **Required**: Ollama/MLX backends with conversational capabilities and <2s response times
+- **Required**: Ollama backend with conversational capabilities and <2s response times
 - **Gap**: Enhanced LLM adapter for natural language development assistance missing
 - **Feature**: Local-first processing and conversation context management not implemented
 
@@ -365,7 +365,7 @@ requirements:
 
 **Missing Components:**
 
-- Ollama/MLX backend adapters
+- Ollama backend adapter hardening
 - Conversation context management
 - Model selection strategy (Code/Chat/Debug/Documentation)
 - Performance optimization (<2s response times)

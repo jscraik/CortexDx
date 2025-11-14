@@ -14,6 +14,7 @@ These scripts install CortexDx's MCP server as a macOS LaunchAgent. The generate
 ### 1. Install the Service
 
 ```bash
+set -a && source config/port.env   # keep port assignments consistent (optional)
 ./install-service.sh
 ```
 
@@ -179,3 +180,23 @@ This service is designed to work with your cloudflared tunnel:
 - Provides reliable backend for the tunnel
 
 The tunnel should point to `http://127.0.0.1:5001` and will automatically connect when both services are running.
+
+### Cloudflare Tunnel LaunchAgent
+
+To keep the MCP tunnel alive after reboots (and to collect health logs), install the bundled LaunchAgent:
+
+```bash
+chmod +x install-cloudflared.sh manage-cloudflared.sh
+CORTEXDX_CLOUDFLARED_CONFIG=~/.cloudflared/config.yml ./install-cloudflared.sh
+```
+
+Key details:
+
+- Label: `com.brainwav.cortexdx-cloudflared`
+- Runs `scripts/cloudflared/run-cloudflared.sh`, which
+  - rotates logs in `~/Library/Logs/cortexdx-cloudflared`
+  - polls `https://cortexdx-mcp.brainwav.io/health` every 60s and records reachability
+  - restarts automatically via `launchd` if the tunnel exits
+- Manage with `./manage-cloudflared.sh {start|stop|restart|status|logs}`
+
+Set `CORTEXDX_CLOUDFLARED_HEALTH_URLS` or `CORTEXDX_CLOUDFLARED_HEALTH_INTERVAL` before installing if you need custom targets/intervals.

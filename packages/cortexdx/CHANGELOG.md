@@ -13,8 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Local LLM Integration System**
   - Ollama adapter with model management and conversation support
-  - MLX adapter optimized for Apple Silicon with quantization
-  - llama.cpp adapter for cross-platform CPU inference
   - LLM orchestrator with automatic model selection
   - Conversation manager with persistent context across sessions
   - Model manager with dynamic loading/unloading capabilities

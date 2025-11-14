@@ -1,0 +1,12 @@
+cai:
+  enabled: true
+  lastReviewed: 2025-11-05
+multicultural:
+  enabled: true
+  locales:
+    - global
+    - eu
+  lastReviewed: 2025-11-05
+pap:
+  enabled: false
+  lastReviewed: 2025-11-05

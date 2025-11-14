@@ -64,7 +64,8 @@ const plan = [
     id: "context7",
     tool: "context7_analyze_paper",
     params: {
-      title: "Improving OAuth 2.0 Client Credentials Reliability for MCP Gateways",
+      title:
+        "Improving OAuth 2.0 Client Credentials Reliability for MCP Gateways",
       abstract:
         "Analyzes deterministic token acquisition strategies, session caching, and transport hardening for Auth0-protected CortexDx diagnostics.",
       keywords: ["OAuth2", "client credentials", "API gateway", "Auth0", "MCP"],
@@ -79,7 +80,8 @@ const plan = [
       title: "Auth0 Handshake Hardening Playbook",
       abstract:
         "Guidance on enforcing machine-to-machine token exchange, deterministic diagnostics, and zero-trust headers for CortexDx MCP clients.",
-      methodology: "client credentials grant, deterministic diagnostics, session caching",
+      methodology:
+        "client credentials grant, deterministic diagnostics, session caching",
       dataset_description: "CortexDx mock reports + Auth0 RC specs",
       arxiv_id: "auth0-handoff-2025",
     },
@@ -112,7 +114,10 @@ async function run(): Promise<void> {
   for (const entry of plan) {
     const provider = registry.createProviderInstance(entry.id, ctx);
     try {
-      const data = await provider.executeTool(entry.tool, entry.params as Record<string, unknown>);
+      const data = await provider.executeTool(
+        entry.tool,
+        entry.params as Record<string, unknown>,
+      );
       results[entry.id] = { ok: true, sample: data };
     } catch (error) {
       results[entry.id] = {
@@ -127,7 +132,10 @@ async function run(): Promise<void> {
   const repoRoot = join(scriptDir, "..", "..", "..");
   const reportsDir = join(repoRoot, "reports");
   mkdirSync(reportsDir, { recursive: true });
-  writeFileSync(join(reportsDir, "academic-research.json"), JSON.stringify(results, null, 2));
+  writeFileSync(
+    join(reportsDir, "academic-research.json"),
+    JSON.stringify(results, null, 2),
+  );
 }
 
 run().catch((error) => {

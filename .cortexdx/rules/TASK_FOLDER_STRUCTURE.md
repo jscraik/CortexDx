@@ -262,7 +262,7 @@ After creating/updating task artifacts:
 
 This structure is **mandatory** per:
 
-- `.cortex/rules/agentic-coding-workflow.md`
+- `.cortexdx/rules/agentic-coding-workflow.md`
 - `.github/copilot-instructions.md`
 - `AGENTS.md` (root)
 

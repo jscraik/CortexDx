@@ -49,7 +49,7 @@ Regular backups are essential for:
 ### Optional Data
 
 4. **Local Models** (`/app/models`)
-   - LLM model files (Ollama, MLX)
+   - LLM model files (Ollama)
    - Model configurations
    - Size: 2GB-50GB per model
    - **Note**: Usually not backed up due to size; can be re-downloaded

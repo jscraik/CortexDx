@@ -25,12 +25,6 @@ alwaysApply: true
 - [ ] **Doc-hardening evidence archived:** Reviewer confirms the PR links to the latest timestamped logs under `tasks/doc-hardening/evidence/` (lint/test/build) and cites `tasks/doc-hardening/verification/trace.log` for command provenance.
 - [ ] **[BLOCKER] Time Freshness Guard:** Dates in PR/specs are anchored to harness "today" and expressed in ISO-8601; no ambiguous "yesterday/last week".
 - [ ] **[BLOCKER] Danger cleared:** PR body contains Narrated diff, full Evidence Triplet, and `CHARTER_SHA256`; `blocked:charter` label absent.
-- [ ] **[BLOCKER] Charter propagation verified:** If `/.cortex/rules/CHARTER_FRAGMENT.md` or related governance docs change, confirm `pnpm charter:inject` + `pnpm charter:validate` ran, CODESTYLE/reviewer docs were updated, and the Danger comment links to the Apply Waiver workflow. Evidence pointer: ____________________
-- **Waiver Activation Rule:** A charter waiver is valid only after the `charter-enforce / danger` job posts ✅ with a link to the `Apply Waiver` workflow run that recorded Maintainer approval.
-  - Detection: Treat any Danger comment missing the `Apply Waiver` link (or still ❌) as provisional—`blocked:charter` stays until resolved.
-  - Diagnostics: Check GitHub Actions → **Apply Waiver** for the PR branch/run; ensure the workflow succeeded and produced the approval URL. Confirm the PR body lists waiver ID, scope, expiry, and compensating controls.
-  - Remediation: Trigger or re-run the Apply Waiver workflow, update the PR description with missing metadata, then re-run the Danger job (UI rerun or doc-only commit). Verify the regenerated comment carries the workflow link.
-  - Documentation: Add a reviewer note summarizing remediation, include the workflow URL, and attach relevant logs/screenshots. Keep `blocked:charter` until that note exists.
 - [ ] **[BLOCKER] Release plan verified:** "Changeset release preview" comment aligns with the diff, or a documented `skip-release` waiver label is present.
 - [ ] **[MAJOR] Phase machine honored:** No `human_input` usage before **REVIEW** phase; phase tokens present (`PHASE_TRANSITION:*`).
 
@@ -59,7 +53,7 @@ alwaysApply: true
 ### Reuse-First Evidence Expectations (Effective 2025-11-12)
 
 - **Artifact path:** `analysis/reuse-evaluation.md` inside the active task folder; commit alongside implementation changes.
-- **Template:** Populate `/.cortex/templates/reuse-evaluation-template.md` and keep Summary, Candidate Survey, Trace, and Outcome sections intact.
+- **Template:** Populate `/.cortexdx/templates/reuse-evaluation-template.md` and keep Summary, Candidate Survey, Trace, and Outcome sections intact.
 - **Content:** Enumerate candidate modules/services, capability fit, risks, and decisions with links to code, docs, benchmarks, or threat models.
 - **Traceability:** Record search queries (`rg`, `nx graph`, catalog lookups) and attach follow-up ticket IDs or waiver references when gaps are discovered.
 - **Run-manifest linkage:** Ensure `run-manifest.json` → `governance.reuseEvidence` points to the latest log and reflects the template version/sha.
@@ -210,4 +204,4 @@ alwaysApply: true
   - **Verification required:** Before referencing `/docs/review/helper-gallery/`, reviewers must confirm that the directory exists and contains up-to-date exemplars. If missing, document the absence in your review and notify the documentation team to update or restore the gallery.
 
 **Reviewer Signature:** ____________________  **Date (ISO-8601):** __________
-**Checklist Path:** `/.cortex/rules/code-review-checklist.md` (canonical)
+**Checklist Path:** `/.cortexdx/rules/code-review-checklist.md` (canonical)

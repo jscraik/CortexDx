@@ -14,7 +14,7 @@ alwaysApply: true
 
 When documents overlap or conflict, follow this order (highest → lowest):
 
-1. **Governance Pack** `/.cortex/rules/*` — binding project rules (this document is part of it)
+1. **Governance Pack** `/.cortexdx/rules/*` — binding project rules (this document is part of it)
 2. **CODESTYLE.md** (root) — coding & testing conventions enforced by CI
 3. **AGENTS.md** (root) — operational rules for agents; repo defaults
 4. **Package-level `AGENTS.md`** — may tighten rules; cannot weaken repo standards
@@ -22,14 +22,14 @@ When documents overlap or conflict, follow this order (highest → lowest):
 
 ### Governance Pack Files (mandatory reading)
 
-- **[Time Freshness Guard](/.cortex/rules/_time-freshness.md)**
-- **[Vision](/.cortex/rules/vision.md)**
-- **[Agentic Coding Workflow](/.cortex/rules/agentic-coding-workflow.md)**
-- **[Task Folder Structure](/.cortex/rules/TASK_FOLDER_STRUCTURE.md)**
-- **[Code Review Checklist](/.cortex/rules/code-review-checklist.md)**
-- **[CI Review Checklist](/.cortex/rules/CHECKLIST.cortex-os.md)**
-- **[Constitution](/.cortex/rules/constitution.md)**
-- **This document** `/.cortex/rules/RULES_OF_AI.md`
+- **[Time Freshness Guard](/.cortexdx/rules/_time-freshness.md)**
+- **[Vision](/.cortexdx/rules/vision.md)**
+- **[Agentic Coding Workflow](/.cortexdx/rules/agentic-coding-workflow.md)**
+- **[Task Folder Structure](/.cortexdx/rules/TASK_FOLDER_STRUCTURE.md)**
+- **[Code Review Checklist](/.cortexdx/rules/code-review-checklist.md)**
+- **[CI Review Checklist](/.cortexdx/rules/CHECKLIST.cortexdx-os.md)**
+- **[Constitution](/.cortexdx/rules/constitution.md)**
+- **This document** `/.cortexdx/rules/RULES_OF_AI.md`
 - **[Governance Standards Mapping](/docs/governance/standards-mapping.md)**
 - **[EU AI Act Timeline](/docs/governance/eu-ai-act-dates.md)**
 
@@ -43,7 +43,7 @@ When documents overlap or conflict, follow this order (highest → lowest):
 - **Governance enforcement**: Structure Guard validates root entries against `allowedRootEntries`.
 - **Branding**: All root docs include brAInwav branding.
 
-**Agent responsibility**: Place specialized rules/config under the correct subdirs (`.cortex/rules/`, `config/`, `docs/`, etc.).
+**Agent responsibility**: Place specialized rules/config under the correct subdirs (`.cortexdx/rules/`, `config/`, `docs/`, etc.).
 
 ---
 
@@ -85,9 +85,9 @@ Never claim "production-ready/complete/operational" if any prod path contains:
 
 ## 🔄 Mandatory Agentic Workflow (summary)
 
-All agents follow the **7-phase** workflow. Full details: **`/.cortex/rules/agentic-coding-workflow.md`** and **AGENTS.md**.
+All agents follow the **7-phase** workflow. Full details: **`/.cortexdx/rules/agentic-coding-workflow.md`** and **AGENTS.md**.
 
-**Task folder (mandatory)** — **`~/{tasks}/[feature]/`** per **`/.cortex/rules/TASK_FOLDER_STRUCTURE.md`**.  
+**Task folder (mandatory)** — **`~/{tasks}/[feature]/`** per **`/.cortexdx/rules/TASK_FOLDER_STRUCTURE.md`**.  
 **Memory parity (mandatory)** — Persist decisions to `.github/instructions/memories.instructions.md` **and** via Local Memory **MCP/REST dual-mode**; reviewers confirm entries exist.
 
 ---
@@ -96,7 +96,7 @@ All agents follow the **7-phase** workflow. Full details: **`/.cortex/rules/agen
 
 **State machine**: **R → G → F → REVIEW**  
 - **HITL only at REVIEW**. Any `human_input` before REVIEW is a violation.  
-- Agents must persist `.cortex/run.yaml` with:
+- Agents must persist `.cortexdx/run.yaml` with:
   - `phase: "R"|"G"|"F"|"REVIEW"`
   - `agents_sha: <nearest AGENTS.md git-sha>`
   - `task_id`, `run_id`, `started_at`
@@ -263,7 +263,7 @@ Include brAInwav branding in a11y announcements where appropriate.
 
 ## 🔍 Code Review (constitutional enforcement)
 
-**Human reviewer (non-author)** completes `/.cortex/rules/code-review-checklist.md`:
+**Human reviewer (non-author)** completes `/.cortexdx/rules/code-review-checklist.md`:
 - Paste filled checklist as top-level PR comment
 - **BLOCKER** items must be PASS
 - **MAJOR** items need fixes or Constitution waiver

@@ -10,6 +10,7 @@ import {
     getMemoryMetrics,
     getOperationMetrics,
     getPerformanceMetrics,
+    buildQuickHealthPayload,
     performHealthCheck,
     recordDiagnostic,
     recordRequest,
@@ -308,6 +309,21 @@ describe("Monitoring System", () => {
 
             expect(global1).toBe(global2);
         });
+    });
+});
+
+describe("Quick health snapshot", () => {
+    it("exposes subsystem status details", () => {
+        const payload = buildQuickHealthPayload({
+            providers: ["semantic-scholar"],
+            responseTimeMs: 12,
+            stateDbExists: false,
+            stateDbPath: "/tmp/non-existent.db",
+        });
+
+        expect(payload.providers).toContain("semantic-scholar");
+        expect(payload.subsystems).toHaveProperty("stateDb");
+        expect(payload.subsystems).toHaveProperty("providers");
     });
 });
 

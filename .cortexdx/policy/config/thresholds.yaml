@@ -1,0 +1,8 @@
+adherence:
+  minimumScore: 0.92
+  warningBand: 0.85
+critique:
+  maxIters: 3
+  maxTokens: 512
+optimizer:
+  cooldownMinutes: 15

@@ -6,6 +6,7 @@
     "build": "NX_CLOUD=false nx run cortexdx:build",
     "test": "NX_CLOUD=false nx run cortexdx:test",
     "lint": "NX_CLOUD=false nx run cortexdx:lint",
+    "postinstall": "patch-package",
     "doctor": "NX_CLOUD=false nx run cortexdx:doctor",
     "docs:validate": "node scripts/validate-docs.js",
     "docs:lint": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.nx\" \"#dist\" \"#reports\" \"#enhanced-reports\"",
@@ -19,12 +20,19 @@
     "docs:sync-versions:dry-run": "node scripts/sync-versions.js --dry-run",
     "docs:monitor-links": "node scripts/broken-link-monitor.js",
     "internal:self-improvement": "pnpm --filter @brainwav/cortexdx run internal:self-improvement",
-    "internal:self-healing-suite": "pnpm --filter @brainwav/cortexdx run internal:self-healing-suite"
+    "internal:self-healing-suite": "pnpm --filter @brainwav/cortexdx run internal:self-healing-suite",
+    "deepcontext:status": "pnpm --filter @brainwav/cortexdx run deepcontext:status",
+    "research:smoke": "pnpm --filter @brainwav/cortexdx run research:smoke",
+    "sbom": "pnpm --filter @brainwav/cortexdx run sbom"
   },
   "devDependencies": {
+    "@ai-sdk/openai": "^2.0.65",
     "@biomejs/biome": "1.9.4",
     "@nx/js": "19.8.4",
+    "mcp-evals": "1.0.18",
     "nx": "19.8.4",
-    "ts-node": "^10.9.2"
+    "patch-package": "^8.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   }
 }

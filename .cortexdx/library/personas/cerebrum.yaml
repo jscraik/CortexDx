@@ -1,0 +1,14 @@
+name: cerebrum
+checks:
+  - "a11y: Ensure WCAG 2.2 AA compliance for all user-facing features"
+  - "security: Follow OWASP ASVS standards and LLM Top-10 security guidelines"
+rules:
+  - "Implement comprehensive accessibility testing"
+  - "Apply secure coding practices throughout"
+policies:
+  - id: accessibility-compliance
+    description: "Maintain WCAG 2.2 AA standards"
+    category: a11y
+  - id: security-standards
+    description: "Follow OWASP ASVS and LLM Top-10 guidelines"
+    category: security

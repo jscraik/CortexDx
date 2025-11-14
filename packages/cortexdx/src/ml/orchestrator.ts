@@ -26,6 +26,7 @@ import type {
   Solution,
 } from "../types.js";
 import { hasOllama } from "./detect.js";
+import { createDeterministicSeed } from "../utils/deterministic.js";
 
 export interface OrchestratorConfig {
   preferredBackend?: "ollama" | "auto";
@@ -44,6 +45,7 @@ export interface SessionMetrics {
   averageResponseTime: number;
   totalTokens: number;
   backend: string;
+  seed?: number;
 }
 
 export interface PromptTemplate {
@@ -100,6 +102,9 @@ export class LlmOrchestrator {
     sessionType: "development" | "debugging" | "learning" = "debugging",
   ): Promise<ConversationId> {
     const adapter = await this.selectBestAdapter();
+    const seed = context.deterministic
+      ? context.deterministicSeed ?? createDeterministicSeed(`${context.endpoint}:${sessionType}`)
+      : undefined;
 
     const conversationContext: ConversationContext = {
       userId: (context.headers?.["user-id"] as string) || undefined,
@@ -110,6 +115,7 @@ export class LlmOrchestrator {
         capabilities: [],
         configuration: {},
       },
+      deterministicSeed: seed,
     };
 
     const sessionId = await adapter.startConversation(conversationContext);
@@ -123,6 +129,7 @@ export class LlmOrchestrator {
       averageResponseTime: 0,
       totalTokens: 0,
       backend: adapter.backend,
+      seed,
     });
 
     // Create evidence for session start
@@ -424,13 +431,12 @@ export class LlmOrchestrator {
     }
 
     if (this.adapters.size === 0) {
-      throw new Error("No LLM adapters available");
+      throw new Error("Ollama backend unavailable; install and start Ollama to enable local LLM features.");
     }
   }
 
   private async selectBestAdapter(): Promise<EnhancedLlmAdapter> {
-    const preferred = this.config.preferredBackend === "auto" ? "ollama" : this.config.preferredBackend;
-    const adapter = this.adapters.get(preferred);
+    const adapter = this.adapters.get("ollama");
     if (adapter) {
       return adapter;
     }

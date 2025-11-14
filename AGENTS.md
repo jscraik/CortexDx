@@ -51,6 +51,9 @@ Whenever instructions conflict, obey the most specific rule that still honours h
 - **Nx:** 19.8.4.
 - **Biome:** 1.9.4 (lint + format via `pnpm lint` / `pnpm --dir packages/cortexdx exec biome format src`).
 - **Typescript/tsup/vitest:** already specified in `packages/cortexdx/package.json`.
+- **Secrets:** load the 1Password-managed `.env` (via `op run --env-file=.env -- pnpm …` or equivalent) before running lint/test/build/research commands so Context7, Exa, Vibe Check, OpenAlex, Cloudflare, and LLM adapters have the required API keys.
+- **Workflow state DB:** LangGraph checkpoints default to `.cortexdx/workflow-state.db` (override via `CORTEXDX_STATE_DB` or `--state-db`). Treat the SQLite file as sensitive and never commit it.
+- **Security automation:** Use the pinned scripts `pnpm security:semgrep`, `pnpm security:gitleaks`, and `pnpm security:zap <endpoint>` whenever security tooling changes; expect JSON output and deterministic exit codes.
 
 ```bash
 mise install             # installs pinned Node & pnpm
@@ -93,7 +96,7 @@ same commands without editing plist files manually.
 4. **Determinism:** if randomness/time is involved, respect the `deterministic` flag. Do not write real-time `Date.now()` results to findings unless seeded or offset aware.
 5. **Evidence:** every finding must include at least one evidence pointer (`url`, `file`, or `log`). For new plugin outputs, extend reporting if needed.
 6. **Docs & Vision Alignment:** update README/vision when introducing new flags, suites, or governance impacts.
-7. **Verify:** run lint/test/build, then—when relevant—`npx cortexdx diagnose` against mock servers (`ok.ts`, `broken-sse.ts`, etc.) to validate outputs.
+7. **Verify:** run `pnpm lint`, `pnpm test`, and `pnpm build`. When orchestration/LLM/performance code changes, also run `pnpm test:integration` (enables `CORTEXDX_RUN_INTEGRATION=1`) plus `npx cortexdx diagnose` against mock servers (`ok.ts`, `broken-sse.ts`, etc.) and `cortexdx orchestrate --workflow agent.langgraph.baseline <endpoint>` to validate LangGraph orchestration + checkpoint evidence.
 
 ---
 
@@ -153,6 +156,9 @@ CI (GitHub Actions) will:
 - When adding a TUI (roadmap M3), ensure WCAG 2.2 AA compliance (focus management, landmarks, keyboard control).
 
 ---
+
+## Security Policy
+- See [SECURITY.md](SECURITY.md) for supported versions, threat model, and reporting instructions.
 
 ## 9. Contribution Checklist (pre-PR)
 

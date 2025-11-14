@@ -1,0 +1,17 @@
+packageManager: pnpm
+lockfile: pnpm-lock.yaml
+forbid:
+  - "bun.lockb"
+  - "yarn.lock"
+  - "package-lock.json"
+  - "Pipfile.lock"
+  - "poetry.lock"
+  - "requirements.txt"
+required:
+  - ".mise.toml"
+  - "biome.json"
+  - "nx.json"
+  - "tsconfig.base.json"
+  - "pyproject.toml"
+  - "uv.lock"
+  - "rustfmt.toml"

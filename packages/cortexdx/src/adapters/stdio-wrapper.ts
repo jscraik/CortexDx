@@ -105,6 +105,13 @@ class StudioWrapper {
    */
   private async handleMessage(line: string): Promise<void> {
     try {
+      if (!line || (line[0] !== '{' && line[0] !== '[')) {
+        if (this.config.verbose) {
+          console.error(`[StudioWrapper] Ignoring non-JSON line: ${line}`);
+        }
+        return;
+      }
+
       const request: JsonRpcRequest = JSON.parse(line);
 
       if (this.config.verbose) {

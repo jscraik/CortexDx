@@ -116,8 +116,8 @@
             "type": "general_purpose"
         },
         "gpt-oss-safeguard": {
-            "name": "gpt-oss-safeguard:latest",
-            "model_tag": "gpt-oss-safeguard:latest",
+            "name": "gpt-oss-safeguard:20b",
+            "model_tag": "gpt-oss-safeguard:20b",
             "context_length": 8192,
             "memory_gb": 26.0,
             "priority": 2,
@@ -135,7 +135,7 @@
                 "remediation_planning",
                 "compliance_briefing"
             ],
-            "ollama_model": "gpt-oss-safeguard:latest",
+            "ollama_model": "gpt-oss-safeguard:20b",
             "quantization": "q4_0",
             "type": "reasoning",
             "notes": "Safety-aligned variant of gpt-oss tuned for deterministic remediation summaries"
@@ -380,6 +380,118 @@
                 "high_fidelity_visual_reasoning",
                 "cloud_scale_performance"
             ]
+        },
+        "deepseek-v3-1-cloud": {
+            "name": "deepseek-v3.1:671b-cloud",
+            "model_tag": "deepseek-v3.1:671b-cloud",
+            "context_length": 128000,
+            "memory_gb": 0,
+            "priority": 1,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "tier": "ON_DEMAND",
+            "recommended_for": [
+                "multi_step_reasoning",
+                "self_healing_plans",
+                "governance_reports"
+            ],
+            "ollama_model": "deepseek-v3.1:671b-cloud",
+            "cortexdx_tasks": [
+                {
+                    "path": "packages/cortexdx/src/self-healing/graph.ts",
+                    "task": "derive deterministic remediation arcs across plugins"
+                },
+                {
+                    "path": "packages/cortexdx/src/report/consolidated-report.ts",
+                    "task": "author long-form executive summaries with evidence links"
+                }
+            ]
+        },
+        "gpt-oss-20b-cloud": {
+            "name": "gpt-oss:20b-cloud",
+            "model_tag": "gpt-oss:20b-cloud",
+            "context_length": 32768,
+            "memory_gb": 0,
+            "priority": 2,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "tier": "ON_DEMAND",
+            "recommended_for": [
+                "performance_triage",
+                "security_audits",
+                "advanced_algorithms"
+            ],
+            "ollama_model": "gpt-oss:20b-cloud",
+            "cortexdx_tasks": [
+                {
+                    "path": "packages/cortexdx/src/plugins/performance.ts",
+                    "task": "explain latency anomalies and suggest mitigations"
+                },
+                {
+                    "path": "packages/cortexdx/src/security/dependency-recommendations.ts",
+                    "task": "prioritize SBOM remediation guidance"
+                }
+            ]
+        },
+        "gpt-oss-120b-cloud": {
+            "name": "gpt-oss:120b-cloud",
+            "model_tag": "gpt-oss:120b-cloud",
+            "context_length": 65536,
+            "memory_gb": 0,
+            "priority": 2,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "tier": "ON_DEMAND",
+            "recommended_for": [
+                "architecture_reviews",
+                "policy_gap_analysis",
+                "governance_alignment"
+            ],
+            "ollama_model": "gpt-oss:120b-cloud",
+            "cortexdx_tasks": [
+                {
+                    "path": "packages/cortexdx/src/plugins/governance.ts",
+                    "task": "map findings to brAInwav Constitution policies"
+                },
+                {
+                    "path": "packages/cortexdx/src/orchestration/workflow-engine.ts",
+                    "task": "stress-test LangGraph policy branches"
+                }
+            ]
+        },
+        "minimax-m2-cloud": {
+            "name": "minimax-m2:cloud",
+            "model_tag": "minimax-m2:cloud",
+            "context_length": 24000,
+            "memory_gb": 0,
+            "priority": 3,
+            "status": "available",
+            "size_bytes": 0,
+            "type": "cloud",
+            "mode": "cloud",
+            "tier": "ON_DEMAND",
+            "recommended_for": [
+                "multilingual_briefings",
+                "customer_readouts",
+                "fast_triage"
+            ],
+            "ollama_model": "minimax-m2:cloud",
+            "cortexdx_tasks": [
+                {
+                    "path": "packages/cortexdx/src/report/consolidated-report.ts",
+                    "task": "localize remediation summaries for regional teams"
+                },
+                {
+                    "path": "packages/cortexdx/src/commands/templates.ts",
+                    "task": "produce multilingual fix templates"
+                }
+            ]
         }
     },
     "task_routing": {
@@ -415,6 +527,10 @@
         "advanced_coding_tasks": "kimi-k2-cloud",
         "vision_cloud": "qwen3-vl-cloud",
         "advanced_vision_analysis": "qwen3-vl-cloud",
+        "self_healing_plans": "deepseek-v3-1-cloud",
+        "governance_reports": "gpt-oss-120b-cloud",
+        "performance_triage": "gpt-oss-20b-cloud",
+        "multilingual_briefings": "minimax-m2-cloud",
         "default": "deepseek-coder"
     },
     "service_configuration": {

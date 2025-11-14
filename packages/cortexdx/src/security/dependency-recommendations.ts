@@ -174,9 +174,18 @@ export class DependencyRecommendations {
   ): string | null {
     // Sort versions and select the latest
     const sorted = fixedVersions.sort((a, b) => this.compareVersions(a, b));
-    const latest = sorted[sorted.length - 1];
 
-    // Only recommend if it's newer than current
+    // Check if sorted array is not empty
+    if (sorted.length === 0) {
+      return null;
+    }
+
+    const latest = sorted[sorted.length - 1];
+    if (!latest) {
+      return null;
+    }
+
+    // Check if latest is newer than current
     if (this.compareVersions(latest, currentVersion) > 0) {
       return latest;
     }

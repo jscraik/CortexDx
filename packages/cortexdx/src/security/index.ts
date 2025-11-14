@@ -88,3 +88,9 @@ export {
   type ZAPResults
 } from "./zap-integration.js";
 
+export {
+  annotateControlEvidence,
+  buildCoverageGapDescription,
+  getMissingControls,
+  type ControlMetadata,
+} from "./control-mappings.js";

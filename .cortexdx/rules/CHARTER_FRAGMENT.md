@@ -52,21 +52,33 @@ All agents executing workstreams within Cortex-OS MUST obey these rules:
 
 ### 6️⃣ **Brand Logs**
 
-- Runtime and workflow logs MUST include:
-  - Field: `{ "brand": "brAInwav" }`
-  - Prefix: `[brAInwav]` in console output
+- Runtime and workflow logs MUST include both a **human-readable prefix** and a **structured JSON log** per line:
+  - Text prefix: `[brAInwav]`
+  - JSON fields:  
+    `brand:"brAInwav"`, ISO-8601 timestamp with timezone, `trace_id` (32 lowercase hex), and the **HTTP `traceparent`** value captured at ingress/egress.
 - OPA/Conftest policies enforce the following tokens in every charter-governed log line:
   - `MODELS:LIVE:OK` when model health passes
-  - Latency markers (e.g., `LATENCY:123ms` or structured JSON field)
+  - Latency markers (e.g., `LATENCY:123ms` or structured JSON `latency_ms` field)
   - ISO-8601 timestamps with timezone offset
   - `NORTH_STAR:RED_FIRST` for the initial failing acceptance execution
   - `NORTH_STAR:GREEN_AFTER` once the acceptance turns green
+- First failing acceptance must log `marker:"NORTH_STAR:RED_FIRST"`, passing acceptance `marker:"NORTH_STAR:GREEN_AFTER"`.
+- Emit `model_status:"MODELS:LIVE:OK"` **only** after live health checks succeed.
 - **Enforcement**: Grep validation in CI; missing brand fails build
 
-**Example Logs**
+**Example JSON log**
 
 ```json
-{"timestamp":"2025-10-28T19:22:11.402-07:00","brand":"brAInwav","marker":"NORTH_STAR:RED_FIRST","latency_ms":742,"model_status":"MODELS:LIVE:OK","message":"Acceptance failed as expected"}
+{
+  "timestamp":"2025-11-10T19:22:11.402-07:00",
+  "brand":"brAInwav",
+  "trace_id":"3f0a2dbe4c2a4f71a7c1c3b50d1a0c9e",
+  "traceparent":"00-3f0a2dbe4c2a4f71a7c1c3b50d1a0c9e-9a1c7b2d3e4f5678-01",
+  "marker":"NORTH_STAR:RED_FIRST",
+  "model_status":"MODELS:LIVE:OK",
+  "latency_ms":742,
+  "message":"Acceptance failed as expected"
+}
 ```
 
 ```text
@@ -103,11 +115,13 @@ Swap to `NORTH_STAR:GREEN_AFTER` once the acceptance passes; never emit `MODELS:
   1. **Vibe Check (Oversight)** – `pnpm oversight:vibe-check` or JSON-RPC to `${VIBE_CHECK_HTTP_URL}`; log saved to `logs/vibe-check/<task>.json`
   2. **Hybrid Model Health** – `pnpm models:health && pnpm models:smoke` with live MLX/Ollama/Frontier engines (no stubs)
   3. **Knowledge Connector Health** – Verify `${WIKIDATA_MCP_URL}/healthz` and `${ARXIV_MCP_URL}/healthz`; log to `research/connectors-health.log`
-  4. **Trace Context Verification** – `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` ensures W3C `trace_id` in all logs
-  5. **Supply-Chain Evidence** – `pnpm sbom:generate && pnpm attest:sign && pnpm verify:attest && pnpm sbom:scan`; store in `sbom/`
+  4. **Trace Context Verification** – `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` ensures W3C `trace_id` and `traceparent` in all logs
+  5. **Supply-Chain Evidence** – `pnpm sbom:generate` (CycloneDX **1.7**) → `pnpm attest:sign` (SLSA **v1.1**) → `pnpm verify:attest` (Cosign **v3 bundle**); store in `sbom/`
   6. **Identity Gate** – CI/services MUST use GitHub Actions OIDC/WIF (no static credentials)
+  7. **Feature Flags** – OpenFeature only; ad-hoc toggles prohibited
+  8. **HTTP Cancellation** – All HTTP/tool calls must support `AbortSignal` or SDK equivalent
 - **Run Manifest Requirements**: `run-manifest.json` MUST include JSON pointers for each attached log artifact **and** persist the raw text submitted to policy helpers so OPA/Conftest inputs remain reproducible.
-- **Enforcement**: PR MUST attach preflight logs (vibe-check, model health, connector health, trace verification, SBOM attestation); missing logs block merge
+- **Enforcement**: PR MUST attach preflight logs (vibe-check, model health, connector health, trace verification with `traceparent`, SBOM attestation); missing logs block merge
 
 **Manifest Pointers**
 
@@ -142,7 +156,7 @@ Every entry MUST include `pointer`, `artifact_path`, and byte-identical `raw_tex
 | Recap Rule | Token counter | Template auto-generates | Trim to ≤500 tokens |
 | Brand Logs | `grep -r 'brand.*brAInwav'` | Logger wrapper | Patch log calls |
 | Arc Protocol | `validate-run-manifest.ts` (arc structure, milestone test, contract snapshot) | Task scaffolding enforces arc template | Add missing arc artifacts |
-| North-Star Test | `validate-run-manifest.ts` (`north_star.acceptance_test_path` required) | `pnpm task:new` generates acceptance test scaffold | Write missing north-star test |
+| North-Star Test | `validate-run-manifest.ts` (`north_star.acceptance_test_path` required) | `pnpm changelog:new` generates acceptance test scaffold | Write missing north-star test |
 | Preflight Guards | CI checks for `logs/vibe-check/*.json`, model health logs, trace context, SBOM | PR template checklist requires preflight evidence | Execute missing guards and attach logs |
 | Session Hygiene | `run-manifest.json` `session_resets` timestamps; reviewer audit | 10-minute reset hook calls `pnpm session:reset` | Log retrospective resets with justification |
 
@@ -153,7 +167,7 @@ Every entry MUST include `pointer`, `artifact_path`, and byte-identical `raw_tex
 **Before starting any task:**
 
 ```bash
-pnpm task:new --slug my-feature --tier feature  # Scaffolds charter-compliant structure + north-star test
+pnpm changelog:new --slug my-feature --tier feature  # Scaffolds charter-compliant structure + north-star test
 pnpm oversight:vibe-check --goal "<task>" --plan "<steps>" --session <id>  # Preflight guard
 pnpm models:health && pnpm models:smoke  # Verify live model engines
 ```
@@ -186,30 +200,31 @@ pnpm sbom:generate && pnpm attest:sign && pnpm verify:attest  # Supply-chain evi
 
 This fragment is authoritative. Any conflicts defer to:
 
-1. `/.cortex/rules/AGENT_CHARTER.md` (full specification)
-2. `/.cortex/rules/agentic-coding-workflow.md` (workflow integration and task lifecycle)
-3. `/.cortex/rules/code-review-checklist.md` (verification)
+1. `/.cortexdx/rules/AGENT_CHARTER.md` (full specification)
+2. `/.cortexdx/rules/agentic-coding-workflow.md` (workflow integration and task lifecycle)
+3. `/.cortexdx/rules/code-review-checklist.md` (verification)
 
 **Workflow Integration Notes:**
+
 - The full task lifecycle (gates G0–G10) is governed by `agentic-coding-workflow.md`
 - Workflow MAY define task tiers (fix/feature/refactor) with differentiated gate requirements, provided all tiers enforce these core guardrails
 - Waivers policy detailed in lines 115–124 below
 
 **Fragment SHA-256:** `3289664bc8ba94bec3d1418292b76558bcf2ec0eb974e7317f2fb437b5848067`
-**Fragment Path:** `/.cortex/rules/CHARTER_FRAGMENT.md`
+**Fragment Path:** `/.cortexdx/rules/CHARTER_FRAGMENT.md`
 
 ---
 
 **⚠️ DEVIATION POLICY**
 
-Waivers require **Maintainer approval** under `/.cortex/waivers/`. All deviations must:
+Waivers require **Maintainer approval** under `/.cortexdx/waivers/`. All deviations must:
 
 - Document justification with evidence
 - Specify compensation controls
 - Set expiration date (max 30 days)
 - Link to remediation plan
 - **Waiver Activation Rule:** A charter waiver is valid only after the `charter-enforce / danger` job posts ✅ with a link to the `Apply Waiver` workflow run that recorded Maintainer approval.
-- **Emergency Waiver Sync:** If `charter-enforce / danger` or Apply Waiver automation is unavailable, mark the waiver **provisional**, document manual Maintainer approval + compensating controls in `/.cortex/waivers/<id>.md`, and pause merges unless escalation is documented. Once automation is restored, re-run the Apply Waiver workflow, re-trigger Danger until the comment links to that run, and add a post-incident note referencing the workflow URL and recovery timestamp.
+- **Emergency Waiver Sync:** If `charter-enforce / danger` or Apply Waiver automation is unavailable, mark the waiver **provisional**, document manual Maintainer approval + compensating controls in `/.cortexdx/waivers/<id>.md`, and pause merges unless escalation is documented. Once automation is restored, re-run the Apply Waiver workflow, re-trigger Danger until the comment links to that run, and add a post-incident note referencing the workflow URL and recovery timestamp.
 
 **Reviewer Guidance:**
 

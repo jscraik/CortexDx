@@ -98,6 +98,7 @@ export class OAuthAuthenticator {
         clientId: string,
         scope: string[],
         deviceCodeEndpoint: string,
+        audience?: string,
     ): Promise<DeviceCodeResult> {
         const startTime = Date.now();
 
@@ -117,6 +118,7 @@ export class OAuthAuthenticator {
                 body: new URLSearchParams({
                     client_id: clientId,
                     scope: scope.join(" "),
+                    ...(audience ? { audience } : {}),
                 }).toString(),
             });
 

@@ -121,7 +121,8 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
           area: "performance-recommendations",
           severity: "info",
           title: `Generated ${criticalRecommendations.length} optimization recommendations`,
-          description: "Review recommendations for actionable performance improvements with code examples and impact estimates",
+          description:
+            "Review recommendations for actionable performance improvements with code examples and impact estimates",
           evidence: [{ type: "url", ref: ctx.endpoint }],
           confidence: 1.0,
         });
@@ -208,51 +209,61 @@ async function measureHttp(
   ctx: DiagnosticContext,
   harness: PerformanceHarness,
 ): Promise<HttpMetrics | undefined> {
-  return await withSpan("performance.http", { endpoint: ctx.endpoint }, async () => {
-    const headers = {
-      "content-type": "application/json",
-      accept: "application/json, text/event-stream",
-      ...harness.headers(),
-    };
-    const started = harness.now();
-    let status: number | undefined;
-    try {
-      const response = await harness.fetch(ctx.endpoint, {
-        method: "POST",
-        headers,
-        body: "{}",
-      });
-      status = response.status;
-    } catch {
-      status = undefined;
-    }
-    const latencyMs = harness.now() - started;
-    return { latencyMs, status };
-  });
+  return await withSpan(
+    "performance.http",
+    { endpoint: ctx.endpoint },
+    async () => {
+      const headers = {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        ...harness.headers(),
+      };
+      const started = harness.now();
+      let status: number | undefined;
+      try {
+        const response = await harness.fetch(ctx.endpoint, {
+          method: "POST",
+          headers,
+          body: "{}",
+        });
+        status = response.status;
+      } catch {
+        status = undefined;
+      }
+      const latencyMs = harness.now() - started;
+      return { latencyMs, status };
+    },
+  );
 }
 
 async function measureSse(
   ctx: DiagnosticContext,
   harness: PerformanceHarness,
 ): Promise<SseMetrics | undefined> {
-  return await withSpan("performance.sse", { endpoint: ctx.endpoint }, async () => {
-    try {
-      const result = await harness.sseProbe(ctx.endpoint, {
-        timeoutMs: 5000,
-        headers: harness.headers(),
-      });
-      return {
-        firstEventMs: result.firstEventMs,
-        heartbeatMs: result.heartbeatMs,
-        jitterMs: calculateSseJitter(result.firstEventMs, result.heartbeatMs),
-      };
-    } catch {
-      return undefined;
-    }
-  });
+  return await withSpan(
+    "performance.sse",
+    { endpoint: ctx.endpoint },
+    async () => {
+      try {
+        const result = await harness.sseProbe(ctx.endpoint, {
+          timeoutMs: 5000,
+          headers: harness.headers(),
+        });
+        return {
+          firstEventMs: result.firstEventMs,
+          heartbeatMs: result.heartbeatMs,
+          jitterMs: calculateSseJitter(result.firstEventMs, result.heartbeatMs),
+        };
+      } catch {
+        return undefined;
+      }
+    },
+  );
 }
 
-function measureWebSocket(transcript: TransportTranscript | null): WebSocketMetrics | undefined {
+function measureWebSocket(
+  transcript: TransportTranscript | null,
+): WebSocketMetrics | undefined {
   if (!transcript) {
     return undefined;
   }
@@ -266,13 +277,20 @@ function measureWebSocket(transcript: TransportTranscript | null): WebSocketMetr
     .sort((a, b) => a - b);
   let maxGap = 0;
   for (let i = 1; i < timestamps.length; i++) {
-    const gap = timestamps[i] - timestamps[i - 1];
-    if (gap > maxGap) {
-      maxGap = gap;
+    const current = timestamps[i];
+    const previous = timestamps[i - 1];
+    if (current !== undefined && previous !== undefined) {
+      const gap = current - previous;
+      if (gap > maxGap) {
+        maxGap = gap;
+      }
     }
   }
-  const reconnects = exchanges.filter((exchange) => exchange.method === "CONNECT").length - 1;
-  const messageCount = exchanges.filter((exchange) => exchange.method !== "CONNECT").length;
+  const reconnects =
+    exchanges.filter((exchange) => exchange.method === "CONNECT").length - 1;
+  const messageCount = exchanges.filter(
+    (exchange) => exchange.method !== "CONNECT",
+  ).length;
   return {
     messageCount,
     maxGapMs: maxGap,
@@ -280,7 +298,10 @@ function measureWebSocket(transcript: TransportTranscript | null): WebSocketMetr
   };
 }
 
-function calculateSseJitter(firstEvent?: number, heartbeat?: number): number | undefined {
+function calculateSseJitter(
+  firstEvent?: number,
+  heartbeat?: number,
+): number | undefined {
   if (firstEvent === undefined || heartbeat === undefined) {
     return undefined;
   }
@@ -769,7 +790,7 @@ function calculateVariance(values: number[]): number {
 
 /**
  * Get enhanced bottleneck recommendation with tool insights (Req 22.5)
- * 
+ *
  * Provides actionable recommendations with code examples and performance impact estimates
  * for identified bottlenecks.
  */
@@ -1181,7 +1202,8 @@ async function detectCPUHotspots(
     const totalCPUTime = cpuResults.reduce((sum, r) => sum + r.duration, 0);
 
     for (const result of cpuResults) {
-      const percentage = totalCPUTime > 0 ? (result.duration / totalCPUTime) * 100 : 0;
+      const percentage =
+        totalCPUTime > 0 ? (result.duration / totalCPUTime) * 100 : 0;
 
       if (percentage > 40) {
         findings.push({
@@ -1200,7 +1222,8 @@ async function detectCPUHotspots(
     // Overall CPU profiling summary
     if (cpuResults.length > 0 && cpuResults[0]) {
       const topResult = cpuResults[0];
-      const percentage = totalCPUTime > 0 ? (topResult.duration / totalCPUTime) * 100 : 0;
+      const percentage =
+        totalCPUTime > 0 ? (topResult.duration / totalCPUTime) * 100 : 0;
       findings.push({
         id: "perf.bottleneck.cpu_summary",
         area: "performance-bottlenecks",
@@ -1370,7 +1393,7 @@ function calculatePercentile(values: number[], percentile: number): number {
 
 /**
  * Get recommendation for CPU hotspot with enhanced tool insights (Req 22.5)
- * 
+ *
  * Provides actionable recommendations with code examples and performance impact estimates
  * based on Clinic.js Flame and py-spy profiling data.
  */
@@ -1495,7 +1518,7 @@ function getFormattedString(id) {
 
 /**
  * Get recommendation for async bottleneck with enhanced tool insights (Req 22.5)
- * 
+ *
  * Provides actionable recommendations with code examples and performance impact estimates
  * based on Clinic Bubbleprof profiling data.
  */
@@ -1931,10 +1954,10 @@ export const PySpyPerformanceProfilerPlugin: DiagnosticPlugin = {
 
 /**
  * Generate comprehensive optimization recommendations based on all profiling data (Req 22.5)
- * 
+ *
  * Combines insights from Clinic.js (Doctor, Flame, Bubbleprof) and py-spy to provide
  * actionable recommendations with code examples and performance impact estimates.
- * 
+ *
  * @param findings - All performance findings from profiling
  * @returns Enhanced findings with comprehensive recommendations
  */

@@ -1,37 +1,38 @@
 /**
  * Fix templates for common MCP Inspector findings
  * Each template provides structured fix procedures with checklists and code patterns
- */
+ */ import type { Finding } from "../types.js";
 
 export interface FixTemplate {
   id: string;
   name: string;
   description: string;
   area: string;
-  severity: 'blocker' | 'major' | 'minor' | 'info';
+  severity: "blocker" | "major" | "minor" | "info";
   checklist: string[];
   codeTemplate?: string;
   validationPlugins?: string[];
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   estimatedTime: string;
   filesAffected: string[];
 }
 
 export const FixTemplates: Record<string, FixTemplate> = {
-  'security.headers': {
-    id: 'security.headers',
-    name: 'Add Security Headers',
-    description: 'Adds rate limiting and security headers to MCP server endpoints',
-    area: 'security',
-    severity: 'minor',
+  "security.headers": {
+    id: "security.headers",
+    name: "Add Security Headers",
+    description:
+      "Adds rate limiting and security headers to MCP server endpoints",
+    area: "security",
+    severity: "minor",
     checklist: [
-      '✓ Identify security middleware integration point in server.ts',
-      '✓ Add rate limiting configuration with appropriate thresholds',
-      '✓ Add security headers (CSP, HSTS, X-Frame-Options)',
-      '✓ Update security plugin validation rules',
-      '✓ Test with security-scanner plugin suite',
-      '✓ Verify no breaking changes to existing functionality',
-      '✓ Confirm CORS policies remain compatible'
+      "✓ Identify security middleware integration point in server.ts",
+      "✓ Add rate limiting configuration with appropriate thresholds",
+      "✓ Add security headers (CSP, HSTS, X-Frame-Options)",
+      "✓ Update security plugin validation rules",
+      "✓ Test with security-scanner plugin suite",
+      "✓ Verify no breaking changes to existing functionality",
+      "✓ Confirm CORS policies remain compatible",
     ],
     codeTemplate: `
 // Add to src/server.ts after existing middleware
@@ -59,28 +60,29 @@ app.use((req, res, next) => {
   next();
 });
     `,
-    validationPlugins: ['security-scanner', 'cors', 'ratelimit', 'protocol'],
-    riskLevel: 'low',
-    estimatedTime: '5-10 minutes',
-    filesAffected: ['src/server.ts', 'src/plugins/threat-model.ts'],
+    validationPlugins: ["security-scanner", "cors", "ratelimit", "protocol"],
+    riskLevel: "low",
+    estimatedTime: "5-10 minutes",
+    filesAffected: ["src/server.ts", "src/plugins/threat-model.ts"],
   },
 
-  'sse.streaming': {
-    id: 'sse.streaming',
-    name: 'Fix SSE Streaming Issues',
-    description: 'Resolves Server-Sent Events streaming problems and memory leaks',
-    area: 'performance',
-    severity: 'major',
+  "sse.streaming": {
+    id: "sse.streaming",
+    name: "Fix SSE Streaming Issues",
+    description:
+      "Resolves Server-Sent Events streaming problems and memory leaks",
+    area: "performance",
+    severity: "major",
     checklist: [
-      '✓ Check SSE adapter implementation in src/adapters/sse.ts',
-      '✓ Verify eventsource-parser integration is correct',
-      '✓ Add proper cleanup for SSE connections',
-      '✓ Implement heartbeat mechanism for connection health',
-      '✓ Add error handling and automatic reconnection',
-      '✓ Test SSE probe functionality',
-      '✓ Validate conversation storage updates during streaming',
-      '✓ Check for memory leaks with long-running connections',
-      '✓ Verify buffer limits and backpressure handling'
+      "✓ Check SSE adapter implementation in src/adapters/sse.ts",
+      "✓ Verify eventsource-parser integration is correct",
+      "✓ Add proper cleanup for SSE connections",
+      "✓ Implement heartbeat mechanism for connection health",
+      "✓ Add error handling and automatic reconnection",
+      "✓ Test SSE probe functionality",
+      "✓ Validate conversation storage updates during streaming",
+      "✓ Check for memory leaks with long-running connections",
+      "✓ Verify buffer limits and backpressure handling",
     ],
     codeTemplate: `
 // Add to src/adapters/sse.ts
@@ -126,27 +128,32 @@ export class EnhancedSSEAdapter {
   }
 }
     `,
-    validationPlugins: ['sse-probe', 'performance', 'conversation-storage'],
-    riskLevel: 'medium',
-    estimatedTime: '15-20 minutes',
-    filesAffected: ['src/adapters/sse.ts', 'src/server.ts', 'src/conversation/manager.ts'],
+    validationPlugins: ["sse-probe", "performance", "conversation-storage"],
+    riskLevel: "medium",
+    estimatedTime: "15-20 minutes",
+    filesAffected: [
+      "src/adapters/sse.ts",
+      "src/server.ts",
+      "src/conversation/manager.ts",
+    ],
   },
 
-  'jsonrpc.batch': {
-    id: 'jsonrpc.batch',
-    name: 'Fix JSON-RPC Batch Handling',
-    description: 'Corrects JSON-RPC batch request processing and response ordering',
-    area: 'protocol',
-    severity: 'major',
+  "jsonrpc.batch": {
+    id: "jsonrpc.batch",
+    name: "Fix JSON-RPC Batch Handling",
+    description:
+      "Corrects JSON-RPC batch request processing and response ordering",
+    area: "protocol",
+    severity: "major",
     checklist: [
-      '✓ Review JSON-RPC batch request parsing in src/adapters/jsonrpc.ts',
-      '✓ Ensure proper correlation of request/response IDs',
-      '✓ Handle mixed ID types (string and number) correctly',
-      '✓ Process batch requests in parallel when possible',
-      '✓ Maintain response order matching request order',
-      '✓ Add proper error handling for malformed batch requests',
-      '✓ Test with various batch sizes and ID types',
-      '✓ Validate response format matches JSON-RPC 2.0 spec'
+      "✓ Review JSON-RPC batch request parsing in src/adapters/jsonrpc.ts",
+      "✓ Ensure proper correlation of request/response IDs",
+      "✓ Handle mixed ID types (string and number) correctly",
+      "✓ Process batch requests in parallel when possible",
+      "✓ Maintain response order matching request order",
+      "✓ Add proper error handling for malformed batch requests",
+      "✓ Test with various batch sizes and ID types",
+      "✓ Validate response format matches JSON-RPC 2.0 spec",
     ],
     codeTemplate: `
 // Add to src/adapters/jsonrpc.ts
@@ -187,27 +194,28 @@ export async function handleBatchRequest(
   return responses;
 }
     `,
-    validationPlugins: ['protocol', 'jsonrpc-batch', 'performance'],
-    riskLevel: 'medium',
-    estimatedTime: '10-15 minutes',
-    filesAffected: ['src/adapters/jsonrpc.ts', 'src/server.ts'],
+    validationPlugins: ["protocol", "jsonrpc-batch", "performance"],
+    riskLevel: "medium",
+    estimatedTime: "10-15 minutes",
+    filesAffected: ["src/adapters/jsonrpc.ts", "src/server.ts"],
   },
 
-  'cors.configuration': {
-    id: 'cors.configuration',
-    name: 'Fix CORS Configuration',
-    description: 'Configures proper CORS settings for development and production',
-    area: 'protocol',
-    severity: 'minor',
+  "cors.configuration": {
+    id: "cors.configuration",
+    name: "Fix CORS Configuration",
+    description:
+      "Configures proper CORS settings for development and production",
+    area: "protocol",
+    severity: "minor",
     checklist: [
-      '✓ Review current CORS middleware configuration',
-      '✓ Add environment-specific CORS settings',
-      '✓ Configure allowed origins for development (localhost)',
-      '✓ Set up production origin restrictions',
-      '✓ Add proper preflight handling for OPTIONS requests',
-      '✓ Configure allowed headers and methods',
-      '✓ Test CORS preflight requests',
-      '✓ Verify MCP tool calls work across origins'
+      "✓ Review current CORS middleware configuration",
+      "✓ Add environment-specific CORS settings",
+      "✓ Configure allowed origins for development (localhost)",
+      "✓ Set up production origin restrictions",
+      "✓ Add proper preflight handling for OPTIONS requests",
+      "✓ Configure allowed headers and methods",
+      "✓ Test CORS preflight requests",
+      "✓ Verify MCP tool calls work across origins",
     ],
     codeTemplate: `
 // Add to src/server.ts
@@ -235,27 +243,27 @@ app.use('/mcp', cors(corsOptions));
 app.use('/tools', cors(corsOptions));
 app.use('/events', cors(corsOptions));
     `,
-    validationPlugins: ['cors', 'protocol', 'security-scanner'],
-    riskLevel: 'low',
-    estimatedTime: '5 minutes',
-    filesAffected: ['src/server.ts'],
+    validationPlugins: ["cors", "protocol", "security-scanner"],
+    riskLevel: "low",
+    estimatedTime: "5 minutes",
+    filesAffected: ["src/server.ts"],
   },
 
-  'performance.memory': {
-    id: 'performance.memory',
-    name: 'Optimize Memory Usage',
-    description: 'Reduces memory footprint and prevents memory leaks',
-    area: 'performance',
-    severity: 'minor',
+  "performance.memory": {
+    id: "performance.memory",
+    name: "Optimize Memory Usage",
+    description: "Reduces memory footprint and prevents memory leaks",
+    area: "performance",
+    severity: "minor",
     checklist: [
-      '✓ Profile current memory usage patterns',
-      '✓ Identify memory leaks in long-running processes',
-      '✓ Add garbage collection hints where appropriate',
-      '✓ Optimize data structures for memory efficiency',
-      '✓ Add memory monitoring and alerts',
-      '✓ Implement connection pooling for database connections',
-      '✓ Add cleanup for event listeners and timers',
-      '✓ Configure appropriate Node.js memory limits'
+      "✓ Profile current memory usage patterns",
+      "✓ Identify memory leaks in long-running processes",
+      "✓ Add garbage collection hints where appropriate",
+      "✓ Optimize data structures for memory efficiency",
+      "✓ Add memory monitoring and alerts",
+      "✓ Implement connection pooling for database connections",
+      "✓ Add cleanup for event listeners and timers",
+      "✓ Configure appropriate Node.js memory limits",
     ],
     codeTemplate: `
 // Add to src/utils/memory-monitor.ts
@@ -301,27 +309,27 @@ export function cleanupResources(): void {
   closeConnections();
 }
     `,
-    validationPlugins: ['performance', 'memory-profiling'],
-    riskLevel: 'low',
-    estimatedTime: '20-30 minutes',
-    filesAffected: ['src/server.ts', 'src/utils/memory-monitor.ts'],
+    validationPlugins: ["performance", "memory-profiling"],
+    riskLevel: "low",
+    estimatedTime: "20-30 minutes",
+    filesAffected: ["src/server.ts", "src/utils/memory-monitor.ts"],
   },
 
-  'conversation.storage': {
-    id: 'conversation.storage',
-    name: 'Fix Conversation Storage',
-    description: 'Improves conversation storage performance and reliability',
-    area: 'development',
-    severity: 'minor',
+  "conversation.storage": {
+    id: "conversation.storage",
+    name: "Fix Conversation Storage",
+    description: "Improves conversation storage performance and reliability",
+    area: "development",
+    severity: "minor",
     checklist: [
-      '✓ Review conversation storage implementation',
-      '✓ Add proper error handling for storage failures',
-      '✓ Implement conversation compression for long sessions',
-      '✓ Add conversation cleanup for old sessions',
-      '✓ Optimize database queries for conversation retrieval',
-      '✓ Add conversation backup and restore functionality',
-      '✓ Test conversation persistence across server restarts',
-      '✓ Validate conversation export/import features'
+      "✓ Review conversation storage implementation",
+      "✓ Add proper error handling for storage failures",
+      "✓ Implement conversation compression for long sessions",
+      "✓ Add conversation cleanup for old sessions",
+      "✓ Optimize database queries for conversation retrieval",
+      "✓ Add conversation backup and restore functionality",
+      "✓ Test conversation persistence across server restarts",
+      "✓ Validate conversation export/import features",
     ],
     codeTemplate: `
 // Add to src/storage/conversation-storage.ts
@@ -371,10 +379,13 @@ export class EnhancedConversationStorage {
   }
 }
     `,
-    validationPlugins: ['conversation-storage', 'performance'],
-    riskLevel: 'low',
-    estimatedTime: '15-20 minutes',
-    filesAffected: ['src/storage/conversation-storage.ts', 'src/conversation/manager.ts'],
+    validationPlugins: ["conversation-storage", "performance"],
+    riskLevel: "low",
+    estimatedTime: "15-20 minutes",
+    filesAffected: [
+      "src/storage/conversation-storage.ts",
+      "src/conversation/manager.ts",
+    ],
   },
 };
 
@@ -385,18 +396,28 @@ export function getTemplate(id: string): FixTemplate | undefined {
   return FixTemplates[id];
 }
 
+export function getAllTemplates(): FixTemplate[] {
+  return Object.values(FixTemplates);
+}
+
 /**
  * Get all templates for a specific area
  */
 export function getTemplatesByArea(area: string): FixTemplate[] {
-  return Object.values(FixTemplates).filter(template => template.area === area);
+  return Object.values(FixTemplates).filter(
+    (template) => template.area === area,
+  );
 }
 
 /**
  * Get templates by severity level
  */
-export function getTemplatesBySeverity(severity: FixTemplate['severity']): FixTemplate[] {
-  return Object.values(FixTemplates).filter(template => template.severity === severity);
+export function getTemplatesBySeverity(
+  severity: FixTemplate["severity"],
+): FixTemplate[] {
+  return Object.values(FixTemplates).filter(
+    (template) => template.severity === severity,
+  );
 }
 
 /**
@@ -408,7 +429,7 @@ export function getTemplateRecommendations(findings: Finding[]): FixTemplate[] {
   for (const finding of findings) {
     if (finding.templateId) {
       const template = getTemplate(finding.templateId);
-      if (template && !recommendations.find(t => t.id === template.id)) {
+      if (template && !recommendations.find((t) => t.id === template.id)) {
         recommendations.push(template);
       }
     }

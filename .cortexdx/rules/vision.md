@@ -4,123 +4,191 @@ alwaysApply: true
 ---
 <!-- filename: /.cortexdx/rules/vision.md -->
 
-# CortexDx MCP Vision Document (v1.1, 2025-11-05)
+# Cortex-OS Vision Document (v1.1, 2025-10-12)
 
 ## 0) North Star (End State)
 
-**CortexDx MCP** is the stateless, read-only **Model Context Protocol (MCP) Meta-Inspector** that every brAInwav delivery uses to harden MCP servers and clients *before* production. It:
+Cortex-OS is a self-contained, local-first **Agentic Second Brain Runtime (ASBR)** that:
 
-1. exercises MCP HTTP(S)/SSE entrypoints, WebSocket bridges, JSON-RPC envelopes, and (optional) gRPC shims with policy-driven probes;
-2. detects MCP transport, streaming, auth, rate-limit, permissioning, governance, and threat-model drift with reproducible evidence;
-3. emits branded Markdown/JSON/ArcTDD reports, confidence scoring, and actionable file plans ready for remediation;
-4. integrates cleanly with Nx, pnpm, Biome, and Mise so teams can slot CortexDx into CI/CD without bespoke wiring.
+1) orchestrates agent workflows with **LangGraph** under strict phase gates,  
+2) persists knowledge via a **Memory Core** with MCP/REST **parity**,  
+3) exposes **only** controlled surfaces — **MCP**, **A2A**, **REST**, and **frontier adapters** — guarded by policy, and  
+4) ships an **A11y-first Ops Dashboard** for health, logs, metrics, traces, and manual controls.
 
-> **Governance is code.** CortexDx acknowledges the nearest `AGENTS.md`, honors the Constitution + CODESTYLE gates, and treats time freshness and determinism as first-class requirements.
+> **Governance is code.** The runtime acknowledges the nearest `AGENTS.md`, emits evidence tokens, runs a Vibe Check before acting, and treats **time freshness** as a first-class constraint.
 
 ---
 
 ## 1) Core Principles
 
-- **Stateless & Read-Only.** Diagnostics never mutate MCP targets; HAR capture is opt-in and redacted client-side.
-- **Plugin-First Surface.** Every suite (discovery, auth, streaming, threat-model, etc.) lives behind a worker-thread sandbox with explicit CPU/time/memory budgets and denylisted APIs (`fs`, `child_process`, raw sockets).
-- **Deterministic by Design.** `--deterministic` fixes seeds, clocks, and retry jitter; repeat runs produce comparable outputs.
-- **Evidence Everywhere.** Findings carry evidence pointers (URLs, logs, files), run stamps, OTEL spans, and optional HAR artifacts.
-- **Security & A11y Baseline.** OAuth2 device/client cred simulations, secret hygiene, WCAG 2.2 AA CLI output (no color-only, summary-first).
-- **Governance Integration.** `.cortex` packs, policy-drift checks, ArcTDD plans, Constitution branding, and SBOM/license scans enforced via Nx targets.
-- **TDD Mandatory.** Tests precede code; Vitest suites cover each plugin; mocks live under `scripts/mock-servers/` with chaos toggles.
-- **Toolchain Alignment.** pnpm workspace, Nx smart targets, Biome lint/format, Mise version pinning, tsup for packaging; outputs stay MCP-first and stateless.
+- **Local-first, vendor-neutral.** MLX + Ollama preferred; frontier APIs optional behind policy.
+- **Deterministic & evidence-backed.** Reproducible runs; artifacted logs, traces, SBOM/provenance.
+- **Single integration hub.** Exactly one MCP server; Tools/Resources/Prompts are **registered** (not embedded).
+- **Tight domain boundaries.** No cross-domain imports; communicate via A2A topics or declared contracts/schemas.
+- **Security, A11y, Observability by default.** API-key/OAuth, WCAG 2.2 AA, structured logs + OTel; secrets retrieved on-demand via the 1Password CLI (`op`) with no long-lived copies.
+- **Small, shippable steps.** Quality gates: coverage/mutation, a11y, security, structure guard.
+- **Time Freshness Guard.** All dates anchored to harness "today"; ISO-8601 surfaced to users.
+- **Hybrid Model — Live Only.** Embeddings/rerankers/generation must hit **live** MLX/Ollama/frontier engines (no stubs/recordings/dry-runs).
+- **AGENTS.md + Vibe Check.** Load nearest `AGENTS.md` (persist SHA); call `vibe_check` before file writes/network calls/long runs.
 
 ---
 
-## 2) System Boundaries & Interfaces (MCP-First)
+## 2) System Boundaries (Allowed Interfaces)
 
-- **CLI (`cortexdx`).** Commands: `diagnose`, `compare`, `doctor`; Commander-based with structured exit codes (`0/1/2`). All probes assume MCP-compatible transports and schema contracts.
-- **Reports.** Markdown + JSON findings, ArcTDD plan, optional file plan patches, redacted HAR bundles—each finding mapped to an MCP suite or capability tag.
-- **Observability.** Optional OTLP exporter; structured console logs with `brand:"brAInwav"`; span helper wraps probes and annotates MCP endpoint/suite metadata.
-- **Extensibility.** Plugins shipped under `src/plugins/`; additional suites register via the canonical registry module and MUST focus on MCP behaviours (tools/resources/prompts notifications, transport, auth, governance).
-- **CI Hooks.** GitHub Action uploads artifacts, enforces severity-based failures, runs SBOM and Biome/Nx gates, and is scoped to MCP diagnostics.
-- **Mock Infrastructure.** Scripted MCP endpoints for OK / broken SSE / malformed JSON-RPC / bad CORS cases to reproduce protocol faults deterministically.
+- **MCP (Model Context Protocol)** over **HTTP/SSE** (optional **STDIO**)  
+  Paths: `/mcp`, `/sse`, `/health`, `/metrics`
+- **A2A** (Agent-to-Agent hub) for intra-runtime messaging (topics, intents, envelopes)
+- **REST API** for programmatic control & integrations
+- **Frontier Adapters**: OpenAI/Anthropic/Google, ChatGPT Connectors/Apps SDK, Perplexity SSE — all policy-guarded
 
-Non-MCP diagnostics (generic REST fuzzing, GraphQL, SOAP, etc.) are **explicitly out of scope**. Context adapters and frontier surfaces remain roadmap items (Milestone M2+) and must still mediate through MCP contracts when introduced.
+> **Default ports (must match `.well-known/mcp.json`)**: `3024` MCP, `3026` Local Memory MCP, `3002` Memory API, `39300` Pieces OS.
+
+**Auth modes**
+- **API key** by default (dev may allow `NO_AUTH=true`).  
+- **OAuth2 (Auth0)** optional; scopes must include: `search.read docs.write memory.read memory.write memory.delete` (RBAC + "Add Permissions in Access Token").
 
 ---
 
 ## 3) Architecture Overview
 
-### 3.1 CLI Orchestrator
-- Commander command tree with consistent branding.
-- Parses auth, suite filters, determinism, OTEL, HAR, compare, a11y, and budget flags.
-- Hands execution to `runDiagnose`, capturing run stamps and writing artifacts.
+### 3.1 ASBR Orchestrator (LangGraph)
+- Owns graphs, policies, **phase machine (R→G→F→REVIEW)**, and run lifecycle.
+- Invokes MCP Tools/Resources/Prompts, A2A messages, Memory, RAG jobs.
+- Emits structured telemetry (traces/metrics/logs) with `brand:"brAInwav"`, run IDs, and phase transitions.
 
-### 3.2 Orchestrator & Reporting Core
-- `runDiagnose` resolves suites → plugin host, consolidates findings, and writes Markdown/JSON/ArcTDD/file plan outputs.
-- `buildJsonReport`, `buildMarkdownReport`, `buildArcTddPlan`, and `buildFilePlan` are named exports enabling downstream automation.
+### 3.2 MCP (Single Hub)
+- **FastMCP v3** server exposing `/mcp`, `/sse`, `/health`, `/metrics`.
+- Loads registries for Tools/Resources/Prompts; no business logic in the server.
+- **Auth**: API-key or OAuth2; remote access via **Cloudflare Tunnel**.
 
-### 3.3 Plugin Host & Sandbox
-- Worker-thread sandbox per plugin with configurable budgets (`--budget-time`, `--budget-mem`).
-- Fallback to in-process execution only if platform lacks worker support (logged and surfaced as major finding).
-- Message channel relays evidence/logs/findings; type guards prevent `any` leakage.
+### 3.3 A2A Hub
+- Central bus for topics/intents; policies for routing, retries/backoff, auditing.
+- **No direct cross-domain imports**; use envelopes/contracts only.
 
-### 3.4 Adapters & Probes
-- MCP HTTP/S, JSON-RPC, SSE, WS (with `eventsource-parser`), and optional gRPC shims; deterministic SSE probes with keepalive heuristics.
-- Batch JSON-RPC tests cover mixed ID types, notifications, and error data.
-- CORS, rate-limit, permissioning, threat-model, devtool-env, tool-drift, streaming suites map to spec hardening deltas.
+### 3.4 Memory Core
+- Single source of truth for memories (facts, episodes, embeddings, artifacts).
+- CRUD + search APIs; retention/expiry; export/import.
+- **Parity rule**: every write available via **MCP & REST**. Evidence persisted to `.github/instructions/memories.instructions.md`.
 
-### 3.5 Observability & Evidence Pipeline
-- OTEL helper (`withSpan`) sets attributes (endpoint, suite, severity, confidence, version, duration).
-- Optional HAR redactor ensures secrets/tokens replaced; outputs stay local.
-- Logger emits evidence tokens for governance auditing.
+### 3.5 RAG Pipeline
+- Ingestion → chunking → **live** embedding → indexing → retrieval → post-processing (rerankers are **live** only).
+- Deterministic pipelines with versioned configs, replayable jobs, and batch evaluation hooks.
 
-### 3.6 Packaging & Distribution
-- tsup bundles CLI + index + plugin registry + worker.
-- Package metadata: `@brainwav/cortexdx`, Node 20+, sideEffects false, Commander entrypoint.
-- Nx `project.json` orchestrates build/test/lint/doctor targets; Biome handles lint/format; Mise pins Node/pnpm.
+### 3.6 Agents
+- Role-scoped (builder/reviewer/guardian) with explicit contracts and **evidence pointers**.
+- Obey **phase machine** and **HITL at REVIEW only**; blocked otherwise.
 
-### 3.7 Developer Experience & Doctor Command
-- `doctor` surfaces Node version, Playwright deps, MLX/Ollama availability, DNS/proxy tips, Windows WSL guidance (roadmap for deeper checks).
-- `scripts/mock-servers/` offer deterministic repro of protocol failures.
+### 3.7 Connectors & Frontier Surfaces
+- **ChatGPT Connectors / Apps SDK** for bounded operation of Cortex-OS inside ChatGPT (OAuth protected-resource discovery, dynamic client registration).
+- **Perplexity SSE** via streaming adapter.
+- Rate-limits, audit, and error taxonomy standardized.
 
----
+### 3.8 Ops Dashboard (React)
+- Health, logs viewer, trace explorer, metrics, queue/state monitors.
+- Manual controls: pause/resume, retry, drain, "run test flow".
+- **A11y**: keyboard navigation, semantic roles, no color-only signaling.
 
-## 4) Roadmap Alignment (from PRD v1.1)
-
-| Milestone | Focus | Key Deliverables |
-|-----------|-------|------------------|
-| **M0** | Scaffold & Core Plugins | CLI, orchestrator, HTTP/JSON-RPC/SSE adapters, discovery/auth/protocol plugins, reporting pipeline. |
-| **M0.5 (Hardening)** | Spec-integrated additions | CORS, JSON-RPC batch, SSE reconnect, rate-limit, threat-model, permissioning, devtool-env, tool drift, worker sandbox, OTEL, HAR redactor, compare command, doctor, mock servers, CI workflows, deterministic mode. |
-| **M1** | Streaming & Governance Depth | Heartbeat/sticky session policies, `.cortex` drift detection, enhanced security heuristics, chaos toggles. |
-| **M2** | Context Adapters & Performance | AVIX/arXiv/Context7 adapters, performance lab, compare-run diff UX, richer evals. |
-| **M3** | Packaging Options | Optional prebuilt binaries, minimal TUI/Web dashboard, polished gRPC adapter. |
-
-All milestones must uphold TDD, coverage/mutation gates, WCAG compliance, Semgrep/OSV/gitleaks scans, and determinism guarantees.
+### 3.9 Observability & Security
+- **Metrics** (Prometheus), **Traces** (OpenTelemetry), **Logs** (structured/Pino-style).
+- Security: timing-safe API-key checks, Host/CORS validation, secret vaults.
+- **403 triage**: path, host/CORS, auth header, tunnel policy, dev no-auth alignment.
 
 ---
 
-## 5) Success Metrics
+## 4) Packages: Vision & "Done Means"
 
-- **Coverage & Quality.** ≥90% unit coverage on plugins/adapters; zero lint violations; mutation testing baseline tracked.
-- **Reliability.** Golden-path diagnose run completes under 60s with ≤2% variance under deterministic mode.
-- **Security.** 100% findings carry evidence pointers; no secrets in logs or artifacts; SBOM/license step green.
-- **Governance.** ArcTDD plan generated per run; policy-drift plugin flags version mismatches; branding/a11y checks enforced in CI.
-- **Adoption.** CLI integrated into brAInwav standard Nx workflow; GitHub Action uploads artifacts on every PR/nightly.
+> Names indicative — adapt to monorepo layout.
+
+### 4.1 `packages/mcp-server`
+**Vision:** Minimal FastMCP v3 HTTP/SSE hub; loads registries; zero business logic.  
+**Done means:** `/health`, `/mcp`, `/sse`, `/metrics` green; API-key on; Cloudflare Tunnel tested; integration tests pass; **evidence tokens present** (`AGENTS_MD_SHA`, `brAInwav-vibe-check`).
+
+### 4.2 `packages/mcp-core`
+**Vision:** Protocol utilities, schemas, adapters, error taxonomy.  
+**Done means:** Zod types for Tools/Resources/Prompts; stable client; exhaustive unit tests; import-boundary guards.
+
+### 4.3 `packages/mcp-registry`
+**Vision:** Declarative registry with lazy loading.  
+**Done means:** Hot-reload in dev; list/read/register APIs; smoke test of discoverable & callable Tool/Resource/Prompt via MCP.
+
+### 4.4 `packages/a2a`
+**Vision:** Central A2A hub (no per-package A2A).  
+**Done means:** Topics/intents; at-least-once delivery; retries/backoff; message audit; fan-out/error-path tests.
+
+### 4.5 `packages/memory-core`
+**Vision:** Unified memory store (facts/episodes/embeddings/artifacts).  
+**Done means:** Deterministic IDs; retention/export; vector adapters; >90% test coverage; **parity tests** (MCP & REST).
+
+### 4.6 `packages/rag`
+**Vision:** Deterministic ingestion/index/retrieval with **live** models.  
+**Done means:** Config-driven jobs; snapshotable outputs; retrieval quality smoke; perf budget; **models:health/smoke logs** attached (model IDs, dims/norms, latency).
+
+### 4.7 `packages/agents`
+**Vision:** Role-scoped agents with policy gates; evidence-backed outputs.  
+**Done means:** JSON-schema I/O; blocking reviewer modes; trace correlation; E2E fixtures; **phase tokens** emitted.
+
+### 4.8 `packages/orchestration`
+**Vision:** LangGraph graphs + policy enforcement (phase, HITL gates).  
+**Done means:** Golden path (ingest→index→query) and incident path; replayable runs; determinism checks; **HITL blocked pre-REVIEW**.
+
+### 4.9 `packages/connectors`
+**Vision:** Adapters for ChatGPT Apps SDK, Perplexity SSE, frontier APIs.  
+**Done means:** Sample ChatGPT config; SSE demo; rate-limit & auth guards; 403 playbook; protected-resource metadata publishing OAuth scopes.
+
+### 4.10 `apps/chatgpt-dashboard`
+**Vision:** ChatGPT "glass" dashboard (React) rendered via the OpenAI **Apps SDK**, to monitor health, logs, traces, metrics, and control agents **from within ChatGPT**, under the same governance and auth as the MCP hub.  
+**Done means:** Keyboard-navigable UI; live metrics; log search; run controls; role-based access; axe/jest-axe reports; protected-resource discovery (`/.well-known/oauth-protected-resource`) wired; OAuth scopes published (`search.read docs.write memory.read memory.write memory.delete`); app manifest validated in ChatGPT; Cloudflare tunnel tested; structured logs include `brand:"brAInwav"`.
+
+### 4.11 `apps/cortex-os` (ASBR host)
+**Vision:** Boots ASBR, mounts graphs, wires MCP/A2A/Memory/RAG, exposes REST.  
+**Done means:** One-command dev up; golden-path E2E; graceful shutdown; provenance artifacts saved; **structure guard** clean.
 
 ---
 
-## 6) Non-Goals
+## 5) Non-Goals
 
-- Running arbitrary target-side mutations or exploit attempts.
-- Maintaining long-lived state, credential stores, or telemetry beyond local artifacts.
-- Shipping multiple MCP servers or managing remote agents; CortexDx remains a diagnostic client.
-- Implementing full frontier adapters before roadmap Milestone M2.
-- Acting as a generic API/security scanner for non-MCP protocols (REST/GraphQL/SOAP/etc.).
+- Multiple MCP servers per package (duplication)  
+- Interfaces beyond MCP/A2A/REST/frontier adapters  
+- Opaque AI actions without evidence/logs
 
 ---
 
-## 7) Shared Responsibilities
+## 6) Success Metrics
 
-- **Engineers/Agents**: Follow ArcTDD, keep plugin functions ≤40 lines, ensure named exports, update tests before code, cite evidence.
-- **DevOps**: Maintain Nx workflow, GitHub Actions, secrets policy for HAR/OTEL, Mise tool chain, SBOM pipelines.
-- **Security**: Review new plugins for sandbox compliance, secret-handling, and determinism; approve rate-limit/auth heuristics.
-- **Docs**: Keep README/vision in sync with PRD changes; document new flags and governance impacts.
+- **Reliability:** ≥99% success on golden-path E2E; zero data-loss on restart.  
+- **Quality:** CI gates all green; ≥90% unit coverage key packages; 95% span coverage in traces.  
+- **Security:** All external calls authenticated; happy-path free of 403s; no secrets logged.  
+- **A11y/UX:** Full keyboard coverage; no color-only indicators; screen-reader labels pass axe/jest-axe.  
+- **Governance Evidence:** PRs contain:
+  - `AGENTS_MD_SHA:<sha>`, `brAInwav-vibe-check`, `PHASE_TRANSITION:*`  
+  - `MODELS:LIVE:OK engine=<mlx|ollama|frontier>` with model IDs and dims/norms  
+  - Top-level Code Review Checklist link to `/.cortexdx/rules/code-review-checklist.md`
 
-> **Reminder:** Before shipping, run `pnpm lint && pnpm test && pnpm build` and validate reports against at least one mock server.
+---
+
+## 7) Phase Machine & HITL Gating (Runtime Policy)
+
+- **R (Red):** Write failing tests; plan minimal pass → auto-advance to **G** when failing → passing committed.  
+- **G (Green):** Implement to pass; coverage gates → **F** when 90/95% thresholds met.  
+- **F (Finished):** Refactor/docs/a11y/security/structure-guard + **live model** evidence → **REVIEW**.  
+- **REVIEW:** HITL permitted; Code Review Checklist must PASS all BLOCKERs.
+
+> Any `human_input` before REVIEW is a policy violation.
+
+---
+
+## 8) Evidence Protocol (Emitted & Verified)
+
+- **AGENTS Acknowledgement:** `AGENTS_MD_SHA:<sha>` persisted in `.cortexdx/run.yaml` and first vibe-check log.
+- **Vibe Check:** `"brAInwav-vibe-check"` log required before act phases.
+- **Live-Only Models:** `pnpm models:health && pnpm models:smoke` output includes engine, model IDs, vector dims/norms, latency, and `MODELS:LIVE:OK`.
+- **Time Freshness:** All surfaced dates are ISO-8601; relative terms normalized.
+
+---
+
+## 9) Glossary
+
+- **MCP:** Model Context Protocol — registry/invocation of Tools/Resources/Prompts.  
+- **ASBR:** Agentic Second Brain Runtime — Cortex-OS orchestrator on LangGraph.  
+- **A2A:** Agent-to-Agent messaging hub.  
+- **Phase Machine:** R→G→F→REVIEW gatekeeper of autonomy and HITL.

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.brainwav.cortexdx-cloudflared</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__PROJECT_DIR__/scripts/cloudflared/run-cloudflared.sh</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__PATH__</string>
+        <key>CORTEXDX_CLOUDFLARED_CONFIG</key>
+        <string>__CLOUDFLARED_CONFIG__</string>
+        <key>CORTEXDX_CLOUDFLARED_TUNNEL</key>
+        <string>__CLOUDFLARED_TUNNEL__</string>
+        <key>CORTEXDX_CLOUDFLARED_LOG_DIR</key>
+        <string>__LOG_DIR__</string>
+        <key>CORTEXDX_DEPENDENCY_URL</key>
+        <string>http://127.0.0.1:5001/health</string>
+        <!-- Intentionally omit SERVER_PORT so tunnel does not leak port overrides -->
+    </dict>
+
+    <key>WorkingDirectory</key>
+    <string>__PROJECT_DIR__</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>15</integer>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>__LOG_DIR__/cloudflared.launchd.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__LOG_DIR__/cloudflared.launchd.error.log</string>
+
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>1024</integer>
+        <key>ResidentSetSize</key>
+        <integer>402653184</integer>
+    </dict>
+
+    <key>HardResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>2048</integer>
+        <key>ResidentSetSize</key>
+        <integer>536870912</integer>
+    </dict>
+</dict>
+</plist>

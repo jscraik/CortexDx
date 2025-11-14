@@ -3,9 +3,16 @@
  * Validates the internal diagnostic/development plugin behaviour
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SelfImprovementPlugin } from "../src/plugins/development/self-improvement.js";
+import { InspectorAdapter } from "../src/adapters/inspector-adapter.js";
+import * as mlRouter from "../src/ml/router.js";
+import * as academicResearcher from "../src/research/academic-researcher.js";
+import type {
+  AcademicResearchReport,
+} from "../src/research/academic-researcher.js";
 import type { DevelopmentContext } from "../src/types.js";
+import { createMockLlmAdapter } from "./utils/mock-llm-adapter.js";
 
 const baseContext = (): DevelopmentContext => ({
   endpoint: "http://localhost:5001",
@@ -18,12 +25,53 @@ const baseContext = (): DevelopmentContext => ({
   sessionId: "session-test",
   userExpertiseLevel: "intermediate",
   conversationHistory: [],
+  requireAcademicInsights: true,
+});
+
+const buildMockAcademicReport = (): AcademicResearchReport => ({
+  topic: "cortexdx",
+  question: "",
+  timestamp: new Date().toISOString(),
+  providers: [
+    {
+      providerId: "semantic-scholar",
+      providerName: "Semantic Scholar",
+      findings: [],
+    },
+  ],
+  findings: [
+    {
+      id: "research.mock.1",
+      area: "research",
+      severity: "info",
+      title: "Mock academic signal",
+      description: "Academic diagnostics reference",
+      evidence: [],
+      tags: ["academic"],
+    },
+  ],
+  summary: {
+    totalFindings: 1,
+    providersRequested: 1,
+    providersResponded: 1,
+    errors: [],
+  },
+});
+
+beforeEach(() => {
+  vi.spyOn(mlRouter, "getEnhancedLlmAdapter").mockResolvedValue(
+    createMockLlmAdapter(),
+  );
+  vi.spyOn(academicResearcher, "runAcademicResearch").mockResolvedValue(
+    buildMockAcademicReport(),
+  );
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("Self-Improvement Plugin", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
 
   it("flags missing handshake instrumentation files", async () => {
     const ctx: DevelopmentContext = {
@@ -45,9 +93,20 @@ describe("Self-Improvement Plugin", () => {
   });
 
   it("summarizes inspector signals and captures health check details", async () => {
-    const requestMock = vi.fn().mockResolvedValue({
-      status: "healthy",
-      version: "1.0.0",
+    const requestMock = vi.fn().mockImplementation((input) => {
+      if (typeof input === "string" && input.includes("/mcp")) {
+        return Promise.resolve({
+          result: {
+            protocolVersion: "2024-11-05",
+            serverInfo: { name: "test", version: "1.0.0" },
+          },
+        });
+      }
+
+      return Promise.resolve({
+        status: "healthy",
+        version: "1.0.0",
+      });
     });
 
     const ctx: DevelopmentContext = {
@@ -93,10 +152,243 @@ describe("Self-Improvement Plugin", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    expect(requestMock).toHaveBeenCalledTimes(1);
+    expect(requestMock).toHaveBeenCalledTimes(2);
     expect(findings.some((f) => f.id === "self_improvement.signal_digest")).toBe(true);
     expect(findings.some((f) => f.id === "self_improvement.health")).toBe(true);
     expect(findings.some((f) => f.id === "self_improvement.transport_transcript")).toBe(true);
+  });
+});
+
+describe("Self-Improvement LLM analysis optimizations", () => {
+  it("reuses cached analysis for duplicate findings and caps token budget", async () => {
+    process.env.CORTEXDX_DISABLE_DEEPCONTEXT = "1";
+
+    const mockAdapter = createMockLlmAdapter();
+    const completionSpy = vi
+      .spyOn(mockAdapter, "complete")
+      .mockResolvedValue(JSON.stringify({ rootCause: "duplicate" }));
+    vi.spyOn(mlRouter, "getEnhancedLlmAdapter").mockResolvedValue(mockAdapter);
+    const emptyAcademicReport = buildMockAcademicReport();
+    emptyAcademicReport.findings = [];
+    emptyAcademicReport.summary.totalFindings = 0;
+    vi.spyOn(academicResearcher, "runAcademicResearch").mockResolvedValueOnce(
+      emptyAcademicReport,
+    );
+
+    const duplicateInspectorFinding = {
+      id: "dup",
+      severity: "info",
+      area: "protocol",
+      description: "duplicate finding",
+      evidence: { raw: {} },
+    };
+
+    vi.spyOn(InspectorAdapter.prototype, "selfDiagnose").mockResolvedValue({
+      jobId: "job-1",
+      endpoint: "http://localhost:5001",
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      findings: [duplicateInspectorFinding, duplicateInspectorFinding],
+      metrics: { ms: 10, probesRun: 1, failures: 0 },
+    });
+
+    vi.spyOn(InspectorAdapter.prototype, "convertFindings").mockReturnValue([
+      {
+        id: "inspector_dup",
+        area: "protocol",
+        severity: "info",
+        title: "Inspector duplicate",
+        description: "duplicate finding",
+        evidence: [],
+        tags: ["inspector"],
+      },
+      {
+        id: "inspector_dup",
+        area: "protocol",
+        severity: "info",
+        title: "Inspector duplicate",
+        description: "duplicate finding",
+        evidence: [],
+        tags: ["inspector"],
+      },
+    ]);
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      endpoint: "",
+      projectContext: {
+        name: "cortexdx",
+        type: "mcp-client",
+        language: "typescript",
+        dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
+        configFiles: ["pnpm-lock.yaml"],
+        sourceFiles: [
+          "packages/cortexdx/src/adapters/jsonrpc.ts",
+          "packages/cortexdx/src/adapters/sse.ts",
+        ],
+      },
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+
+    const duplicateFindings = findings.filter((finding) => finding.id === "inspector_dup");
+    expect(duplicateFindings).toHaveLength(2);
+    expect(duplicateFindings[0]?.llmAnalysis).toBe(
+      duplicateFindings[1]?.llmAnalysis,
+    );
+    expect(completionSpy.mock.calls[0][1]).toBeLessThanOrEqual(512);
+  });
+});
+
+describe("Academic insight integration", () => {
+  it("appends academic findings to the result set", async () => {
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      projectContext: {
+        name: "cortexdx",
+        type: "mcp-client",
+        language: "typescript",
+        dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser"],
+        configFiles: ["pnpm-lock.yaml"],
+        sourceFiles: ["packages/cortexdx/src/adapters/jsonrpc.ts"],
+      },
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    expect(academicResearcher.runAcademicResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ topic: expect.stringContaining("cortexdx") }),
+    );
+    expect(findings.some((finding) => finding.tags?.includes("academic"))).toBe(true);
+  });
+
+  it("emits a fallback finding when academic research fails", async () => {
+    vi.spyOn(academicResearcher, "runAcademicResearch").mockRejectedValueOnce(
+      new Error("missing API key"),
+    );
+
+    const findings = await SelfImprovementPlugin.run(baseContext());
+    const failure = findings.find(
+      (finding) => finding.id === "self_improvement.academic_failed",
+    );
+    expect(failure).toBeDefined();
+    expect(failure?.description).toContain("missing API key");
+  });
+
+  it("escalates when academic insights are required but unavailable", async () => {
+    vi.spyOn(academicResearcher, "runAcademicResearch").mockResolvedValueOnce({
+      ...buildMockAcademicReport(),
+      findings: [],
+      summary: {
+        totalFindings: 0,
+        providersRequested: 1,
+        providersResponded: 0,
+        errors: [],
+      },
+    });
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      requireAcademicInsights: true,
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    const missing = findings.find(
+      (finding) => finding.id === "self_improvement.academic_missing",
+    );
+    expect(missing).toBeDefined();
+    expect(missing?.severity).toBe("major");
+  });
+
+  it("downgrades when academic enforcement is disabled", async () => {
+    vi.spyOn(academicResearcher, "runAcademicResearch").mockResolvedValueOnce({
+      ...buildMockAcademicReport(),
+      findings: [],
+    });
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      requireAcademicInsights: false,
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    const baseline = findings.find(
+      (finding) => finding.id === "self_improvement.academic_empty",
+    );
+    expect(baseline).toBeDefined();
+    expect(baseline?.severity).toBe("info");
+  });
+});
+
+describe("Memory leak guard", () => {
+  it("reports healthy usage when under the threshold", async () => {
+    const requestMock = vi.fn().mockImplementation((input: string) => {
+      if (input.includes("/debug/memory")) {
+        return Promise.resolve({ heapUsed: 32 * 1024 * 1024, rss: 96 * 1024 * 1024 });
+      }
+      return Promise.resolve({ status: "healthy" });
+    });
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      request: requestMock,
+      memoryCheck: { path: "/debug/memory", thresholdMb: 64 },
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    const memoryFinding = findings.find(
+      (finding) => finding.id === "self_improvement.memory_usage",
+    );
+    expect(memoryFinding).toBeDefined();
+    expect(memoryFinding?.severity).toBe("info");
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.stringContaining("/debug/memory"),
+      expect.any(Object),
+    );
+  });
+
+  it("raises a major finding when usage exceeds the threshold", async () => {
+    const requestMock = vi.fn().mockImplementation((input: string) => {
+      if (input.includes("/debug/memory")) {
+        return Promise.resolve({ heapUsed: 256 * 1024 * 1024, rss: 512 * 1024 * 1024 });
+      }
+      return Promise.resolve({ status: "healthy" });
+    });
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      request: requestMock,
+      memoryCheck: { path: "/debug/memory", thresholdMb: 128 },
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    const memoryFinding = findings.find(
+      (finding) => finding.id === "self_improvement.memory_usage",
+    );
+    expect(memoryFinding).toBeDefined();
+    expect(memoryFinding?.severity).toBe("major");
+    expect(memoryFinding?.description).toContain("256");
+  });
+
+  it("records a failure when the memory probe cannot run", async () => {
+    const requestMock = vi.fn().mockImplementation((input: string) => {
+      if (input.includes("/debug/memory")) {
+        return Promise.reject(new Error("probe offline"));
+      }
+      return Promise.resolve({ status: "healthy" });
+    });
+
+    const ctx: DevelopmentContext = {
+      ...baseContext(),
+      request: requestMock,
+      memoryCheck: { path: "/debug/memory", thresholdMb: 128 },
+    };
+
+    const findings = await SelfImprovementPlugin.run(ctx);
+    const failure = findings.find(
+      (finding) => finding.id === "self_improvement.memory_probe_failed",
+    );
+    expect(failure).toBeDefined();
+    expect(failure?.severity).toBe("minor");
   });
 });
 

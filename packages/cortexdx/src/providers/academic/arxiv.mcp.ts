@@ -6,494 +6,599 @@
  */
 
 import {
-    type LicenseValidatorPlugin,
-    createLicenseValidator
+  type LicenseValidatorPlugin,
+  createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "../../types.js";
 
 export interface ArxivPaper {
-    id: string;
-    title: string;
-    summary: string;
-    authors: Array<{
-        name: string;
-        affiliation?: string;
-    }>;
-    published: string;
-    updated?: string;
-    categories: string[];
-    primary_category: string;
-    doi?: string;
-    journal_ref?: string;
-    pdf_url: string;
-    abs_url: string;
-    comment?: string;
+  id: string;
+  title: string;
+  summary: string;
+  authors: Array<{
+    name: string;
+    affiliation?: string;
+  }>;
+  published: string;
+  updated?: string;
+  categories: string[];
+  primary_category: string;
+  doi?: string;
+  journal_ref?: string;
+  pdf_url: string;
+  abs_url: string;
+  comment?: string;
 }
 
 export interface ArxivSearchParams {
-    search_query?: string;
-    id_list?: string[];
-    start?: number;
-    max_results?: number;
-    sort_by?: "relevance" | "lastUpdatedDate" | "submittedDate";
-    sort_order?: "ascending" | "descending";
+  search_query?: string;
+  id_list?: string[];
+  start?: number;
+  max_results?: number;
+  sort_by?: "relevance" | "lastUpdatedDate" | "submittedDate";
+  sort_order?: "ascending" | "descending";
 }
 
 export interface ArxivCategory {
-    id: string;
-    name: string;
-    description: string;
-    group: string;
+  id: string;
+  name: string;
+  description: string;
+  group: string;
 }
 
 export class ArxivProvider {
-    private readonly baseUrl = "http://export.arxiv.org/api/query";
-    private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
-    private readonly licenseValidator: LicenseValidatorPlugin;
+  private readonly baseUrl = "http://export.arxiv.org/api/query";
+  private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
+  private readonly licenseValidator: LicenseValidatorPlugin;
 
-    // arXiv subject classifications
-    private readonly categories: ArxivCategory[] = [
-        // Computer Science
-        { id: "cs.AI", name: "Artificial Intelligence", description: "AI, machine learning, neural networks", group: "Computer Science" },
-        { id: "cs.CL", name: "Computation and Language", description: "NLP, computational linguistics", group: "Computer Science" },
-        { id: "cs.CV", name: "Computer Vision and Pattern Recognition", description: "Image processing, computer vision", group: "Computer Science" },
-        { id: "cs.LG", name: "Machine Learning", description: "Learning algorithms, statistical learning", group: "Computer Science" },
-        { id: "cs.SE", name: "Software Engineering", description: "Software development, programming languages", group: "Computer Science" },
+  // arXiv subject classifications
+  private readonly categories: ArxivCategory[] = [
+    // Computer Science
+    {
+      id: "cs.AI",
+      name: "Artificial Intelligence",
+      description: "AI, machine learning, neural networks",
+      group: "Computer Science",
+    },
+    {
+      id: "cs.CL",
+      name: "Computation and Language",
+      description: "NLP, computational linguistics",
+      group: "Computer Science",
+    },
+    {
+      id: "cs.CV",
+      name: "Computer Vision and Pattern Recognition",
+      description: "Image processing, computer vision",
+      group: "Computer Science",
+    },
+    {
+      id: "cs.LG",
+      name: "Machine Learning",
+      description: "Learning algorithms, statistical learning",
+      group: "Computer Science",
+    },
+    {
+      id: "cs.SE",
+      name: "Software Engineering",
+      description: "Software development, programming languages",
+      group: "Computer Science",
+    },
 
-        // Physics
-        { id: "physics.comp-ph", name: "Computational Physics", description: "Computational methods in physics", group: "Physics" },
-        { id: "physics.data-an", name: "Data Analysis, Statistics and Probability", description: "Statistical methods, data analysis", group: "Physics" },
+    // Physics
+    {
+      id: "physics.comp-ph",
+      name: "Computational Physics",
+      description: "Computational methods in physics",
+      group: "Physics",
+    },
+    {
+      id: "physics.data-an",
+      name: "Data Analysis, Statistics and Probability",
+      description: "Statistical methods, data analysis",
+      group: "Physics",
+    },
 
-        // Mathematics
-        { id: "math.ST", name: "Statistics Theory", description: "Mathematical statistics", group: "Mathematics" },
-        { id: "math.NA", name: "Numerical Analysis", description: "Numerical methods and algorithms", group: "Mathematics" },
+    // Mathematics
+    {
+      id: "math.ST",
+      name: "Statistics Theory",
+      description: "Mathematical statistics",
+      group: "Mathematics",
+    },
+    {
+      id: "math.NA",
+      name: "Numerical Analysis",
+      description: "Numerical methods and algorithms",
+      group: "Mathematics",
+    },
 
-        // Quantitative Biology
-        { id: "q-bio.QM", name: "Quantitative Methods", description: "Computational biology methods", group: "Quantitative Biology" },
+    // Quantitative Biology
+    {
+      id: "q-bio.QM",
+      name: "Quantitative Methods",
+      description: "Computational biology methods",
+      group: "Quantitative Biology",
+    },
 
-        // Statistics
-        { id: "stat.ML", name: "Machine Learning", description: "Statistical machine learning", group: "Statistics" },
-        { id: "stat.AP", name: "Applications", description: "Statistical applications", group: "Statistics" }
+    // Statistics
+    {
+      id: "stat.ML",
+      name: "Machine Learning",
+      description: "Statistical machine learning",
+      group: "Statistics",
+    },
+    {
+      id: "stat.AP",
+      name: "Applications",
+      description: "Statistical applications",
+      group: "Statistics",
+    },
+  ];
+
+  constructor(private ctx: DiagnosticContext) {
+    this.licenseValidator = createLicenseValidator(ctx);
+  }
+
+  /**
+   * FASTMCP v3.22 tool definitions
+   */
+  static getToolDefinitions() {
+    return [
+      {
+        name: "arxiv_search",
+        description: "Search for papers on arXiv",
+        inputSchema: {
+          type: "object",
+          properties: {
+            search_query: {
+              type: "string",
+              description:
+                "Search query (supports field queries like 'ti:machine learning' for title, 'au:smith' for author, 'cat:cs.AI' for category)",
+            },
+            max_results: {
+              type: "number",
+              description: "Maximum number of results (default: 10, max: 2000)",
+              minimum: 1,
+              maximum: 2000,
+              default: 10,
+            },
+            start: {
+              type: "number",
+              description: "Starting index for pagination (default: 0)",
+              minimum: 0,
+              default: 0,
+            },
+            sort_by: {
+              type: "string",
+              description: "Sort criteria",
+              enum: ["relevance", "lastUpdatedDate", "submittedDate"],
+              default: "relevance",
+            },
+            sort_order: {
+              type: "string",
+              description: "Sort order",
+              enum: ["ascending", "descending"],
+              default: "descending",
+            },
+          },
+        },
+      },
+      {
+        name: "arxiv_get_paper",
+        description: "Get detailed information about specific arXiv papers",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id_list: {
+              type: "array",
+              items: {
+                type: "string",
+              },
+              description:
+                "List of arXiv IDs (e.g., ['1706.03762', '2010.11929'])",
+              maxItems: 100,
+            },
+          },
+          required: ["id_list"],
+        },
+      },
+      {
+        name: "arxiv_search_by_category",
+        description: "Search papers by arXiv category",
+        inputSchema: {
+          type: "object",
+          properties: {
+            category: {
+              type: "string",
+              description: "arXiv category (e.g., 'cs.AI', 'cs.LG', 'stat.ML')",
+            },
+            max_results: {
+              type: "number",
+              description: "Maximum number of results (default: 10, max: 2000)",
+              minimum: 1,
+              maximum: 2000,
+              default: 10,
+            },
+            start: {
+              type: "number",
+              description: "Starting index for pagination (default: 0)",
+              minimum: 0,
+              default: 0,
+            },
+            sort_by: {
+              type: "string",
+              description: "Sort criteria",
+              enum: ["lastUpdatedDate", "submittedDate"],
+              default: "lastUpdatedDate",
+            },
+          },
+          required: ["category"],
+        },
+      },
+      {
+        name: "arxiv_search_by_author",
+        description: "Search papers by author name",
+        inputSchema: {
+          type: "object",
+          properties: {
+            author: {
+              type: "string",
+              description: "Author name (last name or full name)",
+            },
+            max_results: {
+              type: "number",
+              description: "Maximum number of results (default: 10, max: 2000)",
+              minimum: 1,
+              maximum: 2000,
+              default: 10,
+            },
+            start: {
+              type: "number",
+              description: "Starting index for pagination (default: 0)",
+              minimum: 0,
+              default: 0,
+            },
+          },
+          required: ["author"],
+        },
+      },
+      {
+        name: "arxiv_get_categories",
+        description: "Get list of available arXiv categories",
+        inputSchema: {
+          type: "object",
+          properties: {
+            group: {
+              type: "string",
+              description: "Filter by subject group (optional)",
+            },
+          },
+        },
+      },
     ];
+  }
 
-    constructor(private ctx: DiagnosticContext) {
-        this.licenseValidator = createLicenseValidator(ctx);
-    }
+  /**
+   * Parse arXiv XML response
+   */
+  private parseArxivXml(xmlText: string): ArxivPaper[] {
+    // Simple XML parsing for arXiv API response
+    const papers: ArxivPaper[] = [];
 
-    /**
-     * FASTMCP v3.22 tool definitions
-     */
-    static getToolDefinitions() {
-        return [
-            {
-                name: "arxiv_search",
-                description: "Search for papers on arXiv",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        search_query: {
-                            type: "string",
-                            description: "Search query (supports field queries like 'ti:machine learning' for title, 'au:smith' for author, 'cat:cs.AI' for category)"
-                        },
-                        max_results: {
-                            type: "number",
-                            description: "Maximum number of results (default: 10, max: 2000)",
-                            minimum: 1,
-                            maximum: 2000,
-                            default: 10
-                        },
-                        start: {
-                            type: "number",
-                            description: "Starting index for pagination (default: 0)",
-                            minimum: 0,
-                            default: 0
-                        },
-                        sort_by: {
-                            type: "string",
-                            description: "Sort criteria",
-                            enum: ["relevance", "lastUpdatedDate", "submittedDate"],
-                            default: "relevance"
-                        },
-                        sort_order: {
-                            type: "string",
-                            description: "Sort order",
-                            enum: ["ascending", "descending"],
-                            default: "descending"
-                        }
-                    }
-                }
-            },
-            {
-                name: "arxiv_get_paper",
-                description: "Get detailed information about specific arXiv papers",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        id_list: {
-                            type: "array",
-                            items: {
-                                type: "string"
-                            },
-                            description: "List of arXiv IDs (e.g., ['1706.03762', '2010.11929'])",
-                            maxItems: 100
-                        }
-                    },
-                    required: ["id_list"]
-                }
-            },
-            {
-                name: "arxiv_search_by_category",
-                description: "Search papers by arXiv category",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        category: {
-                            type: "string",
-                            description: "arXiv category (e.g., 'cs.AI', 'cs.LG', 'stat.ML')"
-                        },
-                        max_results: {
-                            type: "number",
-                            description: "Maximum number of results (default: 10, max: 2000)",
-                            minimum: 1,
-                            maximum: 2000,
-                            default: 10
-                        },
-                        start: {
-                            type: "number",
-                            description: "Starting index for pagination (default: 0)",
-                            minimum: 0,
-                            default: 0
-                        },
-                        sort_by: {
-                            type: "string",
-                            description: "Sort criteria",
-                            enum: ["lastUpdatedDate", "submittedDate"],
-                            default: "lastUpdatedDate"
-                        }
-                    },
-                    required: ["category"]
-                }
-            },
-            {
-                name: "arxiv_search_by_author",
-                description: "Search papers by author name",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        author: {
-                            type: "string",
-                            description: "Author name (last name or full name)"
-                        },
-                        max_results: {
-                            type: "number",
-                            description: "Maximum number of results (default: 10, max: 2000)",
-                            minimum: 1,
-                            maximum: 2000,
-                            default: 10
-                        },
-                        start: {
-                            type: "number",
-                            description: "Starting index for pagination (default: 0)",
-                            minimum: 0,
-                            default: 0
-                        }
-                    },
-                    required: ["author"]
-                }
-            },
-            {
-                name: "arxiv_get_categories",
-                description: "Get list of available arXiv categories",
-                inputSchema: {
-                    type: "object",
-                    properties: {
-                        group: {
-                            type: "string",
-                            description: "Filter by subject group (optional)"
-                        }
-                    }
-                }
-            }
-        ];
-    }
+    // Extract entries using regex (simplified approach)
+    const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+    let match: RegExpExecArray | null = entryRegex.exec(xmlText);
 
-    /**
-     * Parse arXiv XML response
-     */
-    private parseArxivXml(xmlText: string): ArxivPaper[] {
-        // Simple XML parsing for arXiv API response
-        const papers: ArxivPaper[] = [];
+    while (match) {
+      const entryXml = match[1] || "";
 
-        // Extract entries using regex (simplified approach)
-        const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-        let match: RegExpExecArray | null = entryRegex.exec(xmlText);
+      const paper: ArxivPaper = {
+        id: (this.extractXmlValue(entryXml, "id") || "").replace(
+          "http://arxiv.org/abs/",
+          "",
+        ),
+        title: (this.extractXmlValue(entryXml, "title") || "")
+          .replace(/\s+/g, " ")
+          .trim(),
+        summary: (this.extractXmlValue(entryXml, "summary") || "")
+          .replace(/\s+/g, " ")
+          .trim(),
+        published: this.extractXmlValue(entryXml, "published") || "",
+        updated: this.extractXmlValue(entryXml, "updated") || undefined,
+        authors: this.extractAuthors(entryXml),
+        categories: this.extractCategories(entryXml),
+        primary_category:
+          this.extractXmlAttribute(
+            entryXml,
+            "arxiv:primary_category",
+            "term",
+          ) || "",
+        doi: this.extractXmlValue(entryXml, "arxiv:doi") || undefined,
+        journal_ref:
+          this.extractXmlValue(entryXml, "arxiv:journal_ref") || undefined,
+        pdf_url: "",
+        abs_url: "",
+        comment: this.extractXmlValue(entryXml, "arxiv:comment") || undefined,
+      };
 
-        while (match) {
-            const entryXml = match[1];
+      // Extract PDF and abstract URLs
+      const linkRegex = /<link[^>]*href="([^"]*)"[^>]*type="([^"]*)"/g;
+      let linkMatch: RegExpExecArray | null = linkRegex.exec(entryXml);
+      while (linkMatch) {
+        const href = linkMatch[1] || "";
+        const type = linkMatch[2] || "";
 
-            const paper: ArxivPaper = {
-                id: this.extractXmlValue(entryXml, "id")?.replace("http://arxiv.org/abs/", "") || "",
-                title: this.extractXmlValue(entryXml, "title")?.replace(/\s+/g, " ").trim() || "",
-                summary: this.extractXmlValue(entryXml, "summary")?.replace(/\s+/g, " ").trim() || "",
-                published: this.extractXmlValue(entryXml, "published") || "",
-                updated: this.extractXmlValue(entryXml, "updated"),
-                authors: this.extractAuthors(entryXml),
-                categories: this.extractCategories(entryXml),
-                primary_category: this.extractXmlAttribute(entryXml, "arxiv:primary_category", "term") || "",
-                doi: this.extractXmlValue(entryXml, "arxiv:doi"),
-                journal_ref: this.extractXmlValue(entryXml, "arxiv:journal_ref"),
-                pdf_url: "",
-                abs_url: "",
-                comment: this.extractXmlValue(entryXml, "arxiv:comment")
-            };
-
-            // Extract PDF and abstract URLs
-            const linkRegex = /<link[^>]*href="([^"]*)"[^>]*type="([^"]*)"/g;
-            let linkMatch: RegExpExecArray | null = linkRegex.exec(entryXml);
-            while (linkMatch) {
-                const href = linkMatch[1];
-                const type = linkMatch[2];
-
-                if (type === "application/pdf") {
-                    paper.pdf_url = href;
-                } else if (type === "text/html") {
-                    paper.abs_url = href;
-                }
-                linkMatch = linkRegex.exec(entryXml);
-            }
-
-            papers.push(paper);
-            match = entryRegex.exec(xmlText);
+        if (type === "application/pdf") {
+          paper.pdf_url = href;
+        } else if (type === "text/html") {
+          paper.abs_url = href;
         }
+        linkMatch = linkRegex.exec(entryXml);
+      }
 
-        return papers;
+      papers.push(paper);
+      match = entryRegex.exec(xmlText);
     }
 
-    private extractXmlValue(xml: string, tag: string): string | undefined {
-        const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
-        const match = xml.match(regex);
-        return match ? match[1].trim() : undefined;
+    return papers;
+  }
+
+  private extractXmlValue(xml: string, tag: string): string | undefined {
+    const regex = new RegExp(`<${tag}[^>]*>([\s\S]*?)<\/${tag}>`, "i");
+    const match = xml.match(regex);
+    return match?.[1]?.trim();
+  }
+
+  private extractXmlAttribute(
+    xml: string,
+    tag: string,
+    attr: string,
+  ): string | undefined {
+    const regex = new RegExp(`<${tag}[^>]*${attr}="([^']*)"`, "i");
+    const match = xml.match(regex);
+    return match?.[1];
+  }
+
+  private extractAuthors(
+    xml: string,
+  ): Array<{ name: string; affiliation?: string }> {
+    const authors: Array<{ name: string; affiliation?: string }> = [];
+    const authorRegex = /<author>([\s\S]*?)<\/author>/g;
+    let match: RegExpExecArray | null = authorRegex.exec(xml);
+
+    while (match) {
+      const authorXml = match[1] || "";
+      const name = this.extractXmlValue(authorXml, "name");
+      const affiliation = this.extractXmlValue(authorXml, "arxiv:affiliation");
+
+      if (name) {
+        authors.push({ name, affiliation });
+      }
+      match = authorRegex.exec(xml);
     }
 
-    private extractXmlAttribute(xml: string, tag: string, attr: string): string | undefined {
-        const regex = new RegExp(`<${tag}[^>]*${attr}="([^"]*)"`, "i");
-        const match = xml.match(regex);
-        return match ? match[1] : undefined;
+    return authors;
+  }
+
+  private extractCategories(xml: string): string[] {
+    const categories: string[] = [];
+    const categoryRegex = /<category[^>]*term="([^"]*)"/g;
+    let match: RegExpExecArray | null = categoryRegex.exec(xml);
+
+    while (match) {
+      categories.push(match[1] || "");
+      match = categoryRegex.exec(xml);
     }
 
-    private extractAuthors(xml: string): Array<{ name: string; affiliation?: string }> {
-        const authors: Array<{ name: string; affiliation?: string }> = [];
-        const authorRegex = /<author>([\s\S]*?)<\/author>/g;
-        let match: RegExpExecArray | null = authorRegex.exec(xml);
+    return categories;
+  }
 
-        while (match) {
-            const authorXml = match[1];
-            const name = this.extractXmlValue(authorXml, "name");
-            const affiliation = this.extractXmlValue(authorXml, "arxiv:affiliation");
+  /**
+   * Search for papers
+   */
+  async searchPapers(params: ArxivSearchParams): Promise<ArxivPaper[]> {
+    const searchParams = new URLSearchParams();
 
-            if (name) {
-                authors.push({ name, affiliation });
-            }
-            match = authorRegex.exec(xml);
-        }
-
-        return authors;
+    if (params.search_query) {
+      searchParams.append("search_query", params.search_query);
+    }
+    if (params.id_list && params.id_list.length > 0) {
+      searchParams.append("id_list", params.id_list.join(","));
+    }
+    if (params.start !== undefined) {
+      searchParams.append("start", String(params.start));
+    }
+    if (params.max_results !== undefined) {
+      searchParams.append("max_results", String(params.max_results));
+    }
+    if (params.sort_by) {
+      searchParams.append("sortBy", params.sort_by);
+    }
+    if (params.sort_order) {
+      searchParams.append("sortOrder", params.sort_order);
     }
 
-    private extractCategories(xml: string): string[] {
-        const categories: string[] = [];
-        const categoryRegex = /<category[^>]*term="([^"]*)"/g;
-        let match: RegExpExecArray | null = categoryRegex.exec(xml);
+    const url = `${this.baseUrl}?${searchParams}`;
 
-        while (match) {
-            categories.push(match[1]);
-            match = categoryRegex.exec(xml);
-        }
+    try {
+      // Use fetch directly for XML response instead of ctx.request which expects JSON
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": this.userAgent,
+          ...this.ctx.headers,
+        },
+      });
 
-        return categories;
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const xmlText = await response.text();
+      return this.parseArxivXml(xmlText);
+    } catch (error) {
+      this.ctx.logger("arXiv search failed:", error);
+      throw new Error(
+        `arXiv API error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
+  }
 
-    /**
-     * Search for papers
-     */
-    async searchPapers(params: ArxivSearchParams): Promise<ArxivPaper[]> {
-        const searchParams = new URLSearchParams();
+  /**
+   * Search by category
+   */
+  async searchByCategory(
+    category: string,
+    maxResults = 10,
+    start = 0,
+    sortBy:
+      | "relevance"
+      | "lastUpdatedDate"
+      | "submittedDate" = "lastUpdatedDate",
+  ): Promise<ArxivPaper[]> {
+    return await this.searchPapers({
+      search_query: `cat:${category}`,
+      max_results: maxResults,
+      start,
+      sort_by: sortBy,
+    });
+  }
 
-        if (params.search_query) {
-            searchParams.append("search_query", params.search_query);
-        }
-        if (params.id_list && params.id_list.length > 0) {
-            searchParams.append("id_list", params.id_list.join(","));
-        }
-        if (params.start !== undefined) {
-            searchParams.append("start", String(params.start));
-        }
-        if (params.max_results !== undefined) {
-            searchParams.append("max_results", String(params.max_results));
-        }
-        if (params.sort_by) {
-            searchParams.append("sortBy", params.sort_by);
-        }
-        if (params.sort_order) {
-            searchParams.append("sortOrder", params.sort_order);
-        }
+  /**
+   * Search by author
+   */
+  async searchByAuthor(
+    author: string,
+    maxResults = 10,
+    start = 0,
+  ): Promise<ArxivPaper[]> {
+    return await this.searchPapers({
+      search_query: `au:${author}`,
+      max_results: maxResults,
+      start,
+      sort_by: "lastUpdatedDate",
+    });
+  }
 
-        const url = `${this.baseUrl}?${searchParams}`;
+  /**
+   * Get papers by ID list
+   */
+  async getPapers(idList: string[]): Promise<ArxivPaper[]> {
+    return await this.searchPapers({
+      id_list: idList,
+    });
+  }
 
-        try {
-            // Use fetch directly for XML response instead of ctx.request which expects JSON
-            const response = await fetch(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const xmlText = await response.text();
-            return this.parseArxivXml(xmlText);
-        } catch (error) {
-            this.ctx.logger("arXiv search failed:", error);
-            throw new Error(`arXiv API error: ${error instanceof Error ? error.message : "Unknown error"}`);
-        }
+  /**
+   * Get available categories
+   */
+  getCategories(group?: string): ArxivCategory[] {
+    if (group) {
+      return this.categories.filter(
+        (cat) => cat.group.toLowerCase() === group.toLowerCase(),
+      );
     }
+    return this.categories;
+  }
 
-    /**
-     * Search by category
-     */
-    async searchByCategory(category: string, maxResults = 10, start = 0, sortBy: "relevance" | "lastUpdatedDate" | "submittedDate" = "lastUpdatedDate"): Promise<ArxivPaper[]> {
-        return await this.searchPapers({
-            search_query: `cat:${category}`,
-            max_results: maxResults,
-            start,
-            sort_by: sortBy
-        });
+  /**
+   * Health check for the provider
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      const url = `${this.baseUrl}?search_query=cat:cs.AI&max_results=1`;
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": this.userAgent,
+          ...this.ctx.headers,
+        },
+      });
+      return response.ok;
+    } catch {
+      return false;
     }
+  }
 
-    /**
-     * Search by author
-     */
-    async searchByAuthor(author: string, maxResults = 10, start = 0): Promise<ArxivPaper[]> {
-        return await this.searchPapers({
-            search_query: `au:${author}`,
-            max_results: maxResults,
-            start,
-            sort_by: "lastUpdatedDate"
-        });
+  /**
+   * Execute tool calls
+   */
+  async executeTool(
+    toolName: string,
+    params: Record<string, unknown>,
+  ): Promise<ArxivPaper[] | ArxivCategory[]> {
+    switch (toolName) {
+      case "arxiv_search":
+        return await this.searchPapers(params as ArxivSearchParams);
+
+      case "arxiv_get_paper":
+        return await this.getPapers(params.id_list as string[]);
+
+      case "arxiv_search_by_category":
+        return await this.searchByCategory(
+          params.category as string,
+          params.max_results as number | undefined,
+          params.start as number | undefined,
+          params.sort_by as
+            | "relevance"
+            | "lastUpdatedDate"
+            | "submittedDate"
+            | undefined,
+        );
+
+      case "arxiv_search_by_author":
+        return await this.searchByAuthor(
+          params.author as string,
+          params.max_results as number | undefined,
+          params.start as number | undefined,
+        );
+
+      case "arxiv_get_categories":
+        return this.getCategories(params.group as string | undefined);
+
+      default:
+        throw new Error(`Unknown tool: ${toolName}`);
     }
-
-    /**
-     * Get papers by ID list
-     */
-    async getPapers(idList: string[]): Promise<ArxivPaper[]> {
-        return await this.searchPapers({
-            id_list: idList
-        });
-    }
-
-    /**
-     * Get available categories
-     */
-    getCategories(group?: string): ArxivCategory[] {
-        if (group) {
-            return this.categories.filter(cat => cat.group.toLowerCase() === group.toLowerCase());
-        }
-        return this.categories;
-    }
-
-    /**
-     * Health check for the provider
-     */
-    async healthCheck(): Promise<boolean> {
-        try {
-            const url = `${this.baseUrl}?search_query=cat:cs.AI&max_results=1`;
-            const response = await fetch(url, {
-                headers: {
-                    "User-Agent": this.userAgent,
-                    ...this.ctx.headers
-                }
-            });
-            return response.ok;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * Execute tool calls
-     */
-    async executeTool(toolName: string, params: Record<string, unknown>): Promise<ArxivPaper[] | ArxivCategory[]> {
-        switch (toolName) {
-            case "arxiv_search":
-                return await this.searchPapers(params as ArxivSearchParams);
-
-            case "arxiv_get_paper":
-                return await this.getPapers(params.id_list as string[]);
-
-            case "arxiv_search_by_category":
-                return await this.searchByCategory(
-                    params.category as string,
-                    params.max_results as number | undefined,
-                    params.start as number | undefined,
-                    params.sort_by as "relevance" | "lastUpdatedDate" | "submittedDate" | undefined
-                );
-
-            case "arxiv_search_by_author":
-                return await this.searchByAuthor(
-                    params.author as string,
-                    params.max_results as number | undefined,
-                    params.start as number | undefined
-                );
-
-            case "arxiv_get_categories":
-                return this.getCategories(params.group as string | undefined);
-
-            default:
-                throw new Error(`Unknown tool: ${toolName}`);
-        }
-    }
+  }
 }
 
 /**
  * FASTMCP v3.22 capability registration
  */
 export const arxivCapabilities = {
-    id: "arxiv",
-    name: "arXiv Preprint Provider",
-    version: "1.0.0",
-    description: "Preprint search and metadata extraction via arXiv API",
-    tools: ArxivProvider.getToolDefinitions(),
-    resources: [],
-    prompts: [
+  id: "arxiv",
+  name: "arXiv Preprint Provider",
+  version: "1.0.0",
+  description: "Preprint search and metadata extraction via arXiv API",
+  tools: ArxivProvider.getToolDefinitions(),
+  resources: [],
+  prompts: [
+    {
+      name: "track_research_trends",
+      description: "Track research trends in a specific field using arXiv data",
+      arguments: [
         {
-            name: "track_research_trends",
-            description: "Track research trends in a specific field using arXiv data",
-            arguments: [
-                {
-                    name: "category",
-                    description: "arXiv category to analyze (e.g., 'cs.AI', 'cs.LG')",
-                    required: true
-                },
-                {
-                    name: "timeframe",
-                    description: "Time period to analyze (e.g., 'last_month', 'last_year')",
-                    required: false
-                }
-            ]
+          name: "category",
+          description: "arXiv category to analyze (e.g., 'cs.AI', 'cs.LG')",
+          required: true,
         },
         {
-            name: "author_publication_analysis",
-            description: "Analyze an author's publication history on arXiv",
-            arguments: [
-                {
-                    name: "author",
-                    description: "Author name to analyze",
-                    required: true
-                }
-            ]
-        }
-    ]
+          name: "timeframe",
+          description:
+            "Time period to analyze (e.g., 'last_month', 'last_year')",
+          required: false,
+        },
+      ],
+    },
+    {
+      name: "author_publication_analysis",
+      description: "Analyze an author's publication history on arXiv",
+      arguments: [
+        {
+          name: "author",
+          description: "Author name to analyze",
+          required: true,
+        },
+      ],
+    },
+  ],
 };

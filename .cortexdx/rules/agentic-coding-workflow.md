@@ -1,7 +1,7 @@
 # Agentic Coding Workflow — v2025.11+ArcTDD (Tiered, Accessibility Edition)
 
 **Status:** Authoritative  
-**Scope:** All human and AI agent activity across CortexDx MCP  
+**Scope:** All human and AI agent activity across Cortex-OS  
 **Inheritance:** Governance Pack (`/.cortexdx/rules/*`) · `CODESTYLE.md` · Constitution  
 **Enforcement:** CI blocks merges if required evidence, guards, branding logs, or arc limits are missing.  
 **Accessibility Note:** This document avoids emoji in headings and list markers for screen-reader clarity.
@@ -10,51 +10,111 @@
 
 ## 0) Task Spine and Ground Rules
 
-- **Discrete tasks:** Each feature or fix lives in `~/tasks/<slug>/`.
+- **Discrete tasks:** Each feature or fix lives in `~/Changelog/<slug>/`.
 - **Artifacts at every gate:** specs, plans, tests, evidence, run manifests.
 - **Tiny, verifiable steps:** TDD (red → green → refactor), frequent Conventional Commits, atomic PRs.
 - **Truthfulness:** No stubs, mocks, or recorded outputs in production paths.
-- **A11y and Security:** WCAG 2.2 AA baseline (ISO/IEC 40500:2025); Semgrep, OSV, gitleaks scans gate merges.
-- **Branding:** All logs/errors must include `[brAInwav]` and `brand:"brAInwav"`.
+- **Accessibility:** **WCAG 2.2 AA** as baseline; treat **ISO/IEC 40500:2025** as the harmonized citation of WCAG 2.2.
+- **Security:** Semgrep + gitleaks + OSV gate merges; SBOMs (**CycloneDX 1.7**) + **SLSA v1.1** attestations are required.
+- **Branding:** All logs/errors include `[brAInwav]` and a structured `brand:"brAInwav"` field.
 
 ---
 
 ## 0.1 Preflight Guards and Governance Hooks (mandatory)
 
-- **Time Freshness Guard** — Anchor to harness timezone/date; convert relative dates to ISO-8601 in specs and PRs.
-- **Academic Research Enhancement** — Before vibe check, enhance all implementation plans with academic research and validate licenses by using CortexDx’s built-in academic MCP providers (Wikidata, arXiv, Semantic Scholar, OpenAlex, Context7, EXA, and Vibe Check). Call the tools defined in `packages/cortexdx/src/tools/academic-integration-tools.ts` (e.g., `validate_architecture_academic`, `validate_research_methodology`, `perform_vibe_check`) through your MCP client or the CortexDx CLI, capture the full JSON-RPC transcripts, and store them under `~/.cortexdx/tasks/<slug>/logs/academic-research/`. Research findings MUST be merged back into the plan with citations, and the compliance monitor output must prove that only SAFE/REVIEW sources were used. See `/.cortexdx/rules/vibe-check.md` §2.1 for required evidence keys.
-- **Vibe Check MCP (Oversight)** — After the academic suite is complete (and before touching the repo), invoke the bundled `vibe-check` MCP provider (tools `vibe_check` / `vibe_learn`) and archive the response under `logs/vibe-check/<task>.json`. The request must include the latest goal + ≤7 step plan, plus the academic evidence identifiers, and the stored response must show the provider’s approval. JSON-RPC samples and required metadata are documented in `/.cortexdx/rules/vibe-check.md`; missing or stale artifacts keep the PR blocked.
-- **Local Memory Parity** — Append key decisions to `.github/instructions/memories.instructions.md` and persist via Local Memory MCP/REST.
-- **Knowledge Connectors Live-Check** — Verify `${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health` and `${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health`. Store timestamps/responses in `research/connectors-health.log`. Planning is blocked if down, except where tier-based cached health fallback is permitted (see "Toolchain Resilience", lines 281–283).
-- **Academic Connector Health** — Verify all academic research endpoints are healthy before research enhancement:
+1. **Time Freshness Guard** — Anchor to harness timezone/date; convert relative dates to ISO-8601 in specs and PRs.
+2. **Academic Research Enhancement** — Before vibe check, enhance all implementation plans with academic research and validate licenses using the built-in MCP providers:
 
-  ```bash
-  # Verify MCP-based academic connectors
-  curl -s ${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health
-  curl -s ${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health
-  curl -s ${SEMANTIC_SCHOLAR_API_URL:-https://api.semanticscholar.org}/graph/v1/paper/search?query=test
-  curl -s ${OPENALEX_API_URL:-https://api.openalex.org}/works?search=test
-  ```
+   ```typescript
+   // Use MCP tools directly for academic research
+   await mcpClient.callTool('mcp_wikidata_vector_search', { query: '<concept>' });
+   await mcpClient.callTool('mcp_arxiv_search', { query: '<research topic>' });
+   await mcpClient.callTool('mcp_context7_get-library-docs', { context7CompatibleLibraryID: '<lib>' });
+   // Store findings in ~/.Cortex-OS/Changelog/<slug>/logs/academic-research/findings.json
+   ```
 
-- **Secrets via 1Password CLI** — Fetch with `op`; never persist secrets in repo or long-lived env vars.
-- **Hybrid Model Live-Only Rule** — Embeddings, rerankers, generations must use live engines (MLX, Ollama, Frontier). No stubs, dry-runs, or recorded outputs.
+  Research findings MUST be incorporated into plan steps with evidence citations. License validation MUST pass and only SAFE/REVIEW content may be included. See `/.cortexdx/rules/vibe-check.md` §2.1.
 
-  ```bash
-  pnpm models:health && pnpm models:smoke   # attach model IDs, vector shapes, latency
-  ```
+- If any connector is degraded, check health via `/health` endpoints, store a waiver JSON at `logs/academic-research/<slug>-<timestamp>-waiver.json`, and log compensating controls (expiry ≤ 72h) in the task manifest.
+- Persist a structured connector health log at `research/connectors-health.log` with `[brAInwav]`, `brand:"brAInwav"`, and `trace_id` fields.
 
-- **Plan Step Limit** — Any plan shown to a model must be ≤ 7 concrete steps; split excess into new arcs.
+3. **Vibe Check MCP (Oversight)** — After academic research enhancement and license validation, before any file writes/network calls/long runs:
 
-  - Scaffold compliant manifests with `pnpm arc:new --slug <arc-slug> --title "<Arc Title>" [--steps 1-7]`.
-  - Use `--inherit-plan` to pull unfinished checklist items from the parent arc when you split work; reviewers expect inherited tasks to appear at the top of the new phase templates.
-  - Use `--preview` (or `--dry-run` for metadata only) during design reviews to print the manifest/phase diff without touching disk.
-  - When refactors overflow, chain follow-on arcs explicitly: `pnpm arc:new --slug <arc-slug>-2 --title "<Arc Title> (Arc 2)" --parent <arc-slug>` (repeat for Arc 3 as needed). The scaffolder now updates the parent `arc-manifest.json` with `metadata.childArcs` automatically (see `packages/agents/__tests__/scripts/arc-new.spec.ts`).
-  - Validate local edits with `pnpm arc:lint` (blocks any manifest where `metadata.stepBudget > 7`) and, when integrating tooling, load the schema at `packages/agents/contracts/arc-manifest.schema.json` (`$id` `https://cortexdx.dev/schemas/arc-manifest.schema.json`).
+   ```typescript
+   // Call vibe_check MCP tool
+   const response = await mcpClient.callTool('vibe_check', {
+     goal: '<task summary>',
+     plan: '1. Step one. 2. Step two. ... (max 7 steps)',
+     sessionId: '<task-slug>-<timestamp>'
+   });
+   // Save to ~/.Cortex-OS/Changelog/<slug>/logs/vibe-check/initial.json
+   ```
 
-- **State Recap Rule** — After every 400–700 generated tokens, append a one-line recap to `evidence/recaps.log`: green tests, pending tests, next step.
-- **Trace Context Preflight** — Before pushing code, run `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` on representative logs; failures block commit. Every log line MUST include a W3C Trace Context `trace_id` (32 lowercase hex) propagated from OpenTelemetry.
-- **Supply-Chain Evidence** — Generate and attest SBOMs locally: `pnpm sbom:generate && pnpm attest:sign && pnpm verify:attest && pnpm sbom:scan`. Store SBOM + Cosign bundle in `sbom/` and link evidence in the PR checklist.
-- **Identity Gate** — CI workflows and long-lived services MUST authenticate via GitHub Actions OIDC/WIF (AWS/Azure/GCP) rather than static credentials. Document provider role bindings in `docs/security/supply-chain.md`.
+   Save raw response to `logs/vibe-check/<task>.json`; missing logs block merge. License validation evidence must be attached. See `/.cortexdx/rules/vibe-check.md`.
+4. **Local Memory Parity** — Append key decisions to `.github/instructions/memories.instructions.md` and persist via Local Memory MCP/REST.
+5. **Knowledge Connectors Live-Check** — Verify `${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health` and `${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health`. Store timestamps/responses in `research/connectors-health.log`. Planning is blocked if down, except where tier-based cached health fallback is permitted (see "Toolchain Resilience", lines 281–283).
+
+6. **Memory Recall Integration** — Before task execution, agents should recall relevant governance and technical context using the `/recall` command:
+
+   ```bash
+   # Recall similar previous implementations
+   /recall architecture pattern <domain>
+   /recall performance optimization <technology>
+   
+   # Recall governance decisions
+   /recall governance decision <topic>
+   /recall vibe-check approval <similar-pattern>
+   ```
+
+   The recall system provides hybrid search with MMR diversification, cross-encoder re-ranking, and automatic PII redaction. Results include provenance tracking and governance metadata. Store recall findings in `research/context-recall.log` with `[brAInwav]` branding.
+
+7. **Academic Connector Health** — Verify all academic research endpoints are healthy before research enhancement:
+
+   ```bash
+   # Verify MCP-based academic connectors
+   curl -s ${WIKIDATA_MCP_URL:-http://127.0.0.1:3029}/health
+   curl -s ${ARXIV_MCP_URL:-http://127.0.0.1:3041}/health
+   curl -s ${SEMANTIC_SCHOLAR_API_URL:-https://api.semanticscholar.org}/graph/v1/paper/search?query=test
+   curl -s ${OPENALEX_API_URL:-https://api.openalex.org}/works?search=test
+   ```
+
+8. **Secrets via 1Password CLI** — Fetch with `op`; never persist secrets in repo or long-lived env vars.
+
+9. **Feature Flags** — **OpenFeature** is the only approved flag API and provider model for all new and migrated flags. Use evaluation API, provider configuration, and hooks consistently across services. Deprecate ad-hoc env-flag reads. Observability hooks must include `trace_id` and `brand:"brAInwav"`.
+
+10. **Model Live-Only Rule** — Embeddings, rerankers, generations must use live engines (Ollama, Frontier). No stubs, dry-runs, or recorded outputs. Capture model health and smoke test results in logs with `[brAInwav]`, `brand:"brAInwav"`, `trace_id`, and latency metadata.
+
+   **Health Check via MCP:**
+
+- For MLX-based models, use the RAG package's health check endpoints
+- For Ollama models, query the Ollama API health endpoint directly
+- Store results in `logs/models/<slug>-<timestamp>-{health,smoke}.log`
+- Document model IDs, vector shapes, and latency in the logs
+
+11. **Plan Step Limit** — Any plan shown to a model must be ≤ 7 concrete steps; split excess into new arcs.
+
+8. **Secrets via 1Password CLI** — Fetch with `op`; never persist secrets in repo or long-lived env vars.
+9. **Feature Flags** — **OpenFeature** is the only approved flag API and provider model for all new and migrated flags. Use evaluation API, provider configuration, and hooks consistently across services. Deprecate ad-hoc env-flag reads. Observability hooks must include `trace_id` and `brand:"brAInwav"`.
+10. **Model Live-Only Rule** — Embeddings, rerankers, generations must use live engines (Ollama, Frontier). No stubs, dry-runs, or recorded outputs. Capture model health and smoke test results in logs with `[brAInwav]`, `brand:"brAInwav"`, `trace_id`, and latency metadata.
+
+   **Health Check via MCP:**
+
+- For MLX-based models, use the RAG package's health check endpoints
+- For Ollama models, query the Ollama API health endpoint directly
+- Store results in `logs/models/<slug>-<timestamp>-{health,smoke}.log`
+- Document model IDs, vector shapes, and latency in the logs
+
+9. **Plan Step Limit** — Any plan shown to a model must be ≤ 7 concrete steps; split excess into new arcs.
+   - Scaffold compliant manifests with `pnpm arc:new --slug <arc-slug> --title "<Arc Title>" [--steps 1-7]`.
+   - Use `--inherit-plan` to pull unfinished checklist items from the parent arc when you split work; reviewers expect inherited tasks to appear at the top of the new phase templates.
+   - Use `--preview` (or `--dry-run` for metadata only) during design reviews to print the manifest/phase diff without touching disk.
+   - When refactors overflow, chain follow-on arcs explicitly: `pnpm arc:new --slug <arc-slug>-2 --title "<Arc Title> (Arc 2)" --parent <arc-slug>` (repeat for Arc 3 as needed). The scaffolder now updates the parent `arc-manifest.json` with `metadata.childArcs` automatically (see `packages/agents/__tests__/scripts/arc-new.spec.ts`).
+   - Validate local edits with `pnpm arc:lint` (blocks any manifest where `metadata.stepBudget > 7`) and, when integrating tooling, load the schema at `packages/agents/contracts/arc-manifest.schema.json` (`$id` `https://cortex-os.dev/schemas/arc-manifest.schema.json`).
+10. **State Recap Rule** — After every 400–700 generated tokens, append a one-line recap to `evidence/recaps.log`: green tests, pending tests, next step.
+11. **Trace Context Preflight** — Before pushing code, run `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` on representative logs; failures block commit. Every log line MUST include a W3C Trace Context `trace_id` (32 lowercase hex) and `traceparent` field propagated from OpenTelemetry.
+12. **Supply-Chain Evidence** — Generate and attest SBOMs locally: `pnpm sbom:generate` (CycloneDX **1.7**) → `pnpm attest:sign` (SLSA **v1.1** provenance) → `pnpm verify:attest` (Cosign **v3 bundle** format). Store SBOM JSON under `sbom/` and attestation bundles under `attestations/`; add pointers in `run-manifest.json` and evidence attachments in the PR checklist.
+13. **Identity Gate** — CI workflows and long-lived services MUST authenticate via GitHub Actions OIDC/WIF (AWS/Azure/GCP) rather than static credentials. Document provider role bindings in `docs/security/supply-chain.md`.
+14. **HTTP Cancellation** — All HTTP/tool calls must support **cancellation** (`AbortSignal` or SDK equivalent). Lint/semgrep policies enforce this requirement.
 
 ⸻
 
@@ -84,8 +144,8 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 
 ### G0 Initialize
 
-- Create `~/tasks/<slug>/{notes.md, implementation-plan.md, risks.md, decisions.md, evidence/}`.
-- Define scope and “done”; write `json/baton.v1.json` including the selected tier.
+- Create `~/Changelog/<slug>/{notes.md, implementation-plan.md, risks.md, decisions.md, evidence/}`.
+- Define scope and "done"; write `json/baton.v1.json` including the selected tier.
 - Evidence: `notes.md`, `json/baton.v1.json`.
 
 ⸻
@@ -165,10 +225,26 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 - Hard rules: named exports only; ≤ 40 lines per function; strict types at boundaries; no `any` in production; async/await with `AbortSignal`; never swallow errors; inject seeds/clocks; no cross-domain imports (use declared interfaces); prohibited: `Math.random()` in prod, placeholder adapters, `TODO`/`FIXME`/`HACK` in prod, console stubs, fake telemetry.
 - Enforcement evidence: `semgrep/brAInwav.yml` (wrapping [`security/semgrep/packs/brainwav-custom.yml`](../../security/semgrep/packs/brainwav-custom.yml)) blocks unsafe shells (`child_process.exec*`), TLS downgrades (`NODE_TLS_REJECT_UNAUTHORIZED=0`), and now flags `fetch` + `axios` calls missing cancellation (`brainwav.async.fetch-missing-abort-signal`, `brainwav.async.fetch-options-missing-abort-signal`, `brainwav.async.axios-missing-cancellation`, `brainwav.async.axios-options-missing-cancellation`). `.eslintrc.cjs` keeps `max-lines-per-function` at 40 lines while the root `eslint.config.js` layers SonarJS/TypeScript async checks, with `scripts/ensure-eslint-flat-config.mjs` emitting `reports/policy/flat-config-guard.json` so CI proves cancellation boundaries remain cancellable.
 - Security and supply chain: Semgrep (block ERROR), gitleaks (block ANY), OSV clean, CycloneDX SBOM, SLSA/in-toto attestations.
-- Env and config: shared loader (`@cortexdx/utils`); never call `dotenv.config()`.
+- Env and config: shared loader (`@cortex-os/utils`); never call `dotenv.config()`.
 - Observability: structured logs with `brand:"brAInwav"`, request/run IDs, OTel traces, and `trace_id` sourced via `packages/observability/src/traceLogger.ts`.
 - **Exception handling:** Waivers or deviations from the reuse-first or escalation rules must reference the forthcoming reuse-exception and tier-escalation checklist items in `/.cortexdx/rules/code-review-checklist.md` once they land; reviewers are responsible for citing those checklist entries in `review.md` alongside supporting evidence before approving.
 - Evidence: incremental passing tests; commit history mapped to arc steps.
+
+#### G4.1 Agentic / LLM Execution Rules
+
+- **Structured Outputs (default)**: All generations returning structured data **must** use JSON Schema-enforced structured outputs (or function calling). Platform enforcement ensures model responses conform to provided schemas.
+- **Dual-Lane Tests**:
+  - **Deterministic lane**: schema + exact match for critical paths (APIs, data structures, contracts).
+  - **Probabilistic lane**: graded assertions (rubric scoring, semantic similarity) for UX text or summarization.
+- **Prompt Caching**: Allowed where platform supports it; cache keys and model IDs must be logged; never cache secrets or PII.
+- **MCP Connectors**: Use MCP for academic/data/tool access when available; health must be logged under `research/connectors-health.log`.
+- **Cancellation**: All HTTP/tool calls must support **cancellation** (`AbortSignal` or SDK equivalent). Lint/semgrep policies enforce this.
+- **Model Context Protocol (MCP)**: Use MCP for external tool/resource access:
+  - Tools: Invoke external actions (search, compute, mutation)
+  - Resources: Access static/dynamic data (files, APIs, databases)
+  - Prompts: Reusable prompt templates with arguments
+  - Health checks required for all MCP servers before use
+  - Document MCP server configs in `contracts/mcp-servers.json`
 
 ⸻
 
@@ -176,10 +252,14 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 
 - Thresholds: coverage ≥ 90% global; ≥ 95% changed lines; mutation ≥ 90% (where enabled).
 - Security scans: `pnpm security:scan`, Semgrep, OSV, gitleaks.
-- Structure and A11y: `pnpm structure:validate`; attach axe/jest-axe reports.
-- **Hybrid Model Health** (Charter Guardrail #9): `pnpm models:health && pnpm models:smoke` with model IDs, vector norms/shapes, latency.
+- Structure and A11y: `pnpm structure:validate`; attach axe/jest-axe reports (WCAG 2.2 AA / ISO/IEC 40500:2025).
+- **Supply-Chain**:
+  - SBOMs must be **CycloneDX 1.7**.
+  - Attestations must satisfy **SLSA v1.1** (provenance + verification summary as applicable).
+  - **Cosign v3** verification in **bundle** mode for all artifacts/images.
+- **Hybrid Model Health** (Charter Guardrail #9): Verify model health via MCP health check endpoints or package-specific health checks; document model IDs, vector norms/shapes, P50/P95 latency in `logs/models/`.
 - Property and mutation tests for invariants once an arc stabilizes.
-- **TDD plan reuse ledger** — Implementation plan MUST surface a `### Reuse Ledger` section (see [§ TDD Plan Reuse Ledger](#tdd-plan-reuse-ledger-g5-evidence-hook)) enumerating reused modules/tests and justification for any rewrites. Link this anchor in `run-manifest.json.evidence.tdd_plan_reuse_ledger` and in the code-review checklist boxes **Reuse existing code** and **Design artefacts present** so reviewers have a direct pointer.
+- **TDD plan reuse ledger** — Implementation plan MUST surface a `### Reuse Ledger` section (see [§ TDD Plan Reuse Ledger](#tdd-plan-reuse-ledger)) enumerating reused modules/tests and justification for any rewrites. Link this anchor in `run-manifest.json.evidence.tdd_plan_reuse_ledger` and in the code-review checklist boxes **Reuse existing code** and **Design artefacts present** so reviewers have a direct pointer.
 - **Evidence Triplet** (Charter Guardrail #4, per stage):
   1. Milestone Test (red → green proof)
   2. Contract Snapshot (schema/types/route)
@@ -194,7 +274,7 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 
 #### TDD Plan Reuse Ledger (G5 Evidence Hook)
 
-- **Location:** `~/tasks/<slug>/implementation-plan.md#reuse-ledger` (templated in `/.cortexdx/templates/tdd-plan-template.md`). Use a level-three heading exactly matching `### Reuse Ledger` to keep parser hooks stable.
+- **Location:** `~/Changelog/<slug>/implementation-plan.md#reuse-ledger` (templated in `/.cortexdx/templates/tdd-plan-template.md`). Use a level-three heading exactly matching `### Reuse Ledger` to keep parser hooks stable.
 - **Entry contract:** For every reused module, function, contract, or test harness record the repository-relative path, the reuse mode (`as-is`, `adapted`, or `referenced-pattern`), and a concise rationale. Attach the inherited test filenames/IDs and describe any delta coverage or new assertions that guard the reuse. When reuse is not possible, add an explicit "No reuse" entry that explains the blocker, risk, and compensating controls so reviewers do not need to diff the entire plan.
 - **Additional context:** Capture performance, security, and compliance implications (for example, prior Semgrep/gitleaks posture, latency budgets already met, feature-flag state) and note any follow-up remediation for partial reuse. Call out borrowed artefacts that live behind toggles or require future clean-up to keep audits deterministic.
 - **Evidence pointers:** Populate `run-manifest.json.evidence.tdd_plan_reuse_ledger` with the relative path to this anchor and mirror that pointer in `.cortexdx/evidence-index.json` for audit parity. Include the same URL in the reviewer checklist boxes **Reuse existing code** and **Design artefacts present**.
@@ -220,7 +300,7 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 - **Comment cross-links:** Use saved replies in the PR template to point reviewers from reuse checklist items to `research/findings.md`, `implementation-plan.md`, `run-manifest.json`, and `decisions.md`. Missing cross-links block approval.
 - **Reviewer sign-off trail:** Append a "Reviewer Acknowledgements" section to `decisions.md` noting reviewer handle, checklist version, artefact hashes, and approval timestamp; update after every review round.
 - Checks: plan step count ≤ 7; session resets logged in `run-manifest.json`; recaps in `evidence/recaps.log`.
-- Confirm the code-review checklist boxes **Reuse existing code** and **Design artefacts present** link to the [TDD Plan Reuse Ledger](#tdd-plan-reuse-ledger-g5-evidence-hook); missing links are a BLOCKER for G6 sign-off.
+- Confirm the code-review checklist boxes **Reuse existing code** and **Design artefacts present** link to the [TDD Plan Reuse Ledger](#tdd-plan-reuse-ledger); missing links are a BLOCKER for G6 sign-off.
 - Evidence: `review.md` (merged results), reviewer JSON, `decisions.md`.
 
 ⸻
@@ -239,14 +319,14 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 - **`danger` job** — Asserts narrated diffs by invoking [`scripts/narrated-diff.ts`](../../scripts/narrated-diff.ts), enforces PR hygiene, and blocks merge until the narrated diff table is acknowledged in review.
 - **Plan reuse audit** — The `charter` job surfaces `evidence.tdd_plan_reuse_ledger` inside `quality-report.json`; reviewers must confirm the pointer resolves to `implementation-plan.md#reuse-ledger` before approving reuse waivers or new work.
 
-| Job        | Coverage ≥90% | Mutation ≥90% | Narrated Diff | Trace Context | SBOM Provenance | Failure Evidence |
-| ---------- | ------------- | ------------- | ------------- | ------------- | --------------- | ---------------- |
-| `charter`  | –             | –             | –             | ✅ Verified via `verify-trace-context.ts` | –               | Artifacts → charter-gate-${run} (quality-report.json, quality-summary.json, trace-context.log) |
-| `test`     | ✅ `coverage.sh` thresholds | – | – | – | – | Artifacts → coverage-html-${run} (lcov-report/) + coverage-results.json |
-| `mutation` | – | ✅ Stryker enforcement | – | – | – | Artifacts → mutation-report-${run} (reports/mutation/, mutation-results.json) |
-| `a11y`     | – | – | – | – | – | Artifacts → a11y-audit-${run} (axe-summary.json, screenshots/) |
-| `security` | – | – | – | – | ✅ SBOM + SLSA attestation | Artifacts → security-scan-${run} (sbom.cdx.json, cosign-bundle.sig, semgrep/brAInwav.sarif) |
-| `danger`   | – | – | ✅ Narrated diff table required | – | – | PR comment → narrated diff summary (export via `scripts/narrated-diff.ts --out reports/narrated-diff.md`) |
+| Job        | Coverage ≥90% | Mutation ≥90% | Narrated Diff | Trace Context | SBOM & Provenance | Extra |
+| ---------- | ------------- | ------------- | ------------- | ------------- | --------------- | ----- |
+| `charter`  | –             | –             | –             | ✅ Verify W3C Trace Context + `traceparent` correlation | –               | `quality-report.json`, `trace-context.log` |
+| `test`     | ✅             | –             | –             | –             | –               | HTML coverage deltas |
+| `mutation` | –             | ✅             | –             | –             | –               | Stryker reports |
+| `a11y`     | –             | –             | –             | –             | –               | axe/jest-axe/Playwright (WCAG 2.2 AA) |
+| `security` | –             | –             | –             | –             | ✅ **CycloneDX 1.7 SBOM** + **SLSA v1.1** attestations, **Cosign v3 bundle** verify | Semgrep SARIF, OSV, gitleaks |
+| `danger`   | –             | –             | ✅             | –             | –               | Narrated diff is blocking |
 
 **Failure evidence retrieval:**
 
@@ -255,8 +335,9 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 3. When SBOM or security gates fail, pull `sbom.cdx.json` and `cosign-bundle.sig` from the `security-scan-${run}` artifact, then rerun `pnpm sbom:generate && pnpm attest:sign` after addressing Semgrep findings.
 
 - CI must pass build, test, lint, typecheck, a11y, security, mutation, charter, and danger jobs in this workflow.
-- Generate SBOMs (CycloneDX 1.6) and SLSA/in-toto provenance; sign via Cosign v3 bundle mode and store attestation references in `run-manifest.json`.
-- Evidence: CI run URLs, narrated diff tables, trace-context verification logs, signatures, SBOM artefacts, and the charter job excerpt proving `tdd_plan_reuse_ledger` presence.
+- Generate SBOMs (CycloneDX **1.7**) and SLSA **v1.1** provenance; sign via Cosign **v3 bundle** mode and store attestation references in `run-manifest.json`.
+- **Cosign v3 policy**: signing & verification must use **bundle** artifacts; store bundle files in CI artifacts and reference them from `run-manifest.json`.
+- Evidence: CI run URLs, narrated diff tables, trace-context verification logs (with `traceparent` correlation), signatures, SBOM artefacts, and the charter job excerpt proving `tdd_plan_reuse_ledger` presence.
 
 #### Remediation playbooks
 
@@ -310,7 +391,7 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 
 ### G10 Archive and Index
 
-- Compress `~/tasks/<slug>/` artifacts, reports, ADRs, evidence.
+- Compress `~/Changelog/<slug>/` artifacts, reports, ADRs, evidence.
 - Mirror filled review checklist to `.cortexdx/audit/reviews/<PR_NUMBER>-<SHORT_SHA>.md`.
 - Index specs/tests/contracts to the Memory API for RAG.
 - Evidence: `archive.json` and storage path.
@@ -328,7 +409,7 @@ Select tier at task creation; it is recorded in `run-manifest.json`.
 
 ## Arc Records and Templates
 
-Each arc is stored under `~/tasks/<slug>/arcs/<n>/` and contains:
+Each arc is stored under `~/Changelog/<slug>/arcs/<n>/` and contains:
 
 - North-Star acceptance test path
 - Plan (≤ 7 steps)
@@ -343,7 +424,7 @@ Template: `templates/tdd-arc.template.md`.
 
 ## Run Manifest Schema (v2 excerpt)
 
-```json
+```
 {
   "$id": "schemas/run-manifest.v2.json",
   "type": "object",
@@ -399,11 +480,11 @@ Template: `templates/tdd-arc.template.md`.
 
 ```bash
 # Create task with tier and boilerplate (notes, plan, templates, CI stubs, manifest)
-pnpm task:new --slug "new-feature-slug" --tier "feature"
+pnpm changelog:new --slug "new-feature-slug" --tier "feature"
 
 # Start a new arc with a prefilled template
 pnpm arc:new --slug "new-feature-slug" --title "Arc 1: save+fetch by id"
-# -> creates ~/tasks/new-feature-slug/arcs/001/ with README from templates/tdd-arc.template.md
+# -> creates ~/Changelog/new-feature-slug/arcs/001/ with README from templates/tdd-arc.template.md
 
 # Record session reset (called by the 10-minute reset hook)
 pnpm session:reset --slug "new-feature-slug"
@@ -415,6 +496,57 @@ CLI behavior (expected):
 - Pre-creates `tests/acceptance/<slug>.spec.ts` scaffold with a pending test.
 - Adds `design/contracts/` and `research/` folders conditionally (Tier 2 only).
 - Registers CI jobs (`models:health`, `models:smoke`, `structure:validate`) for the task.
+
+⸻
+
+## Deprecations & Migrations
+
+This section documents version upgrades and migration paths for key dependencies and standards.
+
+### Supply Chain & Security
+
+- **SBOM**: CycloneDX **≤1.6** → **1.7** (update generators; verify pipelines consume the new schema)
+  - Action: Run `pnpm sbom:generate --spec-version 1.7` and update CI scripts
+  - Timeline: Deprecated 2025-11-10; enforce 1.7 by 2026-01-01
+- **Provenance**: Align existing attesters to **SLSA v1.1**; add Verification Summary where applicable
+  - Action: Update `attest:sign` to generate v1.1 provenance documents
+  - Timeline: Deprecated 2025-11-10; enforce v1.1 by 2026-01-01
+- **Cosign**: Move to **v3 bundle** format for sign & verify; store bundle artifacts
+  - Action: Update signing commands to use `--bundle` flag; verify with bundle files
+  - Timeline: v2 signatures deprecated 2025-11-10; enforce v3 by 2025-12-15
+
+### Feature Management
+
+- **Flags**: Migrate ad-hoc flags to **OpenFeature** SDKs/providers
+  - Action: Replace direct env var reads with OpenFeature evaluation API
+  - Timeline: New flags must use OpenFeature immediately; migrate existing flags by 2026-03-01
+  - Pattern: `process.env.FEATURE_X` → `await featureFlags.getBooleanValue('feature-x', false)`
+
+### LLM & Agentic Systems
+
+- **LLM outputs**: Migrate free-form JSON to **Structured Outputs** or function calling with enforced schemas
+  - Action: Add JSON Schema validation to all model generations returning structured data
+  - Timeline: New integrations must use Structured Outputs; migrate existing by 2026-02-01
+- **HTTP clients**: Enforce **AbortSignal**/**cancellation**; fix lint/semgrep findings
+  - Action: Add `signal: abortSignal` to all fetch/axios calls
+  - Timeline: Enforcement via semgrep rules active immediately; fix findings by 2025-12-15
+
+### Observability
+
+- **Logging**: Add `traceparent` capture and ensure `trace_id` (32 lower-hex) is present on every charter-governed log
+  - Action: Update logger middleware to capture and propagate W3C Trace Context headers
+  - Timeline: Required for all new services immediately; backfill existing services by 2026-01-15
+
+### Migration Checklist Template
+
+For each deprecated item above:
+
+- [ ] Identify affected code/configs via `pnpm affected:graph --target=<dependency>`
+- [ ] Create migration task using `pnpm changelog:new --slug migrate-<item> --tier refactor`
+- [ ] Update CI/CD pipelines and documentation
+- [ ] Add deprecation warnings in code/logs
+- [ ] Schedule removal of deprecated paths
+- [ ] Update this section with completion dates
 
 ⸻
 
@@ -432,21 +564,29 @@ CLI behavior (expected):
 
 > Canonical copy: `/.cortexdx/runbooks/arc-tdd.md` (versioned with this governance pack).
 
-1. **Spin up the task shell** — `pnpm task:new --slug "<slug>" --tier "<fix|feature|refactor>"` to scaffold `run-manifest.json`, acceptance test stub, and evidence folders.
+1. **Spin up the task shell** — `pnpm changelog:new --slug "<slug>" --tier "<fix|feature|refactor>"` to scaffold `run-manifest.json`, acceptance test stub, and evidence folders.
 2. **Author the North-Star** — Fill `run-manifest.json.north_star` and write the failing acceptance test in `tests/acceptance/<slug>.spec.[ts|js|py|http]` before touching implementation code.
 3. **Draft the ≤7-step arc plan** — Update `implementation-plan.md` and `json/baton.v1.json` with no more than seven concrete steps; note recap cadence (`evidence/recaps.log`) every 400–700 tokens.
 4. **Run the preflight guard trio** — Execute:
 
-  ```bash
-  curl -s ${VIBE_CHECK_HTTP_URL:-http://127.0.0.1:2091}/mcp \
-    -H 'Content-Type: application/json' \
-    -d @~/.cortexdx/tasks/<slug>/payloads/vibe-check-<session>.json \
-    | tee ~/.cortexdx/tasks/<slug>/logs/vibe-check/<session>.json
-  pnpm models:health && pnpm models:smoke
-  pnpm tsx scripts/ci/verify-trace-context.ts <logfile>
-  ```
+   ```typescript
+   // Call vibe_check MCP tool after academic research
+   const vibeResponse = await mcpClient.callTool('vibe_check', {
+     goal: '<task>',
+     plan: '<steps>',
+     sessionId: '<id>'
+   });
+   // Save to logs/vibe-check/<slug>-<arc>-<timestamp>.json
+   
+   // Verify model health via package health checks
+   // Store results in logs/models/<slug>-<timestamp>-health.json
+   
+   // Verify trace context
+   // Run: pnpm tsx scripts/ci/verify-trace-context.ts <logfile>
+   // Save to logs/trace-context/<slug>-<arc>-trace.log
+   ```
 
-  Commit raw outputs to `logs/vibe-check/<slug>-<arc>-<timestamp>.json`, `logs/models/<slug>-<timestamp>-health.json`, and `logs/trace-context/<slug>-<arc>-trace.log`; failure or misnamed artifacts block the arc.
+   Commit raw outputs to the specified log paths; failure or misnamed artifacts block the arc.
 5. **Scaffold failing tests** — Add Milestone (red) tests covering the planned slice; ensure Evidence Triplet placeholder paths are noted in the arc directory.
 6. **Run red → green → refactor micro-loops** — Implement just enough code per loop; after each recap cadence window, append `[brAInwav]` recap lines with test status and next intent to `evidence/recaps.log`.
 7. **Seal the Evidence Triplet and gates** — Capture (a) Milestone Test diff (red→green), (b) contract snapshot, (c) reviewer JSON pointer; verify with `pnpm evidence:triplet:verify --slug <slug>`; then run `pnpm test:smart`, `pnpm lint:smart`, `pnpm typecheck:smart`, `pnpm security:scan`, and coverage/mutation commands.
@@ -458,7 +598,7 @@ CLI behavior (expected):
 
 | Step | Failure signal | Self-diagnose | Fix |
 | --- | --- | --- | --- |
-| 1 | `pnpm task:new` missing artifacts | `~/tasks/<slug>/` lacks `run-manifest.json` or acceptance stub | Re-run scaffold command; ensure tier flag matches manifest |
+| 1 | `pnpm changelog:new` missing artifacts | `~/Changelog/<slug>/` lacks `run-manifest.json` or acceptance stub | Re-run scaffold command; ensure tier flag matches manifest |
 | 2 | Acceptance test still pending at review | `tests/acceptance/<slug>.spec.*` contains `it.skip` or TODO | Replace with executable failing test; commit before implementation |
 | 3 | Plan exceeds 7 steps | `implementation-plan.md` has ≥8 bullets | Split into additional arc; update `json/baton.v1.json` and manifest |
 | 4 | Preflight logs absent in PR checklist | PR lacks links to vibe-check/models/trace evidence, or filenames do not follow `<slug>-<arc>-<timestamp>` patterns | Re-run commands above; store outputs in canonical folders with naming convention and link |

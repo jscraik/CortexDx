@@ -341,9 +341,67 @@ export function createSQLitePatternStorage(
     /**
      * Decrypt and deserialize pattern data
      */
-    function deserializePattern(encrypted: string): ResolutionPattern {
-        const json = encryption.decrypt(encrypted);
-        return JSON.parse(json) as ResolutionPattern;
+    const loggedDecryptFailures = new Set<string>();
+
+    function deserializePattern(row: PatternRow): ResolutionPattern {
+        const encrypted = row.solution_data;
+        try {
+            const json = encryption.decrypt(encrypted);
+            return JSON.parse(json) as ResolutionPattern;
+        } catch (error) {
+            if (!loggedDecryptFailures.has(row.id)) {
+                console.warn(
+                    "[pattern-storage] Failed to decrypt pattern",
+                    row.id,
+                    error instanceof Error ? error.message : error,
+                );
+                loggedDecryptFailures.add(row.id);
+            }
+
+            // Attempt to treat the payload as legacy plaintext JSON
+            const trimmed = encrypted.trim();
+            if (trimmed.startsWith("{")) {
+                try {
+                    return JSON.parse(trimmed) as ResolutionPattern;
+                } catch {
+                    // fall through to placeholder
+                }
+            }
+
+            return {
+                id: row.id,
+                problemType: row.problem_type,
+                problemSignature: row.problem_signature,
+                solution: {
+                    id: `legacy-${row.id}`,
+                    type: "manual",
+                    confidence: 0,
+                    description: "Legacy pattern could not be decrypted",
+                    userFriendlyDescription: "Legacy pattern could not be decrypted",
+                    steps: [],
+                    codeChanges: [],
+                    configChanges: [],
+                    testingStrategy: {
+                        type: "manual",
+                        tests: [],
+                        coverage: 0,
+                        automated: false,
+                    },
+                    rollbackPlan: {
+                        steps: [],
+                        automated: false,
+                        backupRequired: false,
+                        riskLevel: "low",
+                    },
+                },
+                successCount: row.success_count,
+                failureCount: row.failure_count,
+                averageResolutionTime: row.average_resolution_time,
+                lastUsed: row.last_used,
+                userFeedback: [],
+                confidence: row.confidence,
+            } as ResolutionPattern;
+        }
     }
 
     return {
@@ -370,7 +428,7 @@ export function createSQLitePatternStorage(
             const row = selectPattern.get(id) as PatternRow | undefined;
             if (!row) return null;
 
-            const pattern = deserializePattern(row.solution_data);
+            const pattern = deserializePattern(row);
             return {
                 ...pattern,
                 id: row.id,
@@ -386,7 +444,7 @@ export function createSQLitePatternStorage(
         async loadAllPatterns(): Promise<ResolutionPattern[]> {
             const rows = selectAllPatterns.all() as PatternRow[];
             return rows.map((row) => {
-                const pattern = deserializePattern(row.solution_data);
+                const pattern = deserializePattern(row);
                 return {
                     ...pattern,
                     id: row.id,
@@ -545,7 +603,7 @@ export function createSQLitePatternStorage(
 
             const rows = db.prepare(query).all(...params) as PatternRow[];
             return rows.map((row) => {
-                const pattern = deserializePattern(row.solution_data);
+                const pattern = deserializePattern(row);
                 return {
                     ...pattern,
                     id: row.id,
@@ -610,10 +668,10 @@ export function createSQLitePatternStorage(
                 totalFailures: stats.failures ?? 0,
                 averageConfidence: stats.avg_confidence ?? 0,
                 mostSuccessfulPattern: mostSuccessful
-                    ? deserializePattern(mostSuccessful.solution_data)
+                    ? deserializePattern(mostSuccessful)
                     : null,
                 recentlyUsedPatterns: recentRows.map((row) =>
-                    deserializePattern(row.solution_data),
+                    deserializePattern(row),
                 ),
                 patternsByType,
             };

@@ -226,7 +226,6 @@ function classifyManifest(name: string): PackageManifest["type"] | null {
   if (normalized.endsWith("requirements.txt")) return "pip";
   if (normalized.endsWith("poetry.lock")) return "pip";
   if (normalized.endsWith("pom.xml")) return "maven";
-  if (normalized.endsWith("build.gradle")) return "gradle";
   return null;
 }
 

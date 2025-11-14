@@ -128,6 +128,7 @@ export class OAuthIntegration {
             config.clientId,
             config.scope || [],
             config.deviceCodeEndpoint,
+            config.audience,
         );
 
         // Notify caller with user code and verification URI

@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "endpoint": "http://localhost:5001",
+      "schedule": "*/5 * * * *",
+      "probes": ["handshake", "protocol", "security"],
+      "autoHeal": true,
+      "webhook": "",
+      "enabled": true
+    }
+  ]
+}

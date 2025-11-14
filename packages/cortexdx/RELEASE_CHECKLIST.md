@@ -23,6 +23,7 @@ This checklist ensures all necessary steps are completed before releasing v1.0.0
 - [x] Commercial deployment guide updated (docs/COMMERCIAL_DEPLOYMENT.md)
 - [x] All code examples tested and verified
 - [x] Troubleshooting guide updated with known issues
+- [x] DeepContext artifact guide documented (docs/DEEPCONTEXT_ARTIFACT.md) and referenced in PR checklist
 
 ### Version Management
 
@@ -34,7 +35,7 @@ This checklist ensures all necessary steps are completed before releasing v1.0.0
 ### Feature Completeness
 
 - [x] All v1.0.0 features implemented and tested
-- [x] LLM integration working (Ollama, MLX, llama.cpp)
+- [x] LLM integration working (Ollama)
 - [x] Academic providers integrated and validated
 - [x] Commercial licensing system functional
 - [x] Pattern storage and RAG system operational

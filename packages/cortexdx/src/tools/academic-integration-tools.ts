@@ -4,7 +4,9 @@
  * Requirements: 6.2, 10.2, 11.4
  */
 
-import type { McpTool } from "../types.js";
+import { runAcademicResearch } from "../research/academic-researcher.js";
+import { recordResearchReport } from "../resources/research-store.js";
+import type { McpTool, McpToolResult } from "../types.js";
 
 export const createAcademicIntegrationTools = (): McpTool[] => [
   {
@@ -438,4 +440,107 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
       required: ["implementation", "researchSources"],
     },
   },
+  {
+    name: "cortexdx_academic_research",
+    description: "Aggregate findings from registered academic providers",
+    inputSchema: {
+      type: "object",
+      properties: {
+        topic: {
+          type: "string",
+          description: "Research topic or keyword",
+        },
+        question: {
+          type: "string",
+          description: "Optional research question/abstract context",
+        },
+        providers: {
+          type: "array",
+          items: { type: "string" },
+          description: "Subset of providers to run (defaults to all)",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum results per provider",
+          minimum: 1,
+          maximum: 20,
+          default: 5,
+        },
+        includeLicense: {
+          type: "boolean",
+          description: "Include license metadata (default true)",
+          default: true,
+        },
+        deterministic: {
+          type: "boolean",
+          description: "Enable deterministic timestamps/seeds",
+          default: false,
+        },
+        credentials: {
+          type: "object",
+          additionalProperties: { type: "string" },
+          description: "Provider credential overrides keyed by provider id",
+        },
+        headers: {
+          type: "object",
+          additionalProperties: { type: "string" },
+          description: "HTTP headers to forward to providers",
+        },
+      },
+      required: ["topic"],
+    },
+  },
 ];
+
+export async function executeAcademicIntegrationTool(tool: McpTool, args: unknown): Promise<McpToolResult> {
+  if (tool.name !== "cortexdx_academic_research") {
+    throw new Error(`Unknown academic integration tool: ${tool.name}`);
+  }
+
+  const {
+    topic,
+    question,
+    providers,
+    limit,
+    includeLicense,
+    deterministic,
+    credentials,
+    headers,
+  } = args as {
+    topic?: string;
+    question?: string;
+    providers?: string[];
+    limit?: number;
+    includeLicense?: boolean;
+    deterministic?: boolean;
+    credentials?: Record<string, string>;
+    headers?: Record<string, string>;
+  };
+
+  if (!topic || topic.trim().length === 0) {
+    throw new Error("topic is required for cortexdx_academic_research");
+  }
+
+  const report = await runAcademicResearch({
+    topic: topic.trim(),
+    question,
+    providers,
+    limit,
+    includeLicense,
+    deterministic,
+    credentials,
+    headers,
+  });
+
+  const resource = recordResearchReport(report);
+  const resourceUri = `cortexdx://research/${resource.id}`;
+
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({ resourceUri, report }, null, 2),
+      },
+    ],
+  };
+}

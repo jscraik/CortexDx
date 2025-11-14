@@ -589,7 +589,7 @@ data:
 - `OLLAMA_HOST`: Ollama endpoint (default: `http://localhost:11434`)
 - `OLLAMA_TIMEOUT`: Ollama request timeout (default: `60000`)
 
-> **Note:** MLX and llama.cpp backends have been removed. Deployments must route all LLM traffic through Ollama.
+> **Note:** Alternate local backends have been removed. Deployments must route all LLM traffic through Ollama.
 
 #### Authentication & Security (Enterprise)
 

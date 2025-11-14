@@ -7,7 +7,7 @@ export {
   createLearningEngine,
   createPatternMatcher,
   type LearningEngine,
-  type PatternMatcher
+  type PatternMatcher,
 } from "./pattern-recognition.js";
 
 // RAG system
@@ -16,19 +16,21 @@ export {
   createRagSystem,
   type RagConfig,
   type RagSearchResult,
-  type RagStats
+  type RagStats,
 } from "./rag-system.js";
 
 // Feedback integration
 export {
-  FeedbackIntegration,
-  createFeedbackIntegration,
-  type FeedbackConfig,
-  type FeedbackMetrics
+  createFeedbackCollector,
+  type FeedbackAnalysis,
+  type FeedbackCollector,
+  type SolutionImprovement,
 } from "./feedback-integration.js";
 
 // Enhanced pattern matcher
 export {
-  EnhancedPatternMatcher, createEnhancedPatternMatcher, type MatchingStrategy, type PatternMatch
+  EnhancedPatternMatcher,
+  createEnhancedPatternMatcher,
+  type MatchingStrategy,
+  type PatternMatch,
 } from "./pattern-matcher.js";
-

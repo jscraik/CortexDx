@@ -1,0 +1,17 @@
+id: eu-charter
+title: Charter of Fundamental Rights of the European Union
+region: eu
+reference:
+  citation: Official Journal of the European Communities, 2000
+  url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A12012P%2FTXT
+articles:
+  - article: Article 7 — Respect for private and family life
+    summary: Everyone has the right to respect for their private and family life, home and communications.
+    principleAlignment:
+      - respect-autonomy
+      - transparent-accountability
+  - article: Article 11 — Freedom of expression and information
+    summary: The freedom to hold opinions and receive information without interference must be guaranteed.
+    principleAlignment:
+      - respect-autonomy
+      - harm-minimization

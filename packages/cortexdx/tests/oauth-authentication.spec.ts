@@ -91,6 +91,7 @@ describe("OAuth Authenticator", () => {
                 "test-client",
                 ["read", "write"],
                 "https://auth.example.com/device/code",
+                "https://api.example.com",
             );
 
             expect(result).toBeDefined();
@@ -120,6 +121,7 @@ describe("OAuth Authenticator", () => {
                 "test-client",
                 ["read"],
                 "https://auth.example.com/device/code",
+                undefined,
             );
 
             const elapsed = Date.now() - startTime;

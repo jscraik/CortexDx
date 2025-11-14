@@ -1,0 +1,26 @@
+diff --git a/node_modules/mcp-evals/dist/cli.js b/node_modules/mcp-evals/dist/cli.js
+index 8f0994d..c8eeb8a 100755
+--- a/node_modules/mcp-evals/dist/cli.js
++++ b/node_modules/mcp-evals/dist/cli.js
+@@ -2,12 +2,10 @@
+ import { runAllEvals } from './index.js';
+ import * as dotenv from 'dotenv';
+ import path from 'path';
+-import { createRequire } from 'module';
+ // Load .env file
+ dotenv.config();
+-// Register tsx as a loader
+-const require = createRequire(import.meta.url);
+-require('tsx');
++// Register tsx loader dynamically (avoid CommonJS require issues)
++await import('tsx');
+ async function main() {
+     const userEvalsPath = process.argv[2];
+     const userServerPath = process.argv[3];
+@@ -51,4 +49,4 @@ main().catch(error => {
+     console.error('Error running evaluations:', error);
+     process.exit(1);
+ });
+-//# sourceMappingURL=cli.js.map
+\ No newline at end of file
++//# sourceMappingURL=cli.js.map

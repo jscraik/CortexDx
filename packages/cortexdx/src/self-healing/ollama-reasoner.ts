@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { NormalizedFinding } from "./findings.js";
-import type { PromptCache } from "./prompt-cache.js";
 import { getOllamaEndpoint, resolveModelTag } from "./ollama-config.js";
+import type { PromptCache } from "./prompt-cache.js";
 
 const PROMPT_VERSION = "2025-11-09";
 
@@ -49,7 +49,9 @@ export async function generateReasoningSummary(
   const endpoint = options.endpoint ?? getOllamaEndpoint();
   const fetchImpl = options.fetchImpl ?? globalThis.fetch?.bind(globalThis);
   if (!fetchImpl) {
-    throw new Error("fetch is not available in this runtime; unable to reach Ollama.");
+    throw new Error(
+      "fetch is not available in this runtime; unable to reach Ollama.",
+    );
   }
 
   let origin: "ollama" | "fallback" = "ollama";
@@ -99,11 +101,16 @@ function buildPrompt(findings: NormalizedFinding[]): PromptSections {
   ];
 
   for (const finding of findings.slice(0, 20)) {
-    lines.push(
+    // Create finding lines and filter out empty ones
+    const findingLines = [
       `- [${finding.severity.toUpperCase()}] ${finding.id} • ${finding.source} • ${finding.title}`,
-      finding.location?.file ? `  file: ${finding.location.file}` : undefined,
-      finding.recommendation ? `  recommendation: ${finding.recommendation}` : undefined,
-    );
+      finding.location?.file ? `  file: ${finding.location.file}` : "",
+      finding.recommendation
+        ? `  recommendation: ${finding.recommendation}`
+        : "",
+    ].filter((line) => line !== "");
+
+    lines.push(...findingLines);
   }
 
   const user = [
@@ -176,7 +183,9 @@ function buildFallbackSummary(
     details.push(
       "",
       "Top findings:",
-      ...findings.slice(0, 5).map((f) => `- ${f.id} (${f.severity}) ${f.title}`),
+      ...findings
+        .slice(0, 5)
+        .map((f) => `- ${f.id} (${f.severity}) ${f.title}`),
     );
   } else {
     details.push("No findings reported; system appears healthy.");

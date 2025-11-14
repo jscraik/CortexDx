@@ -9,7 +9,7 @@
 
 ## ⚡ **OPERATIVE GUARDRAILS** (Non-Negotiable)
 
-All agents executing workstreams within CortexDx MCP MUST obey these rules:
+All agents executing workstreams within Cortex-OS MUST obey these rules:
 
 ### 1️⃣ **Step Budget ≤ 7** [AGENTS-STP-001]
 
@@ -224,7 +224,7 @@ Pointers MUST align with the manifest schema, artifact paths MUST remain accessi
 | Recap Rule (#5) | Token counter | Template auto-generates | Trim to ≤500 tokens |
 | Brand Logs (#6) | `grep -r 'brand.*brAInwav'` | Logger wrapper | Patch log calls |
 | Arc Protocol (#7) | `validate-run-manifest.ts` (arc structure, milestone test, contract snapshot) | Task scaffolding enforces arc template | Add missing arc artifacts |
-| North-Star Test (#8) | `validate-run-manifest.ts` (`north_star.acceptance_test_path` required) | `pnpm task:new` generates acceptance test scaffold | Write missing north-star test |
+| North-Star Test (#8) | `validate-run-manifest.ts` (`north_star.acceptance_test_path` required) | `pnpm changelog:new` generates acceptance test scaffold | Write missing north-star test |
 | Preflight Guards (#9) | CI checks for `logs/vibe-check/*.json`, model health logs, trace context, SBOM | PR template checklist requires preflight evidence | Execute missing guards and attach logs |
 | Session Hygiene (#10) | `run-manifest.json` `session_resets` timestamps; reviewer audit | 10-minute reset hook calls `pnpm session:reset` | Log retrospective resets with justification |
 
@@ -235,7 +235,7 @@ Pointers MUST align with the manifest schema, artifact paths MUST remain accessi
 **Before starting any task:**
 
 ```bash
-pnpm task:new --slug my-feature --tier feature  # Scaffolds charter-compliant structure + north-star test
+pnpm changelog:new --slug my-feature --tier feature  # Scaffolds charter-compliant structure + north-star test
 pnpm oversight:vibe-check --goal "<task>" --plan "<steps>" --session <id>  # Preflight guard
 pnpm models:health && pnpm models:smoke  # Verify live model engines
 ```
@@ -273,6 +273,7 @@ This document is authoritative. Any conflicts defer to:
 3. `/.cortexdx/rules/code-review-checklist.md` (verification)
 
 **Workflow Integration Notes:**
+
 - The full task lifecycle (gates G0–G10) is governed by `agentic-coding-workflow.md`
 - Workflow MAY define task tiers (fix/feature/refactor) with differentiated gate requirements, provided all tiers enforce these core guardrails
 - Waivers policy detailed in **DEVIATION POLICY** below
@@ -385,24 +386,32 @@ remediation_plan:
 
 1. **Read this Charter** (you're here!)
 2. **Run task creation**:
+
    ```bash
-   pnpm task:new --slug my-feature --tier feature
+   pnpm changelog:new --slug my-feature --tier feature
    ```
+
 3. **Write North-Star test** in `tests/acceptance/my-feature.spec.ts` (must fail initially)
 4. **Execute preflight guards**:
+
    ```bash
    pnpm oversight:vibe-check --goal "my-feature" --plan "step1, step2, ..." --session $(uuidgen)
    pnpm models:health && pnpm models:smoke
    ```
+
 5. **Create first arc** (≤ 7 steps):
+
    ```bash
    pnpm arc:new --slug my-feature --title "Arc 1: Core API"
    ```
+
 6. **TDD loop**: Write failing test → make it pass → refactor (≤ 20 min per loop)
 7. **Session reset** at 50-minute mark:
+
    ```bash
    pnpm session:reset --slug my-feature
    ```
+
 8. **Before PR**: Attach Evidence Triplet + preflight logs + narrated diff
 9. **Review**: Complete code-review-checklist.md; ensure all BLOCKER items ☑ PASS
 10. **Merge** only after CI passes and artifacts signed
@@ -412,6 +421,7 @@ remediation_plan:
 ## 📜 **VERSION HISTORY**
 
 ### v2.0.0 (2025-10-20)
+
 - **MAJOR**: Added 4 new guardrails (#7 Arc Protocol, #8 North-Star Test, #9 Preflight Guards, #10 Session Hygiene)
 - Updated enforcement matrix with new CI checks
 - Added glossary and quickstart section
@@ -421,6 +431,7 @@ remediation_plan:
 - Expanded deviation policy with waiver template
 
 ### v1.0.0 (2025-09-01)
+
 - Initial release with 6 core guardrails
 - Basic enforcement matrix
 - Quick reference commands
@@ -428,6 +439,7 @@ remediation_plan:
 ---
 
 **Document Hash (for audit trail):**
+
 ```bash
 shasum -a 256 .cortexdx/rules/AGENT_CHARTER.md
 # 6b158d91437c302c14bf167eb52477c6e90e2604d88bf6e20a8698952feddb2e (matches CHARTER_FRAGMENT.md)

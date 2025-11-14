@@ -1,5 +1,13 @@
 {
     "kiroAgent.configureMCP": "Enabled",
     "typescript.tsdk": "node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib",
-    "typescript.enablePromptUseWorkspaceTsdk": true
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "eslint.enable": false,
+    "eslint.validate": [],
+    "[typescript]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    }
 }

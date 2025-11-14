@@ -1,47 +1,95 @@
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import type { EnhancedLlmAdapter, LlmAdapter } from "../types.js";
 import { hasOllama, isOllamaReachable } from "./detect.js";
+import { getCloudOllamaConfig, getLlmPrioritySource } from "./ollama-env.js";
 
-const ENABLE_LOCAL_LLM = process.env.CORTEXDX_ENABLE_LOCAL_LLM === "true";
+type RouterBackend = "ollama-local" | "ollama-cloud" | "none";
 
-export async function pickLocalLLM(): Promise<"ollama" | "none"> {
-  if (!ENABLE_LOCAL_LLM) return "none";
-  if (hasOllama() && (await isOllamaReachable())) return "ollama";
-  return "none";
+export interface LlmAdapterOptions {
+  deterministicSeed?: number;
 }
 
-export async function getLlmAdapter(): Promise<LlmAdapter | null> {
-  const kind = await pickLocalLLM();
-  if (kind === "none") return null;
+function localLlmEnabled(): boolean {
+  return process.env.CORTEXDX_ENABLE_LOCAL_LLM !== "false";
+}
+
+function cloudLlmEnabled(): boolean {
+  return process.env.CORTEXDX_ENABLE_CLOUD_LLM !== "false";
+}
+
+function priorityList(): string[] {
+  return getLlmPrioritySource()
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+async function pickRouterBackend(): Promise<{
+  id: RouterBackend;
+  cloud?: ReturnType<typeof getCloudOllamaConfig>;
+}> {
+  const priorities = priorityList();
+  for (const backend of priorities) {
+    if ((backend === "ollama" || backend === "local" || backend === "ollama-local") && localLlmEnabled()) {
+      if (hasOllama() && (await isOllamaReachable())) {
+        return { id: "ollama-local" };
+      }
+    }
+    if ((backend === "cloud" || backend === "ollama-cloud") && cloudLlmEnabled()) {
+      const cloudConfig = getCloudOllamaConfig();
+      if (!cloudConfig) {
+        continue;
+      }
+      if (await isOllamaReachable(cloudConfig.baseUrl, cloudConfig.apiKey)) {
+        return { id: "ollama-cloud", cloud: cloudConfig };
+      }
+    }
+  }
+  return { id: "none" };
+}
+
+export async function pickLocalLLM(): Promise<"ollama" | "none"> {
+  const selection = await pickRouterBackend();
+  return selection.id === "none" ? "none" : "ollama";
+}
+
+export async function getLlmAdapter(options: LlmAdapterOptions = {}): Promise<LlmAdapter | null> {
+  const enhanced = await getEnhancedLlmAdapter(options);
+  if (!enhanced) {
+    return null;
+  }
   return {
-    complete: async (prompt: string) =>
-      `/* local-${kind} disabled in starter; prompt len=${prompt.length} */`,
+    complete: (prompt: string, maxTokens?: number) => enhanced.complete(prompt, maxTokens),
   };
 }
 
-// Enhanced adapter factory function
-export async function getEnhancedLlmAdapter(): Promise<EnhancedLlmAdapter | null> {
-  const kind = await pickLocalLLM();
-  if (kind !== "ollama") {
-    return null;
-  }
+export async function getEnhancedLlmAdapter(options: LlmAdapterOptions = {}): Promise<EnhancedLlmAdapter | null> {
+  const selection = await pickRouterBackend();
   try {
-    return createOllamaAdapter();
+    if (selection.id === "ollama-local") {
+      return createOllamaAdapter({ deterministicSeed: options.deterministicSeed });
+    }
+    if (selection.id === "ollama-cloud" && selection.cloud) {
+      return createOllamaAdapter({
+        baseUrl: selection.cloud.baseUrl,
+        defaultModel: selection.cloud.model,
+        apiKey: selection.cloud.apiKey,
+        deterministicSeed: options.deterministicSeed,
+      });
+    }
+    return null;
   } catch (error) {
-    console.warn("Failed to create Ollama adapter:", error);
+    console.warn("Failed to create LLM adapter:", error);
     return null;
   }
 }
 
-// Factory function with specific backend selection
 export function createLlmAdapter(
   backend: "ollama",
   config?: import("../adapters/ollama.js").OllamaConfig,
 ): EnhancedLlmAdapter {
-  if (backend !== "ollama") {
-    throw new Error(`Unsupported LLM backend: ${backend}`);
+  if (backend === "ollama") {
+    return createOllamaAdapter(config);
   }
-  return createOllamaAdapter(
-    config as import("../adapters/ollama.js").OllamaConfig,
-  );
+  throw new Error(`Unsupported LLM backend: ${backend}`);
 }

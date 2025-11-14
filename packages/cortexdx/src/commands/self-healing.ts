@@ -1,18 +1,31 @@
-import type { DevelopmentContext, Finding } from "../types.js";
+import { join } from "node:path";
+import { InspectorAdapter } from "../adapters/inspector-adapter.js";
+import { loadProjectContext } from "../context/project-context.js";
 import type { FixAttempt, HealingReport } from "../healing/auto-healer.js";
 import { AutoHealer } from "../healing/auto-healer.js";
-import { MonitoringScheduler } from "../healing/scheduler.js";
-import { InspectorAdapter } from "../adapters/inspector-adapter.js";
-import { promises as fs } from "node:fs";
+import {
+  type MonitoringConfig,
+  MonitoringScheduler,
+} from "../healing/scheduler.js";
+import type { DevelopmentContext, Finding } from "../types.js";
+import { fileSystem as fs } from "../utils/file-system.js";
 
 type SeverityThreshold = "blocker" | "major" | "minor" | "info";
 
-const jsonRpcStub = async (): Promise<Record<string, never>> => ({
+const jsonRpcStub = async <T>(method: string, params?: unknown): Promise<T> => {
   // Stubbed response used for CLI utilities
-});
+  return Promise.reject(
+    new Error(`JSON-RPC method ${method} not implemented in CLI context`),
+  ) as Promise<T>;
+};
 
 const parseSeverityThreshold = (value?: string): SeverityThreshold => {
-  if (value === "blocker" || value === "major" || value === "minor" || value === "info") {
+  if (
+    value === "blocker" ||
+    value === "major" ||
+    value === "minor" ||
+    value === "info"
+  ) {
     return value;
   }
   return "major";
@@ -21,10 +34,14 @@ const parseSeverityThreshold = (value?: string): SeverityThreshold => {
 /**
  * Create development context for CLI operations
  */
-function createDevelopmentContext(): DevelopmentContext {
+async function createDevelopmentContext(): Promise<DevelopmentContext> {
+  const projectContext = await loadProjectContext().catch((error) => {
+    console.warn("[Self-Healing] Unable to load project context:", error);
+    return undefined;
+  });
   return {
-    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
-    logger: (...args) => console.log('[Self-Healing]', ...args),
+    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
+    logger: (...args) => console.log("[Self-Healing]", ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
       if (!response.ok) {
@@ -33,13 +50,14 @@ function createDevelopmentContext(): DevelopmentContext {
       const text = await response.text();
       return text.length ? JSON.parse(text) : {};
     },
-    jsonrpc: jsonRpcStub,
+    jsonrpc: jsonRpcStub as <T>(method: string, params?: unknown) => Promise<T>,
     sseProbe: async () => ({ ok: true }),
     evidence: () => undefined,
     deterministic: true,
     sessionId: `self-healing-${Date.now()}`,
-    userExpertiseLevel: 'expert',
+    userExpertiseLevel: "expert",
     conversationHistory: [],
+    projectContext,
   };
 }
 
@@ -54,10 +72,10 @@ export async function runSelfDiagnose(options: {
   validate?: boolean;
   out?: string;
 }): Promise<number> {
-  console.log('[Self-Healing] Starting comprehensive self-diagnosis...');
+  console.log("[Self-Healing] Starting comprehensive self-diagnosis...");
 
   try {
-    const ctx = createDevelopmentContext();
+    const ctx = await createDevelopmentContext();
     const healer = new AutoHealer(ctx);
 
     const report = await healer.healSelf({
@@ -76,10 +94,9 @@ export async function runSelfDiagnose(options: {
     }
 
     // Return exit code based on severity
-    return report.summary.severity === 'failed' ? 1 : 0;
-
+    return report.summary.severity === "failed" ? 1 : 0;
   } catch (error) {
-    console.error('[Self-Healing] Self-diagnosis failed:', error);
+    console.error("[Self-Healing] Self-diagnosis failed:", error);
     return 1;
   }
 }
@@ -96,18 +113,19 @@ export async function runHealEndpoint(
     probes?: string;
     webhook?: string;
     out?: string;
-  }
+  },
 ): Promise<number> {
   console.log(`[Self-Healing] Diagnosing endpoint: ${endpoint}`);
 
   try {
-    const ctx = createDevelopmentContext();
+    const ctx = await createDevelopmentContext();
     ctx.endpoint = endpoint;
 
     const inspector = new InspectorAdapter(ctx);
-    const probes = options.probes === 'all'
-      ? ['handshake', 'protocol', 'security', 'performance', 'sse']
-      : options.probes?.split(',') || ['handshake', 'protocol'];
+    const probes =
+      options.probes === "all"
+        ? ["handshake", "protocol", "security", "performance", "sse"]
+        : options.probes?.split(",") || ["handshake", "protocol"];
 
     // Run diagnostics
     const report = await inspector.diagnose(endpoint, probes);
@@ -115,22 +133,24 @@ export async function runHealEndpoint(
 
     console.log(`[Self-Healing] Found ${findings.length} issues:`);
     findings.forEach((finding, index) => {
-      console.log(`  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title}`);
+      console.log(
+        `  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title}`,
+      );
       console.log(`     ${finding.description}`);
     });
 
     // Apply fixes if requested and possible
     const fixes: FixAttempt[] = [];
     if (options.autoFix && findings.length > 0) {
-      console.log('\n[Self-Healing] Attempting automated fixes...');
+      console.log("\n[Self-Healing] Attempting automated fixes...");
       // Note: For external endpoints, we'd typically not auto-fix
-      console.log('[Self-Healing] Auto-fix disabled for external endpoints');
+      console.log("[Self-Healing] Auto-fix disabled for external endpoints");
     }
 
     // Send webhook if configured
     if (options.webhook) {
       await sendWebhook(options.webhook, {
-        type: 'endpoint_diagnosis',
+        type: "endpoint_diagnosis",
         endpoint,
         findings,
         timestamp: new Date().toISOString(),
@@ -145,16 +165,19 @@ export async function runHealEndpoint(
         findings,
         inspectorReport: report,
       };
-      await fs.writeFile(options.out, JSON.stringify(fullReport, null, 2), "utf-8");
+      await fs.writeFile(
+        options.out,
+        JSON.stringify(fullReport, null, 2),
+        "utf-8",
+      );
       console.log(`\n[Self-Healing] Report saved to ${options.out}`);
     }
 
     // Return exit code based on findings severity
-    const hasBlockers = findings.some(f => f.severity === 'blocker');
+    const hasBlockers = findings.some((f) => f.severity === "blocker");
     return hasBlockers ? 1 : 0;
-
   } catch (error) {
-    console.error('[Self-Healing] Endpoint diagnosis failed:', error);
+    console.error("[Self-Healing] Endpoint diagnosis failed:", error);
     return 1;
   }
 }
@@ -171,36 +194,34 @@ export async function runMonitoring(options: {
   webhook?: string;
   config?: string;
   export?: string;
+  stateFile?: string;
 }): Promise<number> {
-  const ctx = createDevelopmentContext();
+  const ctx = await createDevelopmentContext();
   const scheduler = new MonitoringScheduler(ctx);
+  const stateFile =
+    options.stateFile ||
+    process.env.CORTEXDX_MONITOR_STATE ||
+    join(process.cwd(), ".cortexdx", "monitoring-status.json");
+  await scheduler.configurePersistence(stateFile);
 
   try {
     if (options.start) {
-      console.log('[Monitoring] Starting background monitoring...');
+      console.log("[Monitoring] Starting background monitoring...");
 
-      const configs = options.config
-        ? (JSON.parse(await fs.readFile(options.config, 'utf-8')).jobs ?? [])
-        : [{
-            endpoint: ctx.endpoint,
-            schedule: '*/5 * * * *',
-            probes: ['handshake', 'protocol', 'security', 'performance'],
-            autoHeal: options.autoHeal || false,
-            webhook: options.webhook,
-            enabled: true,
-          }];
+      const configs = await loadMonitoringConfigs(ctx, options);
 
       scheduler.start({
-        checkIntervalMs: (Number.parseInt(options.interval || '300', 10) || 300) * 1000,
+        checkIntervalMs:
+          (Number.parseInt(options.interval || "300", 10) || 300) * 1000,
         configs,
       });
 
-      console.log('[Monitoring] Background monitoring started');
-      console.log('[Monitoring] Press Ctrl+C to stop');
+      console.log("[Monitoring] Background monitoring started");
+      console.log("[Monitoring] Press Ctrl+C to stop");
 
       // Keep process running
-      process.on('SIGINT', () => {
-        console.log('\n[Monitoring] Stopping...');
+      process.on("SIGINT", () => {
+        console.log("\n[Monitoring] Stopping...");
         scheduler.stop();
         process.exit(0);
       });
@@ -211,7 +232,7 @@ export async function runMonitoring(options: {
 
     if (options.stop) {
       scheduler.stop();
-      console.log('[Monitoring] Background monitoring stopped');
+      console.log("[Monitoring] Background monitoring stopped");
       return 0;
     }
 
@@ -219,20 +240,20 @@ export async function runMonitoring(options: {
       const status = scheduler.getStatus();
       const jobs = scheduler.getJobs();
 
-      console.log('[Monitoring] Status:');
-      console.log(`  Running: ${status.running ? 'Yes' : 'No'}`);
+      console.log("[Monitoring] Status:");
+      console.log(`  Running: ${status.running ? "Yes" : "No"}`);
       console.log(`  Active Jobs: ${status.activeJobs}`);
       console.log(`  Last Check: ${status.lastCheck}`);
       console.log(`  Next Check: ${status.nextCheck}`);
 
       if (jobs.length > 0) {
-        console.log('\n[Monitoring] Jobs:');
+        console.log("\n[Monitoring] Jobs:");
         for (const job of jobs) {
           console.log(`  ${job.id}:`);
           console.log(`    Endpoint: ${job.config.endpoint}`);
-          console.log(`    Enabled: ${job.enabled ? 'Yes' : 'No'}`);
-          console.log(`    Auto-Heal: ${job.config.autoHeal ? 'Yes' : 'No'}`);
-          console.log(`    Last Run: ${job.lastRun || 'Never'}`);
+          console.log(`    Enabled: ${job.enabled ? "Yes" : "No"}`);
+          console.log(`    Auto-Heal: ${job.config.autoHeal ? "Yes" : "No"}`);
+          console.log(`    Last Run: ${job.lastRun || "Never"}`);
           console.log(`    Consecutive Failures: ${job.consecutiveFailures}`);
         }
       }
@@ -242,45 +263,90 @@ export async function runMonitoring(options: {
 
     if (options.export) {
       const config = scheduler.exportConfig();
-      await fs.writeFile(options.export, JSON.stringify(config, null, 2), "utf-8");
+      await fs.writeFile(
+        options.export,
+        JSON.stringify(config, null, 2),
+        "utf-8",
+      );
       console.log(`[Monitoring] Configuration exported to ${options.export}`);
       return 0;
     }
 
     // Show help if no action specified
-    console.log('[Monitoring] Please specify an action: --start, --stop, --status, or --export');
+    console.log(
+      "[Monitoring] Please specify an action: --start, --stop, --status, or --export",
+    );
     return 1;
-
   } catch (error) {
-    console.error('[Monitoring] Operation failed:', error);
+    console.error("[Monitoring] Operation failed:", error);
     return 1;
   }
+}
+
+async function loadMonitoringConfigs(
+  ctx: DevelopmentContext,
+  options: { config?: string; autoHeal?: boolean; webhook?: string },
+): Promise<MonitoringConfig[]> {
+  if (!options.config) {
+    return [
+      {
+        endpoint: ctx.endpoint,
+        schedule: "*/5 * * * *",
+        probes: ["handshake", "protocol", "security", "performance"],
+        autoHeal: Boolean(options.autoHeal),
+        webhook: options.webhook,
+        enabled: true,
+      },
+    ];
+  }
+
+  ctx.logger?.(`[Monitoring] Loading monitoring config from ${options.config}`);
+  // Custom event emission removed - not compatible with Node.js process events
+
+  const raw = await fs.readFile(options.config, "utf-8");
+  const parsed = JSON.parse(typeof raw === "string" ? raw : raw.toString());
+  const jobs = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.jobs)
+      ? parsed.jobs
+      : [];
+
+  return jobs.map((job: MonitoringConfig) => ({
+    endpoint: job.endpoint ?? ctx.endpoint,
+    schedule: job.schedule ?? "*/5 * * * *",
+    probes: job.probes ?? ["handshake", "protocol"],
+    autoHeal: Boolean(job.autoHeal),
+    webhook: job.webhook,
+    enabled: job.enabled !== false,
+  }));
 }
 
 /**
  * Display healing report in terminal
  */
 function displayHealingReport(report: HealingReport, dryRun?: boolean): void {
-  console.log(`\n${'='.repeat(60)}`);
-  console.log('SELF-HEALING REPORT');
-  console.log('='.repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
+  console.log("SELF-HEALING REPORT");
+  console.log("=".repeat(60));
 
-  const mode = dryRun ? ' (DRY RUN)' : '';
+  const mode = dryRun ? " (DRY RUN)" : "";
   console.log(`Job ID: ${report.jobId}${mode}`);
   console.log(`Started: ${report.startedAt}`);
   console.log(`Finished: ${report.finishedAt}`);
 
-  console.log('\nSUMMARY:');
+  console.log("\nSUMMARY:");
   console.log(`  Status: ${report.summary.severity.toUpperCase()}`);
   console.log(`  ${report.summary.message}`);
 
-  console.log('\nFINDINGS:');
+  console.log("\nFINDINGS:");
   if (report.findings.length === 0) {
-    console.log('  ✅ No issues detected - system is healthy!');
+    console.log("  ✅ No issues detected - system is healthy!");
   } else {
     report.findings.forEach((finding: Finding, index: number) => {
-      const status = finding.autoFixed ? '✅ FIXED' : '⚠️  OPEN';
-      console.log(`  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title} - ${status}`);
+      const status = finding.autoFixed ? "✅ FIXED" : "⚠️  OPEN";
+      console.log(
+        `  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title} - ${status}`,
+      );
       if (finding.description) {
         console.log(`     ${finding.description}`);
       }
@@ -291,13 +357,13 @@ function displayHealingReport(report: HealingReport, dryRun?: boolean): void {
   }
 
   if (report.fixes.length > 0) {
-    console.log('\nFIXES ATTEMPTED:');
+    console.log("\nFIXES ATTEMPTED:");
     report.fixes.forEach((fix: FixAttempt, index: number) => {
-      const status = fix.success ? '✅ SUCCESS' : '❌ FAILED';
+      const status = fix.success ? "✅ SUCCESS" : "❌ FAILED";
       console.log(`  ${index + 1}. ${fix.templateId} - ${status}`);
       console.log(`     Finding: ${fix.findingId}`);
-      console.log(`     Applied: ${fix.applied ? 'Yes' : 'No'}`);
-      console.log(`     Validated: ${fix.validated ? 'Yes' : 'No'}`);
+      console.log(`     Applied: ${fix.applied ? "Yes" : "No"}`);
+      console.log(`     Validated: ${fix.validated ? "Yes" : "No"}`);
       console.log(`     Time: ${fix.timeTaken}ms`);
       if (fix.error) {
         console.log(`     Error: ${fix.error}`);
@@ -305,41 +371,46 @@ function displayHealingReport(report: HealingReport, dryRun?: boolean): void {
     });
   }
 
-  console.log('\nVALIDATION SUMMARY:');
+  console.log("\nVALIDATION SUMMARY:");
   console.log(`  Total Findings: ${report.validation.totalFindings}`);
   console.log(`  Issues Fixed: ${report.validation.issuesFixed}`);
   console.log(`  Issues Remaining: ${report.validation.issuesRemaining}`);
   console.log(`  Auto-Fixed: ${report.validation.autoFixed}`);
-  console.log(`  Manual Review Required: ${report.validation.manualReviewRequired}`);
+  console.log(
+    `  Manual Review Required: ${report.validation.manualReviewRequired}`,
+  );
   console.log(`  Blockers Remaining: ${report.validation.blockersRemaining}`);
 
   if (report.summary.recommendations.length > 0) {
-    console.log('\nRECOMMENDATIONS:');
+    console.log("\nRECOMMENDATIONS:");
     report.summary.recommendations.forEach((rec: string, index: number) => {
       console.log(`  ${index + 1}. ${rec}`);
     });
   }
 
   if (report.summary.nextSteps.length > 0) {
-    console.log('\nNEXT STEPS:');
+    console.log("\nNEXT STEPS:");
     report.summary.nextSteps.forEach((step: string, index: number) => {
       console.log(`  ${index + 1}. ${step}`);
     });
   }
 
-  console.log('='.repeat(60));
+  console.log("=".repeat(60));
 }
 
 /**
  * Send webhook notification
  */
-async function sendWebhook(webhookUrl: string, payload: Record<string, unknown>): Promise<void> {
+async function sendWebhook(
+  webhookUrl: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
   try {
     const response = await fetch(webhookUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'CortexDx-Self-Healing/1.0',
+        "Content-Type": "application/json",
+        "User-Agent": "CortexDx-Self-Healing/1.0",
       },
       body: JSON.stringify(payload),
     });
@@ -350,6 +421,6 @@ async function sendWebhook(webhookUrl: string, payload: Record<string, unknown>)
 
     console.log(`[Self-Healing] Webhook sent to ${webhookUrl}`);
   } catch (error) {
-    console.error('[Self-Healing] Webhook failed:', error);
+    console.error("[Self-Healing] Webhook failed:", error);
   }
 }

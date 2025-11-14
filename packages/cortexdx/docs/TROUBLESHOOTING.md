@@ -391,7 +391,7 @@ Import-Certificate -FilePath "cert.pem" -CertStoreLocation Cert:\LocalMachine\Ro
 
 - `LLM backend not available`
 - `No LLM service detected`
-- `Failed to connect to Ollama/MLX`
+- `Failed to connect to Ollama`
 - `Model not found or not loaded`
 
 **Platform-Specific Installation**:
@@ -470,7 +470,7 @@ ollama pull llama3.2:3b
    }
    ```
 
-   > **Note:** CortexDx now supports the Ollama backend exclusively. Remove any legacy MLX configuration blocks to avoid startup failures.
+   > **Note:** CortexDx now supports the Ollama backend exclusively. Remove any legacy local-backend configuration blocks to avoid startup failures.
 
 ### Slow LLM Responses
 
@@ -802,7 +802,7 @@ ollama pull llama3.2:3b
    - **Fast**: `discovery`, `protocol`, `cors`
    - **Medium**: `auth`, `jsonrpc-batch`, `permissioning`
    - **Slow**: `performance`, `governance`, `threat-model`
-   - **Resource-intensive**: `streaming-sse`, `sse-reconnect`
+   - **Resource-intensive**: `streaming`, `sse-reconnect`
 
 3. **Adjust resource budgets**:
 
@@ -1120,7 +1120,7 @@ cortexdx doctor
 **Doctor checks**:
 
 - ✅ Node.js version compatibility
-- ✅ LLM backend availability (Ollama/MLX)
+- ✅ LLM backend availability (Ollama)
 - ✅ Network connectivity
 - ✅ Plugin installation
 - ✅ Configuration validity
@@ -1361,7 +1361,7 @@ cortexdx diagnose https://api.example.com/mcp --deterministic
 
 - **Gatekeeper blocking execution**: `xattr -d com.apple.quarantine /usr/local/bin/cortexdx`
 - **Permission denied for network access**: Check System Preferences > Security & Privacy > Privacy > Network
-- **MLX not working on Intel Macs**: Use Ollama instead of MLX on Intel-based Macs
+- **Ollama not running**: Ensure the `ollama serve` daemon is listening on 127.0.0.1:11434.
 
 #### Debugging Commands
 

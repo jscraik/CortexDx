@@ -131,6 +131,8 @@ We follow **ArcTDD (Architecture-Test-Driven Development)** with strict guidelin
 
 - Run `pnpm internal:self-improvement -- --endpoint http://127.0.0.1:5001` from the workspace root to execute the internal-only plugin against a local CortexDx instance.
 - Optional flags: `--project <path>` to target a different package, `--history <file>` for JSON-formatted chat history, and `--out <file>` to persist findings.
+- Academic insights are enforced by default. Pass `--allow-missing-academic` only when you intentionally want to skip research enforcement (e.g., offline debugging).
+- Memory leak checks now call `<endpoint>/debug/memory` after the run. Tune the probe with `--memory-path <path>`, `--memory-threshold <mb>`, `--enable-memory-check`, or `--disable-memory-check` when running against bespoke deployments.
 - This runner executes TypeScript directly via `tsx`, stays outside the published `dist/` bundle, and satisfies the "internal only" requirement—do not enable or ship it with commercial builds.
 
 ## Testing Strategy

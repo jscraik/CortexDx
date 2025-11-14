@@ -13,6 +13,8 @@ describe("Auth0 handshake", () => {
     delete process.env.CORTEXDX_AUTH0_CLIENT_SECRET;
     delete process.env.CORTEXDX_AUTH0_AUDIENCE;
     delete process.env.CORTEXDX_AUTH0_SCOPE;
+    delete process.env.CORTEXDX_AUTH0_DEVICE_CODE;
+    delete process.env.CORTEXDX_AUTH0_DEVICE_CODE_ENDPOINT;
   });
 
   it("returns manual auth headers when --auth is provided", async () => {
@@ -92,5 +94,54 @@ describe("Auth0 handshake", () => {
     const headers = await resolveAuthHeaders({});
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(headers).toEqual({ authorization: "Bearer envToken" });
+  });
+
+  it("falls back to device code flow when enabled", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            device_code: "devcode",
+            user_code: "ABC123",
+            verification_uri: "https://verify.example.com",
+            expires_in: 900,
+            interval: 0,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: "authorization_pending" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            access_token: "deviceToken",
+            expires_in: 3600,
+            token_type: "Bearer",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      );
+
+    const prompt = vi.fn();
+    const headers = await resolveAuthHeaders({
+      auth0Domain: "example.auth0.com",
+      auth0ClientId: "client",
+      auth0Audience: "https://api.example.com",
+      auth0DeviceCode: true,
+      onDeviceCodePrompt: prompt,
+    });
+
+    expect(prompt).toHaveBeenCalledWith(
+      "ABC123",
+      "https://verify.example.com",
+    );
+    expect(headers).toEqual({ authorization: "Bearer deviceToken" });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

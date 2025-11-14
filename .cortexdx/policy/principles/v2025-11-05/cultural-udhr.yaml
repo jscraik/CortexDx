@@ -1,0 +1,17 @@
+id: udhr
+title: Universal Declaration of Human Rights
+region: global
+reference:
+  citation: United Nations, 1948
+  url: https://www.un.org/en/about-us/universal-declaration-of-human-rights
+articles:
+  - article: Article 1
+    summary: All human beings are born free and equal in dignity and rights.
+    principleAlignment:
+      - respect-autonomy
+      - harm-minimization
+  - article: Article 12
+    summary: No one shall be subjected to arbitrary interference with privacy, family, home or correspondence.
+    principleAlignment:
+      - respect-autonomy
+      - transparent-accountability

@@ -11,6 +11,12 @@ import { GitleaksIntegration } from "../security/gitleaks-integration.js";
 import { SecurityValidator } from "../security/security-validator.js";
 import { SemgrepIntegration } from "../security/semgrep-integration.js";
 import { ZAPIntegration } from "../security/zap-integration.js";
+import {
+  annotateControlEvidence,
+  buildCoverageGapDescription,
+  getMissingControls,
+  summarizeCoverage,
+} from "../security/control-mappings.js";
 import type { DiagnosticContext, DiagnosticPlugin, Finding } from "../types.js";
 
 export const SecurityScannerPlugin: DiagnosticPlugin = {
@@ -64,6 +70,47 @@ export const SecurityScannerPlugin: DiagnosticPlugin = {
 
     // Add best practices
     const enhancedFindings = await addBestPractices(ctx, prioritizedFindings);
+    const coverageTracker = new Set<string>();
+    for (const finding of enhancedFindings) {
+      const matched = annotateControlEvidence(finding);
+      for (const controlId of matched) {
+        coverageTracker.add(controlId);
+      }
+    }
+
+    const coverageSummary = summarizeCoverage(coverageTracker);
+    enhancedFindings.push({
+      id: "security-control-summary",
+      area: "security",
+      severity: "info",
+      title: "Security control coverage summary",
+      description: coverageSummary.description,
+      evidence: coverageSummary.evidence.map((ref) => ({
+        type: "log",
+        ref,
+      })),
+      tags: ["controls", "coverage"],
+      confidence: 0.5,
+    });
+
+    if (process.env.CORTEXDX_ENFORCE_SECURITY === "1") {
+      const missingControls = getMissingControls(coverageTracker, "high");
+      if (missingControls.length > 0) {
+        enhancedFindings.push({
+          id: "security-control-coverage",
+          area: "security",
+          severity: "blocker",
+          title: "High-severity security controls missing evidence",
+          description: `Enable the relevant probes or provide manual evidence for:\n${buildCoverageGapDescription(missingControls)}`,
+          evidence: missingControls.map((control) => ({
+            type: "log",
+            ref: `${control.framework} ${control.id}: ${control.title}`,
+          })),
+          tags: ["security", "controls", "coverage"],
+          confidence: 0.5,
+        });
+      }
+    }
 
     const executionTime = Date.now() - startTime;
     ctx.logger(`Security scan completed in ${executionTime}ms`);
@@ -138,6 +185,7 @@ async function runASVSAssessment(ctx: DiagnosticContext): Promise<Finding[]> {
     return [];
   }
 }
+
 
 /**
  * Run MITRE ATLAS threat detection for AI/ML-specific threats

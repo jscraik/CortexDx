@@ -1,0 +1,144 @@
+{
+    "precedence": [
+        "CHARTER_FRAGMENT.md",
+        "constitution.md",
+        "vision.md",
+        "RULES_OF_AI.md",
+        "agentic-coding-workflow.md",
+        "agentic-phase-policy.md",
+        "vibe-check.md",
+        "code-review-checklist.md",
+        "ci-review-checklists.md",
+        "llm-threat-controls.md",
+        "skills-system-governance.md",
+        "TASK_FOLDER_STRUCTURE.md",
+        "CHECKLIST.cortexdx-os.md",
+        "_time-freshness.md",
+        "AGENT_CHARTER.md"
+    ],
+    "docs": {
+        "CHARTER_FRAGMENT.md": {
+            "path": "/.cortexdx/rules/CHARTER_FRAGMENT.md",
+            "sha256": "b1aad74cf8492c371bb4795e4720496facdbd06f4b6aa23b9a8c3483516c8d87",
+            "required_tokens": [
+                "Step Budget ≤ 7",
+                "Ask-First ≤ 3",
+                "Evidence Triplet"
+            ]
+        },
+        "agentic-coding-workflow.md": {
+            "path": "/.cortexdx/rules/agentic-coding-workflow.md",
+            "sha256": "d27adc38193c1a6da5caab726ce30c3603fa91584d775fb8c4ee1fc8f7c1ef42",
+            "required_tokens": [
+                "G0 Initialize",
+                "Evidence Triplet"
+            ]
+        },
+        "AGENT_CHARTER.md": {
+            "path": "/.cortexdx/rules/AGENT_CHARTER.md",
+            "sha256": "39a90be6f8705ed3138125c6ddac58244c606bd6ab2b2afb33f9af3dfdd4c361",
+            "required_tokens": [
+                "[brAInwav]",
+                "MODELS:LIVE:OK",
+                "NORTH_STAR:RED_FIRST"
+            ]
+        },
+        "agentic-phase-policy.md": {
+            "path": "/.cortexdx/rules/agentic-phase-policy.md",
+            "sha256": "753b47a9eaab75105e2da743980280cd5b5f16e63eb29ad003d7b4217e8663e0",
+            "required_tokens": [
+                "PHASE_TRANSITION:",
+                "No HITL before REVIEW."
+            ]
+        },
+        "llm-threat-controls.md": {
+            "path": "/.cortexdx/rules/llm-threat-controls.md",
+            "sha256": "511155d673f8557ee3230e19d275c088543980c122b4cbbcf7eaee1f5dcecb10",
+            "required_tokens": [
+                "LLM01",
+                "LLM06",
+                "LLM‑S0 — Structured Output Contract (BLOCKER)"
+            ]
+        },
+        "code-review-checklist.md": {
+            "path": "/.cortexdx/rules/code-review-checklist.md",
+            "sha256": "1f568b55f09edb407328c394b59b8b890907f3b04cce11643b82a091b2fbfcf6",
+            "required_tokens": [
+                "[BLOCKER]",
+                "Evidence Triplet"
+            ]
+        },
+        "ci-review-checklists.md": {
+            "path": "/.cortexdx/rules/ci-review-checklists.md",
+            "sha256": "471593ca116db4cc1ab8a061cf1ce0363c6360a26b096d08a2245c607e47bcba",
+            "required_tokens": [
+                "G0 Security",
+                "G7 Docs & Ops"
+            ]
+        },
+        "skills-system-governance.md": {
+            "path": "/.cortexdx/rules/skills-system-governance.md",
+            "sha256": "be3820ecd60428065a985e05fbab4007e37a992cde31ba2c50117c6c022e7d24",
+            "required_tokens": [
+                "STRUCTURED_OUTPUTS:OK",
+                "TRACE_CONTEXT:OK"
+            ]
+        },
+        "constitution.md": {
+            "path": "/.cortexdx/rules/constitution.md",
+            "sha256": "6b6672c9fe1fa16f5aa2ededfe23d9f3dd7e1816695f4e49f7405a2e4ad34719",
+            "required_tokens": [
+                "brAInwav Cortex-OS Constitution",
+                "I. Core Principles"
+            ]
+        },
+        "vision.md": {
+            "path": "/.cortexdx/rules/vision.md",
+            "sha256": "ee5cbbf7592b3c00ef92e310682bb8ce289aa78e2cd56de173bcb77cc76a492f",
+            "required_tokens": [
+                "Cortex-OS Vision Document",
+                "North Star"
+            ]
+        },
+        "vibe-check.md": {
+            "path": "/.cortexdx/rules/vibe-check.md",
+            "sha256": "2d68a06d1fa3a82db120cc901eb17aa9989011853ffbcf39baf598eb5716c843",
+            "required_tokens": [
+                "vibe_check",
+                "governance memorize"
+            ]
+        },
+        "RULES_OF_AI.md": {
+            "path": "/.cortexdx/rules/RULES_OF_AI.md",
+            "sha256": "493a47450a2505b9e4172b3502d47cb161a335cd4c64671cd1a2392af4193ac7",
+            "required_tokens": [
+                "RULES_OF_AI",
+                "brAInwav"
+            ]
+        },
+        "CHECKLIST.cortexdx-os.md": {
+            "path": "/.cortexdx/rules/CHECKLIST.cortexdx-os.md",
+            "sha256": "ea30ac4671220757c0b50e28bafceae3498bdb341fa54a9123d8ec199ff9d6f3",
+            "required_tokens": [
+                "Cortex-OS",
+                "checklist"
+            ]
+        },
+        "TASK_FOLDER_STRUCTURE.md": {
+            "path": "/.cortexdx/rules/TASK_FOLDER_STRUCTURE.md",
+            "sha256": "0fad52db274b60f4f35ed785ef7696c511662fe931024dce5de371d7d4f59ed4",
+            "required_tokens": [
+                "task folder",
+                "structure"
+            ]
+        },
+        "_time-freshness.md": {
+            "path": "/.cortexdx/rules/_time-freshness.md",
+            "sha256": "3f97f219a91679430ee5b200921ac84efe749da0ef1f7491d55e5ba44d0400f9",
+            "required_tokens": [
+                "time freshness",
+                "timezone"
+            ]
+        }
+    }
+}

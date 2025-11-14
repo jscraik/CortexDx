@@ -11,7 +11,7 @@ describe("Conversation Storage Tests", () => {
     let storage: ConversationStorage;
 
     beforeEach(async () => {
-        persistenceDir = await mkdtemp(join(tmpdir(), "insula-conv-"));
+        persistenceDir = await mkdtemp(join(tmpdir(), "cortexdx-conv-"));
         testPersistencePath = join(persistenceDir, "conversations.sqlite");
         storage = new ConversationStorage(testPersistencePath);
     });

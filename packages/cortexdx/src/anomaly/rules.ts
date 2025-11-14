@@ -27,7 +27,7 @@ export function detectHealthDown(
   }
 
   const latest = samples[samples.length - 1];
-  if (latest < thresholdSec) {
+  if (latest !== undefined && latest < thresholdSec) {
     return [];
   }
 
@@ -54,10 +54,11 @@ export function detectLatencySpike(
 
   const latest = p95[p95.length - 1];
   const baselineSlice = p95.slice(0, -1).slice(-Math.max(mins - 1, 1));
-  const baseline = baselineSlice.reduce((sum, value) => sum + value, 0) / baselineSlice.length;
+  const baseline =
+    baselineSlice.reduce((sum, value) => sum + value, 0) / baselineSlice.length;
   const threshold = baseline * (1 + pct / 100);
 
-  if (!(latest > threshold)) {
+  if (latest !== undefined && !(latest > threshold)) {
     return [];
   }
 
@@ -83,7 +84,7 @@ export function detectErrorSpike(
   }
 
   const latest = codes[codes.length - 1];
-  const latestTotals = calculateErrorRate(latest);
+  const latestTotals = latest ? calculateErrorRate(latest) : 0;
   const baselineSlice = codes.slice(0, -1).slice(-Math.max(mins - 1, 1));
   const baselineAverage =
     baselineSlice.reduce((sum, bucket) => sum + calculateErrorRate(bucket), 0) /

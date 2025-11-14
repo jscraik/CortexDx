@@ -75,15 +75,6 @@ interface OllamaConfig {
   defaultModel?: string;
 }
 
-// MLX
-interface MlxConfig {
-  pythonPath?: string;
-  maxMemoryMb?: number;
-  quantization?: 'int4' | 'int8' | 'float16' | 'none';
-  maxTokens?: number;
-  temperature?: number;
-  defaultModel?: string;
-}
 ```
 
 ## Integration with Diagnostic Context
@@ -138,7 +129,6 @@ try {
 ## Requirements
 
 - **Ollama**: Requires Ollama to be installed and running locally
-- **MLX**: Requires macOS with Apple Silicon and MLX Python package
 - **Node.js**: Version 20+ for optimal performance
 
 ## Development

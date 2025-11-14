@@ -329,6 +329,7 @@ pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
 
 - `CORTEXDX_INTERNAL_ENDPOINT`: Default Inspector endpoint
 - `CORTEXDX_HISTORY_PATH`: Default conversation history path
+- `CORTEXDX_INSPECTOR_MAX_RUNTIME_MS` / `INSPECTOR_MAX_RUNTIME_MS`: Overrides the runtime budget (in ms) before the MCP Inspector CLI is terminated. Partial probe output is still converted into findings when this budget is exceeded.
 
 ## Finding Types
 
@@ -354,7 +355,7 @@ pnpm tsx packages/cortexdx/scripts/internal/self-improvement.ts \
 
 - **ID**: `self_improvement.health`
 - **Severity**: `info`
-- **Indicates**: Successful health check with system status
+- **Indicates**: Successful health check with system status, including quick-subsystem telemetry (state DB availability, provider count, rolling performance metrics, and operations counters) sourced from `/health`.
 
 ### 5. Health Probe Failure
 

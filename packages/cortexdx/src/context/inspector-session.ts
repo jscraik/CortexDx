@@ -51,7 +51,9 @@ export function createInspectorSession(
   const transportState: TransportState = {
     transcript: () => ({
       sessionId: transcript.sessionId,
-      initialize: transcript.initialize ? { ...transcript.initialize } : undefined,
+      initialize: transcript.initialize
+        ? { ...transcript.initialize }
+        : undefined,
       exchanges: transcript.exchanges.map((exchange) => ({ ...exchange })),
     }),
     headers: () => ({ ...sessionHeaders }),
@@ -103,10 +105,17 @@ export function createInspectorSession(
     sessionHeaders.accept = "application/json, text/event-stream";
     transcript.sessionId = sessionId;
     transportState.sessionId = sessionId;
-    transcript.initialize = buildExchange("initialize", initRequest, body, response.status);
+    transcript.initialize = buildExchange(
+      "initialize",
+      initRequest,
+      body,
+      response.status,
+    );
     if (shared) {
       shared.sessionId = sessionId;
-      shared.initialize = transcript.initialize ? { ...transcript.initialize } : undefined;
+      shared.initialize = transcript.initialize
+        ? { ...transcript.initialize }
+        : undefined;
       shared.initialized = true;
     }
 
@@ -128,20 +137,28 @@ export function createInspectorSession(
       body: JSON.stringify(payload),
     });
     const body = await safeJsonParse(response);
-    transcript.exchanges.push(buildExchange(method, payload, body, response.status));
-    if (body?.error) {
+    transcript.exchanges.push(
+      buildExchange(method, payload, body, response.status),
+    );
+    if (body && "error" in body && body.error) {
       const { code, message } = body.error;
       throw new Error(`JSON-RPC error ${code}: ${message}`);
     }
-    const result = body?.result as T;
+    const result =
+      body && "result" in body ? (body.result as T) : (undefined as T);
     if (cacheKey) rpcCache.set(cacheKey, result);
     return result;
   };
 
-  const probeStream = async (url: string, opts?: SseProbeOptions): Promise<SseResult> => {
+  const probeStream = async (
+    url: string,
+    opts?: SseProbeOptions,
+  ): Promise<SseResult> => {
     await ensureSession();
     const authHeaders = Object.fromEntries(
-      Object.entries(sessionHeaders).filter(([key]) => key.toLowerCase() !== "content-type"),
+      Object.entries(sessionHeaders).filter(
+        ([key]) => key.toLowerCase() !== "content-type",
+      ),
     );
     const sessionId = transcript.sessionId;
     const headers = {
@@ -170,7 +187,9 @@ export function createInspectorSession(
       if (withSession.ok) return withSession;
       lastResult = withSession;
     }
-    return lastResult ?? { ok: false, reason: "probe failed", resolvedUrl: url };
+    return (
+      lastResult ?? { ok: false, reason: "probe failed", resolvedUrl: url }
+    );
   };
 
   return {
@@ -180,13 +199,40 @@ export function createInspectorSession(
   };
 }
 
-async function safeJsonParse(response: Response): Promise<unknown> {
+interface JsonRpcResponse {
+  jsonrpc: "2.0";
+  id?: string | number | null;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+}
+
+async function safeJsonParse(
+  response: Response,
+): Promise<JsonRpcResponse | undefined> {
   const text = await response.text();
   if (!text) return undefined;
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      parsed.jsonrpc === "2.0"
+    ) {
+      return parsed as JsonRpcResponse;
+    }
+    return {
+      jsonrpc: "2.0",
+      error: { code: response.status, message: "Invalid JSON-RPC response" },
+    };
   } catch {
-    return { error: { code: response.status, message: "Invalid JSON" } };
+    return {
+      jsonrpc: "2.0",
+      error: { code: response.status, message: "Invalid JSON" },
+    };
   }
 }
 

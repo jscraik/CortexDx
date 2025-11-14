@@ -1,3 +1,5 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import type { DevelopmentContext } from "../types.js";
 import type { HealingReport } from "./auto-healer.js";
 import { AutoHealer } from "./auto-healer.js";
@@ -38,6 +40,12 @@ interface MonitoringAlert {
   summary?: HealingReport["summary"];
 }
 
+interface MonitoringStateSnapshot {
+  generatedAt: string;
+  status: SchedulerStatus;
+  jobs: MonitoringJob[];
+}
+
 /**
  * Background monitoring scheduler for continuous health checks and auto-healing
  */
@@ -47,6 +55,13 @@ export class MonitoringScheduler {
   private interval: NodeJS.Timeout | null = null;
   private running = false;
   private checkInterval = 60000; // 1 minute default
+  private stateFile?: string;
+  private lastStatus: SchedulerStatus = {
+    running: false,
+    activeJobs: 0,
+    lastCheck: new Date().toISOString(),
+    nextCheck: "No scheduled jobs",
+  };
 
   constructor(ctx: DevelopmentContext) {
     this.ctx = ctx;
@@ -79,7 +94,10 @@ export class MonitoringScheduler {
       this.runScheduledChecks();
     }, this.checkInterval);
 
-    this.ctx.logger?.(`[MonitoringScheduler] Started with ${this.checkInterval}ms interval`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] Started with ${this.checkInterval}ms interval`,
+    );
+    void this.persistState();
   }
 
   /**
@@ -97,6 +115,7 @@ export class MonitoringScheduler {
     }
 
     this.ctx.logger?.('[MonitoringScheduler] Stopped');
+    void this.persistState();
   }
 
   /**
@@ -113,7 +132,10 @@ export class MonitoringScheduler {
     };
 
     this.jobs.set(jobId, job);
-    this.ctx.logger?.(`[MonitoringScheduler] Added monitoring job for ${config.endpoint}`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] Added monitoring job for ${config.endpoint}`,
+    );
+    void this.persistState();
 
     return jobId;
   }
@@ -124,7 +146,10 @@ export class MonitoringScheduler {
   removeJob(jobId: string): boolean {
     const removed = this.jobs.delete(jobId);
     if (removed) {
-      this.ctx.logger?.(`[MonitoringScheduler] Removed monitoring job ${jobId}`);
+      this.ctx.logger?.(
+        `[MonitoringScheduler] Removed monitoring job ${jobId}`,
+      );
+      void this.persistState();
     }
     return removed;
   }
@@ -140,6 +165,7 @@ export class MonitoringScheduler {
 
     job.enabled = enabled;
     this.ctx.logger?.(`[MonitoringScheduler] ${enabled ? 'Enabled' : 'Disabled'} job ${jobId}`);
+    void this.persistState();
     return true;
   }
 
@@ -231,6 +257,7 @@ export class MonitoringScheduler {
     } finally {
       job.running = false;
       job.nextRun = this.calculateNextRun(job);
+      await this.persistState();
     }
   }
 
@@ -359,12 +386,14 @@ export class MonitoringScheduler {
         return aTime - bTime;
       })[0];
 
-    return {
+    const status = {
       running: this.running,
       activeJobs,
       lastCheck: new Date().toISOString(),
       nextCheck: nextJob?.nextRun || 'No scheduled jobs',
     };
+    this.lastStatus = status;
+    return status;
   }
 
   /**
@@ -415,6 +444,62 @@ export class MonitoringScheduler {
       this.addJob(jobConfig);
     }
 
-    this.ctx.logger?.(`[MonitoringScheduler] Imported ${config.jobs.length} monitoring configurations`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] Imported ${config.jobs.length} monitoring configurations`,
+    );
+    void this.persistState();
+  }
+
+  async configurePersistence(stateFile: string): Promise<void> {
+    this.stateFile = stateFile;
+    await this.restoreState();
+  }
+
+  private async restoreState(): Promise<void> {
+    if (!this.stateFile) return;
+    try {
+      const payload = await readFile(this.stateFile, "utf8");
+      const snapshot = JSON.parse(payload) as MonitoringStateSnapshot;
+      this.jobs.clear();
+      for (const job of snapshot.jobs ?? []) {
+        this.jobs.set(job.id, { ...job, running: false });
+      }
+      if (snapshot.status) {
+        this.lastStatus = snapshot.status;
+      }
+      this.ctx.logger?.(
+        `[MonitoringScheduler] Restored ${this.jobs.size} jobs from state`,
+      );
+    } catch (error) {
+      // Ignore missing file; log others
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        this.ctx.logger?.(
+          "[MonitoringScheduler] Failed to restore persisted state:",
+          error,
+        );
+      }
+    }
+  }
+
+  private async persistState(): Promise<void> {
+    if (!this.stateFile) return;
+    try {
+      const snapshot: MonitoringStateSnapshot = {
+        generatedAt: new Date().toISOString(),
+        status: this.lastStatus,
+        jobs: this.getJobs().map((job) => ({ ...job, running: false })),
+      };
+      await mkdir(dirname(this.stateFile), { recursive: true });
+      await writeFile(
+        this.stateFile,
+        JSON.stringify(snapshot, null, 2),
+        "utf-8",
+      );
+    } catch (error) {
+      this.ctx.logger?.(
+        "[MonitoringScheduler] Failed to persist state:",
+        error,
+      );
+    }
   }
 }

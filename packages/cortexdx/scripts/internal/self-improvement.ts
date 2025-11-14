@@ -1,24 +1,20 @@
-import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import process from "node:process";
-import type {
-  ChatMessage,
-  DevelopmentContext,
-  Finding,
-  ProjectContext,
-} from "../../src/types.js";
-import { SelfImprovementPlugin } from "../../src/plugins/development/self-improvement.js";
+import type { Finding, ProjectContext } from "../../src/types.js";
+import {
+  runSelfImprovementCli,
+  type SelfImprovementRunnerOptions,
+} from "../../src/self-improvement/runner.js";
 
-const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
 const packageRoot = resolve(dirname(__filename), "..", "..");
 const workspaceRoot = resolve(packageRoot, "..", "..");
 
 type ProjectType = ProjectContext["type"];
+
+const DEFAULT_MEMORY_PATH = "/debug/memory";
+const DEFAULT_MEMORY_THRESHOLD_MB = 512;
 
 interface CliOptions {
   endpoint: string;
@@ -27,93 +23,114 @@ interface CliOptions {
   outPath?: string;
   projectType: ProjectType;
   language: string;
+  requireAcademicInsights: boolean;
+  memoryCheckEnabled: boolean;
+  memoryCheckPath: string;
+  memoryThresholdMb: number;
 }
 
 function parseArgs(): CliOptions {
   const args = process.argv.slice(2);
-  let endpoint = process.env.CORTEXDX_INTERNAL_ENDPOINT ?? "http://127.0.0.1:5001";
-  let projectRoot = "packages/cortexdx";
-  let historyPath: string | undefined = process.env.CORTEXDX_HISTORY_PATH;
-  let outPath: string | undefined;
-  let projectType: ProjectType = "mcp-client";
-  let language = "typescript";
-
+  const state = initializeCliState();
   for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i];
-    if (arg === "--endpoint" && args[i + 1]) {
-      endpoint = args[++i];
-    } else if (arg === "--project" && args[i + 1]) {
-      projectRoot = args[++i];
-    } else if (arg === "--history" && args[i + 1]) {
-      historyPath = args[++i];
-    } else if (arg === "--out" && args[i + 1]) {
-      outPath = args[++i];
-    } else if (arg === "--type" && args[i + 1]) {
-      const candidate = args[++i] as ProjectType;
-      projectType = candidate;
-    } else if (arg === "--language" && args[i + 1]) {
-      language = args[++i];
-    }
+    i = applyArg(args, i, state);
   }
-
-  if (!endpoint) {
+  if (!state.endpoint) {
     throw new Error("Missing --endpoint");
   }
-
-  return { endpoint, projectRoot, historyPath, outPath, projectType, language };
+  return state;
 }
 
-async function loadHistory(historyPath?: string): Promise<ChatMessage[]> {
-  if (!historyPath) return [];
-  const abs = resolve(workspaceRoot, historyPath);
-  const raw = await readFile(abs, "utf8");
-  const parsed = JSON.parse(raw);
-  if (!Array.isArray(parsed)) return [];
-  return parsed
-    .filter((entry) => entry && typeof entry.content === "string")
-    .map((entry) => ({
-      role: entry.role ?? "user",
-      content: entry.content,
-      timestamp: entry.timestamp ?? Date.now(),
-    }));
+function initializeCliState(): CliOptions {
+  const threshold = normalizeThreshold(
+    process.env.CORTEXDX_MEMORY_THRESHOLD_MB,
+    DEFAULT_MEMORY_THRESHOLD_MB,
+  );
+  return {
+    endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT ?? "http://127.0.0.1:5001",
+    projectRoot: "packages/cortexdx",
+    historyPath: process.env.CORTEXDX_HISTORY_PATH,
+    outPath: undefined,
+    projectType: "mcp-client",
+    language: "typescript",
+    requireAcademicInsights: process.env.CORTEXDX_REQUIRE_ACADEMIC === "0" ? false : true,
+    memoryCheckEnabled: process.env.CORTEXDX_DISABLE_MEMORY_CHECK === "1" ? false : true,
+    memoryCheckPath: process.env.CORTEXDX_MEMORY_PATH ?? DEFAULT_MEMORY_PATH,
+    memoryThresholdMb: threshold,
+  };
 }
 
-async function gatherSourceFiles(projectRoot: string): Promise<string[]> {
-  try {
-    const target = `${projectRoot}/src`;
-    const { stdout } = await execFileAsync("git", ["ls-files", "--", target], {
-      cwd: workspaceRoot,
-    });
-    return stdout
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
+function applyArg(args: string[], index: number, state: CliOptions): number {
+  const arg = args[index];
+  switch (arg) {
+    case "--endpoint":
+      return consumeValue(args, index, (value) => {
+        state.endpoint = value;
+      });
+    case "--project":
+      return consumeValue(args, index, (value) => {
+        state.projectRoot = value;
+      });
+    case "--history":
+      return consumeValue(args, index, (value) => {
+        state.historyPath = value;
+      });
+    case "--out":
+      return consumeValue(args, index, (value) => {
+        state.outPath = value;
+      });
+    case "--type":
+      return consumeValue(args, index, (value) => {
+        state.projectType = value as ProjectType;
+      });
+    case "--language":
+      return consumeValue(args, index, (value) => {
+        state.language = value;
+      });
+    case "--require-academic":
+      state.requireAcademicInsights = true;
+      return index;
+    case "--allow-missing-academic":
+      state.requireAcademicInsights = false;
+      return index;
+    case "--disable-memory-check":
+      state.memoryCheckEnabled = false;
+      return index;
+    case "--enable-memory-check":
+      state.memoryCheckEnabled = true;
+      return index;
+    case "--memory-path":
+      return consumeValue(args, index, (value) => {
+        state.memoryCheckPath = value;
+      });
+    case "--memory-threshold":
+      return consumeValue(args, index, (value) => {
+        state.memoryThresholdMb = normalizeThreshold(value, state.memoryThresholdMb);
+      });
+    default:
+      return index;
   }
 }
 
-async function buildProjectContext(options: CliOptions): Promise<ProjectContext> {
-  const absProjectRoot = resolve(workspaceRoot, options.projectRoot);
-  const pkgRaw = await readFile(resolve(absProjectRoot, "package.json"), "utf8");
-  const pkg = JSON.parse(pkgRaw) as { name?: string; dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
-  const deps = {
-    ...(pkg.dependencies ?? {}),
-    ...(pkg.devDependencies ?? {}),
-  };
-  const dependencies = Object.keys(deps).sort();
-  const configCandidates = ["pnpm-lock.yaml", "tsconfig.json", "tsconfig.base.json"];
-  const configFiles = configCandidates.filter((file) => existsSync(resolve(workspaceRoot, file)));
-  const sourceFiles = await gatherSourceFiles(options.projectRoot);
+function consumeValue(
+  args: string[],
+  index: number,
+  updater: (value: string) => void,
+): number {
+  const next = args[index + 1];
+  if (next) {
+    updater(next);
+    return index + 1;
+  }
+  return index;
+}
 
-  return {
-    name: pkg.name ?? options.projectRoot,
-    type: options.projectType,
-    language: options.language,
-    dependencies,
-    configFiles,
-    sourceFiles,
-  };
+function normalizeThreshold(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
 }
 
 function reportFindings(findings: Finding[]): void {
@@ -131,43 +148,44 @@ function reportFindings(findings: Finding[]): void {
   }
 }
 
+function buildRunnerOptions(options: CliOptions): SelfImprovementRunnerOptions {
+  return {
+    endpoint: options.endpoint,
+    projectRoot: options.projectRoot,
+    workspaceRoot,
+    projectType: options.projectType,
+    language: options.language,
+    historyPath: options.historyPath,
+    outPath: options.outPath,
+    requireAcademicInsights: options.requireAcademicInsights,
+    memoryProbe: {
+      enabled: options.memoryCheckEnabled,
+      path: options.memoryCheckPath,
+      thresholdMb: options.memoryThresholdMb,
+    },
+  };
+}
+
 async function main(): Promise<void> {
   const options = parseArgs();
-  const projectContext = await buildProjectContext(options);
-  const history = await loadHistory(options.historyPath);
+  process.env.CORTEXDX_INTERNAL_ENDPOINT = options.endpoint;
+  const result = await runSelfImprovementCli(buildRunnerOptions(options));
+  reportFindings(result.findings);
 
-  const ctx: DevelopmentContext = {
-    endpoint: options.endpoint,
-    logger: (...args) => console.log("[self-improvement]", ...args),
-    request: async (input, init) => {
-      const response = await fetch(input, init);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const text = await response.text();
-      return text.length ? JSON.parse(text) : {};
-    },
-    jsonrpc: async () => ({}) as unknown,
-    sseProbe: async () => ({ ok: true }),
-    evidence: () => undefined,
-    deterministic: true,
-    sessionId: `self-improvement-${Date.now()}`,
-    userExpertiseLevel: "expert",
-    conversationHistory: history,
-    projectContext,
-  };
-
-  const findings = await SelfImprovementPlugin.run(ctx);
-  reportFindings(findings);
-
-  if (options.outPath) {
-    const outputPath = resolve(workspaceRoot, options.outPath);
-    await writeFile(outputPath, JSON.stringify(findings, null, 2), "utf8");
-    console.log(`\nSaved findings to ${outputPath}`);
+  if (result.savedOutputPath) {
+    console.log(`\nSaved findings to ${result.savedOutputPath}`);
   }
 }
 
-main().catch((error) => {
-  console.error("Self-improvement runner failed:", error);
-  process.exitCode = 1;
-});
+if (process.env.VITEST !== "true") {
+  main()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Self-improvement runner failed:", error);
+      process.exit(1);
+    });
+}
+
+export { parseArgs, reportFindings };

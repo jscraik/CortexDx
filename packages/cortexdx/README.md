@@ -11,7 +11,7 @@
 
 CortexDx v1.0.0 is now available with major enhancements:
 
-- 🤖 **Local LLM Integration**: Conversational development with Ollama, MLX, and llama.cpp
+- 🤖 **Local LLM Integration**: Conversational development with Ollama
 - 🎓 **Academic Research Validation**: 7 integrated academic providers with license compliance
 - 💼 **Commercial Licensing**: Three tiers (Community, Professional, Enterprise)
 - 🧠 **Learning System**: Pattern recognition and RAG-based knowledge accumulation
@@ -133,6 +133,7 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 | Command | Description | Example |
 |---------|-------------|---------|
 | `diagnose <endpoint>` | Run diagnostic analysis | `cortexdx diagnose https://api.example.com/mcp` |
+| `orchestrate [endpoint]` | Execute LangGraph or plugin workflows | `cortexdx orchestrate --workflow agent.langgraph.baseline https://mcp.example.com` |
 | `interactive` | Interactive diagnostic mode | `cortexdx interactive` |
 | `debug <problem>` | Debug specific issues | `cortexdx debug "connection timeout"` |
 | `generate` | Code generation assistance | `cortexdx generate` |
@@ -140,6 +141,8 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 | `tutorial <topic>` | Interactive tutorials | `cortexdx tutorial mcp-basics` |
 | `doctor` | Environment diagnostics | `cortexdx doctor` |
 | `compare <old> <new>` | Compare diagnostic results | `cortexdx compare old.json new.json` |
+
+`cortexdx tutorial "<topic>" --exercises` now produces a research-backed outline with DeepContext code references and practice exercises so teams can replay the same guidance every run (pass `--no-research` for an offline-only preview).
 
 ### Diagnose Command Options
 
@@ -169,6 +172,96 @@ cortexdx diagnose <endpoint> [options]
 --budget-time <ms>      # Per-plugin time budget (default: 5000)
 --budget-mem <mb>       # Per-plugin memory limit (default: 96)
 ```
+
+### Orchestrate Command
+
+```bash
+cortexdx orchestrate [endpoint] [options]
+
+# List available workflows (LangGraph + plugin)
+cortexdx orchestrate --list
+
+# Run LangGraph baseline workflow with deterministic checkpoints
+cortexdx orchestrate https://mcp.example.com \
+  --workflow agent.langgraph.baseline \
+  --deterministic \
+  --state-db .cortexdx/workflow-state.db
+```
+
+Key options:
+
+- `--workflow <id>`: Executes LangGraph workflows (prefers `agent.*`, falls back to plugin workflows).
+- `--plugin <id>` / `--parallel <csv>`: Target individual plugins or comma-separated batches.
+- `--state-db <path>`: Stores checkpoints in a deterministic SQLite DB for resume support.
+- `--resume-checkpoint <id>` / `--resume-thread <id>`: Restart from saved runs without repeating earlier stages.
+- `--mode development --expertise <level>`: Switches to a development context with conversational LLM access for self-improvement plugins.
+- `--stream`: Streams workflow node events (useful for CI telemetry).
+- `--research` / `--research-topic <text>` / `--research-providers <csv>` / `--research-limit <n>` / `--research-out <dir>`: Configure the pre-flight academic research probe (Context7, Vibe Check, OpenAlex, Exa, Wikidata, arXiv). The probe runs by default—use `--no-research` only when you intentionally need to skip it.
+- `--report-out <dir>`: Persist a consolidated report (JSON/Markdown/HTML + SQLite index) via the ReportManager.
+- `--auth0-device-code`: Force the Auth0 device code flow when client secrets aren’t available.
+
+### Security Tooling Scripts
+
+Reusable security automation lives under `packages/cortexdx/scripts/security` and is surfaced via pnpm:
+
+```bash
+pnpm security:semgrep      # MCP-focused Semgrep suite
+pnpm security:gitleaks     # gitleaks CLI (auto-detects binary on PATH)
+pnpm security:zap <url>    # OWASP ZAP baseline scan via API
+pnpm sbom --manifest package.json --out reports/sbom   # Generate CycloneDX/SPDX SBOM artifacts
+```
+
+All three commands emit JSON summaries and exit non-zero when high/critical issues are discovered, making them suitable for CI/CD gating. The SBOM run writes artifacts under `reports/sbom/<type>/<timestamp>/` with a `summary.json` reviewers can inspect in PRs, and you can push directly to OWASP Dependency Track using `--dt-url/--dt-api-key` or the `CORTEXDX_DT_*` env vars.
+
+### DeepContext Semantic Search
+
+Wildcard's DeepContext MCP server is bundled as a first-class tool for semantic code intelligence. Supply secrets exclusively through the 1Password-managed `.env` and run commands via `op run`:
+
+```bash
+op run --env-file=.env -- cortexdx deepcontext index packages/cortexdx
+op run --env-file=.env -- cortexdx deepcontext search packages/cortexdx "handshake initialize failures"
+op run --env-file=.env -- cortexdx deepcontext status
+op run --env-file=.env -- cortexdx deepcontext clear packages/cortexdx
+```
+
+- `WILDCARD_API_KEY` (or `DEEPCONTEXT_API_KEY`), `JINA_API_KEY`, and `TURBOPUFFER_API_KEY` are read from `.env`; do **not** duplicate them in GitHub secrets.
+- The self-improvement plugin automatically indexes and queries DeepContext whenever `CORTEXDX_PROJECT_ROOT` (or `projectContext.rootPath`) and the API keys are available, so `cortexdx self-diagnose` and AutoHealer runs inherit semantic evidence automatically.
+- DeepContext stores its semantic index under `${CODEX_CONTEXT_DIR}` (defaults to `<project>/.codex-context`) and mirrors each run into `.cortexdx/deepcontext-status.json`; `cortexdx deepcontext status <codebase>` fetches the live MCP status, while running it without arguments prints the cached status snapshots.
+- To scope DeepContext to another workspace, set `CORTEXDX_PROJECT_ROOT=/abs/path/to/project` before invoking CLI commands or diagnostic suites.
+- CI runs `pnpm deepcontext:status`, so make sure you’ve run `cortexdx deepcontext index <repo>` locally (and committed `.cortexdx/deepcontext-status.json` to your branch) before pushing; otherwise the workflow will fail and upload an empty cache artifact.
+
+Reviewers should follow [`docs/DEEPCONTEXT_ARTIFACT.md`](../../docs/DEEPCONTEXT_ARTIFACT.md) when interpreting the uploaded artifact and include the checklist item in every PR description.
+
+### Academic Research CLI
+
+Run real-time research sweeps against the live providers with the secrets sourced from the 1Password-managed `.env` (no GitHub secrets required):
+
+```bash
+op run --env-file=.env -- cortexdx research "MCP streaming stability" \
+  --question "How do modern inspectors validate SSE reconnects?" \
+  --providers context7,openalex,vibe-check,exa,wikidata \
+  --limit 5 --out reports/research
+```
+
+Environment / header mapping (all loaded automatically when present):
+
+- `SEMANTIC_SCHOLAR_API_KEY` → `x-api-key` header for the preview-only Semantic Scholar provider (excluded from defaults)
+- `OPENALEX_CONTACT_EMAIL` → appended to every OpenAlex request as the required `mailto` parameter
+- `EXA_API_KEY` → `x-exa-api-key` header (required)
+- `CONTEXT7_API_KEY` → `Authorization: Bearer …` header (required)
+- `CONTEXT7_API_BASE_URL`, `CONTEXT7_PROFILE` → forwarded as `context7-base-url` / `x-context7-profile` headers so the provider knows which MCP endpoint/profile to hit
+- `VIBE_CHECK_API_KEY`, `VIBE_CHECK_HTTP_URL`, `VIBE_CHECK_PROFILE`, `VIBE_CHECK_STRICT` → forwarded as `x-vibe-api-key`, `vibe-check-url`, `x-vibe-profile`, `x-vibe-strict`
+
+The `resolveCredentialHeaders` helper also accepts CLI overrides (`--credential context7:token`, `--header context7-base-url:https://…`) so CI can point at staging endpoints without mutating the `.env`. All documentation assumes commands are wrapped with `op run --env-file=.env -- …` to keep credentials in 1Password only.
+
+Supported providers: **Context7**, **Vibe Check**, **OpenAlex**, **Exa**, **Wikidata**, **arXiv**, plus the preview-only **Semantic Scholar** integration. Provider ids are normalized case-insensitively and deduplicated before execution—`--providers context7,Context7,EXA` still runs Context7 + Exa exactly once. Skip the flag altogether to run the production set above, or use the `research:smoke` test (`op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke`) to validate your secret bundle against the live endpoints.
+
+#### Smoke Tests
+
+- Local: set `CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1` (or run `op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke`) to execute `tests/academic-provider-smoke.spec.ts`. The suite skips automatically when the required provider secrets are missing.
+- CI: set the repository/workflow variable `RESEARCH_SMOKE=true` to enable the smoke step (`pnpm research:smoke`) inside the GitHub Actions workflow. This keeps the default fast path off but makes it easy to opt-in for staging runs.
+- Use `CORTEXDX_RESEARCH_SMOKE_PROVIDERS` (comma-delimited) to scope the smoke harness to a subset. Providers missing required secrets are logged and skipped so the rest of the suite can still execute. Context7, Vibe Check, OpenAlex, Exa, and Wikidata mirror the CLI defaults; only Exa mandates an API key, while Vibe Check just needs `VIBE_CHECK_HTTP_URL`.
+- **Semantic Scholar preview:** we’re still finalizing API access, so treat the Semantic Scholar provider as **not production ready**. It’s excluded from the default provider set—only include it with `--providers semantic-scholar` or `CORTEXDX_RESEARCH_SMOKE_PROVIDERS=semantic-scholar,...` when explicitly testing the preview key.
 
 ## 🔍 Diagnostic Suites
 
@@ -200,6 +293,14 @@ CortexDx includes comprehensive diagnostic suites covering all aspects of MCP im
 - **`interactive-debugger`**: Real-time debugging assistance with academic research backing
 - **`code-generation`**: Research-validated code generation with quality scoring
 - **`performance-analysis`**: Academic research-backed performance optimization
+
+## 🧠 Local LLM Backend (Ollama)
+
+CortexDx relies on a single local adapter managed by `src/ml/router.ts`:
+
+- **Ollama** (default): requires the Ollama daemon on `http://localhost:11434`. Set `CORTEXDX_LLM_PRIORITY=ollama` to explicitly pin the backend.
+
+Deterministic runs (`--deterministic`) seed the adapter, ensuring LangGraph orchestrations and self-improvement plugins can replay identical conversations.
 
 ### Narrative Stories (Preview)
 
@@ -270,6 +371,12 @@ Test-driven implementation plan with prioritized remediation steps:
 3. Add keepalive: Send periodic heartbeat messages
 ```
 
+### SSE Troubleshooting Shortcuts
+
+- `--disable-sse` flag or `CORTEXDX_DISABLE_SSE=1` will skip the streaming probe for workflows where the inspector tunnel can’t stream yet. The plugin emits an info-level finding instead of blocking the run.
+- `--sse-endpoint http://127.0.0.1:5001/events` (or `CORTEXDX_SSE_ENDPOINT`) points the probe at a dedicated heartbeat endpoint so long-running `/events` shells don’t stall orchestrate. Ideal when a Cloudflared tunnel fronts the inspector.
+- Both toggles are scoped per `cortexdx orchestrate` invocation; the CLI resets your previous env values when it exits so global automation remains deterministic.
+
 ### 4. File Plan (`cortexdx-fileplan.patch`)
 
 Unified diff patches for direct code remediation:
@@ -303,7 +410,33 @@ pnpm doctor              # Environment diagnostics
 # Advanced testing
 pnpm test --coverage     # Test with coverage report
 pnpm test --watch        # Watch mode for development
+pnpm test:integration    # Run long-running integration suites (LLM, self-healing, performance)
 ```
+
+`pnpm test:integration` sets `CORTEXDX_RUN_INTEGRATION=1`, enabling the longer suites only when explicitly requested.
+
+#### Doctor Command
+
+Run environment checks, provider readiness, and (by default) an academic research probe in one shot:
+
+```bash
+cortexdx doctor --providers context7,exa --research-topic "SSE hardening"
+```
+
+- `--providers <csv>` limits the readiness scan. Use `--skip-providers` if you only want the runtime diagnostics.
+- `--research`, `--research-topic`, `--research-providers`, `--research-limit`, and `--research-out` tune the pre-flight research probe (Context7, Vibe Check, OpenAlex, Exa, Wikidata, arXiv). Use `--no-research` to disable it when you truly need an offline run.
+- `--json` emits a structured report for CI logs.
+
+#### Monitoring CLI
+
+Continuous monitoring now persists its state so you can restart schedulers without losing job metadata:
+
+```bash
+cortexdx monitor --start --config monitor-config.json --state-file .cortexdx/monitoring-status.json
+```
+
+- `--state-file <path>` (defaults to `.cortexdx/monitoring-status.json`) stores scheduler status, next-run timestamps, and configured jobs.
+- `--status` reads from the persisted file when the scheduler isn’t running, making audits possible in CI or local verification.
 
 ### Plugin Development
 
@@ -334,6 +467,23 @@ CORTEXDX_BUDGET_MEM=128       # 128MB memory limit
 
 # Debug logging
 DEBUG=cortexdx:*            # Enable debug logging
+
+# Monitoring state file (optional override for --state-file)
+CORTEXDX_MONITOR_STATE=.cortexdx/monitoring-status.json
+
+# Enforce security control coverage (ASVS/MITRE)
+CORTEXDX_ENFORCE_SECURITY=1
+
+# Force Auth0 device code flow
+CORTEXDX_AUTH0_DEVICE_CODE=1
+# Override Auth0 device authorization endpoint
+CORTEXDX_AUTH0_DEVICE_CODE_ENDPOINT=https://tenant.auth0.com/oauth/device/code
+
+# Dependency Track integration
+CORTEXDX_DT_API_URL=https://dt.example.com
+CORTEXDX_DT_API_KEY=dt-api-key
+CORTEXDX_DT_PROJECT=cortexdx
+CORTEXDX_DT_PROJECT_VERSION=1.0.0
 ```
 
 ### CI/CD Integration
@@ -466,6 +616,8 @@ DEBUG=cortexdx:adapter:* cortexdx diagnose <endpoint>
 - **[Plugin Development](docs/PLUGIN_DEVELOPMENT.md)**: Creating custom diagnostic plugins
 - **[IDE Integration](docs/IDE_INTEGRATION.md)**: Editor setup and extensions
 - **[Contributing](docs/CONTRIBUTING.md)**: Development and contribution guide
+- **[Phase 5 Roadmap](../../docs/PHASE5_ROADMAP.md)**: Upcoming OWASP/Auth0/SBOM/tutorial milestones
+- **[Report Manager](../../docs/REPORT_MANAGER.md)**: How consolidated reports (`--report-out`) are stored and reviewed
 
 ### Operations
 

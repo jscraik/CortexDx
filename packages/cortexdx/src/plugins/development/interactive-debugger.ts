@@ -9,9 +9,9 @@
 
 import type {
   ChatMessage,
-  ConversationalPlugin,
   ConversationResponse,
   ConversationSession,
+  ConversationalPlugin,
   DevelopmentContext,
   Finding,
   MultipleInputs,
@@ -183,7 +183,9 @@ export const InteractiveDebuggerPlugin: ConversationalPlugin = {
     const problem = extractProblemFromContext(ctx, intent);
 
     // Perform academic research-based contextual analysis
-    const academicContext = problem ? await performContextualAnalysis(ctx, problem) : undefined;
+    const academicContext = problem
+      ? await performContextualAnalysis(ctx, problem)
+      : undefined;
 
     const state: DebuggingState = {
       problem,
@@ -193,7 +195,7 @@ export const InteractiveDebuggerPlugin: ConversationalPlugin = {
       academicContext,
       evidenceTrail: [],
       researchValidatedSolutions: [],
-      contextualMemory: []
+      contextualMemory: [],
     };
 
     // Add initial evidence from academic analysis
@@ -201,7 +203,7 @@ export const InteractiveDebuggerPlugin: ConversationalPlugin = {
       state.evidenceTrail.push(
         `Academic analysis: Relevance score ${academicContext.contextualAnalysis?.relevanceScore.toFixed(2)}`,
         `Quality metrics: Methodology ${academicContext.qualityMetrics?.methodologyScore}/100`,
-        `Research evidence: ${academicContext.researchEvidence.length} sources`
+        `Research evidence: ${academicContext.researchEvidence.length} sources`,
       );
     }
 
@@ -296,44 +298,48 @@ function detectErrorPatterns(ctx: DevelopmentContext): string[] {
     {
       pattern: "timeout",
       keywords: ["timeout", "timed out", "connection timeout"],
-      researchBasis: "Network timeout patterns in distributed systems (IEEE 2023)",
-      severity: "high"
+      researchBasis:
+        "Network timeout patterns in distributed systems (IEEE 2023)",
+      severity: "high",
     },
     {
       pattern: "connection-failure",
       keywords: ["connection", "refused", "failed", "unreachable"],
       researchBasis: "Connection failure analysis in microservices (ACM 2023)",
-      severity: "high"
+      severity: "high",
     },
     {
       pattern: "json-parse-error",
       keywords: ["json", "parse", "invalid", "malformed"],
-      researchBasis: "JSON parsing error patterns in API communication (Springer 2023)",
-      severity: "medium"
+      researchBasis:
+        "JSON parsing error patterns in API communication (Springer 2023)",
+      severity: "medium",
     },
     {
       pattern: "authentication",
       keywords: ["auth", "unauthorized", "403", "401", "forbidden"],
-      researchBasis: "Authentication failure patterns in web services (Nature 2023)",
-      severity: "high"
+      researchBasis:
+        "Authentication failure patterns in web services (Nature 2023)",
+      severity: "high",
     },
     {
       pattern: "protocol-compliance",
       keywords: ["protocol", "json-rpc", "specification", "compliance"],
       researchBasis: "Protocol compliance issues in RPC systems (Science 2023)",
-      severity: "medium"
+      severity: "medium",
     },
     {
       pattern: "cors",
       keywords: ["cors", "cross-origin", "preflight", "origin"],
-      researchBasis: "CORS configuration patterns and security (Security Journal 2023)",
-      severity: "low"
-    }
+      researchBasis:
+        "CORS configuration patterns and security (Security Journal 2023)",
+      severity: "low",
+    },
   ];
 
   for (const researchPattern of researchPatterns) {
-    const hasPattern = researchPattern.keywords.some(keyword =>
-      conversation.includes(keyword)
+    const hasPattern = researchPattern.keywords.some((keyword) =>
+      conversation.includes(keyword),
     );
     if (hasPattern) {
       patterns.push(researchPattern.pattern);
@@ -348,11 +354,9 @@ function detectErrorPatterns(ctx: DevelopmentContext): string[] {
  */
 async function performContextualAnalysis(
   ctx: DevelopmentContext,
-  problem: Problem
+  problem: Problem,
 ): Promise<AcademicDebuggingContext> {
-  const conversation = ctx.conversationHistory
-    .map((m) => m.content)
-    .join(" ");
+  const conversation = ctx.conversationHistory.map((m) => m.content).join(" ");
 
   // Simulate Context7 contextual analysis
   const thematicPatterns = extractThematicPatterns(conversation);
@@ -366,14 +370,14 @@ async function performContextualAnalysis(
     contextualAnalysis: {
       relevanceScore,
       crossReferences,
-      thematicPatterns
+      thematicPatterns,
     },
     qualityMetrics,
     researchEvidence: [
       "Context7: Contextual analysis methodology (2023)",
       "Vibe Check: Quality assessment framework (2023)",
-      "Interactive debugging patterns in software engineering (IEEE 2023)"
-    ]
+      "Interactive debugging patterns in software engineering (IEEE 2023)",
+    ],
   };
 }
 
@@ -383,16 +387,36 @@ function extractThematicPatterns(text: string): string[] {
 
   // Research-based thematic pattern extraction
   const themePatterns = [
-    { theme: "network_connectivity", keywords: ["network", "connection", "timeout", "unreachable"] },
-    { theme: "data_serialization", keywords: ["json", "parse", "serialize", "format"] },
-    { theme: "authentication_authorization", keywords: ["auth", "token", "permission", "access"] },
-    { theme: "protocol_compliance", keywords: ["protocol", "specification", "standard", "rfc"] },
-    { theme: "configuration_management", keywords: ["config", "setting", "parameter", "option"] },
-    { theme: "error_handling", keywords: ["error", "exception", "failure", "crash"] }
+    {
+      theme: "network_connectivity",
+      keywords: ["network", "connection", "timeout", "unreachable"],
+    },
+    {
+      theme: "data_serialization",
+      keywords: ["json", "parse", "serialize", "format"],
+    },
+    {
+      theme: "authentication_authorization",
+      keywords: ["auth", "token", "permission", "access"],
+    },
+    {
+      theme: "protocol_compliance",
+      keywords: ["protocol", "specification", "standard", "rfc"],
+    },
+    {
+      theme: "configuration_management",
+      keywords: ["config", "setting", "parameter", "option"],
+    },
+    {
+      theme: "error_handling",
+      keywords: ["error", "exception", "failure", "crash"],
+    },
   ];
 
   for (const themePattern of themePatterns) {
-    const hasTheme = themePattern.keywords.some(keyword => lowerText.includes(keyword));
+    const hasTheme = themePattern.keywords.some((keyword) =>
+      lowerText.includes(keyword),
+    );
     if (hasTheme) {
       patterns.push(themePattern.theme);
     }
@@ -401,24 +425,30 @@ function extractThematicPatterns(text: string): string[] {
   return patterns;
 }
 
-function findCrossReferences(problem: Problem, ctx: DevelopmentContext): string[] {
+function findCrossReferences(
+  problem: Problem,
+  ctx: DevelopmentContext,
+): string[] {
   const references: string[] = [];
 
   // Find similar problems in conversation history
   const similarProblems = ctx.conversationHistory
-    .filter(msg =>
-      msg.content.toLowerCase().includes("similar") ||
-      msg.content.toLowerCase().includes("same") ||
-      msg.content.toLowerCase().includes("before")
+    .filter(
+      (msg) =>
+        msg.content.toLowerCase().includes("similar") ||
+        msg.content.toLowerCase().includes("same") ||
+        msg.content.toLowerCase().includes("before"),
     )
-    .map(msg => msg.content.substring(0, 100));
+    .map((msg) => msg.content.substring(0, 100));
 
   references.push(...similarProblems);
 
   // Add research-based cross-references
   if (problem.type === "development") {
     references.push("MCP Protocol Debugging Patterns (brAInwav Research 2023)");
-    references.push("Interactive Debugging Methodologies (Academic Survey 2023)");
+    references.push(
+      "Interactive Debugging Methodologies (Academic Survey 2023)",
+    );
   }
 
   return references;
@@ -433,7 +463,6 @@ function calculateRelevanceScore(problem: Problem, patterns: string[]): number {
 
   // Adjust based on problem severity
   switch (problem.severity) {
-    case "critical":
     case "blocker":
       score += 0.3;
       break;
@@ -443,13 +472,19 @@ function calculateRelevanceScore(problem: Problem, patterns: string[]): number {
     case "minor":
       score += 0.1;
       break;
+    case "info":
+      // No additional score for info severity
+      break;
   }
 
   // Ensure score is between 0 and 1
   return Math.min(1.0, Math.max(0.0, score));
 }
 
-function assessDebuggingQuality(problem: Problem, ctx: DevelopmentContext): AcademicDebuggingContext["qualityMetrics"] {
+function assessDebuggingQuality(
+  problem: Problem,
+  ctx: DevelopmentContext,
+): AcademicDebuggingContext["qualityMetrics"] {
   // Vibe Check-inspired quality assessment
   let methodologyScore = 70; // Base methodology score
   let reproducibilityScore = 60; // Base reproducibility score
@@ -466,19 +501,22 @@ function assessDebuggingQuality(problem: Problem, ctx: DevelopmentContext): Acad
   }
 
   // Assess reproducibility based on available context
-  if (problem.context.configuration && Object.keys(problem.context.configuration).length > 0) {
+  if (
+    problem.context.configuration &&
+    Object.keys(problem.context.configuration).length > 0
+  ) {
     reproducibilityScore += 20;
   }
   if (ctx.projectContext) {
     reproducibilityScore += 15;
   }
 
-  const overallScore = (methodologyScore * 0.6 + reproducibilityScore * 0.4);
+  const overallScore = methodologyScore * 0.6 + reproducibilityScore * 0.4;
 
   return {
     methodologyScore,
     reproducibilityScore,
-    overallScore
+    overallScore,
   };
 }
 
@@ -608,7 +646,8 @@ function buildDebuggingSystemPrompt(
   const { userExpertiseLevel } = session.context;
   const { currentPhase, problem, academicContext, evidenceTrail } = state;
 
-  let prompt = "You are an expert MCP debugging assistant enhanced with academic research capabilities. ";
+  let prompt =
+    "You are an expert MCP debugging assistant enhanced with academic research capabilities. ";
 
   // Add academic research context
   if (academicContext) {
@@ -697,56 +736,73 @@ function updateDebuggingState(
   // Track attempted solutions with academic validation
   if (lowerInput.includes("tried") || lowerInput.includes("attempted")) {
     state.attemptedSolutions.push(userInput);
-    state.evidenceTrail.push(`Attempted solution: ${userInput.substring(0, 100)}`);
+    state.evidenceTrail.push(
+      `Attempted solution: ${userInput.substring(0, 100)}`,
+    );
   }
 
   // Track research-validated solutions mentioned in response
-  if (lowerResponse.includes("research") || lowerResponse.includes("study") || lowerResponse.includes("academic")) {
+  if (
+    lowerResponse.includes("research") ||
+    lowerResponse.includes("study") ||
+    lowerResponse.includes("academic")
+  ) {
     const researchSolution: ResearchValidatedSolution = {
       solution: response.substring(0, 200),
       researchBasis: extractResearchReferences(response),
       confidenceScore: calculateConfidenceFromResponse(response),
       academicEvidence: extractAcademicEvidence(response),
-      successProbability: estimateSuccessProbability(response, state)
+      successProbability: estimateSuccessProbability(response, state),
     };
     state.researchValidatedSolutions.push(researchSolution);
   }
 
   // Update evidence trail with contextual information
-  state.evidenceTrail.push(`Phase: ${state.currentPhase}, Input: ${userInput.substring(0, 50)}`);
+  state.evidenceTrail.push(
+    `Phase: ${state.currentPhase}, Input: ${userInput.substring(0, 50)}`,
+  );
 
   // Progress phase based on conversation with academic validation
   if (state.currentPhase === "analysis") {
     // Move to diagnosis if we have enough information (academic threshold)
-    const hasEnoughEvidence = state.multipleInputs ||
+    const hasEnoughEvidence =
+      state.multipleInputs ||
       (state.problem && state.problem.context.errorLogs.length > 0) ||
       state.evidenceTrail.length >= 3;
 
     if (hasEnoughEvidence) {
       state.currentPhase = "diagnosis";
-      state.evidenceTrail.push("Phase transition: analysis → diagnosis (sufficient evidence)");
+      state.evidenceTrail.push(
+        "Phase transition: analysis → diagnosis (sufficient evidence)",
+      );
     }
   } else if (state.currentPhase === "diagnosis") {
     // Move to solution if hypotheses are generated with academic backing
-    const hasHypotheses = lowerResponse.includes("likely") ||
+    const hasHypotheses =
+      lowerResponse.includes("likely") ||
       lowerResponse.includes("probably") ||
       lowerResponse.includes("cause") ||
       lowerResponse.includes("hypothesis");
 
     if (hasHypotheses) {
       state.currentPhase = "solution";
-      state.evidenceTrail.push("Phase transition: diagnosis → solution (hypotheses generated)");
+      state.evidenceTrail.push(
+        "Phase transition: diagnosis → solution (hypotheses generated)",
+      );
     }
   } else if (state.currentPhase === "solution") {
     // Move to validation if solution is provided with research backing
-    const hasSolution = lowerResponse.includes("try") ||
+    const hasSolution =
+      lowerResponse.includes("try") ||
       lowerResponse.includes("fix") ||
       lowerResponse.includes("solution") ||
       lowerResponse.includes("implement");
 
     if (hasSolution) {
       state.currentPhase = "validation";
-      state.evidenceTrail.push("Phase transition: solution → validation (solution provided)");
+      state.evidenceTrail.push(
+        "Phase transition: solution → validation (solution provided)",
+      );
     }
   }
 
@@ -757,7 +813,7 @@ function updateDebuggingState(
       context: `${state.problem?.type || "unknown"}: ${userInput.substring(0, 100)}`,
       solution: response.substring(0, 200),
       outcome: "partial", // Will be updated when validation completes
-      researchReferences: extractResearchReferences(response)
+      researchReferences: extractResearchReferences(response),
     };
     state.contextualMemory.push(memoryEntry);
   }
@@ -770,7 +826,7 @@ function extractResearchReferences(text: string): string[] {
   const patterns = [
     /\b(IEEE|ACM|Springer|Nature|Science)\s+\d{4}\b/g,
     /\b(research|study|paper|methodology)\b.*?\b(shows|demonstrates|indicates)\b/gi,
-    /\b(according to|based on|research by)\b.*?\b(university|institute|lab)\b/gi
+    /\b(according to|based on|research by)\b.*?\b(university|institute|lab)\b/gi,
   ];
 
   for (const pattern of patterns) {
@@ -828,12 +884,16 @@ function extractAcademicEvidence(text: string): string[] {
   return evidence;
 }
 
-function estimateSuccessProbability(response: string, state: DebuggingState): number {
+function estimateSuccessProbability(
+  response: string,
+  state: DebuggingState,
+): number {
   let probability = 0.6; // Base probability
 
   // Increase based on academic backing
   if (state.academicContext?.qualityMetrics?.overallScore) {
-    probability += (state.academicContext.qualityMetrics.overallScore / 100) * 0.2;
+    probability +=
+      (state.academicContext.qualityMetrics.overallScore / 100) * 0.2;
   }
 
   // Increase based on evidence quality
@@ -899,7 +959,6 @@ function generateDebuggingActions(
   return actions;
 }
 
-
 /**
  * ENHANCEMENT: Session Persistence (Req 24.3, 24.8)
  */
@@ -914,12 +973,15 @@ class SessionPersistenceManager {
       conversationHistory: session.context.conversationHistory,
       startTime: session.startTime,
       lastActivity: session.lastActivity,
-      savedAt: Date.now()
+      savedAt: Date.now(),
     };
     this.storage.set(session.id, serialized);
   }
 
-  async loadSession(sessionId: string, ctx: DevelopmentContext): Promise<ConversationSession | undefined> {
+  async loadSession(
+    sessionId: string,
+    ctx: DevelopmentContext,
+  ): Promise<ConversationSession | undefined> {
     const serialized = this.storage.get(sessionId);
     if (!serialized) return undefined;
 
@@ -929,13 +991,14 @@ class SessionPersistenceManager {
       context: { ...ctx, conversationHistory: serialized.conversationHistory },
       state: serialized.state,
       startTime: serialized.startTime,
-      lastActivity: serialized.lastActivity
+      lastActivity: serialized.lastActivity,
     };
   }
 
   async listSessions(): Promise<SerializedSession[]> {
-    return Array.from(this.storage.values())
-      .sort((a, b) => b.lastActivity - a.lastActivity);
+    return Array.from(this.storage.values()).sort(
+      (a, b) => b.lastActivity - a.lastActivity,
+    );
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
@@ -956,36 +1019,41 @@ interface SerializedSession {
 /**
  * ENHANCEMENT: Adaptive Questioning (Req 24.3)
  */
-function generateAdaptiveQuestion(state: DebuggingState, ctx: DevelopmentContext): string {
+function generateAdaptiveQuestion(
+  state: DebuggingState,
+  ctx: DevelopmentContext,
+): string {
   const { currentPhase, hypotheses, evidenceTrail, academicContext } = state;
   const userLevel = ctx.userExpertiseLevel;
 
   // Adapt questions based on phase and user expertise
-  if (currentPhase === 'analysis') {
-    if (userLevel === 'beginner') {
+  if (currentPhase === "analysis") {
+    if (userLevel === "beginner") {
       return "Can you describe what you expected to happen versus what actually happened?";
     }
-    if (userLevel === 'intermediate') {
+    if (userLevel === "intermediate") {
       return "What error message or unexpected behavior are you seeing? Please include any relevant logs.";
     }
     return "What's the failure mode? Include stack traces, error codes, and reproduction steps.";
   }
 
-  if (currentPhase === 'diagnosis' && hypotheses.length > 0) {
+  if (currentPhase === "diagnosis" && hypotheses.length > 0) {
     const topHypothesis = hypotheses[0];
-    if (userLevel === 'beginner') {
-      return `I think the issue might be: ${topHypothesis.description}. Have you checked ${topHypothesis.nextSteps[0]}?`;
+    if (topHypothesis?.description && topHypothesis?.nextSteps) {
+      if (userLevel === "beginner") {
+        return `I think the issue might be: ${topHypothesis.description}. Have you checked ${topHypothesis.nextSteps[0] || "the next step"}?`;
+      }
+      return `Based on the evidence, the most likely cause is ${topHypothesis.description} (${(topHypothesis.probability * 100).toFixed(0)}% confidence). Can you verify: ${topHypothesis.nextSteps.join(", ")}?`;
     }
-    return `Based on the evidence, the most likely cause is ${topHypothesis.description} (${(topHypothesis.probability * 100).toFixed(0)}% confidence). Can you verify: ${topHypothesis.nextSteps.join(', ')}?`;
   }
 
   // Use academic context for more targeted questions
   if (academicContext?.contextualAnalysis) {
     const patterns = academicContext.contextualAnalysis.thematicPatterns;
-    if (patterns.includes('network_connectivity')) {
+    if (patterns.includes("network_connectivity")) {
       return "Can you check your network configuration and firewall settings?";
     }
-    if (patterns.includes('authentication_authorization')) {
+    if (patterns.includes("authentication_authorization")) {
       return "Have you verified your authentication credentials and permissions?";
     }
   }
@@ -997,42 +1065,43 @@ function generateAdaptiveQuestion(state: DebuggingState, ctx: DevelopmentContext
  * ENHANCEMENT: Targeted Scans (Req 24.3)
  */
 async function runTargetedScan(
-  scanType: 'performance' | 'security' | 'protocol',
-  context: DevelopmentContext
+  scanType: "performance" | "security" | "protocol",
+  context: DevelopmentContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   switch (scanType) {
-    case 'performance':
+    case "performance":
       findings.push({
-        id: 'debug.scan.performance',
-        area: 'performance',
-        severity: 'info',
-        title: 'Performance scan initiated',
-        description: 'Analyzing response times, memory usage, and bottlenecks',
-        evidence: [{ type: 'log', ref: 'performance-scan' }]
+        id: "debug.scan.performance",
+        area: "performance",
+        severity: "info",
+        title: "Performance scan initiated",
+        description: "Analyzing response times, memory usage, and bottlenecks",
+        evidence: [{ type: "log", ref: "performance-scan" }],
       });
       break;
 
-    case 'security':
+    case "security":
       findings.push({
-        id: 'debug.scan.security',
-        area: 'security',
-        severity: 'info',
-        title: 'Security scan initiated',
-        description: 'Checking for vulnerabilities, exposed secrets, and security misconfigurations',
-        evidence: [{ type: 'log', ref: 'security-scan' }]
+        id: "debug.scan.security",
+        area: "security",
+        severity: "info",
+        title: "Security scan initiated",
+        description:
+          "Checking for vulnerabilities, exposed secrets, and security misconfigurations",
+        evidence: [{ type: "log", ref: "security-scan" }],
       });
       break;
 
-    case 'protocol':
+    case "protocol":
       findings.push({
-        id: 'debug.scan.protocol',
-        area: 'protocol-compliance',
-        severity: 'info',
-        title: 'Protocol compliance scan initiated',
-        description: 'Validating MCP protocol adherence and message formats',
-        evidence: [{ type: 'log', ref: 'protocol-scan' }]
+        id: "debug.scan.protocol",
+        area: "protocol-compliance",
+        severity: "info",
+        title: "Protocol compliance scan initiated",
+        description: "Validating MCP protocol adherence and message formats",
+        evidence: [{ type: "log", ref: "protocol-scan" }],
       });
       break;
   }
@@ -1054,7 +1123,7 @@ interface CollaborationSession {
 interface Participant {
   id: string;
   name: string;
-  role: 'driver' | 'navigator' | 'observer';
+  role: "driver" | "navigator" | "observer";
   joinedAt: number;
 }
 
@@ -1062,40 +1131,51 @@ interface CollaborationMessage {
   from: string;
   message: string;
   timestamp: number;
-  type: 'chat' | 'state-update' | 'hypothesis' | 'solution';
+  type: "chat" | "state-update" | "hypothesis" | "solution";
 }
 
 class CollaborationManager {
   private sessions: Map<string, CollaborationSession> = new Map();
 
-  async createCollaborationSession(debugSessionId: string, creator: Participant): Promise<string> {
+  async createCollaborationSession(
+    debugSessionId: string,
+    creator: Participant,
+  ): Promise<string> {
     const collabId = `collab-${Date.now()}`;
     const session: CollaborationSession = {
       sessionId: collabId,
       participants: [creator],
       sharedState: {} as DebuggingState,
       chatHistory: [],
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
     this.sessions.set(collabId, session);
     return collabId;
   }
 
-  async joinSession(collabId: string, participant: Participant): Promise<boolean> {
+  async joinSession(
+    collabId: string,
+    participant: Participant,
+  ): Promise<boolean> {
     const session = this.sessions.get(collabId);
     if (!session) return false;
 
     session.participants.push(participant);
     session.chatHistory.push({
-      from: 'system',
+      from: "system",
       message: `${participant.name} joined as ${participant.role}`,
       timestamp: Date.now(),
-      type: 'chat'
+      type: "chat",
     });
     return true;
   }
 
-  async sendMessage(collabId: string, from: string, message: string, type: CollaborationMessage['type']): Promise<void> {
+  async sendMessage(
+    collabId: string,
+    from: string,
+    message: string,
+    type: CollaborationMessage["type"],
+  ): Promise<void> {
     const session = this.sessions.get(collabId);
     if (!session) return;
 
@@ -1103,11 +1183,14 @@ class CollaborationManager {
       from,
       message,
       timestamp: Date.now(),
-      type
+      type,
     });
   }
 
-  async updateSharedState(collabId: string, state: Partial<DebuggingState>): Promise<void> {
+  async updateSharedState(
+    collabId: string,
+    state: Partial<DebuggingState>,
+  ): Promise<void> {
     const session = this.sessions.get(collabId);
     if (!session) return;
 

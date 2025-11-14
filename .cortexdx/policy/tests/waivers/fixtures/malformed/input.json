@@ -1,0 +1,28 @@
+{
+  "waivers": [
+    {
+      "waiver_id": "no-approver-waiver",
+      "created_at": "2025-01-10T00:00:00Z",
+      "expires": "2025-01-20T00:00:00Z"
+    },
+    {
+      "waiver_id": "wrong-role-waiver",
+      "created_at": "2025-01-10T00:00:00Z",
+      "expires": "2025-01-20T00:00:00Z",
+      "approved_by": [
+        { "name": "Casey Reviewer", "role": "Reviewer" }
+      ]
+    },
+    {
+      "waiver_id": "missing-expiry-waiver",
+      "created_at": "2025-01-10T00:00:00Z",
+      "approved_by": "Maintainer"
+    },
+    {
+      "waiver_id": "invalid-expiry-format",
+      "created_at": "2025-01-10T00:00:00Z",
+      "expires": "2025/01/20",
+      "approved_by": "Maintainer"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+rules:
+  - id: cortexdx.insecure-http
+    message: Insecure HTTP transport detected. Use HTTPS endpoints.
+    severity: ERROR
+    languages: [typescript, javascript, python]
+    pattern-regex: "http://"
+  - id: cortexdx.hardcoded-token
+    message: Hardcoded authorization token detected.
+    severity: ERROR
+    languages: [typescript, javascript, python]
+    pattern-regex: "(Authorization\\s*:\\s*['\"]?Bearer\\s+[A-Za-z0-9._-]{10,})"
+  - id: cortexdx.prompt-injection
+    message: Potential prompt injection surface without sanitization.
+    severity: WARNING
+    languages: [typescript, javascript]
+    pattern-regex: "(llm\\.(complete|generate)\\s*\\()"

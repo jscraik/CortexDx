@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-12T12:10:50.000Z",
+  "entries": [
+    {
+      "id": "memory-layer-promotion-regression-semantic-promotion-regression-test",
+      "taskId": "memory-layer-promotion-regression",
+      "gateId": "G2",
+      "taskPhase": "implementation",
+      "evidenceId": "semantic-promotion-regression-test",
+      "evidenceType": "test-result",
+      "artifactPath": "packages/memory-core/__tests__/layers/short-term.store.test.ts",
+      "timestamp": "2025-10-12T12:10:45.000Z",
+      "branding": "brAInwav"
+    },
+    {
+      "id": "memory-layer-promotion-regression-promotion-tuning-guide",
+      "taskId": "memory-layer-promotion-regression",
+      "taskPhase": "runbook",
+      "evidenceId": "promotion-tuning-guide",
+      "evidenceType": "analysis",
+      "artifactPath": "packages/memory-core/README.md#promotion-tuning-playbook",
+      "timestamp": "2025-10-12T12:10:50.000Z",
+      "branding": "brAInwav"
+    },
+    {
+      "id": "governance-tdd-plan-reuse-ledger",
+      "taskId": "governance-pack",
+      "gateId": "G5",
+      "taskPhase": "verification",
+      "evidenceId": "tdd-plan-reuse-ledger",
+      "evidenceType": "governance-hook",
+      "artifactPath": ".cortexdx/rules/agentic-coding-workflow.md#tdd-plan-reuse-ledger",
+      "timestamp": "2025-10-22T00:00:00.000Z",
+      "branding": "brAInwav"
+    }
+  ]
+}

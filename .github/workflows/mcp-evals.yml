@@ -1,0 +1,122 @@
+name: MCP Evals
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * *"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cortexdx-local
+            eval_file: tests/mcp-evals/cortexdx-basic.evals.mjs
+            server_path: scripts/mcp-evals/stdio-auth-wrapper.ts
+            endpoint_var: CORTEXDX_EVAL_ENDPOINT
+            endpoint_value: http://127.0.0.1:5001/mcp
+            needs_server: true
+            auth_header_secret: ""
+            auth0_domain_secret: ""
+            auth0_client_id_secret: ""
+            auth0_client_secret_secret: ""
+            auth0_audience_secret: ""
+          - name: client-staging
+            eval_file: tests/mcp-evals/client-routing.evals.mjs
+            server_path: scripts/mcp-evals/stdio-auth-wrapper.ts
+            endpoint_var: CLIENT_EVAL_ENDPOINT
+            endpoint_secret: CLIENT_MCP_URL
+            needs_server: false
+            auth_header_secret: CLIENT_MCP_AUTH_HEADER
+            auth0_domain_secret: CLIENT_AUTH0_DOMAIN
+            auth0_client_id_secret: CLIENT_AUTH0_CLIENT_ID
+            auth0_client_secret_secret: CLIENT_AUTH0_CLIENT_SECRET
+            auth0_audience_secret: CLIENT_AUTH0_AUDIENCE
+    env:
+      NODE_ENV: test
+      CORTEXDX_EVAL_MODEL: qwen2.5
+      CLIENT_EVAL_MODEL: qwen2.5
+      OPENAI_API_BASE: https://api.ollama.ai/v1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9.12.2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CortexDx
+        run: pnpm build
+
+      - name: Configure endpoint
+        run: |
+          if [ -n "${{ matrix.endpoint_value || '' }}" ]; then
+            echo "${{ matrix.endpoint_var }}=${{ matrix.endpoint_value }}" >> "$GITHUB_ENV"
+            echo "MCP_EVAL_ENDPOINT=${{ matrix.endpoint_value }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ matrix.endpoint_secret || '' }}" ]; then
+            echo "${{ matrix.endpoint_var }}=${{ secrets[matrix.endpoint_secret] }}" >> "$GITHUB_ENV"
+            echo "MCP_EVAL_ENDPOINT=${{ secrets[matrix.endpoint_secret] }}" >> "$GITHUB_ENV"
+          fi
+          echo "CORTEXDX_EVAL_STDIO=${{ matrix.server_path }}" >> "$GITHUB_ENV"
+          echo "CLIENT_EVAL_STDIO=${{ matrix.server_path }}" >> "$GITHUB_ENV"
+
+      - name: Configure static auth header
+        if: ${{ matrix.auth_header_secret != '' }}
+        run: |
+          echo "CLIENT_EVAL_AUTH_HEADER=${{ secrets[matrix.auth_header_secret] }}" >> "$GITHUB_ENV"
+          echo "MCP_EVAL_AUTH_HEADER=${{ secrets[matrix.auth_header_secret] }}" >> "$GITHUB_ENV"
+
+      - name: Configure Auth0 domain
+        if: ${{ matrix.auth0_domain_secret != '' }}
+        run: echo "MCP_EVAL_AUTH0_DOMAIN=${{ secrets[matrix.auth0_domain_secret] }}" >> "$GITHUB_ENV"
+
+      - name: Configure Auth0 client id
+        if: ${{ matrix.auth0_client_id_secret != '' }}
+        run: echo "MCP_EVAL_AUTH0_CLIENT_ID=${{ secrets[matrix.auth0_client_id_secret] }}" >> "$GITHUB_ENV"
+
+      - name: Configure Auth0 client secret
+        if: ${{ matrix.auth0_client_secret_secret != '' }}
+        run: echo "MCP_EVAL_AUTH0_CLIENT_SECRET=${{ secrets[matrix.auth0_client_secret_secret] }}" >> "$GITHUB_ENV"
+
+      - name: Configure Auth0 audience
+        if: ${{ matrix.auth0_audience_secret != '' }}
+        run: echo "MCP_EVAL_AUTH0_AUDIENCE=${{ secrets[matrix.auth0_audience_secret] }}" >> "$GITHUB_ENV"
+
+      - name: Launch CortexDx server
+        if: matrix.needs_server
+        run: |
+          pnpm --filter @brainwav/cortexdx run server >/tmp/cortexdx.log 2>&1 &
+          echo $! > server.pid
+          npx --yes wait-on http://127.0.0.1:5001/health
+
+      - name: Run MCP evals (${{ matrix.name }})
+        env:
+          OPENAI_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+        run: |
+          mkdir -p reports/mcp-evals/${{ matrix.name }}
+          pnpm dlx mcp-eval "${{ matrix.eval_file }}" "${{ matrix.server_path }}" \
+            | tee "reports/mcp-evals/${{ matrix.name }}/latest.txt"
+
+      - name: Stop CortexDx
+        if: always() && matrix.needs_server
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+          fi
+          rm -f server.pid
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cortexdx-mcp-evals
+          path: reports/mcp-evals

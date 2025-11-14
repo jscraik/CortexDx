@@ -11,9 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MCP_ENDPOINT: ${{ secrets.MCP_ENDPOINT }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      RESEARCH_SMOKE: ${{ vars.RESEARCH_SMOKE || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install 1Password CLI
+        uses: 1Password/install-cli-action@v2
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -38,6 +43,23 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: DeepContext Status
+        run: pnpm deepcontext:status
+
+      - name: Upload DeepContext Cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepcontext-status
+          path: .cortexdx/deepcontext-status.json
+          if-no-files-found: warn
+
+      - name: Academic Research Smoke Tests
+        if: env.RESEARCH_SMOKE == 'true'
+        env:
+          CORTEXDX_RUN_INTEGRATION: 1
+          CORTEXDX_RESEARCH_SMOKE: 1
+        run: pnpm research:smoke
+
       - name: Diagnose (Quick)
         id: diag
         continue-on-error: true
@@ -57,18 +79,15 @@ jobs:
             reports/cortexdx-fileplan.patch
           if-no-files-found: warn
 
-      - name: Generate lightweight SBOM (npm tree)
-        run: |
-          mkdir -p artifacts
-          npm ls --all > artifacts/npm-tree.txt || true
-        shell: bash
+      - name: Generate SBOM
+        run: pnpm sbom --out reports/sbom
 
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-lite
-          path: artifacts/npm-tree.txt
-          if-no-files-found: ignore
+          name: sbom
+          path: reports/sbom
+          if-no-files-found: warn
 
       - name: Fail if BLOCKER/MAJOR
         run: |

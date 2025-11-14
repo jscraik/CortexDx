@@ -54,7 +54,7 @@ Implemented a minimal but functional web-based interface for CortexDx that provi
 
 ### 4. Configuration Tab
 
-- LLM backend selection (Ollama, MLX, llama.cpp)
+- LLM backend selection (Ollama)
 - Model selection
 - Expertise level setting
 - LocalStorage persistence

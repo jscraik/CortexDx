@@ -3,7 +3,7 @@
  * Automated fix generation for common MCP issues
  * Requirements: 3.3, 4.4, 9.4
  * Performance: <30s for fix generation
- * 
+ *
  * ENHANCEMENTS (Req 24.4):
  * - Fix explanations with rationale and side effects
  * - Rollback mechanism with state snapshots
@@ -25,7 +25,7 @@ interface FixExplanation {
   howItWorks: string;
   sideEffects: string[];
   prerequisites: string[];
-  estimatedImpact: 'low' | 'medium' | 'high';
+  estimatedImpact: "low" | "medium" | "high";
   reversible: boolean;
 }
 
@@ -51,14 +51,19 @@ interface RollbackResult {
 }
 
 // Fix strategies
-type FixStrategy = 'quick-patch' | 'refactor' | 'config-change' | 'dependency-update' | 'architecture-change';
+type FixStrategy =
+  | "quick-patch"
+  | "refactor"
+  | "config-change"
+  | "dependency-update"
+  | "architecture-change";
 
 interface StrategyOption {
   strategy: FixStrategy;
   name: string;
   description: string;
   timeEstimate: string;
-  complexity: 'low' | 'medium' | 'high';
+  complexity: "low" | "medium" | "high";
   reliability: number; // 0-1
   explanation: FixExplanation;
   steps: FixStep[];
@@ -78,7 +83,7 @@ interface FixStep {
 interface ComplianceCheck {
   rule: string;
   passed: boolean;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   message: string;
   recommendation?: string;
 }
@@ -92,7 +97,7 @@ interface SecurityAnalysis {
 
 interface SecurityVulnerability {
   type: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
+  severity: "critical" | "high" | "medium" | "low";
   description: string;
   cwe?: string;
   mitigation: string;
@@ -619,123 +624,129 @@ function validateJsonRpcResponse(response: unknown): response is JsonRpcResponse
  */
 async function generateFixStrategies(
   problem: DetectedProblem,
-  ctx: DevelopmentContext
+  ctx: DevelopmentContext,
 ): Promise<StrategyOption[]> {
   const strategies: StrategyOption[] = [];
 
   // Strategy 1: Quick Patch
   strategies.push({
-    strategy: 'quick-patch',
-    name: 'Quick Patch',
-    description: 'Fast, minimal change to resolve the immediate issue',
-    timeEstimate: '5-10 minutes',
-    complexity: 'low',
+    strategy: "quick-patch",
+    name: "Quick Patch",
+    description: "Fast, minimal change to resolve the immediate issue",
+    timeEstimate: "5-10 minutes",
+    complexity: "low",
     reliability: 0.75,
     explanation: {
-      rationale: 'Applies a minimal fix to resolve the immediate problem without major refactoring',
-      howItWorks: 'Modifies only the affected code section with a targeted fix',
-      sideEffects: ['May not address root cause', 'Could require future refactoring'],
+      rationale:
+        "Applies a minimal fix to resolve the immediate problem without major refactoring",
+      howItWorks: "Modifies only the affected code section with a targeted fix",
+      sideEffects: [
+        "May not address root cause",
+        "Could require future refactoring",
+      ],
       prerequisites: [],
-      estimatedImpact: 'low',
-      reversible: true
+      estimatedImpact: "low",
+      reversible: true,
     },
     steps: [
       {
         order: 1,
-        action: 'Identify exact failure point',
-        description: 'Locate the specific line or function causing the issue',
+        action: "Identify exact failure point",
+        description: "Locate the specific line or function causing the issue",
         automated: true,
-        validation: 'Error no longer occurs'
+        validation: "Error no longer occurs",
       },
       {
         order: 2,
-        action: 'Apply minimal fix',
-        description: 'Add error handling or null check',
+        action: "Apply minimal fix",
+        description: "Add error handling or null check",
         automated: true,
-        validation: 'Code compiles and tests pass'
-      }
+        validation: "Code compiles and tests pass",
+      },
     ],
     securityScore: 85,
-    complianceChecks: []
+    complianceChecks: [],
   });
 
   // Strategy 2: Refactor
   strategies.push({
-    strategy: 'refactor',
-    name: 'Refactor Solution',
-    description: 'Restructure code to eliminate root cause and improve maintainability',
-    timeEstimate: '30-60 minutes',
-    complexity: 'high',
+    strategy: "refactor",
+    name: "Refactor Solution",
+    description:
+      "Restructure code to eliminate root cause and improve maintainability",
+    timeEstimate: "30-60 minutes",
+    complexity: "high",
     reliability: 0.95,
     explanation: {
-      rationale: 'Addresses the root cause by improving code structure and design',
-      howItWorks: 'Refactors affected components following best practices',
-      sideEffects: ['Requires more testing', 'May affect related code'],
-      prerequisites: ['Comprehensive test coverage', 'Code review'],
-      estimatedImpact: 'high',
-      reversible: true
+      rationale:
+        "Addresses the root cause by improving code structure and design",
+      howItWorks: "Refactors affected components following best practices",
+      sideEffects: ["Requires more testing", "May affect related code"],
+      prerequisites: ["Comprehensive test coverage", "Code review"],
+      estimatedImpact: "high",
+      reversible: true,
     },
     steps: [
       {
         order: 1,
-        action: 'Analyze root cause',
-        description: 'Identify underlying design issues',
+        action: "Analyze root cause",
+        description: "Identify underlying design issues",
         automated: false,
-        validation: 'Root cause documented'
+        validation: "Root cause documented",
       },
       {
         order: 2,
-        action: 'Design improved structure',
-        description: 'Plan refactoring approach',
+        action: "Design improved structure",
+        description: "Plan refactoring approach",
         automated: false,
-        validation: 'Design reviewed'
+        validation: "Design reviewed",
       },
       {
         order: 3,
-        action: 'Implement refactoring',
-        description: 'Restructure code with improved design',
+        action: "Implement refactoring",
+        description: "Restructure code with improved design",
         automated: true,
-        validation: 'All tests pass'
-      }
+        validation: "All tests pass",
+      },
     ],
     securityScore: 95,
-    complianceChecks: []
+    complianceChecks: [],
   });
 
   // Strategy 3: Configuration Change
   strategies.push({
-    strategy: 'config-change',
-    name: 'Configuration Fix',
-    description: 'Resolve issue through configuration adjustments',
-    timeEstimate: '2-5 minutes',
-    complexity: 'low',
-    reliability: 0.90,
+    strategy: "config-change",
+    name: "Configuration Fix",
+    description: "Resolve issue through configuration adjustments",
+    timeEstimate: "2-5 minutes",
+    complexity: "low",
+    reliability: 0.9,
     explanation: {
-      rationale: 'Problem stems from misconfiguration rather than code defect',
-      howItWorks: 'Updates configuration files with correct values',
-      sideEffects: ['May affect other features using same config'],
-      prerequisites: ['Backup current configuration'],
-      estimatedImpact: 'low',
-      reversible: true
+      rationale: "Problem stems from misconfiguration rather than code defect",
+      howItWorks: "Updates configuration files with correct values",
+      sideEffects: ["May affect other features using same config"],
+      prerequisites: ["Backup current configuration"],
+      estimatedImpact: "low",
+      reversible: true,
     },
     steps: [
       {
         order: 1,
-        action: 'Identify configuration issue',
-        description: 'Locate incorrect configuration values',
+        action: "Identify configuration issue",
+        description: "Locate incorrect configuration values",
         automated: true,
-        validation: 'Configuration validated'
+        validation: "Configuration validated",
       },
       {
         order: 2,
-        action: 'Update configuration',
-        description: 'Apply correct configuration values',
+        action: "Update configuration",
+        description: "Apply correct configuration values",
         automated: true,
-        validation: 'Service restarts successfully'
-      }
+        validation: "Service restarts successfully",
+      },
     ],
     securityScore: 90,
-    complianceChecks: []
+    complianceChecks: [],
   });
 
   // Add compliance checks to all strategies
@@ -751,7 +762,7 @@ async function generateFixStrategies(
  */
 function generateDetailedExplanation(
   strategy: StrategyOption,
-  _problem: DetectedProblem
+  _problem: DetectedProblem,
 ): string {
   let explanation = `## ${strategy.name}\n\n`;
 
@@ -764,7 +775,7 @@ function generateDetailedExplanation(
     for (const effect of strategy.explanation.sideEffects) {
       explanation += `- ${effect}\n`;
     }
-    explanation += '\n';
+    explanation += "\n";
   }
 
   if (strategy.explanation.prerequisites.length > 0) {
@@ -772,11 +783,11 @@ function generateDetailedExplanation(
     for (const prereq of strategy.explanation.prerequisites) {
       explanation += `- ${prereq}\n`;
     }
-    explanation += '\n';
+    explanation += "\n";
   }
 
   explanation += `**Estimated impact:** ${strategy.explanation.estimatedImpact}\n`;
-  explanation += `**Reversible:** ${strategy.explanation.reversible ? 'Yes' : 'No'}\n`;
+  explanation += `**Reversible:** ${strategy.explanation.reversible ? "Yes" : "No"}\n`;
   explanation += `**Time estimate:** ${strategy.timeEstimate}\n`;
   explanation += `**Reliability:** ${(strategy.reliability * 100).toFixed(0)}%\n`;
 
@@ -794,7 +805,7 @@ class RollbackManager {
     description: string,
     files: string[],
     problemId: string,
-    fixStrategy: string
+    fixStrategy: string,
   ): Promise<string> {
     const snapshotId = `snapshot-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -813,17 +824,21 @@ class RollbackManager {
       metadata: {
         problemId,
         fixStrategy,
-        appliedBy: 'cortexdx'
-      }
+        appliedBy: "cortexdx",
+      },
     };
 
     this.snapshots.set(snapshotId, snapshot);
 
     // Cleanup old snapshots
     if (this.snapshots.size > this.maxSnapshots) {
-      const oldest = Array.from(this.snapshots.values())
-        .sort((a, b) => a.timestamp - b.timestamp)[0];
-      this.snapshots.delete(oldest.id);
+      const sorted = Array.from(this.snapshots.values()).sort(
+        (a, b) => a.timestamp - b.timestamp,
+      );
+      const oldest = sorted[0];
+      if (oldest) {
+        this.snapshots.delete(oldest.id);
+      }
     }
 
     return snapshotId;
@@ -836,8 +851,8 @@ class RollbackManager {
       return {
         success: false,
         restoredFiles: [],
-        errors: ['Snapshot not found'],
-        message: `Snapshot ${snapshotId} does not exist`
+        errors: ["Snapshot not found"],
+        message: `Snapshot ${snapshotId} does not exist`,
       };
     }
 
@@ -863,13 +878,14 @@ class RollbackManager {
       success,
       restoredFiles,
       errors,
-      message
+      message,
     };
   }
 
   async listSnapshots(): Promise<StateSnapshot[]> {
-    return Array.from(this.snapshots.values())
-      .sort((a, b) => b.timestamp - a.timestamp);
+    return Array.from(this.snapshots.values()).sort(
+      (a, b) => b.timestamp - a.timestamp,
+    );
   }
 
   async getSnapshot(snapshotId: string): Promise<StateSnapshot | undefined> {
@@ -886,58 +902,62 @@ class RollbackManager {
  */
 async function runComplianceChecks(
   strategy: StrategyOption,
-  _ctx: DevelopmentContext
+  _ctx: DevelopmentContext,
 ): Promise<ComplianceCheck[]> {
   const checks: ComplianceCheck[] = [];
 
   // Check 1: No hardcoded secrets
   checks.push({
-    rule: 'no-hardcoded-secrets',
+    rule: "no-hardcoded-secrets",
     passed: true,
-    severity: 'error',
-    message: 'No hardcoded secrets detected in fix'
+    severity: "error",
+    message: "No hardcoded secrets detected in fix",
   });
 
   // Check 2: Follows coding standards
   checks.push({
-    rule: 'coding-standards',
+    rule: "coding-standards",
     passed: true,
-    severity: 'warning',
-    message: 'Fix follows project coding standards'
+    severity: "warning",
+    message: "Fix follows project coding standards",
   });
 
   // Check 3: Includes error handling
   checks.push({
-    rule: 'error-handling',
-    passed: strategy.strategy !== 'quick-patch',
-    severity: 'warning',
-    message: strategy.strategy === 'quick-patch'
-      ? 'Quick patch may have minimal error handling'
-      : 'Comprehensive error handling included',
-    recommendation: strategy.strategy === 'quick-patch'
-      ? 'Consider adding more robust error handling'
-      : undefined
+    rule: "error-handling",
+    passed: strategy.strategy !== "quick-patch",
+    severity: "warning",
+    message:
+      strategy.strategy === "quick-patch"
+        ? "Quick patch may have minimal error handling"
+        : "Comprehensive error handling included",
+    recommendation:
+      strategy.strategy === "quick-patch"
+        ? "Consider adding more robust error handling"
+        : undefined,
   });
 
   // Check 4: Security best practices
   checks.push({
-    rule: 'security-best-practices',
+    rule: "security-best-practices",
     passed: strategy.securityScore >= 80,
-    severity: 'error',
+    severity: "error",
     message: `Security score: ${strategy.securityScore}/100`,
-    recommendation: strategy.securityScore < 80
-      ? 'Review security implications before applying'
-      : undefined
+    recommendation:
+      strategy.securityScore < 80
+        ? "Review security implications before applying"
+        : undefined,
   });
 
   // Check 5: Backward compatibility
   checks.push({
-    rule: 'backward-compatibility',
-    passed: strategy.strategy !== 'architecture-change',
-    severity: 'info',
-    message: strategy.strategy === 'architecture-change'
-      ? 'May break backward compatibility'
-      : 'Maintains backward compatibility'
+    rule: "backward-compatibility",
+    passed: strategy.strategy !== "architecture-change",
+    severity: "info",
+    message:
+      strategy.strategy === "architecture-change"
+        ? "May break backward compatibility"
+        : "Maintains backward compatibility",
   });
 
   return checks;
@@ -945,58 +965,61 @@ async function runComplianceChecks(
 
 async function analyzeFixSecurity(
   _strategy: StrategyOption,
-  code: string
+  code: string,
 ): Promise<SecurityAnalysis> {
   const vulnerabilities: SecurityVulnerability[] = [];
 
   // Check for SQL injection risks
-  if (code.includes('query') && code.includes('+')) {
+  if (code.includes("query") && code.includes("+")) {
     vulnerabilities.push({
-      type: 'SQL Injection',
-      severity: 'high',
-      description: 'Potential SQL injection through string concatenation',
-      cwe: 'CWE-89',
-      mitigation: 'Use parameterized queries or prepared statements'
+      type: "SQL Injection",
+      severity: "high",
+      description: "Potential SQL injection through string concatenation",
+      cwe: "CWE-89",
+      mitigation: "Use parameterized queries or prepared statements",
     });
   }
 
   // Check for XSS risks
-  if (code.includes('innerHTML') || code.includes('dangerouslySetInnerHTML')) {
+  if (code.includes("innerHTML") || code.includes("dangerouslySetInnerHTML")) {
     vulnerabilities.push({
-      type: 'Cross-Site Scripting (XSS)',
-      severity: 'high',
-      description: 'Potential XSS through unsafe HTML rendering',
-      cwe: 'CWE-79',
-      mitigation: 'Sanitize user input before rendering'
+      type: "Cross-Site Scripting (XSS)",
+      severity: "high",
+      description: "Potential XSS through unsafe HTML rendering",
+      cwe: "CWE-79",
+      mitigation: "Sanitize user input before rendering",
     });
   }
 
   // Check for insecure randomness
-  if (code.includes('Math.random()') && code.includes('crypto')) {
+  if (code.includes("Math.random()") && code.includes("crypto")) {
     vulnerabilities.push({
-      type: 'Weak Randomness',
-      severity: 'medium',
-      description: 'Using Math.random() for security-sensitive operations',
-      cwe: 'CWE-338',
-      mitigation: 'Use crypto.randomBytes() for cryptographic operations'
+      type: "Weak Randomness",
+      severity: "medium",
+      description: "Using Math.random() for security-sensitive operations",
+      cwe: "CWE-338",
+      mitigation: "Use crypto.randomBytes() for cryptographic operations",
     });
   }
 
-  const overallScore = Math.max(0, 100 - (vulnerabilities.length * 15));
-  const safe = vulnerabilities.filter(v => v.severity === 'critical' || v.severity === 'high').length === 0;
+  const overallScore = Math.max(0, 100 - vulnerabilities.length * 15);
+  const safe =
+    vulnerabilities.filter(
+      (v) => v.severity === "critical" || v.severity === "high",
+    ).length === 0;
 
   const recommendations: string[] = [];
   if (vulnerabilities.length > 0) {
-    recommendations.push('Address identified vulnerabilities before deploying');
-    recommendations.push('Run security scanning tools (Semgrep, Snyk)');
-    recommendations.push('Conduct security code review');
+    recommendations.push("Address identified vulnerabilities before deploying");
+    recommendations.push("Run security scanning tools (Semgrep, Snyk)");
+    recommendations.push("Conduct security code review");
   }
 
   return {
     overallScore,
     vulnerabilities,
     recommendations,
-    safe
+    safe,
   };
 }
 

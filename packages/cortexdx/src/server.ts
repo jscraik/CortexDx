@@ -3,15 +3,18 @@
  * HTTP server that exposes the academic research providers as MCP endpoints
  */
 
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { type IncomingMessage, type ServerResponse, createServer } from "node:http";
 import { extname, join } from "node:path";
 import { URL, fileURLToPath } from "node:url";
+import { performance } from "node:perf_hooks";
 import { ConversationManager } from "./conversation/manager.js";
 import { AutoHealer } from "./healing/auto-healer.js";
 import { MonitoringScheduler } from "./healing/scheduler.js";
 import { createLlmOrchestrator } from "./ml/index.js";
 import {
+    buildQuickHealthPayload,
     performHealthCheck,
     recordDiagnostic,
     recordRequest,
@@ -27,7 +30,9 @@ import { getAcademicRegistry } from "./registry/index.js";
 import { TemplateEngine } from "./template-engine/engine.js";
 import type { FixTemplate } from "./templates/fix-templates.js";
 import * as FixTemplateModule from "./templates/fix-templates.js";
-import { findMcpTool, getAllMcpToolsFlat } from "./tools/index.js";
+import { getResearchResource, listResearchResources } from "./resources/research-store.js";
+import { findMcpTool, getAllMcpToolsFlat, executeDeepContextTool } from "./tools/index.js";
+import { executeAcademicIntegrationTool } from "./tools/academic-integration-tools.js";
 import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "./types.js";
 const { getTemplate, getTemplatesByArea, getTemplatesBySeverity } = FixTemplateModule;
 
@@ -175,6 +180,13 @@ const executeDevelopmentTool = async (tool: McpTool, args: unknown, ctx: Develop
             return await generateMcpCode(args, ctx);
         case 'validate_license':
             return await validateLicense(args, ctx);
+        case 'cortexdx_academic_research':
+            return await executeAcademicIntegrationTool(tool, args);
+        case 'cortexdx_deepcontext_index':
+        case 'cortexdx_deepcontext_search':
+        case 'cortexdx_deepcontext_status':
+        case 'cortexdx_deepcontext_clear':
+            return await executeDeepContextTool(tool, args, ctx);
         default:
             throw new Error(`Unknown development tool: ${tool.name}`);
     }
@@ -311,6 +323,40 @@ const broadcastEvent = (event: string, data: unknown): void => {
 // Get the academic registry and initialize all MCP tools
 const registry = getAcademicRegistry();
 const allMcpTools = getAllMcpToolsFlat();
+
+type JsonRpcTool = {
+    name: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+};
+
+const getJsonRpcToolList = (): JsonRpcTool[] => {
+    const providerCapabilities = Object.values(registry.getAllCapabilities());
+    const academicTools = providerCapabilities.flatMap((capability) =>
+        (capability?.tools as Array<{ name?: string; description?: string; inputSchema?: Record<string, unknown> }> | undefined) ?? []
+    );
+    const normalizedAcademic = academicTools
+        .filter((tool): tool is { name: string; description?: string; inputSchema?: Record<string, unknown> } => Boolean(tool.name))
+        .map((tool) => ({
+            name: tool.name,
+            description: tool.description ?? "",
+            inputSchema: tool.inputSchema ?? { type: "object", properties: {} },
+        }));
+
+    const normalizedMcpTools = allMcpTools.map((tool) => ({
+        name: tool.name,
+        description: tool.description ?? "",
+        inputSchema: (tool.inputSchema as Record<string, unknown> | undefined) ?? { type: "object", properties: {} },
+    }));
+
+    const seen = new Set<string>();
+    const combined = [...normalizedAcademic, ...normalizedMcpTools];
+    return combined.filter((tool) => {
+        if (seen.has(tool.name)) return false;
+        seen.add(tool.name);
+        return true;
+    });
+};
 const conversationManager = new ConversationManager();
 const llmOrchestrator = createLlmOrchestrator();
 
@@ -322,7 +368,7 @@ const authMiddlewareConfig: AuthMiddlewareConfig = {
         audience: AUTH0_AUDIENCE,
     },
     requireAuth: REQUIRE_AUTH,
-    publicEndpoints: ["/", "/web/", "/health", "/events", "/providers"],
+    publicEndpoints: ["/", "/web/", "/health", "/mcp/health", "/events", "/providers"],
 };
 
 const authMiddleware = createAuthMiddleware(authMiddlewareConfig);
@@ -709,21 +755,14 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
     }
 
     try {
-        // Serve web interface
-        if (path === '/') {
-            const served = await serveStaticFile('index.html', res);
-            if (served) return;
-        }
-
-        // Serve static web assets
-        if (path.startsWith('/web/')) {
-            const filePath = path.substring(5); // Remove '/web/' prefix
-            const served = await serveStaticFile(filePath, res);
-            if (served) return;
-        }
-
         // SSE endpoint for real-time updates
-        if (path === '/events') {
+        const wantsSse =
+            req.method === 'GET' &&
+            (path === '/events' ||
+                path === '/sse' ||
+                (path === '/' &&
+                    (req.headers.accept || '').includes('text/event-stream')));
+        if (wantsSse) {
             res.writeHead(200, {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
@@ -734,11 +773,18 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             sseClients.add(res);
             updateActiveConnections(1);
 
-            // Send initial connection event
-            res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`);
+            const writeEvent = (payload: Record<string, unknown>) => {
+                res.write(`data: ${JSON.stringify(payload)}\n\n`);
+            };
 
-            // Clean up on client disconnect
+            writeEvent({ type: 'connected', timestamp: new Date().toISOString() });
+
+            const heartbeat = setInterval(() => {
+                writeEvent({ type: 'heartbeat', timestamp: new Date().toISOString() });
+            }, 2000);
+
             req.on('close', () => {
+                clearInterval(heartbeat);
                 sseClients.delete(res);
                 updateActiveConnections(-1);
             });
@@ -746,10 +792,23 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
             return;
         }
 
+        // Serve web interface
+        if (path === '/' && req.method === 'GET') {
+            const served = await serveStaticFile('index.html', res);
+            if (served) return;
+        }
+
+        // Serve static web assets
+        if (path.startsWith('/web/') && req.method === 'GET') {
+            const filePath = path.substring(5); // Remove '/web/' prefix
+            const served = await serveStaticFile(filePath, res);
+            if (served) return;
+        }
+
         // Health check endpoint
-        if (path === '/health') {
+        if (path === '/health' || path === '/mcp/health') {
             const detailed = url.searchParams.get('detailed') === 'true';
-            const startTime = Date.now();
+            const startTime = performance.now();
 
             try {
                 if (detailed) {
@@ -761,7 +820,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                         timeout: 5000,
                     });
 
-                    const responseTime = Date.now() - startTime;
+                    const responseTime = Math.round(performance.now() - startTime);
                     recordRequest(responseTime, true);
 
                     res.writeHead(health.status === 'healthy' ? 200 : 503, {
@@ -770,21 +829,23 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                     res.end(JSON.stringify(health));
                 } else {
                     // Quick health check
-                    const responseTime = Date.now() - startTime;
+                    const responseTime = Math.round(performance.now() - startTime);
                     recordRequest(responseTime, true);
 
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        status: 'healthy',
-                        service: 'CortexDx Server',
-                        version: '1.0.0',
-                        providers: Object.keys(registry.getAllProviders()),
-                        timestamp: new Date().toISOString(),
+                    const providers = Object.keys(registry.getAllProviders());
+                    const stateDbPath = process.env.CORTEXDX_STATE_DB ?? join(process.cwd(), '.cortexdx', 'workflow-state.db');
+                    const quickPayload = buildQuickHealthPayload({
+                        providers,
                         responseTimeMs: responseTime,
-                    }));
+                        stateDbPath,
+                        stateDbExists: existsSync(stateDbPath),
+                    });
+
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(quickPayload));
                 }
             } catch (error) {
-                const responseTime = Date.now() - startTime;
+                const responseTime = Math.round(performance.now() - startTime);
                 recordRequest(responseTime, false);
 
                 res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -1031,7 +1092,8 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
         }
 
         // MCP protocol endpoints
-        if (path === '/mcp' && req.method === 'POST') {
+        const isJsonRpcPost = req.method === 'POST' && (path === '/mcp' || path === '/' || path === '');
+        if (isJsonRpcPost) {
             let body = '';
             req.on('data', (chunk) => {
                 body += chunk;
@@ -1040,43 +1102,99 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                 try {
                     const request = JSON.parse(body);
 
-                    // Handle MCP initialize
-                    if (request.method === 'initialize') {
+                    const respond = (result: unknown): void => {
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({
                             jsonrpc: '2.0',
-                            id: request.id,
-                            result: {
-                                protocolVersion: '2024-11-05',
-                                capabilities: {
-                                    tools: {},
-                                    resources: {},
-                                    prompts: {}
-                                },
-                                serverInfo: {
-                                    name: 'CortexDx Server',
-                                    version: '1.0.0'
-                                }
-                            }
+                            id: request.id ?? null,
+                            result,
                         }));
+                    };
+
+                    const respondError = (code: number, message: string, statusCode = 400): void => {
+                        res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: request.id ?? null,
+                            error: { code, message },
+                        }));
+                    };
+
+                    // Handle MCP initialize
+                    if (request.method === 'initialize') {
+                        respond({
+                            protocolVersion: '2024-11-05',
+                            capabilities: {
+                                tools: {},
+                                resources: { list: true, read: true },
+                                prompts: {},
+                            },
+                            serverInfo: {
+                                name: 'CortexDx Server',
+                                version: '1.0.0',
+                            },
+                        });
+                        return;
+                    }
+
+                    if (request.method === 'rpc.ping') {
+                        respond({
+                            status: 'ok',
+                            timestamp: new Date().toISOString(),
+                        });
                         return;
                     }
 
                     // Handle tools/list
                     if (request.method === 'tools/list') {
-                        const allCapabilities = registry.getAllCapabilities();
-                        const academicTools = Object.values(allCapabilities).flatMap(cap => cap.tools);
-                        const mcpTools = allMcpTools.map(tool => ({
-                            name: tool.name,
-                            description: tool.description,
-                            inputSchema: tool.inputSchema
+                        respond({ tools: getJsonRpcToolList() });
+                        return;
+                    }
+
+                    if (request.method === 'resources/list') {
+                        const researchResources = listResearchResources().map((resource) => ({
+                            uri: `cortexdx://research/${resource.id}`,
+                            name: `Academic Research — ${resource.report.topic}`,
+                            description: `Captured ${new Date(resource.createdAt).toISOString()}`,
+                            mimeType: 'application/json',
                         }));
 
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({
                             jsonrpc: '2.0',
                             id: request.id,
-                            result: { tools: [...academicTools, ...mcpTools] }
+                            result: { resources: researchResources }
+                        }));
+                        return;
+                    }
+
+                    if (request.method === 'resources/read') {
+                        const uri = request.params?.uri as string | undefined;
+                        if (!uri || !uri.startsWith('cortexdx://research/')) {
+                            respondError(-32602, 'Unknown resource uri');
+                            return;
+                        }
+                        const id = uri.split('/').pop() as string;
+                        const resource = getResearchResource(id);
+                        if (!resource) {
+                            respondError(-32602, 'Resource not found', 404);
+                            return;
+                        }
+
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            jsonrpc: '2.0',
+                            id: request.id,
+                            result: {
+                                contents: [
+                                    {
+                                        uri,
+                                        mimeType: 'application/json',
+                                        type: 'text',
+                                        text: JSON.stringify(resource.report, null, 2)
+                                    }
+                                ]
+                            }
                         }));
                         return;
                     }
@@ -1157,13 +1275,9 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
                     }
 
                     // Unknown method
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        jsonrpc: '2.0',
-                        id: request.id,
-                        error: { code: -32601, message: `Method not found: ${request.method}` }
-                    }));
+                    respondError(-32601, `Method not found: ${request.method}`);
                 } catch (error) {
+                    console.error('JSON-RPC parse error:', error);
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         jsonrpc: '2.0',

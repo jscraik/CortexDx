@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cortex-os.dev/schemas/policy-prompt.schema.json",
+  "title": "Cortex-OS Policy Prompt",
+  "type": "object",
+  "required": ["id", "version", "goal", "constraints", "body"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9.-]+$" },
+    "version": { "type": "string", "pattern": "^v\\d{4}-\\d{2}-\\d{2}$" },
+    "goal": { "type": "string", "minLength": 10 },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "review": {
+      "type": "object",
+      "required": ["cadenceMinutes", "owner"],
+      "additionalProperties": false,
+      "properties": {
+        "cadenceMinutes": { "type": "integer", "minimum": 5 },
+        "owner": { "type": "string", "minLength": 3 }
+      }
+    },
+    "body": { "type": "string", "minLength": 20 }
+  }
+}

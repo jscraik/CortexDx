@@ -1,11 +1,13 @@
 import { URL } from "node:url";
+import { oauthAuthenticator } from "../adapters/oauth-authenticator.js";
 
 interface Auth0MachineConfig {
   domain: string;
   clientId: string;
-  clientSecret: string;
+  clientSecret?: string;
   audience: string;
   scope?: string;
+  deviceCodeEndpoint?: string;
 }
 
 interface CachedToken {
@@ -28,6 +30,9 @@ export async function resolveAuthHeaders(
     auth0Audience?: string;
     auth0Scope?: string;
     mcpApiKey?: string;
+    auth0DeviceCode?: boolean;
+    auth0DeviceCodeEndpoint?: string;
+    onDeviceCodePrompt?: (userCode: string, verifyUri: string) => void;
   },
 ): Promise<Record<string, string> | undefined> {
   if (typeof opts.auth === "string" && opts.auth.trim().length > 0) {
@@ -38,7 +43,12 @@ export async function resolveAuthHeaders(
   const headers: Record<string, string> = {};
 
   if (config) {
-    const token = await getAuth0AccessToken(config);
+    const hasSecret = Boolean(config.clientSecret);
+    const useDeviceCode = shouldUseDeviceCode(opts.auth0DeviceCode, hasSecret);
+
+    const token = useDeviceCode
+      ? await getAuth0DeviceCodeToken(config, opts.onDeviceCodePrompt)
+      : await getAuth0AccessToken(config as Auth0MachineConfig & { clientSecret: string });
     headers.authorization = `Bearer ${token}`;
   }
 
@@ -89,6 +99,7 @@ function resolveAuth0Config(
     auth0ClientSecret?: string;
     auth0Audience?: string;
     auth0Scope?: string;
+    auth0DeviceCodeEndpoint?: string;
   },
 ): Auth0MachineConfig | null {
   const domain = pickFirstDefined(opts.auth0Domain, process.env.CORTEXDX_AUTH0_DOMAIN);
@@ -100,17 +111,28 @@ function resolveAuth0Config(
   const audience = pickFirstDefined(opts.auth0Audience, process.env.CORTEXDX_AUTH0_AUDIENCE);
   const scope = pickFirstDefined(opts.auth0Scope, process.env.CORTEXDX_AUTH0_SCOPE);
 
-  if (!domain || !clientId || !clientSecret || !audience) {
+  if (!domain || !clientId || !audience) {
     return null;
   }
 
   return {
     domain: domain.trim(),
     clientId: clientId.trim(),
-    clientSecret: clientSecret.trim(),
+    clientSecret: clientSecret?.trim(),
     audience: audience.trim(),
     scope: scope?.trim(),
+    deviceCodeEndpoint:
+      pickFirstDefined(opts.auth0DeviceCodeEndpoint, process.env.CORTEXDX_AUTH0_DEVICE_CODE_ENDPOINT)?.trim(),
   };
+}
+
+function shouldUseDeviceCode(
+  preference: boolean | undefined,
+  hasSecret: boolean,
+): boolean {
+  if (typeof preference === "boolean") return preference;
+  if (process.env.CORTEXDX_AUTH0_DEVICE_CODE === "1") return true;
+  return !hasSecret;
 }
 
 function pickFirstDefined<T>(...values: Array<T | undefined>): T | undefined {
@@ -123,7 +145,9 @@ function pickFirstDefined<T>(...values: Array<T | undefined>): T | undefined {
   return undefined;
 }
 
-async function getAuth0AccessToken(config: Auth0MachineConfig): Promise<string> {
+async function getAuth0AccessToken(
+  config: Auth0MachineConfig & { clientSecret: string },
+): Promise<string> {
   const cacheKey = `${config.domain}|${config.clientId}|${config.audience}|${config.scope ?? ""}`;
   const cached = tokenCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
@@ -171,6 +195,45 @@ async function getAuth0AccessToken(config: Auth0MachineConfig): Promise<string> 
   return payload.access_token;
 }
 
+async function getAuth0DeviceCodeToken(
+  config: Auth0MachineConfig,
+  onPrompt?: (userCode: string, verificationUri: string) => void,
+): Promise<string> {
+  const cacheKey = `device|${config.domain}|${config.clientId}|${config.audience}|${config.scope ?? ""}`;
+  const cached = tokenCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.token;
+  }
+
+  const scopeArray =
+    config.scope?.split(/\s+/).filter((entry) => entry.length > 0) ?? [];
+  const deviceEndpoint = config.deviceCodeEndpoint ?? buildDeviceCodeUrl(config.domain);
+  const deviceCodeResult = await oauthAuthenticator.deviceCodeFlow(
+    config.clientId,
+    scopeArray,
+    deviceEndpoint,
+    config.audience,
+  );
+
+  const prompt = onPrompt ?? defaultDeviceCodePrompt;
+  prompt(
+    deviceCodeResult.userCode,
+    deviceCodeResult.verificationUriComplete ?? deviceCodeResult.verificationUri,
+  );
+
+  const tokenResult = await oauthAuthenticator.pollDeviceCode(
+    deviceCodeResult.deviceCode,
+    buildTokenUrl(config.domain),
+    config.clientId,
+    deviceCodeResult.interval,
+  );
+
+  const expiresAt =
+    Date.now() + Math.max(30, (tokenResult.expiresIn ?? 60) - 30) * 1000;
+  tokenCache.set(cacheKey, { token: tokenResult.accessToken, expiresAt });
+  return tokenResult.accessToken;
+}
+
 function buildTokenUrl(domain: string): string {
   const trimmed = domain.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
@@ -181,6 +244,16 @@ function buildTokenUrl(domain: string): string {
   return `https://${trimmed.replace(/\/$/, "")}/oauth/token`;
 }
 
+function buildDeviceCodeUrl(domain: string): string {
+  const trimmed = domain.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    const url = new URL(trimmed);
+    url.pathname = url.pathname.replace(/\/?$/, "/oauth/device/code");
+    return url.toString();
+  }
+  return `https://${trimmed.replace(/\/$/, "")}/oauth/device/code`;
+}
+
 async function safeReadError(response: Response): Promise<string> {
   try {
     const text = await response.text();
@@ -188,6 +261,12 @@ async function safeReadError(response: Response): Promise<string> {
   } catch {
     return "unable to read error body";
   }
+}
+
+function defaultDeviceCodePrompt(userCode: string, verificationUri: string): void {
+  console.log(
+    `[Auth0 Device Code] Visit ${verificationUri} and enter code ${userCode} to continue.`,
+  );
 }
 
 // Exposed for tests

@@ -98,7 +98,7 @@ type DiagnosticTool = (ctx: DevelopmentContext) => Promise<NormalizedFinding[]>;
 - Reuse `EnhancedLlmAdapter` but lock the backend to Ollama:
   - `backend: 'ollama'`.
   - `modelId` configurable via CLI/env (defaults to `gpt-oss-safeguard:latest`).
-- Model metadata resolves through `config/ollama-models.json` so that only vetted Ollama builds (no MLX fallbacks) are available to the suite.
+- Model metadata resolves through `config/ollama-models.json` so that only vetted Ollama builds are available to the suite.
 - Reasoner prompts are cached by SHA-256 of `{model, prompt, findings}` with YAML prompt records under `reports/_cache/ollama/` for deterministic replays.
 - `LLMReasoner` node tasks:
   1. Summarise multi-plugin findings.

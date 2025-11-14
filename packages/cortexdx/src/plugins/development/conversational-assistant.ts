@@ -296,7 +296,7 @@ export const DevelopmentAssistantPlugin: ConversationalPlugin = {
           "No conversational LLM adapter configured. Interactive development assistance will be limited.",
         evidence: [{ type: "log", ref: "development-assistant" }],
         recommendation:
-          "Configure a conversational LLM adapter (Ollama, MLX, or llama.cpp) for guided development workflows and interactive tutorials.",
+          "Configure the Ollama conversational adapter for guided development workflows and interactive tutorials.",
       });
       return findings;
     }

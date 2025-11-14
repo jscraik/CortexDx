@@ -292,7 +292,10 @@ export class EnhancedPatternMatcher {
     /**
      * Extract keywords from text
      */
-    private extractKeywords(text: string): string[] {
+    private extractKeywords(text?: string): string[] {
+        if (!text) {
+            return [];
+        }
         const stopWords = new Set([
             "the",
             "a",

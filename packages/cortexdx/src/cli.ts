@@ -12,6 +12,16 @@ import {
   runStartDebugging,
 } from "./commands/interactive-cli.js";
 import { runDiagnose } from "./orchestrator.js";
+import { runOrchestrate } from "./commands/orchestrate.js";
+import {
+  ensureWildcardApiKey,
+  runDeepContextClear,
+  runDeepContextIndex,
+  runDeepContextSearch,
+  runDeepContextStatus,
+} from "./commands/deepcontext.js";
+import { runResearch } from "./commands/research.js";
+import { runGenerateSbom } from "./commands/sbom.js";
 
 const program = new Command();
 program
@@ -29,6 +39,7 @@ program
   .option("--suites <csv>", "subset, e.g. streaming,governance,cors,ratelimit")
   .option("--simulate-external", "probe as if remote client")
   .option("--out <dir>", "output dir", "reports")
+  .option("--report-out <dir>", "store consolidated reports via ReportManager")
   .option("--file-plan", "emit unified diffs")
   .option("--a11y", "screen-reader friendly output")
   .option("--no-color", "disable ANSI colors")
@@ -41,6 +52,8 @@ program
   .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
   .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
   .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
+  .option("--auth0-device-code", "Use Auth0 device code flow instead of client credentials")
+  .option("--auth0-device-code-endpoint <url>", "Override Auth0 device authorization endpoint")
   .option("--mcp-api-key <key>", "MCP API key for dual authentication")
   .option(
     "--budget-time <ms>",
@@ -155,6 +168,123 @@ program
   );
 
 program
+  .command("orchestrate")
+  .description("orchestrate plugins or LangGraph workflows")
+  .argument("[endpoint]", "MCP base URL (required unless --list)")
+  .option("--workflow <id>", "workflow identifier to execute")
+  .option("--plugin <id>", "run a single plugin by id")
+  .option("--parallel <csv>", "comma-delimited plugin ids to run in parallel")
+  .option("--list", "list available workflows")
+  .option("--json", "emit findings as JSON")
+  .option("--deterministic", "enable deterministic seeds and timestamps")
+  .option("--auth <scheme:value>", "bearer:XYZ | basic:u:p | header:Name:Value")
+  .option("--auth0-domain <domain>", "Auth0 domain used for MCP protection")
+  .option("--auth0-client-id <id>", "Auth0 client id for client-credential flow")
+  .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
+  .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
+  .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
+  .option("--auth0-device-code", "Use Auth0 device code flow instead of client credentials")
+  .option("--auth0-device-code-endpoint <url>", "Override Auth0 device authorization endpoint")
+  .option("--mcp-api-key <key>", "MCP API key for dual authentication")
+  .option("--state-db <path>", "SQLite path for checkpoint persistence")
+  .option("--thread-id <id>", "override thread identifier for checkpointing")
+  .option("--checkpoint-id <id>", "custom checkpoint id for the current run")
+  .option("--resume-checkpoint <id>", "resume from a saved checkpoint id")
+  .option("--resume-thread <id>", "resume from the latest checkpoint for a thread id")
+  .option("--mode <diagnostic|development>", "execution mode", "diagnostic")
+  .option(
+    "--expertise <level>",
+    "expertise level for development mode: beginner, intermediate, expert",
+    "intermediate",
+  )
+  .option("--stream", "stream workflow events to stdout")
+  .option(
+    "--research",
+    "run an academic research probe before orchestrating (default on)",
+    true,
+  )
+  .option("--no-research", "skip the academic research probe")
+  .option("--research-topic <text>", "topic to send to the academic providers")
+  .option("--research-question <text>", "question/abstract for contextual providers")
+  .option("--research-providers <csv>", "subset of academic providers to include")
+  .option("--research-limit <number>", "maximum findings per provider for the research probe")
+  .option("--research-out <dir>", "write research artifacts before orchestration")
+  .option("--report-out <dir>", "store consolidated reports via ReportManager")
+  .option(
+    "--disable-sse",
+    "skip SSE streaming probes (sets CORTEXDX_DISABLE_SSE=1 during the run)",
+  )
+  .option(
+    "--sse-endpoint <url>",
+    "override the SSE endpoint used by streaming probes (CORTEXDX_SSE_ENDPOINT)",
+  )
+  .action(async (endpoint, opts) => {
+    const code = await runOrchestrate(endpoint ?? null, opts);
+    process.exitCode = code;
+  });
+
+const deepContext = program
+  .command("deepcontext")
+  .description("invoke DeepContext (semantic code search) helpers");
+
+deepContext
+  .command("index")
+  .argument("<codebase>", "absolute or relative path to the codebase root")
+  .option("--force", "force a complete reindex")
+  .action(async (codebase, opts) => {
+    ensureWildcardApiKey();
+    const code = await runDeepContextIndex(codebase, opts);
+    process.exitCode = code;
+  });
+
+deepContext
+  .command("search")
+  .argument("<codebase>", "path to indexed codebase")
+  .argument("<query>", "natural language or keyword search query")
+  .option("--max-results <number>", "override default result limit (5)")
+  .action(async (codebase, query, opts) => {
+    ensureWildcardApiKey();
+    const code = await runDeepContextSearch(codebase, query, opts);
+    process.exitCode = code;
+  });
+
+deepContext
+  .command("status")
+  .argument("[codebase]", "optional codebase path")
+  .action(async (codebase) => {
+    ensureWildcardApiKey();
+    const code = await runDeepContextStatus(codebase);
+    process.exitCode = code;
+  });
+
+deepContext
+  .command("clear")
+  .argument("[codebase]", "optional codebase path to clear")
+  .action(async (codebase) => {
+    ensureWildcardApiKey();
+    const code = await runDeepContextClear(codebase);
+    process.exitCode = code;
+  });
+
+program
+  .command("research")
+  .description("run academic provider sweep and capture evidence")
+  .argument("<topic>", "research topic or keyword")
+  .option("--question <text>", "optional research question/abstract")
+  .option("--providers <csv>", "comma-delimited provider ids")
+  .option("--limit <number>", "maximum results per provider")
+  .option("--no-license", "skip license metadata in results")
+  .option("--out <dir>", "write JSON/Markdown artifacts")
+  .option("--deterministic", "stable timestamps and seeds")
+  .option("--json", "emit full JSON report")
+  .option("--credential <provider:value>", "override provider credential", collectRepeatableOption, [])
+  .option("--header <name:value>", "inject custom HTTP header", collectRepeatableOption, [])
+  .action(async (topic, opts) => {
+    const code = await runResearch(topic, opts);
+    process.exitCode = code;
+  });
+
+program
   .command("debug")
   .description("start interactive debugging session")
   .argument("<problem>", "problem description or error message")
@@ -168,6 +298,43 @@ program
   )
   .action(async (problem, opts) => {
     const code = await runStartDebugging(problem, opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("sbom")
+  .description("generate SBOM artifacts (CycloneDX/SPDX)")
+  .option("--manifest <path>", "path to manifest (package.json, requirements.txt, pom.xml)")
+.option("--type <npm|pip|maven>", "override manifest type")
+  .option("--format <cyclonedx|spdx>", "SBOM format", "cyclonedx")
+  .option("--out <dir>", "output directory (default: reports/sbom)")
+  .option("--include-dev", "include dev dependencies")
+  .option("--no-licenses", "omit license metadata")
+  .option("--hashes", "include component hashes")
+  .option("--xml", "emit XML output alongside JSON")
+  .option("--dt-url <url>", "Dependency Track base URL (e.g., https://dt.example.com)")
+  .option("--dt-api-key <key>", "Dependency Track API key")
+  .option("--dt-project <name>", "Dependency Track project name")
+  .option("--dt-version <version>", "Dependency Track project version")
+  .option("--dt-subscribe", "Subscribe Dependency Track notifications to a webhook")
+  .option("--dt-webhook <url>", "Webhook URL for Dependency Track alerts")
+  .action(async (opts) => {
+    const code = await runGenerateSbom({
+      manifest: opts.manifest,
+      type: opts.type,
+      format: opts.format,
+      out: opts.out,
+      includeDev: Boolean(opts.includeDev),
+      includeLicenses: opts.licenses !== false,
+      includeHashes: Boolean(opts.hashes),
+      xml: Boolean(opts.xml),
+      dtUrl: opts.dtUrl,
+      dtApiKey: opts.dtApiKey,
+      dtProject: opts.dtProject,
+      dtVersion: opts.dtVersion,
+      dtSubscribe: Boolean(opts.dtSubscribe),
+      dtWebhook: opts.dtWebhook,
+    });
     process.exitCode = code;
   });
 
@@ -244,6 +411,20 @@ program
     "typescript",
   )
   .option("--no-exercises", "skip hands-on exercises")
+  .option(
+    "--research",
+    "enrich tutorial output with academic research (default on)",
+    true,
+  )
+  .option("--no-research", "skip academic research and DeepContext lookups")
+  .option(
+    "--research-providers <csv>",
+    "override providers for tutorial research",
+  )
+  .option(
+    "--research-limit <number>",
+    "max findings per provider used in tutorials",
+  )
   .action(async (topic, opts) => {
     const code = await runCreateTutorial(topic, opts);
     process.exitCode = code;
@@ -251,10 +432,26 @@ program
 
 program
   .command("doctor")
-  .description("environment checks (Node/Playwright/MLX/Ollama/DNS/proxy)")
-  .action(async () => {
-    console.log("[brAInwav] Doctor: Node", process.version);
-    // Extend: WSL, CA store, proxy, playwright deps, MLX/Ollama checks…
+  .description("environment checks (Node/Playwright/Ollama/DNS/proxy)")
+  .option("--providers <csv>", "limit provider readiness check to ids")
+  .option("--skip-providers", "skip provider readiness check")
+  .option(
+    "--research",
+    "run academic research probe before diagnostics (default on)",
+    true,
+  )
+  .option("--no-research", "skip academic research probe")
+  .option("--research-topic <text>", "topic for academic research probe")
+  .option("--research-question <text>", "question/abstract to pass to providers")
+  .option("--research-providers <csv>", "providers to use for research probe")
+  .option("--research-limit <number>", "max findings per provider")
+  .option("--research-out <dir>", "write research artifacts to directory")
+  .option("--deterministic", "stable seeds for research probe")
+  .option("--json", "emit JSON doctor report")
+  .action(async (opts) => {
+    const { runDoctor } = await import("./commands/doctor.js");
+    const code = await runDoctor(opts);
+    process.exitCode = code;
   });
 
 program
@@ -310,6 +507,7 @@ program
   .option("--webhook <url>", "send notifications to webhook URL")
   .option("--config <file>", "load monitoring configuration from file")
   .option("--export <file>", "export current configuration to file")
+  .option("--state-file <file>", "persist monitoring scheduler status to JSON file")
   .action(async (opts) => {
     const { runMonitoring } = await import("./commands/self-healing.js");
     const code = await runMonitoring(opts);
@@ -365,6 +563,10 @@ program
     const code = await runHealthCheck(opts);
     process.exitCode = code;
   });
+
+function collectRepeatableOption(value: string, previous: string[]): string[] {
+  return [...previous, value];
+}
 
 program.parseAsync().catch((e) => {
   console.error("[brAInwav] fatal:", e?.stack || String(e));

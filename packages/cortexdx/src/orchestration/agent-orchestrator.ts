@@ -7,6 +7,7 @@
 import { END, MemorySaver, START, StateGraph, type StateGraphArgs } from "@langchain/langgraph";
 import type { DiagnosticContext, Finding } from "../types.js";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
+import type { StateManager } from "./state-manager.js";
 
 /**
  * Workflow state that flows through the graph
@@ -114,9 +115,11 @@ export class AgentOrchestrator {
     private workflows: Map<string, CompiledWorkflow> = new Map();
     private checkpointers: Map<string, MemorySaver> = new Map();
     private pluginOrchestrator?: PluginOrchestrator;
+    private stateManager?: StateManager;
 
-    constructor(pluginOrchestrator?: PluginOrchestrator) {
+    constructor(pluginOrchestrator?: PluginOrchestrator, stateManager?: StateManager) {
         this.pluginOrchestrator = pluginOrchestrator;
+        this.stateManager = stateManager;
     }
 
     /**
@@ -174,7 +177,9 @@ export class AgentOrchestrator {
         // Create checkpointer if enabled
         let checkpointer: MemorySaver | undefined;
         if (definition.config.enableCheckpointing) {
-            checkpointer = new MemorySaver();
+            checkpointer = this.stateManager
+                ? this.stateManager.getMemorySaver(definition.config.workflowId)
+                : new MemorySaver();
             this.checkpointers.set(definition.config.workflowId, checkpointer);
         }
 
@@ -215,6 +220,7 @@ export class AgentOrchestrator {
             threadId?: string;
             streamEvents?: boolean;
             onEvent?: (event: WorkflowEvent) => void;
+            checkpointId?: string;
         }
     ): Promise<WorkflowExecutionResult> {
         const workflow = this.workflows.get(workflowId);
@@ -256,6 +262,14 @@ export class AgentOrchestrator {
         // Execute with streaming if requested
         let finalState: WorkflowState = state;
         const threadId = options?.threadId || `thread-${Date.now()}`;
+        const checkpointId = options?.checkpointId ?? threadId;
+        let sessionId: string | undefined;
+
+        if (this.stateManager) {
+            sessionId = await this.stateManager.createSession(workflowId, threadId, {
+                deterministic: initialContext.deterministic,
+            });
+        }
 
         if (options?.streamEvents) {
             // Stream execution events
@@ -292,12 +306,34 @@ export class AgentOrchestrator {
 
         const executionTime = Date.now() - startTime;
 
+        if (this.stateManager) {
+            const serializableState = createSerializableState(finalState);
+            await this.stateManager.saveCheckpoint({
+                checkpointId,
+                workflowId,
+                threadId,
+                state: serializableState,
+                timestamp: Date.now(),
+                metadata: {
+                    executionTime,
+                    findings: finalState.findings.length,
+                    severity: finalState.severity,
+                },
+            });
+            if (sessionId) {
+                await this.stateManager.updateSessionStatus(
+                    sessionId,
+                    finalState.errors.length === 0 ? "completed" : "failed",
+                );
+            }
+        }
+
         return {
             workflowId,
             state: finalState,
             success: finalState.errors.length === 0,
             executionTime,
-            checkpointId: threadId,
+            checkpointId,
         };
     }
 
@@ -437,16 +473,48 @@ export interface WorkflowEvent {
     error?: string;
 }
 
+function createSerializableState(state: WorkflowState): WorkflowState {
+    return {
+        ...state,
+        context: createSerializableContext(state.context),
+    };
+}
+
+function createSerializableContext(context: DiagnosticContext): DiagnosticContext {
+    const noopRequest: DiagnosticContext["request"] = async <T>(): Promise<T> => {
+        throw new Error("Checkpoint context is read-only");
+    };
+    const noopJsonrpc: DiagnosticContext["jsonrpc"] = async <T>(): Promise<T> => {
+        throw new Error("Checkpoint context is unavailable");
+    };
+    const noopSse: DiagnosticContext["sseProbe"] = async () => ({ ok: false });
+    const noopEvidence: DiagnosticContext["evidence"] = () => undefined;
+    const noopLogger: DiagnosticContext["logger"] = () => undefined;
+
+    return {
+        endpoint: context.endpoint,
+        headers: context.headers,
+        logger: noopLogger,
+        request: noopRequest,
+        jsonrpc: noopJsonrpc,
+        sseProbe: noopSse,
+        evidence: noopEvidence,
+        deterministic: context.deterministic,
+        deterministicSeed: context.deterministicSeed,
+    };
+}
+
 /**
  * Create a singleton instance of the agent orchestrator
  */
 let agentOrchestratorInstance: AgentOrchestrator | null = null;
 
 export function getAgentOrchestrator(
-    pluginOrchestrator?: PluginOrchestrator
+    pluginOrchestrator?: PluginOrchestrator,
+    stateManager?: StateManager
 ): AgentOrchestrator {
     if (!agentOrchestratorInstance) {
-        agentOrchestratorInstance = new AgentOrchestrator(pluginOrchestrator);
+        agentOrchestratorInstance = new AgentOrchestrator(pluginOrchestrator, stateManager);
     }
     return agentOrchestratorInstance;
 }

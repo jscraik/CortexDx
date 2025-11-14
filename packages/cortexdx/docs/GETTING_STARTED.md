@@ -26,7 +26,7 @@ Before installing CortexDx, ensure your system meets these requirements:
 
 ### Optional (for enhanced features)
 
-- **Local AI Models**: Ollama, MLX (Apple Silicon), or llama.cpp for offline assistance
+- **Local AI Models**: Ollama for offline assistance
 - **Docker**: For containerized MCP server testing
 - **Git**: For template generation and version control
 
@@ -410,7 +410,7 @@ All AI assistance runs locally on your machine:
 - **Privacy**: No code or data sent to external services
 - **Offline**: Works without internet connectivity
 - **Performance**: Sub-2-second response times
-- **Flexibility**: Support for Ollama, MLX, and llama.cpp
+- **Flexibility**: Support for Ollama with deterministic seeding
 
 ### Setting Up Local LLM
 

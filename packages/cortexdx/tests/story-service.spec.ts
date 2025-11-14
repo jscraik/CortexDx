@@ -27,6 +27,39 @@ describe("StoryService", () => {
     expect(stories[0]?.trigger.kind).toBe("latency");
   });
 
+  it("emits error, health, and fallback triggers", () => {
+    const stories = service.generateStories({
+      errors: {
+        buckets: [
+          { 200: 90, 500: 10 },
+          { 200: 40, 500: 60 },
+        ],
+        pct: 10,
+        target: "tool.analyze",
+      },
+      health: {
+        downtime: [5, 60],
+        thresholdSec: 30,
+        target: "connector.edge",
+      },
+      fallback: {
+        flags: [true, true, true],
+        minutes: 3,
+        target: "service.vector",
+      },
+      now: Date.UTC(2025, 0, 7),
+    });
+
+    const kinds = stories.map((story) => story.trigger.kind);
+    expect(kinds).toContain("errors");
+    expect(kinds).toContain("health");
+    expect(kinds).toContain("fallback");
+  });
+
+  it("returns no stories when no signals supplied", () => {
+    expect(service.generateStories()).toHaveLength(0);
+  });
+
   it("locates individual stories by id", () => {
     const stories = service.generateStories({
       latency: { p95: [210, 230, 640], target: "connector.edge" },

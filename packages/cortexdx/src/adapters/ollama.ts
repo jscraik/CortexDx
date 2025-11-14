@@ -3,6 +3,15 @@
  * Provides local LLM capabilities through Ollama with model management and conversation support
  */
 
+import {
+  getDefaultOllamaBaseUrl,
+  getDefaultOllamaModel,
+  getOllamaApiKey,
+  getOllamaDeterministicSeed,
+  getOllamaMaxRetries,
+  getOllamaTemperature,
+  getOllamaTimeoutMs,
+} from "../ml/ollama-env.js";
 import type {
   CodeAnalysis,
   Constraints,
@@ -22,6 +31,9 @@ export interface OllamaConfig {
   timeout?: number;
   maxRetries?: number;
   defaultModel?: string;
+  deterministicSeed?: number;
+  temperature?: number;
+  apiKey?: string;
 }
 
 export interface OllamaModel {
@@ -55,6 +67,10 @@ export interface OllamaResponse {
 export interface OllamaApiResponse {
   models?: OllamaModel[];
   response?: string;
+  message?: {
+    role?: string;
+    content?: string;
+  };
   context?: number[];
   details?: {
     family?: string;
@@ -72,11 +88,17 @@ export interface ConversationSession {
   ollamaContext?: number[];
   startTime: number;
   lastActivity: number;
+  seed?: number;
 }
 
 export class OllamaAdapter implements EnhancedLlmAdapter {
   public readonly backend = "ollama" as const;
-  private readonly config: Required<OllamaConfig>;
+  private readonly config: Required<
+    Omit<OllamaConfig, "deterministicSeed" | "apiKey">
+  > & {
+    deterministicSeed?: number;
+    apiKey?: string;
+  };
   private readonly conversations = new Map<
     ConversationId,
     ConversationSession
@@ -89,6 +111,9 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
       timeout: config.timeout || 30000,
       defaultModel: config.defaultModel || "llama3.2:3b",
       maxRetries: config.maxRetries || 3,
+      deterministicSeed: config.deterministicSeed,
+      temperature: config.temperature ?? (config.deterministicSeed ? 0 : 0.7),
+      apiKey: config.apiKey,
     };
   }
 
@@ -100,11 +125,12 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
       stream: false,
       options: {
         num_predict: maxTokens || 2048,
-        temperature: 0.7,
+        temperature: this.config.temperature,
+        seed: this.config.deterministicSeed,
       },
     });
 
-    return response.response || "";
+    return extractResponseText(response);
   }
 
   // Enhanced adapter methods
@@ -181,6 +207,7 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
       model,
       startTime: Date.now(),
       lastActivity: Date.now(),
+      seed: context.deterministicSeed ?? this.config.deterministicSeed,
     };
 
     // Add system message based on context
@@ -223,21 +250,23 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
         stream: false,
         context: session.ollamaContext,
         options: {
-          temperature: 0.7,
+          temperature: session.seed ? 0 : this.config.temperature,
           num_predict: 2048,
+          seed: session.seed ?? this.config.deterministicSeed,
         },
       });
 
       // Update session with response
+      const reply = extractResponseText(response);
       session.messages.push({
         role: "assistant",
-        content: response.response || "",
+        content: reply,
         timestamp: Date.now(),
       });
       session.ollamaContext = response.context;
       session.lastActivity = Date.now();
 
-      return response.response || "";
+      return reply;
     } catch (error) {
       throw new Error(
         `Failed to continue conversation: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -394,9 +423,28 @@ Respond in JSON format.`;
   // Private helper methods
   private async makeRequest(
     endpoint: string,
-    data?: unknown,
+    data?: Record<string, unknown>,
   ): Promise<OllamaApiResponse> {
-    const url = `${this.config.baseUrl}${endpoint}`;
+    let targetEndpoint = endpoint;
+    let payload: Record<string, unknown> | undefined = data;
+
+    if (this.config.apiKey && endpoint === "/api/generate" && data) {
+      targetEndpoint = "/api/chat";
+      const prompt = typeof data.prompt === "string" ? data.prompt : "";
+      payload = {
+        model: data.model,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        stream: data.stream ?? false,
+        options: data.options,
+      };
+    }
+
+    const url = this.buildUrl(targetEndpoint);
 
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
@@ -407,11 +455,14 @@ Respond in JSON format.`;
         );
 
         const response = await fetch(url, {
-          method: data ? "POST" : "GET",
+          method: payload ? "POST" : "GET",
           headers: {
             "Content-Type": "application/json",
+            ...(this.config.apiKey
+              ? { Authorization: `Bearer ${this.config.apiKey}` }
+              : {}),
           },
-          body: data ? JSON.stringify(data) : undefined,
+          body: payload ? JSON.stringify(payload) : undefined,
           signal: controller.signal,
         });
 
@@ -497,12 +548,54 @@ Respond in JSON format.`;
     if (modelId.includes("mistral")) return 32768;
     return 4096; // Conservative default
   }
+
+  private buildUrl(endpoint: string): string {
+    const base = this.config.baseUrl.replace(/\/+$/, "");
+    let path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    if (base.endsWith("/api") && path.startsWith("/api/")) {
+      path = path.slice(4);
+    } else if (/\/v\d+$/.test(base) && path.startsWith("/api/")) {
+      path = path.slice(4);
+    }
+    return `${base}${path}`;
+  }
 }
 
 // Factory function for creating Ollama adapter
 export const createOllamaAdapter = (config?: OllamaConfig): OllamaAdapter => {
-  return new OllamaAdapter(config);
+  const mergedConfig: OllamaConfig = {
+    baseUrl: config?.baseUrl ?? getDefaultOllamaBaseUrl(),
+    defaultModel: config?.defaultModel ?? getDefaultOllamaModel(),
+    timeout: config?.timeout ?? getOllamaTimeoutMs(),
+    maxRetries: config?.maxRetries ?? getOllamaMaxRetries(),
+    deterministicSeed:
+      config?.deterministicSeed ?? getOllamaDeterministicSeed(),
+    temperature: config?.temperature ?? getOllamaTemperature(),
+    apiKey: config?.apiKey ?? getOllamaApiKey(),
+  };
+
+  return new OllamaAdapter(mergedConfig);
 };
+
+function extractResponseText(response: OllamaApiResponse): string {
+  if (response.response && response.response.trim().length > 0) {
+    return response.response;
+  }
+  const messageContent = response.message?.content;
+  if (messageContent && messageContent.trim().length > 0) {
+    return messageContent;
+  }
+  const messages = (response as { messages?: Array<{ content?: string }> })
+    .messages;
+  if (Array.isArray(messages)) {
+    for (const item of messages) {
+      if (item?.content && item.content.trim().length > 0) {
+        return item.content;
+      }
+    }
+  }
+  return "";
+}
 
 // Integration with existing evidence system
 export const createOllamaEvidence = (

@@ -579,7 +579,7 @@ cortexdx doctor
 ✅ Plugin system functional
 ✅ Worker threads supported
 ⚠️  Playwright not installed (optional for browser testing)
-ℹ️  MLX not detected (optional for local AI)
+ℹ️  Ollama daemon not detected (required for local AI)
 ```
 
 #### `compare <old> <new>`

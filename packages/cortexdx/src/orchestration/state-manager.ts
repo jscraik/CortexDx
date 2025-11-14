@@ -591,16 +591,20 @@ export interface StateTransition {
 }
 
 /**
- * Create a singleton instance of the state manager
+ * Create (or reuse) a state manager instance per database path.
+ * This allows callers to swap `--state-db` paths without restarting the process.
  */
-let stateManagerInstance: StateManager | null = null;
+const stateManagerInstances = new Map<string, StateManager>();
 
 export function getStateManager(config?: StatePersistenceConfig): StateManager {
-    if (!stateManagerInstance && config) {
-        stateManagerInstance = new StateManager(config);
+    const key = config?.dbPath ?? "__default__";
+    let instance = stateManagerInstances.get(key);
+    if (!instance) {
+        if (!config) {
+            throw new Error(`StateManager not initialized for key ${key}. Provide config on first call.`);
+        }
+        instance = new StateManager(config);
+        stateManagerInstances.set(key, instance);
     }
-    if (!stateManagerInstance) {
-        throw new Error("StateManager not initialized. Provide config on first call.");
-    }
-    return stateManagerInstance;
+    return instance;
 }

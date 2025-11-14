@@ -27,7 +27,7 @@ A minimal web-based interface for visual MCP development and debugging.
 
 ### 4. Configuration Tab
 
-- Select LLM backend (Ollama, MLX, llama.cpp)
+- Select LLM backend (Ollama)
 - Choose model for assistance
 - Set expertise level (beginner, intermediate, expert)
 - Configuration persists in browser localStorage

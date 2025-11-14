@@ -97,9 +97,9 @@ All contributors and automation agents must follow these rules. CI enforces them
 
 - No `eval`/dynamic Function. No unpinned remote code. Validate/sanitize all external inputs.
 
-**MLX rule**
+**Local LLM rule**
 
-- All MLX integrations must be real; no mocks/placeholders in production code.
+- Ollama is the supported local backend. Features must fail gracefully when the daemon is unavailable and tests must stub adapters instead of making network calls.
 
 ---
 

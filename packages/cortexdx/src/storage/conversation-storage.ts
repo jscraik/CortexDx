@@ -4,27 +4,27 @@
  * Requirement 12.5: Maintain conversation context across sessions
  */
 
-import Database from "better-sqlite3";
+import Database, { type Database as DatabaseType } from "better-sqlite3";
 import type {
-    ChatMessage,
-    ConversationSession,
-    DevelopmentContext,
+  ChatMessage,
+  ConversationSession,
+  DevelopmentContext,
 } from "../types.js";
 
 export interface StoredConversation {
-    id: string;
-    pluginId: string;
-    context: string; // JSON serialized DevelopmentContext
-    state: string; // JSON serialized state
-    startTime: number;
-    lastActivity: number;
-    messages: string; // JSON serialized ChatMessage[]
+  id: string;
+  pluginId: string;
+  context: string; // JSON serialized DevelopmentContext
+  state: string; // JSON serialized state
+  startTime: number;
+  lastActivity: number;
+  messages: string; // JSON serialized ChatMessage[]
 }
 
 export interface ConversationExport {
-    version: string;
-    exportDate: number;
-    conversations: StoredConversation[];
+  version: string;
+  exportDate: number;
+  conversations: StoredConversation[];
 }
 
 /**
@@ -32,214 +32,221 @@ export interface ConversationExport {
  * Uses in-memory Map with optional file-based persistence
  */
 export class ConversationStorage {
-    private storage = new Map<string, StoredConversation>();
-    private persistencePath?: string;
-    private db?: Database;
+  private storage = new Map<string, StoredConversation>();
+  private persistencePath?: string;
+  private db?: DatabaseType;
 
-    constructor(persistencePath?: string) {
-        this.persistencePath = persistencePath;
-        if (persistencePath) {
-            this.initializeDatabase(persistencePath);
-        }
+  constructor(persistencePath?: string) {
+    this.persistencePath = persistencePath;
+    if (persistencePath) {
+      this.initializeDatabase(persistencePath);
+    }
+  }
+
+  /**
+   * Save a conversation session
+   */
+  async saveConversation(session: ConversationSession): Promise<void> {
+    const stored: StoredConversation = {
+      id: session.id,
+      pluginId: session.pluginId,
+      context: JSON.stringify(session.context),
+      state: JSON.stringify(session.state),
+      startTime: session.startTime,
+      lastActivity: session.lastActivity,
+      messages: JSON.stringify(session.context.conversationHistory || []),
+    };
+
+    this.storage.set(session.id, stored);
+
+    if (this.db) {
+      this.persistToDatabase(stored);
+    }
+  }
+
+  /**
+   * Load a conversation session by ID
+   */
+  async loadConversation(
+    sessionId: string,
+  ): Promise<ConversationSession | null> {
+    const stored = this.storage.get(sessionId);
+
+    if (!stored) {
+      return null;
     }
 
-    /**
-     * Save a conversation session
-     */
-    async saveConversation(session: ConversationSession): Promise<void> {
-        const stored: StoredConversation = {
-            id: session.id,
-            pluginId: session.pluginId,
-            context: JSON.stringify(session.context),
-            state: JSON.stringify(session.state),
-            startTime: session.startTime,
-            lastActivity: session.lastActivity,
-            messages: JSON.stringify(session.context.conversationHistory || []),
-        };
+    return this.deserializeConversation(stored);
+  }
 
-        this.storage.set(session.id, stored);
+  /**
+   * Load all conversation sessions
+   */
+  async loadAllConversations(): Promise<ConversationSession[]> {
+    const sessions: ConversationSession[] = [];
 
-        if (this.db) {
-            this.persistToDatabase(stored);
-        }
+    for (const stored of this.storage.values()) {
+      const session = this.deserializeConversation(stored);
+      if (session) {
+        sessions.push(session);
+      }
     }
 
-    /**
-     * Load a conversation session by ID
-     */
-    async loadConversation(sessionId: string): Promise<ConversationSession | null> {
-        const stored = this.storage.get(sessionId);
+    return sessions;
+  }
 
-        if (!stored) {
-            return null;
-        }
+  /**
+   * Delete a conversation session
+   */
+  async deleteConversation(sessionId: string): Promise<boolean> {
+    const deleted = this.storage.delete(sessionId);
 
-        return this.deserializeConversation(stored);
+    if (deleted && this.db) {
+      this.deleteFromDatabase(sessionId);
     }
 
-    /**
-     * Load all conversation sessions
-     */
-    async loadAllConversations(): Promise<ConversationSession[]> {
-        const sessions: ConversationSession[] = [];
+    return deleted;
+  }
 
-        for (const stored of this.storage.values()) {
-            const session = this.deserializeConversation(stored);
-            if (session) {
-                sessions.push(session);
-            }
+  /**
+   * Export conversations to JSON
+   */
+  async exportConversations(
+    sessionIds?: string[],
+  ): Promise<ConversationExport> {
+    const conversations: StoredConversation[] = [];
+
+    if (sessionIds) {
+      for (const id of sessionIds) {
+        const stored = this.storage.get(id);
+        if (stored) {
+          conversations.push(stored);
         }
-
-        return sessions;
+      }
+    } else {
+      conversations.push(...Array.from(this.storage.values()));
     }
 
-    /**
-     * Delete a conversation session
-     */
-    async deleteConversation(sessionId: string): Promise<boolean> {
-        const deleted = this.storage.delete(sessionId);
+    return {
+      version: "1.0",
+      exportDate: Date.now(),
+      conversations,
+    };
+  }
 
-        if (deleted && this.db) {
-            this.deleteFromDatabase(sessionId);
-        }
+  /**
+   * Import conversations from JSON export
+   */
+  async importConversations(exportData: ConversationExport): Promise<number> {
+    let imported = 0;
 
-        return deleted;
+    for (const conversation of exportData.conversations) {
+      this.storage.set(conversation.id, conversation);
+      imported++;
     }
 
-    /**
-     * Export conversations to JSON
-     */
-    async exportConversations(sessionIds?: string[]): Promise<ConversationExport> {
-        const conversations: StoredConversation[] = [];
-
-        if (sessionIds) {
-            for (const id of sessionIds) {
-                const stored = this.storage.get(id);
-                if (stored) {
-                    conversations.push(stored);
-                }
-            }
-        } else {
-            conversations.push(...Array.from(this.storage.values()));
-        }
-
-        return {
-            version: "1.0",
-            exportDate: Date.now(),
-            conversations,
-        };
+    if (this.db && imported > 0) {
+      for (const conversation of exportData.conversations) {
+        this.persistToDatabase(conversation);
+      }
     }
 
-    /**
-     * Import conversations from JSON export
-     */
-    async importConversations(exportData: ConversationExport): Promise<number> {
-        let imported = 0;
+    return imported;
+  }
 
-        for (const conversation of exportData.conversations) {
-            this.storage.set(conversation.id, conversation);
-            imported++;
-        }
+  /**
+   * Clean up old conversations
+   */
+  async cleanupOldConversations(maxAgeMs: number): Promise<number> {
+    const now = Date.now();
+    let cleaned = 0;
 
-        if (this.db && imported > 0) {
-            for (const conversation of exportData.conversations) {
-                this.persistToDatabase(conversation);
-            }
-        }
-
-        return imported;
+    for (const [id, stored] of this.storage.entries()) {
+      if (now - stored.lastActivity > maxAgeMs) {
+        this.storage.delete(id);
+        cleaned++;
+      }
     }
 
-    /**
-     * Clean up old conversations
-     */
-    async cleanupOldConversations(maxAgeMs: number): Promise<number> {
-        const now = Date.now();
-        let cleaned = 0;
-
-        for (const [id, stored] of this.storage.entries()) {
-            if (now - stored.lastActivity > maxAgeMs) {
-                this.storage.delete(id);
-                cleaned++;
-            }
-        }
-
-        if (cleaned > 0 && this.db) {
-            this.deleteOlderThan(now - maxAgeMs);
-        }
-
-        return cleaned;
+    if (cleaned > 0 && this.db) {
+      this.deleteOlderThan(now - maxAgeMs);
     }
 
-    /**
-     * Get storage statistics
-     */
-    getStats(): {
-        totalConversations: number;
-        oldestConversation: number | null;
-        newestConversation: number | null;
-    } {
-        const conversations = Array.from(this.storage.values());
+    return cleaned;
+  }
 
-        if (conversations.length === 0) {
-            return {
-                totalConversations: 0,
-                oldestConversation: null,
-                newestConversation: null,
-            };
-        }
+  /**
+   * Get storage statistics
+   */
+  getStats(): {
+    totalConversations: number;
+    oldestConversation: number | null;
+    newestConversation: number | null;
+  } {
+    const conversations = Array.from(this.storage.values());
 
-        const timestamps = conversations.map((c) => c.startTime);
-
-        return {
-            totalConversations: conversations.length,
-            oldestConversation: Math.min(...timestamps),
-            newestConversation: Math.max(...timestamps),
-        };
+    if (conversations.length === 0) {
+      return {
+        totalConversations: 0,
+        oldestConversation: null,
+        newestConversation: null,
+      };
     }
 
-    /**
-     * Restore sessions from disk on startup
-     */
-    async restoreFromDisk(): Promise<number> {
-        return this.restoreFromSQLite();
+    const timestamps = conversations.map((c) => c.startTime);
+
+    return {
+      totalConversations: conversations.length,
+      oldestConversation: Math.min(...timestamps),
+      newestConversation: Math.max(...timestamps),
+    };
+  }
+
+  /**
+   * Restore sessions from disk on startup
+   */
+  async restoreFromDisk(): Promise<number> {
+    return this.restoreFromSQLite();
+  }
+
+  async restoreFromSQLite(): Promise<number> {
+    if (!this.db) {
+      return 0;
     }
 
-    async restoreFromSQLite(): Promise<number> {
-        if (!this.db) {
-            return 0;
-        }
-
-        try {
-            const rows = this.db.prepare(
-                "SELECT id, plugin_id as pluginId, context, state, start_time as startTime, last_activity as lastActivity, messages FROM conversations",
-            ).all();
-            let restored = 0;
-            for (const row of rows as StoredConversation[]) {
-                this.storage.set(row.id, {
-                    id: row.id,
-                    pluginId: row.pluginId,
-                    context: row.context,
-                    state: row.state,
-                    startTime: row.startTime,
-                    lastActivity: row.lastActivity,
-                    messages: row.messages,
-                });
-                restored++;
-            }
-            return restored;
-        } catch (error) {
-            console.error("Failed to restore conversations from SQLite", error);
-            return 0;
-        }
+    try {
+      const rows = this.db
+        .prepare(
+          "SELECT id, plugin_id as pluginId, context, state, start_time as startTime, last_activity as lastActivity, messages FROM conversations",
+        )
+        .all();
+      let restored = 0;
+      for (const row of rows as StoredConversation[]) {
+        this.storage.set(row.id, {
+          id: row.id,
+          pluginId: row.pluginId,
+          context: row.context,
+          state: row.state,
+          startTime: row.startTime,
+          lastActivity: row.lastActivity,
+          messages: row.messages,
+        });
+        restored++;
+      }
+      return restored;
+    } catch (error) {
+      console.error("Failed to restore conversations from SQLite", error);
+      return 0;
     }
+  }
 
-    private initializeDatabase(path: string): void {
-        try {
-            this.db = new Database(path);
-            this.db.pragma("journal_mode = WAL");
-            this.db.prepare(
-                `CREATE TABLE IF NOT EXISTS conversations (
+  private initializeDatabase(path: string): void {
+    try {
+      this.db = new Database(path);
+      this.db.pragma("journal_mode = WAL");
+      this.db
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
                     plugin_id TEXT NOT NULL,
                     context TEXT NOT NULL,
@@ -248,20 +255,22 @@ export class ConversationStorage {
                     last_activity INTEGER NOT NULL,
                     messages TEXT NOT NULL
                 )`,
-            ).run();
-        } catch (error) {
-            console.error("Failed to initialize conversation database", error);
-            this.db = undefined;
-        }
+        )
+        .run();
+    } catch (error) {
+      console.error("Failed to initialize conversation database", error);
+      this.db = undefined;
     }
+  }
 
-    private persistToDatabase(conversation: StoredConversation): void {
-        if (!this.db) {
-            return;
-        }
-        try {
-            this.db.prepare(
-                `INSERT INTO conversations (id, plugin_id, context, state, start_time, last_activity, messages)
+  private persistToDatabase(conversation: StoredConversation): void {
+    if (!this.db) {
+      return;
+    }
+    try {
+      this.db
+        .prepare(
+          `INSERT INTO conversations (id, plugin_id, context, state, start_time, last_activity, messages)
                  VALUES (@id, @pluginId, @context, @state, @startTime, @lastActivity, @messages)
                  ON CONFLICT(id) DO UPDATE SET
                     plugin_id=excluded.plugin_id,
@@ -270,67 +279,70 @@ export class ConversationStorage {
                     start_time=excluded.start_time,
                     last_activity=excluded.last_activity,
                     messages=excluded.messages`,
-            ).run(conversation);
-        } catch (error) {
-            console.error("Failed to persist conversation", error);
-        }
+        )
+        .run(conversation);
+    } catch (error) {
+      console.error("Failed to persist conversation", error);
     }
+  }
 
-    private deleteFromDatabase(sessionId: string): void {
-        if (!this.db) {
-            return;
-        }
-        try {
-            this.db.prepare("DELETE FROM conversations WHERE id = ?").run(sessionId);
-        } catch (error) {
-            console.error("Failed to delete conversation", error);
-        }
+  private deleteFromDatabase(sessionId: string): void {
+    if (!this.db) {
+      return;
     }
-
-    private deleteOlderThan(threshold: number): void {
-        if (!this.db) {
-            return;
-        }
-        try {
-            this.db.prepare("DELETE FROM conversations WHERE last_activity < ?").run(threshold);
-        } catch (error) {
-            console.error("Failed to cleanup old conversations", error);
-        }
+    try {
+      this.db.prepare("DELETE FROM conversations WHERE id = ?").run(sessionId);
+    } catch (error) {
+      console.error("Failed to delete conversation", error);
     }
+  }
 
-    /**
-     * Deserialize stored conversation to session
-     */
-    private deserializeConversation(
-        stored: StoredConversation,
-    ): ConversationSession | null {
-        try {
-            const context: DevelopmentContext = JSON.parse(stored.context);
-            const messages: ChatMessage[] = JSON.parse(stored.messages);
-
-            // Restore conversation history
-            context.conversationHistory = messages;
-
-            return {
-                id: stored.id,
-                pluginId: stored.pluginId,
-                context,
-                state: JSON.parse(stored.state),
-                startTime: stored.startTime,
-                lastActivity: stored.lastActivity,
-            };
-        } catch (error) {
-            console.error(`Failed to deserialize conversation ${stored.id}:`, error);
-            return null;
-        }
+  private deleteOlderThan(threshold: number): void {
+    if (!this.db) {
+      return;
     }
+    try {
+      this.db
+        .prepare("DELETE FROM conversations WHERE last_activity < ?")
+        .run(threshold);
+    } catch (error) {
+      console.error("Failed to cleanup old conversations", error);
+    }
+  }
+
+  /**
+   * Deserialize stored conversation to session
+   */
+  private deserializeConversation(
+    stored: StoredConversation,
+  ): ConversationSession | null {
+    try {
+      const context: DevelopmentContext = JSON.parse(stored.context);
+      const messages: ChatMessage[] = JSON.parse(stored.messages);
+
+      // Restore conversation history
+      context.conversationHistory = messages;
+
+      return {
+        id: stored.id,
+        pluginId: stored.pluginId,
+        context,
+        state: JSON.parse(stored.state),
+        startTime: stored.startTime,
+        lastActivity: stored.lastActivity,
+      };
+    } catch (error) {
+      console.error(`Failed to deserialize conversation ${stored.id}:`, error);
+      return null;
+    }
+  }
 }
 
 /**
  * Create a conversation storage instance
  */
 export function createConversationStorage(
-    persistencePath?: string,
+  persistencePath?: string,
 ): ConversationStorage {
-    return new ConversationStorage(persistencePath);
+  return new ConversationStorage(persistencePath);
 }

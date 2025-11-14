@@ -3,8 +3,10 @@
  * Exports all MCP tool definitions for the CortexDx diagnostic system
  */
 
-export { createAcademicIntegrationTools } from "./academic-integration-tools.js";
+export { createAcademicIntegrationTools, executeAcademicIntegrationTool } from "./academic-integration-tools.js";
+export { createAgentOrchestrationTools, executeAgentOrchestrationTool } from "./agent-orchestration-tools.js";
 export { createCommercialFeatureTools } from "./commercial-feature-tools.js";
+export { createDeepContextTools, executeDeepContextTool } from "./deepcontext-tools.js";
 export { createDevelopmentAssistanceTools } from "./development-assistance-tools.js";
 export { createDevelopmentTools } from "./development-tools.js";
 export { createDiagnosticTools } from "./diagnostic-tools.js";
@@ -14,7 +16,9 @@ export { createPluginOrchestrationTools, executePluginOrchestrationTool } from "
 
 import type { McpTool } from "../types.js";
 import { createAcademicIntegrationTools } from "./academic-integration-tools.js";
+import { createAgentOrchestrationTools } from "./agent-orchestration-tools.js";
 import { createCommercialFeatureTools } from "./commercial-feature-tools.js";
+import { createDeepContextTools } from "./deepcontext-tools.js";
 import { createDevelopmentAssistanceTools } from "./development-assistance-tools.js";
 import { createDevelopmentTools } from "./development-tools.js";
 import { createDiagnosticTools } from "./diagnostic-tools.js";
@@ -32,8 +36,10 @@ export const getAllMcpTools = (): Record<string, McpTool[]> => ({
   academic: createAcademicIntegrationTools(),
   commercial: createCommercialFeatureTools(),
   license: createLicenseValidationTools(),
+  deepcontext: createDeepContextTools(),
   ide: ideIntegrationTools,
   orchestration: createPluginOrchestrationTools(),
+  agentOrchestration: createAgentOrchestrationTools(),
 });
 
 /**

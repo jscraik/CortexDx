@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "slug": null,
+  "file_tree": [
+    "packages/prp-runner/src",
+    "packages/prp-runner/.gitignore"
+  ],
+  "tasks": [
+    {
+      "id": "Remove tracked source maps",
+      "category": "obsolete",
+      "concurrent": false,
+      "deps": [],
+      "patch_hint": "--- /dev/null\n+++ b/packages/prp-runner/.gitignore\n@@\n+src/**/*.js.map\n+src/**/*.d.ts.map\n--- a/packages/prp-runner/src/index.d.ts.map\n+++ /dev/null\n@@ -1 +0,0 @@\n-{\"version\":3,...}",
+      "test_hint": "pnpm --filter prp-runner build"
+    }
+  ],
+  "risks": [
+    "Ensure no runtime asset depends on source map presence",
+    "Need to keep gitignore scoped to package to avoid global side-effects"
+  ],
+  "testing": {
+    "coverage_target": ">= 92% package threshold"
+  },
+  "evidence": {
+    "vibe_check_initial": null,
+    "memory_ids": null
+  },
+  "concurrency_report_path": ".cortexdx/refactors/20251027-3c9f/concurrency-report.json"
+}
