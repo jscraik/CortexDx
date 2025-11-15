@@ -9,7 +9,18 @@ export class DocsStore {
   private db: Database.Database;
 
   constructor(dbPath: string) {
-    this.db = new Database(dbPath);
+    try {
+      this.db = new Database(dbPath);
+    } catch (err: any) {
+      throw new Error(
+        `Failed to open SQLite database at path "${dbPath}".\n` +
+        `Error: ${err.message}\n` +
+        `Troubleshooting steps:\n` +
+        `- Ensure the path exists and is correct.\n` +
+        `- Check file and directory permissions.\n` +
+        `- Ensure the file system is writable.\n`
+      );
+    }
     this.initializeSchema();
   }
 
