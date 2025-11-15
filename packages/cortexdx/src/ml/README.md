@@ -1,5 +1,9 @@
 # LLM Integration for CortexDx
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+
 This module provides enhanced LLM integration for the CortexDx diagnostic system, enabling conversational development assistance and intelligent problem solving.
 
 ## Features
@@ -140,3 +144,17 @@ The LLM integration follows brAInwav CODESTYLE standards:
 - Proper TypeScript typing
 - AbortSignal support for async operations
 - Integration with existing adapter patterns
+
+See the main [Contributing Guide](../../../../CONTRIBUTING.md) for complete development setup and coding standards.
+
+## Support
+
+For issues or questions:
+
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../../README.md)
+- **Ollama Documentation**: <https://ollama.ai/docs>
+
+## License
+
+Licensed under the [Apache License 2.0](../../../../LICENSE)

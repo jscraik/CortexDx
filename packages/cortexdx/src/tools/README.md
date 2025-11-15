@@ -1,5 +1,9 @@
 # MCP Tool Definitions
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../LICENSE)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://spec.modelcontextprotocol.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+
 This directory contains comprehensive MCP tool definitions for the CortexDx diagnostic system. All tools follow the MCP protocol specification version 2024-11-05 and provide JSON schema-based input validation.
 
 ## Tool Categories
@@ -198,3 +202,17 @@ When adding new tools:
 6. Update this README with the new tool information
 7. Ensure Biome formatting compliance (`pnpm exec biome format --write`)
 8. Run tests and build to verify (`pnpm test && pnpm build`)
+
+See the main [Contributing Guide](../../../../CONTRIBUTING.md) for complete development setup and coding standards.
+
+## Support
+
+For issues or questions:
+
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../../README.md)
+- **MCP Specification**: <https://spec.modelcontextprotocol.io/>
+
+## License
+
+Licensed under the [Apache License 2.0](../../../../LICENSE)

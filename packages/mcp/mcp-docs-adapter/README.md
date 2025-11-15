@@ -1,5 +1,9 @@
 # @cortex-os/mcp-docs-adapter
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+
 Offline MCP documentation knowledge pack with SQLite FTS search.
 
 ## Overview
@@ -164,6 +168,20 @@ pnpm test -- --coverage
 pnpm test:watch
 ```
 
+## Contributing
+
+Contributions are welcome! Please see the main [Contributing Guide](../../../CONTRIBUTING.md) for details on:
+
+- Development setup
+- Coding standards
+- Submission guidelines
+- Testing requirements
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../README.md)
+
 ## License
 
-Apache-2.0
+Licensed under the [Apache License 2.0](../../../LICENSE)

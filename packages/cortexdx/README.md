@@ -59,8 +59,8 @@ docker run -p 3000:3000 \
 
 ```bash
 # Clone repository
-git clone https://github.com/brainwav/cortexdx.git
-cd cortexdx/packages/cortexdx
+git clone https://github.com/jscraik/CortexDx.git
+cd CortexDx/packages/cortexdx
 
 # Start with docker-compose
 docker-compose up cortexdx-community
@@ -70,8 +70,8 @@ docker-compose up cortexdx-community
 
 ```bash
 # For development/contribution
-git clone https://github.com/brainwav/cortexdx.git
-cd cortexdx
+git clone https://github.com/jscraik/CortexDx.git
+cd CortexDx
 mise install && pnpm install && pnpm build
 ```
 

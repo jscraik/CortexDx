@@ -1,5 +1,9 @@
 # Academic Research MCP Providers
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../../LICENSE)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://spec.modelcontextprotocol.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+
 This directory contains FASTMCP v3.22 compliant providers for academic research tools and services. These providers enable comprehensive research workflows including paper discovery, citation analysis, quality assessment, and contextual research analysis.
 
 ## Available Providers
@@ -292,6 +296,36 @@ When adding new academic providers:
 3. Register the provider in the academic registry
 4. Add appropriate tests
 5. Update this README with provider details
+6. Verify all upstream attributions are correct
+7. Check license compatibility with Apache 2.0
+
+See the main [Contributing Guide](../../../../../CONTRIBUTING.md) for complete development setup and coding standards.
+
+## Support
+
+For issues or questions:
+
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../../../README.md) and [Academic Tools Comparison](../../../../../docs/academic-research-tools-comparison.md)
+- **MCP Specification**: <https://spec.modelcontextprotocol.io/>
+
+## License
+
+Licensed under the [Apache License 2.0](../../../../../LICENSE)
+
+### Upstream Attributions
+
+This implementation includes adaptations and inspirations from the following open-source projects:
+
+- **Semantic Scholar MCP**: [SnippetSquid/SemanticScholarMCP](https://github.com/SnippetSquid/SemanticScholarMCP) (MIT License)
+- **Wikidata MCP**: [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) (MIT License)
+- **arXiv MCP Server**: [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) (MIT License)
+- **Vibe Check MCP**: [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) (MIT License)
+- **Cortex Vibe MCP**: [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) (Apache-2.0)  
+  _(npm package maintained under @brainwav, based on/forked from jscraik/Cortex-Vibe-MCP)_
+- **Context7**: [upstash/context7](https://github.com/upstash/context7) (MIT License)
+
+All upstream projects are used in compliance with their respective licenses.
 
 ## References
 

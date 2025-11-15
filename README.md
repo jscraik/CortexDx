@@ -1,6 +1,6 @@
 # CortexDx — Diagnostic Meta-Inspector
 
-[![GitHub Actions](https://github.com/brainwav/cortexdx/workflows/CortexDx%20Diagnose/badge.svg)](https://github.com/brainwav/cortexdx/actions)
+[![GitHub Actions](https://github.com/jscraik/CortexDx/workflows/CortexDx%20Diagnose/badge.svg)](https://github.com/jscraik/CortexDx/actions)
 [![npm version](https://img.shields.io/npm/v/@brainwav/cortexdx.svg)](https://www.npmjs.com/package/@brainwav/cortexdx)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
@@ -64,8 +64,8 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp
 
 ```bash
 # Clone and setup (for contributors)
-git clone https://github.com/brainwav/cortexdx.git
-cd cortexdx
+git clone https://github.com/jscraik/CortexDx.git
+cd CortexDx
 mise install          # Install Node/pnpm versions
 pnpm install          # Install dependencies
 pnpm build           # Build the project
@@ -467,8 +467,8 @@ Licensed under the [Apache License 2.0](LICENSE). See LICENSE file for details.
 
 ## 🆘 Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/brainwav/cortexdx/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/brainwav/cortexdx/discussions)
+- **Issues**: [GitHub Issues](https://github.com/jscraik/CortexDx/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jscraik/CortexDx/discussions)
 - **Documentation**: [docs.brainwav.io/mcp](https://docs.brainwav.io/mcp)
 - **Security**: Report security issues to <security@brainwav.io>
 
