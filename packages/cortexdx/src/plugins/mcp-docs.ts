@@ -147,7 +147,8 @@ export async function getDocumentationForCategory(
     });
 
     return searchResults.hits[0]?.url ?? null;
-  } catch {
+  } catch (error) {
+    console.debug('Failed to get documentation for category:', category, error);
     return null;
   }
 }
