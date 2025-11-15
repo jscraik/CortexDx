@@ -4,12 +4,92 @@
   "commit": "local-dev",
   "pages": [
     {
-      "id": "placeholder",
-      "title": "Placeholder Page",
-      "path": "/placeholder",
-      "url": "/placeholder",
-      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "anchors": []
+      "id": "mcp-intro",
+      "title": "Introduction to MCP",
+      "path": "/docs/mcp-intro",
+      "url": "/docs/mcp-intro",
+      "sha256": "a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef",
+      "anchors": ["overview", "history"]
+    },
+    {
+      "id": "mcp-installation",
+      "title": "MCP Installation Guide",
+      "path": "/docs/mcp-installation",
+      "url": "/docs/mcp-installation",
+      "sha256": "b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1",
+      "anchors": ["requirements", "steps", "troubleshooting"]
+    },
+    {
+      "id": "mcp-configuration",
+      "title": "MCP Configuration",
+      "path": "/docs/mcp-configuration",
+      "url": "/docs/mcp-configuration",
+      "sha256": "c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2",
+      "anchors": ["basic", "advanced", "examples"]
+    },
+    {
+      "id": "mcp-usage",
+      "title": "Using MCP",
+      "path": "/docs/mcp-usage",
+      "url": "/docs/mcp-usage",
+      "sha256": "d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3",
+      "anchors": ["cli", "api", "best-practices"]
+    },
+    {
+      "id": "mcp-api-reference",
+      "title": "MCP API Reference",
+      "path": "/docs/mcp-api-reference",
+      "url": "/docs/mcp-api-reference",
+      "sha256": "e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4",
+      "anchors": ["endpoints", "authentication", "examples"]
+    },
+    {
+      "id": "mcp-security",
+      "title": "MCP Security",
+      "path": "/docs/mcp-security",
+      "url": "/docs/mcp-security",
+      "sha256": "f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5",
+      "anchors": ["overview", "configuration", "audit"]
+    },
+    {
+      "id": "mcp-troubleshooting",
+      "title": "MCP Troubleshooting",
+      "path": "/docs/mcp-troubleshooting",
+      "url": "/docs/mcp-troubleshooting",
+      "sha256": "678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f",
+      "anchors": ["common-issues", "logs", "support"]
+    },
+    {
+      "id": "mcp-upgrade",
+      "title": "Upgrading MCP",
+      "path": "/docs/mcp-upgrade",
+      "url": "/docs/mcp-upgrade",
+      "sha256": "78901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f6",
+      "anchors": ["steps", "rollback", "compatibility"]
+    },
+    {
+      "id": "mcp-faq",
+      "title": "MCP FAQ",
+      "path": "/docs/mcp-faq",
+      "url": "/docs/mcp-faq",
+      "sha256": "8901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f67",
+      "anchors": ["general", "technical", "licensing"]
+    },
+    {
+      "id": "mcp-release-notes",
+      "title": "MCP Release Notes",
+      "path": "/docs/mcp-release-notes",
+      "url": "/docs/mcp-release-notes",
+      "sha256": "901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f678",
+      "anchors": ["v2025-06-18", "changes", "deprecated"]
+    },
+    {
+      "id": "mcp-contributing",
+      "title": "Contributing to MCP",
+      "path": "/docs/mcp-contributing",
+      "url": "/docs/mcp-contributing",
+      "sha256": "01234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f6789",
+      "anchors": ["guidelines", "code-of-conduct", "process"]
     }
   ]
 }
