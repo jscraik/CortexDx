@@ -227,7 +227,7 @@ export class RunCollector {
 
 			return result.url;
 		} catch (err) {
-			// Optionally log error here, e.g. console.error(err);
+			console.error('Failed to upload envelope:', err);
 			return null;
 		}
 	}
