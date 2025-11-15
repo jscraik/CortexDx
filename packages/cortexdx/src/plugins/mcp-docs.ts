@@ -123,7 +123,7 @@ async function searchRelevantDocs(
       });
     }
   } catch (error) {
-    // Silently ignore search errors
+    console.warn('Failed to search relevant docs in searchRelevantDocs:', error);
   }
 
   return findings;
