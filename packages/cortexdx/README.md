@@ -16,6 +16,7 @@ CortexDx v1.0.0 is now available with major enhancements:
 - 💼 **Commercial Licensing**: Three tiers (Community, Professional, Enterprise)
 - 🧠 **Learning System**: Pattern recognition and RAG-based knowledge accumulation
 - 📊 **Enhanced Diagnostics**: Real-time monitoring and performance profiling
+- ☁️ **Cloud Storage**: Cloudflare R2/AWS S3 integration with presigned URLs and zero-egress deployment
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details and [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for upgrade instructions.
 
