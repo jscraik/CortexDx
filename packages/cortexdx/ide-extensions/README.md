@@ -183,13 +183,11 @@ Each IDE extension has its own configuration:
 
 To contribute IDE extension improvements:
 
-1. Follow [CONTRIBUTING.md](../../../CONTRIBUTING.md) and [AGENTS.md](../../../AGENTS.md) guidelines
+1. Follow the guidelines in [CONTRIBUTING.md](../../../CONTRIBUTING.md) (development setup, coding standards) and [AGENTS.md](../../../AGENTS.md)
 2. Test with multiple IDEs
 3. Ensure MCP protocol compliance
 4. Add tests for new features
 5. Update documentation
-
-See the main [Contributing Guide](../../../CONTRIBUTING.md) for complete development setup and coding standards.
 
 ## Support
 
