@@ -379,7 +379,8 @@ For remote MCP server connections:
 | arXiv | None | None | Public API |
 | Context7 | None | `CONTEXT7_API_KEY`, `CONTEXT7_API_BASE_URL` | Remote server optional |
 | Semantic Scholar | None | `SEMANTIC_SCHOLAR_API_KEY` | Higher rate limits with key |
-| Vibe Check | None | `VIBE_CHECK_API_KEY`, `VIBE_CHECK_HTTP_URL` | Remote optional |
+| Research Quality | None | `RESEARCH_QUALITY_API_KEY`, `RESEARCH_QUALITY_HTTP_URL` | Remote optional |
+| Cortex Vibe | None | `CORTEX_VIBE_HTTP_URL` | Agent oversight & CPI |
 | OpenAlex | `OPENALEX_CONTACT_EMAIL` | None | Polite pool access |
 
 ---
