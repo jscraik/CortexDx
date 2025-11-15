@@ -32,8 +32,11 @@ export class McpDocsAdapter {
   private dataRoot: string;
 
   constructor(dataRoot?: string) {
+    // Find workspace root: from dist/ go up to workspace root
+    // dist/ -> mcp-docs-adapter/ -> mcp/ -> packages/ -> CortexDx/
+    const workspaceRoot = path.resolve(__dirname, "../../../..");
     this.dataRoot =
-      dataRoot ?? path.resolve(__dirname, "../../../data/knowledge/mcp-docs");
+      dataRoot ?? path.join(workspaceRoot, "data/knowledge/mcp-docs");
     this.activeVersion = process.env.MCP_DOCS_VERSION ?? "v2025-06-18";
   }
 
@@ -73,14 +76,15 @@ export class McpDocsAdapter {
    * Search documentation
    */
   async search(input: unknown): Promise<SearchOutput> {
+    // Validate input first (before checking store)
+    const parsed = SearchInput.parse(input);
+
     if (!this.store) {
       throw new McpDocsError(
         ErrorCode.DATA_MISSING,
         "Store not initialized. Call initialize() first.",
       );
     }
-
-    const parsed = SearchInput.parse(input);
     const startTime = Date.now();
 
     // If a specific version is requested, validate it
@@ -116,14 +120,15 @@ export class McpDocsAdapter {
    * Lookup a chunk by ID
    */
   async lookup(input: unknown): Promise<LookupOutput> {
+    // Validate input first (before checking store)
+    const parsed = LookupInput.parse(input);
+
     if (!this.store) {
       throw new McpDocsError(
         ErrorCode.DATA_MISSING,
         "Store not initialized. Call initialize() first.",
       );
     }
-
-    const parsed = LookupInput.parse(input);
     const chunk = this.store.lookup(parsed.id);
 
     if (!chunk) {
