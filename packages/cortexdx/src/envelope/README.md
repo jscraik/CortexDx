@@ -76,7 +76,7 @@ For complex assertions with evidence, use `AssertionEmitter`:
 
 ```typescript
 import { AssertionEmitter, RunCollector } from '@cortexdx/envelope';
-import { createCloudStorageFromEnv } from '@cortexdx/adapters/cloud-storage-adapter';
+import { createCloudStorageFromEnv } from '@cortexdx/adapters';
 
 // Setup
 const cloudStorage = createCloudStorageFromEnv();
