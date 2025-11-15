@@ -86,7 +86,10 @@ async function getMcpDocsAdapter(): Promise<McpDocsAdapter | null> {
       "@cortex-os/mcp-docs-adapter"
     );
     return await createMcpDocsAdapter();
-  } catch {
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.error('Failed to load MCP docs adapter:', error);
+    }
     return null;
   }
 }
