@@ -45,7 +45,20 @@ export class RunCollector {
 	 * Generate a unique run ID
 	 */
 	private generateRunId(): string {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+		const now = new Date();
+		const pad = (n: number, width: number = 2) => n.toString().padStart(width, "0");
+		const timestamp = [
+			now.getUTCFullYear(),
+			pad(now.getUTCMonth() + 1),
+			pad(now.getUTCDate()),
+			"T",
+			pad(now.getUTCHours()),
+			pad(now.getUTCMinutes()),
+			pad(now.getUTCSeconds()),
+			".",
+			pad(now.getUTCMilliseconds(), 3),
+			"Z"
+		].join("");
 		const shortId = randomUUID().substring(0, 8);
 		return `dx_${timestamp}_${shortId}`;
 	}
