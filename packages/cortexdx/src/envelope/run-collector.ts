@@ -194,23 +194,29 @@ export class RunCollector {
 	}
 
 	/**
-	 * Upload envelope to cloud storage
+	 * Upload envelope to cloud storage.
+	 * @returns The URL of the uploaded envelope, or null if upload fails.
+	 * Never throws; returns null on error.
 	 */
 	async uploadEnvelope(): Promise<string | null> {
 		if (!this.cloudStorage) {
 			return null;
 		}
+		try {
+			const envelope = this.build();
+			const content = JSON.stringify(envelope, null, 2);
 
-		const envelope = this.build();
-		const content = JSON.stringify(envelope, null, 2);
+			const result = await this.cloudStorage.uploadReport(
+				this.runId,
+				content,
+				"json",
+			);
 
-		const result = await this.cloudStorage.uploadReport(
-			this.runId,
-			content,
-			"json",
-		);
-
-		return result.url;
+			return result.url;
+		} catch (err) {
+			// Optionally log error here, e.g. console.error(err);
+			return null;
+		}
 	}
 
 	/**
