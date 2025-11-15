@@ -88,14 +88,7 @@ For a detailed feature comparison, see [docs/academic-research-tools-comparison.
 - `wikidata_sparql` - Custom SPARQL queries
 - `wikidata_academic_search` - Academic-focused search
 
-**Implementation Status**: ⚠️ **57% coverage** (4/7 tools from upstream)
-
-**Missing Features** (planned for implementation):
-- Vector search for items (semantic entity discovery)
-- Vector search for properties (property discovery via embeddings)
-- Get entity claims (direct graph connections in triplet format)
-- Get claim values (comprehensive claim data with qualifiers, ranks, references)
-
+**Implementation Status**: ✅ **100% coverage** (8/8 tools)
 ### 4. arXiv Provider (`arxiv.mcp.ts`)
 
 **Based on**: arXiv API v1.0 and inspired by [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server)
