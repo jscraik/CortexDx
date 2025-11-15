@@ -63,7 +63,7 @@ export class RunCollector {
 		const minute = pad(date.getUTCMinutes());
 		const second = pad(date.getUTCSeconds());
 		const ms = pad(date.getUTCMilliseconds(), 3);
-		return `${year}-${month}-${day}T${hour}-${minute}-${second}.${ms}Z`;
+		return `${year}-${month}-${day}T${hour}:${minute}:${second}.${ms}Z`;
 	}
 
 	/**
