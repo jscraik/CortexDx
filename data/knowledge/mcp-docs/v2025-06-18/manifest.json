@@ -6,7 +6,10 @@
     {
       "id": "placeholder",
       "title": "Placeholder Page",
-      "path": "/placeholder"
+      "path": "/placeholder",
+      "url": "/placeholder",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "anchors": []
     }
   ]
 }
