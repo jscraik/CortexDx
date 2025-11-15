@@ -125,7 +125,7 @@ const sampleChunks: DocChunk[] = [
 ];
 
 const sampleManifest: DocManifest = {
-  version: "v2025-06-18",
+  version: "v2024-06-18",
   createdAt: new Date().toISOString(),
   commit: "sample-data",
   pages: [
