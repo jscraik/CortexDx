@@ -1,7 +1,7 @@
 # Academic Research MCP Providers
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../../LICENSE)
-[![MCP Protocol](https://img.shields.io/badge/FASTMCP-v3.22-blue.svg)](https://spec.modelcontextprotocol.io/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://spec.modelcontextprotocol.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 
 This directory contains FASTMCP v3.22 compliant providers for academic research tools and services. These providers enable comprehensive research workflows including paper discovery, citation analysis, quality assessment, and contextual research analysis.
