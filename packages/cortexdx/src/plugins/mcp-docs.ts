@@ -87,7 +87,7 @@ async function getMcpDocsAdapter(): Promise<McpDocsAdapter | null> {
     );
     return await createMcpDocsAdapter();
   } catch (error) {
-    console.warn('Failed to load MCP docs adapter:', error);
+    console.error('Failed to load MCP docs adapter:', error);
     return null;
   }
 }
