@@ -49,9 +49,11 @@ const handshakeCase = collector.buildCase(
         summary: 'Return JSON-RPC error -32601 for unknown methods',
         patch_unified: `--- a/server/rpc.ts
 +++ b/server/rpc.ts
-@@ -10,7 +10,7 @@
-- return { id, result: null }
-+ return { id, error: { code: -32601, message: 'Method not found' } }`,
+@@ -9,7 +9,7 @@
+ function handleRpc(id, method) {
+-   return { id, result: null }
++   return { id, error: { code: -32601, message: 'Method not found' } }
+ }`,
         commands: ['pnpm -w test:rpc:unknown']
       },
       tags: ['jsonrpc', 'error-handling']
