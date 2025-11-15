@@ -220,7 +220,7 @@ function getDocumentationLink(category: ErrorCategory): string {
 async function initializeDocUrlCache(): Promise<void> {
   try {
     const { getDocumentationForCategory } = await import(
-      "../utils/mcp-docs.js"
+      "../plugins/mcp-docs.js"
     );
 
     const categories: ErrorCategory[] = [
