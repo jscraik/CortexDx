@@ -36,7 +36,7 @@ export class McpDocsAdapter {
     // You can set MCP_DOCS_WORKSPACE_ROOT to override the default workspace root
     const workspaceRoot =
       process.env.MCP_DOCS_WORKSPACE_ROOT ??
-      process.cwd();
+      __dirname;
     this.dataRoot =
       dataRoot ?? path.join(workspaceRoot, "data/knowledge/mcp-docs");
     this.activeVersion = process.env.MCP_DOCS_VERSION ?? "v2025-06-18";
