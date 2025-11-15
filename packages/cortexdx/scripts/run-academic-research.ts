@@ -74,16 +74,11 @@ const plan = [
     },
   },
   {
-    id: "vibe-check",
-    tool: "vibe_check_assess_quality",
+    id: "research-quality",
+    tool: "research_quality_assess_quality",
     params: {
+      text: "Guidance on enforcing machine-to-machine token exchange, deterministic diagnostics, and zero-trust headers for CortexDx MCP clients. Methodology: client credentials grant, deterministic diagnostics, session caching. Dataset: CortexDx mock reports + Auth0 RC specs.",
       title: "Auth0 Handshake Hardening Playbook",
-      abstract:
-        "Guidance on enforcing machine-to-machine token exchange, deterministic diagnostics, and zero-trust headers for CortexDx MCP clients.",
-      methodology:
-        "client credentials grant, deterministic diagnostics, session caching",
-      dataset_description: "CortexDx mock reports + Auth0 RC specs",
-      arxiv_id: "auth0-handoff-2025",
     },
   },
   {

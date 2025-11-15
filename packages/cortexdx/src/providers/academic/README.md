@@ -4,6 +4,23 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 
 ## Available Providers
 
+### Implementation Status Summary
+
+| Provider | Status | Coverage | Upstream Source |
+|----------|--------|----------|-----------------|
+| Semantic Scholar | ✅ Full | 100% (7/7 tools) | [SnippetSquid/SemanticScholarMCP](https://github.com/SnippetSquid/SemanticScholarMCP) |
+| OpenAlex | ✅ Native | N/A (5 tools) | Native CortexDx implementation |
+| Wikidata | ✅ Full | 100% (8/8 tools) | [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) |
+| arXiv | ✅ Full | 100% (5/5 tools) | [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) |
+| Research Quality | ✅ Enhanced | 100%+ (7 tools) | [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) |
+| Cortex Vibe | ✅ Full | 100% (5 tools) | [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) |
+| Context7 | ✅ Enhanced | 100%+ (7 tools) | [upstash/context7](https://github.com/upstash/context7) |
+| Exa | ✅ Native | N/A (3 tools) | Native CortexDx implementation |
+
+For a detailed feature comparison, see [docs/academic-research-tools-comparison.md](../../../../docs/academic-research-tools-comparison.md)
+
+---
+
 ### 1. Semantic Scholar Provider (`semantic-scholar.mcp.ts`)
 
 **Based on**: Semantic Scholar API v1 and inspired by [SnippetSquid/SemanticScholarMCP](https://github.com/SnippetSquid/SemanticScholarMCP)
@@ -26,14 +43,19 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 - `semantic_scholar_get_author` - Author profiles
 - `semantic_scholar_get_author_papers` - Author publication lists
 
+**Implementation Status**: ✅ **100% compliant** with upstream SnippetSquid/SemanticScholarMCP
+
 ### 2. OpenAlex Provider (`openalex.mcp.ts`)
+
+**Native CortexDx Implementation** - No direct upstream MCP server
 
 **Capabilities**:
 
 - Scholarly work discovery
-- Author research metrics
+- Author research metrics (h-index, i10-index, citation counts)
 - Institutional analysis
 - Research impact assessment
+- Open access status detection
 
 **Key Tools**:
 
@@ -42,6 +64,11 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 - `openalex_search_institutions` - Institutional research
 - `openalex_get_work` - Detailed work information
 - `openalex_get_author` - Author profiles with h-index
+
+**Environment Variables**:
+- `OPENALEX_CONTACT_EMAIL` (required for polite pool access)
+
+**Implementation Status**: ✅ **Native implementation** - CortexDx original with full FASTMCP v3.22 compliance
 
 ### 3. Wikidata Provider (`wikidata.mcp.ts`)
 
@@ -52,7 +79,7 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 - SPARQL query execution
 - Knowledge graph traversal
 - Entity lookup and relationships
-- Academic entity discovery
+- Academic entity discovery (researchers, institutions, publications, journals)
 
 **Key Tools**:
 
@@ -61,61 +88,125 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 - `wikidata_sparql` - Custom SPARQL queries
 - `wikidata_academic_search` - Academic-focused search
 
+**Implementation Status**: ✅ **100% coverage** (8/8 tools)
 ### 4. arXiv Provider (`arxiv.mcp.ts`)
 
 **Based on**: arXiv API v1.0 and inspired by [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server)
 
+**Note**: This implementation is based on the arXiv MCP server, not [space-cadet/arxivite](https://github.com/space-cadet/arxivite) which is a full-stack research application with UI, Zotero integration, and database requirements.
+
 **Capabilities**:
 
 - Preprint search and discovery
-- Category-based filtering
+- Category-based filtering (cs.AI, cs.LG, stat.ML, etc.)
 - Author publication tracking
-- Metadata extraction
+- Metadata extraction (DOI, journal refs, comments)
+- License compliance checking
 
 **Key Tools**:
 
-- `arxiv_search` - Advanced preprint search
-- `arxiv_get_paper` - Paper details by ID
+- `arxiv_search` - Advanced preprint search with field queries
+- `arxiv_get_paper` - Paper details by ID list
 - `arxiv_search_by_category` - Category-specific search
 - `arxiv_search_by_author` - Author-based discovery
-- `arxiv_get_categories` - Available categories
+- `arxiv_get_categories` - Available categories enumeration
 
-### 5. Vibe Check Provider (`vibe-check.mcp.ts`)
+**Implementation Status**: ✅ **100% compliant** with upstream blazickjp/arxiv-mcp-server plus category enhancements
+
+### 5. Research Quality Provider (`research-quality.mcp.ts`)
 
 **Based on**: Research quality metrics and inspired by [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server)
 
+**Purpose**: Academic research quality assessment and integrity validation
+
+**Note**: Enhanced with anti-pattern detection, code health analysis, and refactoring suggestions beyond upstream. For AI agent metacognitive oversight, see Cortex Vibe provider.
+
 **Capabilities**:
 
-- Research quality assessment
+- Research quality assessment (multi-dimensional scoring)
 - Academic integrity validation
-- Methodology review
+- Methodology review with statistical rigor checks
 - Predatory publisher detection
+- Citation pattern anomaly detection
+- Anti-pattern detection in research code
+- Refactoring recommendations
 
 **Key Tools**:
 
-- `vibe_check_assess_quality` - Comprehensive quality assessment
-- `vibe_check_venue_assessment` - Publication venue evaluation
-- `vibe_check_citation_analysis` - Citation pattern analysis
-- `vibe_check_methodology_review` - Methodology validation
+- `research_quality_assess_quality` - Comprehensive quality assessment
+- `research_quality_venue_assessment` - Publication venue evaluation with predatory detection
+- `research_quality_citation_analysis` - Citation pattern analysis with anomaly detection
+- `research_quality_methodology_review` - Methodology validation with statistical rigor
+- `research_quality_detect_anti_patterns` - Code anti-pattern detection
+- `research_quality_refactoring_suggestions` - Refactoring recommendations
+- `research_quality_code_health` - Code health analysis
 
-### 6. Context7 Provider (`context7.mcp.ts`)
+**Environment Variables**:
+- `RESEARCH_QUALITY_API_KEY` (optional)
+- `RESEARCH_QUALITY_HTTP_URL` (optional, for remote instances)
+
+**Implementation Status**: ✅ **100%+ compliant** - Enhanced with code quality features beyond upstream
+
+### 6. Cortex Vibe Provider (`cortex-vibe.mcp.ts`)
+
+**Based on**: [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) v0.0.19
+
+**Purpose**: AI agent metacognitive oversight and safety alignment
+
+**Note**: Chain-Pattern Interrupts (CPI) for preventing tunnel vision and reasoning lock-in in autonomous agents. For academic research quality assessment, see Research Quality provider.
+
+**Capabilities**:
+
+- Metacognitive self-checks (CPI)
+- Assumption challenge and validation
+- Tunnel vision prevention
+- Learning capture (mistakes/successes/preferences)
+- Session-based constitution rules for agent behavior
+- Agent alignment and safety oversight
+
+**Key Tools**:
+
+- `cortex_vibe_check` - Challenge assumptions and prevent tunnel vision
+- `cortex_vibe_learn` - Capture mistakes, preferences, and successes
+- `cortex_update_constitution` - Set/merge session rules for CPI enforcement
+- `cortex_reset_constitution` - Clear rules for a session
+- `cortex_check_constitution` - Inspect effective rules
+
+**Environment Variables**:
+- `CORTEX_VIBE_API_BASE_URL` or `CORTEX_VIBE_HTTP_URL` (optional, for remote server)
+- `CORTEXDX_DISABLE_CORTEX_VIBE_HTTP` (set to "1" to disable remote calls)
+
+**Integration**: Works with both remote Cortex Vibe MCP servers and local fallback mode
+
+**Implementation Status**: ✅ **100% compliant** with local fallback for offline operation
+
+### 7. Context7 Provider (`context7.mcp.ts`)
 
 **Based on**: Context7 API and inspired by [upstash/context7](https://github.com/upstash/context7)
+
+**Note**: Significantly enhanced beyond upstream. Original Context7 focuses on documentation retrieval; CortexDx adds comprehensive academic research capabilities.
 
 **Capabilities**:
 
 - Contextual research analysis
-- Cross-reference discovery
-- Citation context analysis
+- Cross-reference discovery with relationship types
+- Citation context analysis with sentiment scoring
 - Research trajectory tracking
+- Interdisciplinary connection mapping
+- Architecture validation with license compliance
+- Code quality assessment with academic standards
 
 **Key Tools**:
 
-- `context7_analyze_paper` - Comprehensive contextual analysis
-- `context7_find_related_papers` - Related work discovery
-- `context7_citation_context` - Citation context analysis
-- `context7_research_trajectory` - Research evolution tracking
-- `context7_interdisciplinary_analysis` - Cross-field analysis
+- `context7_analyze_paper` - Comprehensive contextual analysis with relevance metrics
+- `context7_find_related_papers` - Related work discovery with relationship types
+- `context7_citation_context` - Citation context analysis with sentiment by section
+- `context7_research_trajectory` - Research evolution tracking (topic/author/methodology)
+- `context7_interdisciplinary_analysis` - Cross-field influence mapping
+- `context7_validate_architecture` - Design validation with license compliance checking
+- `context7_assess_code_quality` - Academic standards assessment with license validation
+
+**Implementation Status**: ✅ **100%+ compliant** - Enhanced with academic research features beyond upstream
 
 ## Registry System
 

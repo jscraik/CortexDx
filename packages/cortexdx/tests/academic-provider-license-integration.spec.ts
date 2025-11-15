@@ -3,7 +3,7 @@
  * Task 14.1.3: Test academic provider integration with license validation
  * 
  * Tests verify:
- * - All 7 academic providers work with license validation
+ * - All 8 academic providers work with license validation
  * - Research-backed code generation produces valid suggestions
  * - Compliance monitoring tracks usage correctly
  * 
@@ -32,8 +32,8 @@ const mockContext: DiagnosticContext = {
 };
 
 describe("Academic Provider License Integration (Task 14.1.3)", () => {
-  describe("All 7 Academic Providers with License Validation", () => {
-    it("should verify all 7 academic providers are registered", () => {
+  describe("All 8 Academic Providers with License Validation", () => {
+    it("should verify all 8 academic providers are registered", () => {
       const registry = getAcademicRegistry();
       const providers = registry.getAllProviders();
 
@@ -42,7 +42,8 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
+        "cortex-vibe",
         "context7",
         "exa",
       ];
@@ -62,7 +63,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
         "context7",
       ];
 
@@ -79,7 +80,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
         "context7",
         "exa",
       ];
@@ -106,7 +107,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
         "context7",
         "exa",
       ];
@@ -163,7 +164,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
 
     it("should block suggestions from non-approved licenses", () => {
       const nonApprovedLicenses = ["GPL-3.0", "CC-BY-NC-4.0", "AGPL-3.0"];
-      const providers = ["vibe-check", "context7", "wikidata"];
+      const providers = ["research-quality", "context7", "wikidata"];
 
       providers.forEach((provider) => {
         nonApprovedLicenses.forEach((license) => {
@@ -232,7 +233,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         {
           title: "Vibe Check Assessment",
           authors: ["Author 5"],
-          source: "vibe-check",
+          source: "research-quality",
           license: "MIT",
         },
         {
@@ -271,7 +272,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
         "context7",
         "exa",
       ];
@@ -340,7 +341,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         timestamp: number;
       }> = [];
 
-      const providers = ["arxiv", "semantic-scholar", "openalex", "vibe-check"];
+      const providers = ["arxiv", "semantic-scholar", "openalex", "research-quality"];
 
       providers.forEach((provider) => {
         const content: ResearchContent = {
@@ -452,7 +453,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
       const content: ResearchContent = {
         title: "Vibe Check Quality Assessment",
         authors: ["VC Assessor"],
-        source: "vibe-check",
+        source: "research-quality",
         license: "MIT",
       };
 
@@ -495,7 +496,7 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         "openalex",
         "wikidata",
         "arxiv",
-        "vibe-check",
+        "research-quality",
         "context7",
         "exa",
       ];

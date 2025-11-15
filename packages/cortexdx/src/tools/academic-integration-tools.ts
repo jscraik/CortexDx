@@ -330,7 +330,8 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
             type: "string",
             enum: [
               "context7",
-              "vibe-check",
+              "research-quality",
+              "cortex-vibe",
               "semantic-scholar",
               "openalex",
               "wikidata",
