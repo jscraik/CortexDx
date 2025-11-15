@@ -13,6 +13,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHash } from "node:crypto";
+import type { Evidence, EvidenceKind } from "../envelope/types.js";
 
 export interface CloudStorageConfig {
 	provider: "s3" | "r2" | "gcs" | "azure";
@@ -245,6 +246,93 @@ export class CloudStorageAdapter {
 			url,
 			size: Buffer.byteLength(content, "utf8"),
 		};
+	}
+
+	/**
+	 * Upload evidence artifact for envelope diagnostics
+	 * Supports multiple evidence kinds: log, trace, http, screenshot, diff, artifact
+	 */
+	async uploadEvidence(
+		runId: string,
+		caseId: string,
+		assertionId: string,
+		artifactName: string,
+		content: string | Buffer,
+		kind: EvidenceKind,
+		contentType?: string,
+	): Promise<Evidence> {
+		const key = `${this.config.prefix}runs/${runId}/${caseId}/${assertionId}/${artifactName}`;
+
+		// Compute SHA-256 hash
+		const sha256 = createHash("sha256")
+			.update(content)
+			.digest("hex");
+
+		// Determine content type based on kind if not provided
+		const inferredContentType = contentType || this.inferContentType(kind, artifactName);
+
+		// Upload to cloud storage
+		await this.s3Client.send(
+			new PutObjectCommand({
+				Bucket: this.config.bucket,
+				Key: key,
+				Body: content,
+				ContentType: inferredContentType,
+				Metadata: {
+					sha256,
+					runId,
+					caseId,
+					assertionId,
+					evidenceKind: kind,
+					uploadedAt: new Date().toISOString(),
+				},
+				// Evidence is short-lived, cache accordingly
+				CacheControl: "public, max-age=3600",
+			}),
+		);
+
+		// Generate presigned URL with expiration
+		const url = await this.makePresignedUrl(key);
+		const expiresAt = new Date();
+		expiresAt.setSeconds(expiresAt.getSeconds() + (this.config.ttlSeconds || 900));
+
+		return {
+			kind,
+			url,
+			sha256,
+			content_type: inferredContentType,
+			expires_at: expiresAt.toISOString(),
+		};
+	}
+
+	/**
+	 * Infer content type from evidence kind and artifact name
+	 */
+	private inferContentType(kind: EvidenceKind, artifactName: string): string {
+		// Check file extension first
+		const ext = artifactName.split(".").pop()?.toLowerCase();
+
+		if (ext === "json") return "application/json";
+		if (ext === "txt" || ext === "log") return "text/plain";
+		if (ext === "png") return "image/png";
+		if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+		if (ext === "patch" || ext === "diff") return "text/x-diff";
+		if (ext === "har") return "application/json";
+
+		// Fallback to kind-based inference
+		switch (kind) {
+			case "log":
+			case "trace":
+			case "http":
+				return "application/json";
+			case "diff":
+				return "text/x-diff";
+			case "screenshot":
+				return "image/png";
+			case "artifact":
+			default:
+				return "application/octet-stream";
+		}
 	}
 
 	/**
