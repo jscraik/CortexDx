@@ -309,30 +309,33 @@ export class CloudStorageAdapter {
 	 * Infer content type from evidence kind and artifact name
 	 */
 	private inferContentType(kind: EvidenceKind, artifactName: string): string {
-		// Check file extension first
+		const extensionContentTypeMap: Record<string, string> = {
+			json: "application/json",
+			txt: "text/plain",
+			log: "text/plain",
+			png: "image/png",
+			jpg: "image/jpeg",
+			jpeg: "image/jpeg",
+			patch: "text/x-diff",
+			diff: "text/x-diff",
+			har: "application/json",
+		};
+		const kindContentTypeMap: Record<EvidenceKind, string> = {
+			log: "application/json",
+			trace: "application/json",
+			http: "application/json",
+			diff: "text/x-diff",
+			screenshot: "image/png",
+			artifact: "application/octet-stream",
+		};
 		const ext = artifactName.split(".").pop()?.toLowerCase();
-
-		if (ext === "json") return "application/json";
-		if (ext === "txt" || ext === "log") return "text/plain";
-		if (ext === "png") return "image/png";
-		if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
-		if (ext === "patch" || ext === "diff") return "text/x-diff";
-		if (ext === "har") return "application/json";
-
-		// Fallback to kind-based inference
-		switch (kind) {
-			case "log":
-			case "trace":
-			case "http":
-				return "application/json";
-			case "diff":
-				return "text/x-diff";
-			case "screenshot":
-				return "image/png";
-			case "artifact":
-			default:
-				return "application/octet-stream";
+		if (ext && extensionContentTypeMap[ext]) {
+			return extensionContentTypeMap[ext];
 		}
+		if (kindContentTypeMap[kind]) {
+			return kindContentTypeMap[kind];
+		}
+		return "application/octet-stream";
 	}
 
 	/**
