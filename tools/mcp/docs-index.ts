@@ -40,7 +40,7 @@ const PAGES: PageSpec[] = [
   },
   {
     id: "spec-2025-06-18",
-    url: "https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/",
+    url: "https://spec.modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle/",
     type: "web",
   },
   {
