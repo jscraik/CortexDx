@@ -19,6 +19,8 @@
     "docs:sync-versions": "node scripts/sync-versions.js",
     "docs:sync-versions:dry-run": "node scripts/sync-versions.js --dry-run",
     "docs:monitor-links": "node scripts/broken-link-monitor.js",
+    "docs:mcp:index": "tsx tools/mcp/docs-index.ts",
+    "docs:mcp:index:dry-run": "MCP_DOCS_DRY_RUN=1 tsx tools/mcp/docs-index.ts",
     "internal:self-improvement": "pnpm --filter @brainwav/cortexdx run internal:self-improvement",
     "internal:self-healing-suite": "pnpm --filter @brainwav/cortexdx run internal:self-healing-suite",
     "deepcontext:status": "pnpm --filter @brainwav/cortexdx run deepcontext:status",
@@ -33,6 +35,7 @@
     "nx": "19.8.4",
     "patch-package": "^8.0.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.6.3"
   }
 }

@@ -1,0 +1,51 @@
+# Agent Graph Configuration
+# Defines the multi-agent system architecture for CortexDx
+
+version: "1.0"
+
+agents:
+  - id: cortexdx
+    role: "MCP diagnostic meta-inspector"
+    description: "Stateless, plugin-based diagnostic system for MCP servers"
+    capabilities:
+      - protocol-validation
+      - performance-analysis
+      - security-scanning
+      - compatibility-testing
+
+  - id: mcp-docs-adapter
+    role: "MCP knowledge adapter (MCP docs)"
+    description: "Offline MCP documentation search and retrieval"
+    provides:
+      - tool: mcp_docs.search
+        description: "Search MCP documentation with query"
+        inputs:
+          - query (string, min 2 chars)
+          - topK (number, 1-20, default 5)
+          - version (string, optional)
+        outputs:
+          - version (string)
+          - tookMs (number)
+          - hits (array of passages)
+      - tool: mcp_docs.lookup
+        description: "Get full documentation chunk by ID"
+        inputs:
+          - id (string, required)
+        outputs:
+          - id (string)
+          - url (string)
+          - title (string)
+          - text (string)
+          - outline (array of headings)
+      - tool: mcp_docs.version
+        description: "Get version info and available snapshots"
+        outputs:
+          - active (string)
+          - available (array of versions)
+          - commit (string)
+
+edges:
+  - from: cortexdx
+    to: mcp-docs-adapter
+    type: "knowledge-lookup"
+    description: "CortexDx queries MCP docs for diagnostic evidence"
