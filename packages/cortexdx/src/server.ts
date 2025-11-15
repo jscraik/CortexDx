@@ -27,6 +27,7 @@ import {
 import { getGlobalMonitoring } from "./observability/monitoring.js";
 import { runPlugins } from "./plugin-host.js";
 import { type AuthMiddlewareConfig, type AuthenticatedRequest, checkToolAccess, createAuthMiddleware } from "./plugins/auth-middleware.js";
+import { createDiagnosticSessionMiddleware } from "./plugins/diagnostic-session-middleware.js";
 import type { LicenseKey } from "./plugins/commercial-licensing.js";
 import { type LicenseEnforcementConfig, createFeatureAccessMiddleware, createLicenseEnforcementMiddleware } from "./plugins/license-enforcement.js";
 import { getAcademicRegistry } from "./registry/index.js";
@@ -38,6 +39,7 @@ import { getMcpDocsResource, listMcpDocsResources } from "./resources/mcp-docs-s
 import { findMcpTool, getAllMcpToolsFlat, executeDeepContextTool } from "./tools/index.js";
 import { executeAcademicIntegrationTool } from "./tools/academic-integration-tools.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
+import { getDiagnosticSessionManager, type DiagnosticSessionConfig } from "./auth/diagnostic-session-manager.js";
 import type {
     DevelopmentContext,
     DiagnosticContext,
@@ -90,6 +92,14 @@ type MonitoringActionPayload = {
 type ProviderExecutePayload = {
     tool: string;
     params?: Record<string, unknown>;
+};
+
+type DiagnosticSessionCreatePayload = {
+    requestedBy: string;
+    scope: string[];
+    duration: number;
+    allowedEndpoints?: string[];
+    metadata?: Record<string, unknown>;
 };
 
 // Auth0 configuration from environment
@@ -419,6 +429,9 @@ const authMiddlewareConfig: AuthMiddlewareConfig = {
 
 const authMiddleware = createAuthMiddleware(authMiddlewareConfig);
 
+// Initialize diagnostic session middleware
+const diagnosticSessionMiddleware = createDiagnosticSessionMiddleware();
+
 // Initialize license enforcement middleware
 const licenseEnforcementConfig: LicenseEnforcementConfig = {
     licenseDatabase,
@@ -736,6 +749,214 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
             return;
         }
 
+        // Diagnostic session management endpoints
+        if (route === '/api/v1/diagnostic-session/create' && method === 'POST') {
+            // Create diagnostic session endpoint (requires Auth0 authentication)
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', async () => {
+                try {
+                    // Verify Auth0 authentication
+                    const authReq = req as AuthenticatedRequest;
+                    if (!authReq.auth && REQUIRE_AUTH) {
+                        res.writeHead(401);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Authentication required. Provide valid Auth0 Bearer token.',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    const payload: DiagnosticSessionCreatePayload = safeParseJson<DiagnosticSessionCreatePayload>(
+                        body,
+                        "diagnostic session create payload"
+                    );
+
+                    // Validate required fields
+                    if (!payload.requestedBy || !payload.scope || !Array.isArray(payload.scope) || !payload.duration) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Missing required fields: requestedBy, scope (array), duration (seconds)',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    // Validate duration (max 24 hours)
+                    if (payload.duration > 86400) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Duration cannot exceed 86400 seconds (24 hours)',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    const sessionManager = getDiagnosticSessionManager();
+                    const config: DiagnosticSessionConfig = {
+                        requestedBy: payload.requestedBy,
+                        scope: payload.scope,
+                        duration: payload.duration,
+                        allowedEndpoints: payload.allowedEndpoints,
+                        metadata: {
+                            ...payload.metadata,
+                            createdBy: authReq.auth?.userId || 'unknown',
+                            createdVia: 'api'
+                        }
+                    };
+
+                    const session = sessionManager.createSession(config);
+
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        session,
+                        message: 'Diagnostic session created successfully. Store the apiKey securely - it will not be shown again.',
+                        timestamp: new Date().toISOString(),
+                    }));
+                } catch (error) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: String(error),
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
+            return;
+        }
+
+        if (route.startsWith('/api/v1/diagnostic-session/') && route.endsWith('/revoke') && method === 'POST') {
+            // Revoke diagnostic session endpoint
+            const sessionId = route.split('/')[4]; // Extract session ID
+            if (!sessionId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Session ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const sessionManager = getDiagnosticSessionManager();
+                const revoked = sessionManager.revokeSession(sessionId);
+
+                if (revoked) {
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        message: `Diagnostic session ${sessionId} revoked successfully`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Session ${sessionId} not found or already revoked`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route.match(/^\/api\/v1\/diagnostic-session\/[^\/]+$/) && method === 'GET') {
+            // Get diagnostic session info endpoint
+            const sessionId = route.split('/').pop();
+            if (!sessionId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Session ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const sessionManager = getDiagnosticSessionManager();
+                const session = sessionManager.getSession(sessionId);
+
+                if (session) {
+                    const usage = sessionManager.getSessionUsage(sessionId);
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        session,
+                        usage,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Session ${sessionId} not found`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/diagnostic-session' && method === 'GET') {
+            // List diagnostic sessions endpoint
+            try {
+                const url = new URL(req.url || '', `http://${req.headers.host}`);
+                const requestedBy = url.searchParams.get('requestedBy');
+                const status = url.searchParams.get('status') as "active" | "revoked" | "expired" | null;
+
+                if (!requestedBy) {
+                    res.writeHead(400);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: 'requestedBy query parameter required',
+                        timestamp: new Date().toISOString(),
+                    }));
+                    return;
+                }
+
+                const sessionManager = getDiagnosticSessionManager();
+                const sessions = sessionManager.listSessions(requestedBy, status || undefined);
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    sessions,
+                    count: sessions.length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
         // 404 for unknown API endpoints
         res.writeHead(404);
         res.end(JSON.stringify({
@@ -798,6 +1019,16 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
 
     if (!authPassed) {
         return; // Auth middleware already sent response
+    }
+
+    // Apply diagnostic session middleware (allows alternative auth via session key)
+    let sessionPassed = false;
+    await diagnosticSessionMiddleware(req, res, () => {
+        sessionPassed = true;
+    });
+
+    if (!sessionPassed) {
+        return; // Diagnostic session middleware already sent response
     }
 
     // Apply license enforcement middleware
@@ -1504,6 +1735,12 @@ if (SHOULD_LISTEN) {
         console.log("  GET  /api/v1/templates      - List available fix templates");
         console.log("  POST /api/v1/templates/:id - Apply a fix template");
         console.log("  POST /api/v1/monitor       - Control background monitoring");
+        console.log("");
+        console.log("Diagnostic Session API:");
+        console.log("  POST /api/v1/diagnostic-session/create - Create temporary diagnostic session");
+        console.log("  POST /api/v1/diagnostic-session/:id/revoke - Revoke diagnostic session");
+        console.log("  GET  /api/v1/diagnostic-session/:id - Get session information");
+        console.log("  GET  /api/v1/diagnostic-session - List diagnostic sessions");
 
         // Start monitoring if enabled
         if (ENABLE_MONITORING) {
