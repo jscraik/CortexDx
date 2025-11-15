@@ -12,7 +12,8 @@ This directory contains FASTMCP v3.22 compliant providers for academic research 
 | OpenAlex | ✅ Native | N/A (5 tools) | Native CortexDx implementation |
 | Wikidata | ✅ Full | 100% (8/8 tools) | [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) |
 | arXiv | ✅ Full | 100% (5/5 tools) | [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) |
-| Vibe Check | ✅ Enhanced | 100%+ (4 tools) | [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) |
+| Research Quality | ✅ Enhanced | 100%+ (7 tools) | [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) |
+| Cortex Vibe | ✅ Full | 100% (5 tools) | [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) |
 | Context7 | ✅ Enhanced | 100%+ (7 tools) | [upstash/context7](https://github.com/upstash/context7) |
 | Exa | ✅ Native | N/A (3 tools) | Native CortexDx implementation |
 
@@ -119,11 +120,13 @@ For a detailed feature comparison, see [docs/academic-research-tools-comparison.
 
 **Implementation Status**: ✅ **100% compliant** with upstream blazickjp/arxiv-mcp-server plus category enhancements
 
-### 5. Vibe Check Provider (`vibe-check.mcp.ts`)
+### 5. Research Quality Provider (`research-quality.mcp.ts`)
 
 **Based on**: Research quality metrics and inspired by [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server)
 
-**Note**: Enhanced with anti-pattern detection, code health analysis, and refactoring suggestions beyond upstream.
+**Purpose**: Academic research quality assessment and integrity validation
+
+**Note**: Enhanced with anti-pattern detection, code health analysis, and refactoring suggestions beyond upstream. For AI agent metacognitive oversight, see Cortex Vibe provider.
 
 **Capabilities**:
 
@@ -137,18 +140,54 @@ For a detailed feature comparison, see [docs/academic-research-tools-comparison.
 
 **Key Tools**:
 
-- `vibe_check_assess_quality` - Comprehensive quality assessment
-- `vibe_check_venue_assessment` - Publication venue evaluation with predatory detection
-- `vibe_check_citation_analysis` - Citation pattern analysis with anomaly detection
-- `vibe_check_methodology_review` - Methodology validation with statistical rigor
+- `research_quality_assess_quality` - Comprehensive quality assessment
+- `research_quality_venue_assessment` - Publication venue evaluation with predatory detection
+- `research_quality_citation_analysis` - Citation pattern analysis with anomaly detection
+- `research_quality_methodology_review` - Methodology validation with statistical rigor
+- `research_quality_detect_anti_patterns` - Code anti-pattern detection
+- `research_quality_refactoring_suggestions` - Refactoring recommendations
+- `research_quality_code_health` - Code health analysis
 
 **Environment Variables**:
-- `VIBE_CHECK_API_KEY` (optional)
-- `VIBE_CHECK_HTTP_URL` (optional, for remote instances)
+- `RESEARCH_QUALITY_API_KEY` (optional)
+- `RESEARCH_QUALITY_HTTP_URL` (optional, for remote instances)
 
 **Implementation Status**: ✅ **100%+ compliant** - Enhanced with code quality features beyond upstream
 
-### 6. Context7 Provider (`context7.mcp.ts`)
+### 6. Cortex Vibe Provider (`cortex-vibe.mcp.ts`)
+
+**Based on**: [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) v0.0.19
+
+**Purpose**: AI agent metacognitive oversight and safety alignment
+
+**Note**: Chain-Pattern Interrupts (CPI) for preventing tunnel vision and reasoning lock-in in autonomous agents. For academic research quality assessment, see Research Quality provider.
+
+**Capabilities**:
+
+- Metacognitive self-checks (CPI)
+- Assumption challenge and validation
+- Tunnel vision prevention
+- Learning capture (mistakes/successes/preferences)
+- Session-based constitution rules for agent behavior
+- Agent alignment and safety oversight
+
+**Key Tools**:
+
+- `cortex_vibe_check` - Challenge assumptions and prevent tunnel vision
+- `cortex_vibe_learn` - Capture mistakes, preferences, and successes
+- `cortex_update_constitution` - Set/merge session rules for CPI enforcement
+- `cortex_reset_constitution` - Clear rules for a session
+- `cortex_check_constitution` - Inspect effective rules
+
+**Environment Variables**:
+- `CORTEX_VIBE_API_BASE_URL` or `CORTEX_VIBE_HTTP_URL` (optional, for remote server)
+- `CORTEXDX_DISABLE_CORTEX_VIBE_HTTP` (set to "1" to disable remote calls)
+
+**Integration**: Works with both remote Cortex Vibe MCP servers and local fallback mode
+
+**Implementation Status**: ✅ **100% compliant** with local fallback for offline operation
+
+### 7. Context7 Provider (`context7.mcp.ts`)
 
 **Based on**: Context7 API and inspired by [upstash/context7](https://github.com/upstash/context7)
 
