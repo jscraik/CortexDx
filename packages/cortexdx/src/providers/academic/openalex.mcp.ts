@@ -105,6 +105,9 @@ export class OpenAlexProvider {
   private readonly licenseValidator: LicenseValidatorPlugin;
   private readonly remoteClient?: HttpMcpClient;
   private readonly contactEmail?: string;
+  private lastRequestAt = 0;
+  private readonly throttleMs =
+    Number.parseInt(process.env.OPENALEX_THROTTLE_MS ?? "200", 10) || 200;
 
   constructor(private ctx: DiagnosticContext) {
     this.licenseValidator = createLicenseValidator(ctx);
@@ -115,12 +118,17 @@ export class OpenAlexProvider {
   }
 
   private buildHeaders(extra?: Record<string, string>): Record<string, string> {
-    return {
-      "User-Agent": this.userAgent,
+    const headers: Record<string, string> = {
+      "User-Agent": this.contactEmail
+        ? `${this.userAgent} (mailto:${this.contactEmail})`
+        : this.userAgent,
       Accept: "application/json",
-      ...(this.ctx.headers ?? {}),
       ...(extra ?? {}),
     };
+    if (this.contactEmail) {
+      headers["x-openalex-contact"] = this.contactEmail;
+    }
+    return headers;
   }
 
   private withMailto(url: string): string {
@@ -301,26 +309,15 @@ export class OpenAlexProvider {
     const url = `${this.baseUrl}/works?${searchParams}`;
     const target = this.withMailto(url);
 
-    try {
-      const response = await this.ctx.request<{
-        results: OpenAlexWork[];
-        meta: unknown;
-      }>(target, {
-        headers: this.buildHeaders(),
-      });
-
-      this.ctx.evidence({
-        type: "url",
-        ref: target,
-      });
-
-      return response;
-    } catch (error) {
-      this.ctx.logger("OpenAlex works search failed:", error);
-      throw new Error(
-        `OpenAlex API error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+    const response = await this.fetchJson<{
+      results: OpenAlexWork[];
+      meta: unknown;
+    }>(target);
+    this.ctx.evidence({
+      type: "url",
+      ref: target,
+    });
+    return response;
   }
 
   /**
@@ -341,26 +338,15 @@ export class OpenAlexProvider {
     const url = `${this.baseUrl}/authors?${searchParams}`;
     const target = this.withMailto(url);
 
-    try {
-      const response = await this.ctx.request<{
-        results: OpenAlexAuthor[];
-        meta: unknown;
-      }>(target, {
-        headers: this.buildHeaders(),
-      });
-
-      this.ctx.evidence({
-        type: "url",
-        ref: target,
-      });
-
-      return response;
-    } catch (error) {
-      this.ctx.logger("OpenAlex authors search failed:", error);
-      throw new Error(
-        `OpenAlex API error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+    const response = await this.fetchJson<{
+      results: OpenAlexAuthor[];
+      meta: unknown;
+    }>(target);
+    this.ctx.evidence({
+      type: "url",
+      ref: target,
+    });
+    return response;
   }
 
   /**
@@ -381,26 +367,15 @@ export class OpenAlexProvider {
     const url = `${this.baseUrl}/institutions?${searchParams}`;
     const target = this.withMailto(url);
 
-    try {
-      const response = await this.ctx.request<{
-        results: OpenAlexInstitution[];
-        meta: unknown;
-      }>(target, {
-        headers: this.buildHeaders(),
-      });
-
-      this.ctx.evidence({
-        type: "url",
-        ref: target,
-      });
-
-      return response;
-    } catch (error) {
-      this.ctx.logger("OpenAlex institutions search failed:", error);
-      throw new Error(
-        `OpenAlex API error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+    const response = await this.fetchJson<{
+      results: OpenAlexInstitution[];
+      meta: unknown;
+    }>(target);
+    this.ctx.evidence({
+      type: "url",
+      ref: target,
+    });
+    return response;
   }
 
   /**
@@ -414,15 +389,11 @@ export class OpenAlexProvider {
     const target = this.withMailto(url);
 
     try {
-      const response = await this.ctx.request<OpenAlexWork>(target, {
-        headers: this.buildHeaders(),
-      });
-
+      const response = await this.fetchJson<OpenAlexWork>(target);
       this.ctx.evidence({
         type: "url",
         ref: target,
       });
-
       return response;
     } catch (error) {
       this.ctx.logger("OpenAlex work details failed:", error);
@@ -441,15 +412,11 @@ export class OpenAlexProvider {
     const target = this.withMailto(url);
 
     try {
-      const response = await this.ctx.request<OpenAlexAuthor>(target, {
-        headers: this.buildHeaders(),
-      });
-
+      const response = await this.fetchJson<OpenAlexAuthor>(target);
       this.ctx.evidence({
         type: "url",
         ref: target,
       });
-
       return response;
     } catch (error) {
       this.ctx.logger("OpenAlex author details failed:", error);
@@ -509,6 +476,7 @@ export class OpenAlexProvider {
     }
 
     try {
+      await this.applyThrottle();
       const result = await this.remoteClient.callToolJson<T>(
         toolName,
         sanitizeToolArgs(params),
@@ -557,6 +525,35 @@ export class OpenAlexProvider {
       default:
         throw new Error(`Unknown tool: ${toolName}`);
     }
+  }
+
+  private async applyThrottle(): Promise<void> {
+    const elapsed = Date.now() - this.lastRequestAt;
+    if (elapsed < this.throttleMs) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, this.throttleMs - elapsed),
+      );
+    }
+    this.lastRequestAt = Date.now();
+  }
+
+  private async fetchJson<T>(
+    url: string,
+    extraHeaders?: Record<string, string>,
+  ): Promise<T> {
+    await this.applyThrottle();
+    const response = await fetch(url, {
+      headers: this.buildHeaders(extraHeaders),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(
+        `OpenAlex HTTP ${response.status}: ${
+          detail.slice(0, 200) || response.statusText
+        }`,
+      );
+    }
+    return (await response.json()) as T;
   }
 }
 

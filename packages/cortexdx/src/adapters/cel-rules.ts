@@ -7,6 +7,7 @@
  * Requirements: 23.3 - Implement custom CEL rules
  */
 
+import { safeParseJson } from "../utils/json.js";
 import type { CELRule } from "./protovalidate.js";
 
 /**
@@ -398,12 +399,8 @@ export const MCPCELRuleLibrary = {
  */
 
 export function loadCELRulesFromJSON(json: string): CELRule[] {
-  try {
-    const config = JSON.parse(json);
-    return parseRulesConfig(config);
-  } catch (error) {
-    throw new Error(`Failed to parse CEL rules JSON: ${String(error)}`);
-  }
+  const config = safeParseJson<CELRulesConfig>(json, "CEL rules config");
+  return parseRulesConfig(config);
 }
 
 export function loadCELRulesFromConfig(config: CELRulesConfig): CELRule[] {

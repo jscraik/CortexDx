@@ -116,6 +116,10 @@ async function performMcpInspection(ctx: import("../types.js").DiagnosticContext
   const capabilitiesResult = await inspectServerCapabilities(ctx);
   findings.push(...capabilitiesResult);
 
+  // Server instructions inspection
+  const instructionsResult = await inspectServerInstructions(ctx);
+  findings.push(...instructionsResult);
+
   return findings;
 }
 
@@ -262,6 +266,61 @@ async function inspectMcpPrompts(ctx: import("../types.js").DiagnosticContext): 
   }
 
   return findings;
+}
+
+async function inspectServerInstructions(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+  const findings: Finding[] = [];
+  try {
+    const response = await ctx.jsonrpc<{ instructions?: string | string[] }>("server/instructions");
+    const instructions = normalizeServerInstructions(response?.instructions);
+    if (instructions.length > 0) {
+      const preview = instructions[0].slice(0, 240);
+      findings.push({
+        id: "mcp.instructions.present",
+        area: "mcp-governance",
+        severity: "info",
+        title: `Server instructions available (${instructions.length})`,
+        description: `Example: ${preview}`,
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.95
+      });
+    } else {
+      findings.push({
+        id: "mcp.instructions.empty",
+        area: "mcp-governance",
+        severity: "info",
+        title: "Server instructions endpoint returned no data",
+        description: "Consider publishing concise server instructions to guide MCP clients.",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        confidence: 0.75
+      });
+    }
+  } catch (error) {
+    findings.push({
+      id: "mcp.instructions.unavailable",
+      area: "mcp-governance",
+      severity: "info",
+      title: "Server instructions not exposed",
+      description: `server/instructions call failed: ${String(error)}`,
+      evidence: [{ type: "url", ref: ctx.endpoint }],
+      confidence: 0.6
+    });
+  }
+  return findings;
+}
+
+function normalizeServerInstructions(input: unknown): string[] {
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  if (Array.isArray(input)) {
+    return input
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+  }
+  return [];
 }
 
 async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {

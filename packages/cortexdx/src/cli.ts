@@ -22,6 +22,7 @@ import {
 } from "./commands/deepcontext.js";
 import { runResearch } from "./commands/research.js";
 import { runGenerateSbom } from "./commands/sbom.js";
+import { runLibraryIngestCommand } from "./commands/library.js";
 
 const program = new Command();
 program
@@ -163,6 +164,24 @@ program
       .option("--out <file>", "output file path")
       .action(async (target, source, opts) => {
         const code = await runGenerateDocumentation(target, source, opts);
+        process.exitCode = code;
+      }),
+  );
+
+program
+  .command("library")
+  .description("manage CortexDx knowledge artifacts")
+  .addCommand(
+    new Command("ingest-docs")
+      .description("ingest normalized MCP docs snapshot into vector storage")
+      .option("--version <version>", "snapshot version to ingest")
+      .option("--root <dir>", "library root directory", ".cortexdx/library/mcp-docs")
+      .option("--storage <file>", "vector storage persistence path")
+      .option("--limit <count>", "limit number of chunks ingested")
+      .option("--promoted", "read from promoted snapshots instead of _staging")
+      .option("--dry-run", "simulate ingestion without storing vectors")
+      .action(async (opts) => {
+        const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
   );

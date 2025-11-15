@@ -3,6 +3,7 @@
  * Provides local LLM capabilities through Ollama with model management and conversation support
  */
 
+import { safeParseJson } from "../utils/json.js";
 import {
   getDefaultOllamaBaseUrl,
   getDefaultOllamaModel,
@@ -300,7 +301,7 @@ Respond in JSON format.`;
     const response = await this.complete(prompt, 1024);
 
     try {
-      return JSON.parse(response);
+      return safeParseJson<CodeAnalysis>(response, "ollama code analysis");
     } catch {
       // Fallback if JSON parsing fails
       return {
@@ -349,7 +350,7 @@ Respond in JSON format.`;
     const response = await this.complete(prompt, 2048);
 
     try {
-      return JSON.parse(response);
+      return safeParseJson<Solution>(response, "ollama solution");
     } catch {
       // Fallback solution
       return {
@@ -399,7 +400,7 @@ Respond in JSON format.`;
     const response = await this.complete(prompt, 1024);
 
     try {
-      return JSON.parse(response);
+      return safeParseJson<Explanation>(response, "ollama error explanation");
     } catch {
       // Fallback explanation
       return {

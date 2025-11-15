@@ -1,6 +1,7 @@
 import type { CELRule } from "../adapters/protovalidate.js";
 import { ProtovalidateAdapter } from "../adapters/protovalidate.js";
-import type { DiagnosticPlugin, Finding } from "../types.js";
+import type { DiagnosticPlugin, EvidencePointer, Finding } from "../types.js";
+import { getMcpSpecEvidence } from "../library/mcp-docs-evidence.js";
 
 export const ProtocolPlugin: DiagnosticPlugin = {
   id: "protocol",
@@ -105,13 +106,14 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
     }>("initialize", initRequest);
 
     if (!initResponse) {
+      const evidence = await buildProtocolEvidence(ctx, "MCP initialize request handshake");
       findings.push({
         id: "mcp.protocol.no_init_response",
         area: "protocol-validation",
         severity: "blocker",
         title: "No initialization response",
         description: "Server failed to respond to MCP initialize request",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.99
       });
       return findings;
@@ -119,50 +121,54 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
 
     // Validate protocol version
     if (initResponse.protocolVersion !== "2024-11-05") {
+      const evidence = await buildProtocolEvidence(ctx, "MCP protocol version negotiation 2024-11-05");
       findings.push({
         id: "mcp.protocol.version_mismatch",
         area: "protocol-validation",
         severity: "major",
         title: `Protocol version mismatch: ${initResponse.protocolVersion}`,
         description: "Server does not support MCP protocol v2024-11-05",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.95,
         recommendation: "Update server to support MCP protocol v2024-11-05"
       });
     } else {
+      const evidence = await buildProtocolEvidence(ctx, "MCP protocol version negotiation 2024-11-05");
       findings.push({
         id: "mcp.protocol.version_ok",
         area: "protocol-validation",
         severity: "info",
         title: "Protocol version validated",
         description: "Server supports MCP protocol v2024-11-05",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.99
       });
     }
 
     // Validate server info
     if (!initResponse.serverInfo?.name || !initResponse.serverInfo?.version) {
+      const evidence = await buildProtocolEvidence(ctx, "MCP initialize serverInfo");
       findings.push({
         id: "mcp.protocol.missing_server_info",
         area: "protocol-validation",
         severity: "minor",
         title: "Incomplete server info",
         description: "Server info missing name or version fields",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.9
       });
     }
 
     // Validate capabilities structure
     if (!initResponse.capabilities || typeof initResponse.capabilities !== 'object') {
+      const evidence = await buildProtocolEvidence(ctx, "MCP initialize capabilities object tools resources prompts");
       findings.push({
         id: "mcp.protocol.invalid_capabilities",
         area: "protocol-validation",
         severity: "major",
         title: "Invalid capabilities structure",
         description: "Server capabilities field is missing or malformed",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.95
       });
     }
@@ -170,23 +176,25 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
     // Test notification support (optional but recommended)
     try {
       await ctx.jsonrpc<void>("notifications/initialized");
+      const evidence = await buildProtocolEvidence(ctx, "notifications/initialized method");
       findings.push({
         id: "mcp.protocol.notifications_supported",
         area: "protocol-validation",
         severity: "info",
         title: "Notifications supported",
         description: "Server supports MCP notification protocol",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.8
       });
     } catch {
+      const evidence = await buildProtocolEvidence(ctx, "notifications/initialized method");
       findings.push({
         id: "mcp.protocol.notifications_unsupported",
         area: "protocol-validation",
         severity: "minor",
         title: "Notifications not supported",
         description: "Server does not support MCP notifications (optional feature)",
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.7
       });
     }
@@ -204,6 +212,20 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
   }
 
   return findings;
+}
+
+async function buildProtocolEvidence(
+  ctx: import("../types.js").DiagnosticContext,
+  query?: string,
+): Promise<EvidencePointer[]> {
+  const evidence: EvidencePointer[] = [{ type: "url", ref: ctx.endpoint }];
+  if (query) {
+    const pointer = await getMcpSpecEvidence(query);
+    if (pointer) {
+      evidence.push(pointer);
+    }
+  }
+  return evidence;
 }
 
 async function validateJsonRpcStructure(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {

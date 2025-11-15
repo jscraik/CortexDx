@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -78,7 +79,7 @@ async function readPackageJson(
   try {
     const pkgPath = path.join(projectRoot, "package.json");
     const raw = await readFile(pkgPath, "utf8");
-    return JSON.parse(raw) as Record<string, unknown>;
+    return safeParseJson<Record<string, unknown>>(raw, "project package.json");
   } catch {
     return undefined;
   }

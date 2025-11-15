@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { TemplateEngine } from "../template-engine/engine.js";
 import {
   getAllCodePatterns,
@@ -26,7 +27,9 @@ function createDevelopmentContext(): DevelopmentContext {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
-      return text.length ? JSON.parse(text) : {};
+      return text.length
+        ? safeParseJson<Record<string, unknown>>(text, "templates request")
+        : {};
     },
     jsonrpc: jsonRpcStub as <T>(method: string, params?: unknown) => Promise<T>,
     sseProbe: async () => ({ ok: true }),

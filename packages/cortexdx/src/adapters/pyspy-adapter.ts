@@ -5,6 +5,7 @@
  * flame graph generation, and subprocess profiling support.
  */
 
+import { safeParseJson } from "../utils/json.js";
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -381,7 +382,10 @@ export class PySpyAdapter {
       if (profile.format === "speedscope") {
         try {
           const jsonContent = await readFile(profile.outputPath, "utf-8");
-          const data = JSON.parse(jsonContent);
+          const data = safeParseJson<{ profiles?: unknown[] }>(
+            jsonContent,
+            "py-spy speedscope profile",
+          );
 
           if (data.profiles && Array.isArray(data.profiles)) {
             findings.push({

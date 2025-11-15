@@ -1,0 +1,47 @@
+{
+  "staticPages": [
+    {
+      "id": "about",
+      "url": "https://modelcontextprotocol.io/about",
+      "title": "Model Context Protocol — About"
+    },
+    {
+      "id": "getting-started-intro",
+      "url": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "title": "Model Context Protocol — Getting Started"
+    }
+  ],
+  "spec": {
+    "baseUrl": "https://modelcontextprotocol.io",
+    "defaultVersion": "2025-06-18",
+    "initialSlugs": [
+      "basic",
+      "changelog",
+      "architecture",
+      "index",
+      "server",
+      "client",
+      "schema"
+    ]
+  },
+  "gitRepos": [
+    {
+      "id": "fastmcp-punkpeye",
+      "url": "https://github.com/punkpeye/fastmcp.git",
+      "ref": "main",
+      "paths": ["README.md"]
+    },
+    {
+      "id": "fastmcp-jlowin",
+      "url": "https://github.com/jlowin/fastmcp.git",
+      "ref": "main",
+      "paths": ["README.md", "docs"]
+    },
+    {
+      "id": "owasp-aisvs",
+      "url": "https://github.com/OWASP/AISVS.git",
+      "ref": "main",
+      "paths": ["README.md", "1.0"]
+    }
+  ]
+}

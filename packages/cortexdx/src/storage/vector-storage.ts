@@ -4,6 +4,7 @@
  * Requirements: 12.5, 10.2
  */
 
+import { safeParseJson } from "../utils/json.js";
 import type { EmbeddingVector } from "../adapters/embedding.js";
 import { cosineSimilarity } from "../adapters/embedding.js";
 import type { Problem, Solution } from "../types.js";
@@ -16,7 +17,7 @@ export interface VectorDocument {
 }
 
 export interface DocumentMetadata {
-  type: "problem" | "solution" | "pattern";
+  type: "problem" | "solution" | "pattern" | "reference";
   problemType?: string;
   problemSignature?: string;
   solutionId?: string;
@@ -35,7 +36,7 @@ export interface SearchResult {
 export interface SearchOptions {
   topK?: number;
   minSimilarity?: number;
-  filterType?: "problem" | "solution" | "pattern";
+  filterType?: "problem" | "solution" | "pattern" | "reference";
   filterProblemType?: string;
 }
 
@@ -158,7 +159,7 @@ export class VectorStorage {
    * Get all documents matching a filter
    */
   async getDocumentsByType(
-    type: "problem" | "solution" | "pattern",
+    type: "problem" | "solution" | "pattern" | "reference",
   ): Promise<VectorDocument[]> {
     return Array.from(this.documents.values()).filter(
       (doc) => doc.metadata.type === type,
@@ -233,7 +234,7 @@ export class VectorStorage {
     try {
       const fs = await import("node:fs/promises");
       const data = await fs.readFile(this.persistencePath, "utf-8");
-      const stored: VectorDocument[] = JSON.parse(data);
+      const stored: VectorDocument[] = safeParseJson(data);
 
       for (const doc of stored) {
         this.documents.set(doc.id, doc);
@@ -361,6 +362,65 @@ export const createPatternDocument = (
         solutionType: solution.type,
         averageResolutionTime: 0,
       },
+    },
+    timestamp: Date.now(),
+  };
+};
+
+export interface ReferenceDocumentInput {
+  id: string;
+  text: string;
+  version: string;
+  url: string;
+  sourceId: string;
+  order: number;
+  sha256: string;
+  title?: string;
+  sourceType?: string;
+  sourceUrl?: string;
+  artifact?: string;
+  commit?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export const createReferenceDocument = (
+  input: ReferenceDocumentInput,
+  embedding: EmbeddingVector,
+): VectorDocument => {
+  const context: Record<string, unknown> = {
+    version: input.version,
+    url: input.url,
+    sourceId: input.sourceId,
+    order: input.order,
+    sha256: input.sha256,
+  };
+
+  if (input.title) {
+    context.title = input.title;
+  }
+  if (input.sourceType) {
+    context.sourceType = input.sourceType;
+  }
+  if (input.sourceUrl) {
+    context.sourceUrl = input.sourceUrl;
+  }
+  if (input.artifact) {
+    context.artifact = input.artifact;
+  }
+  if (input.commit) {
+    context.commit = input.commit;
+  }
+  if (input.metadata) {
+    context.metadata = input.metadata;
+  }
+
+  return {
+    id: `reference_${input.id}`,
+    embedding,
+    metadata: {
+      type: "reference",
+      text: input.text,
+      context,
     },
     timestamp: Date.now(),
   };

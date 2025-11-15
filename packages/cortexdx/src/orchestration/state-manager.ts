@@ -4,6 +4,7 @@
  * Requirements: 18.2
  */
 
+import { safeParseJson } from "../utils/json.js";
 import { MemorySaver } from "@langchain/langgraph";
 import Database from "better-sqlite3";
 import type { WorkflowState } from "./agent-orchestrator.js";
@@ -187,10 +188,10 @@ export class StateManager {
             checkpointId: row.checkpoint_id,
             workflowId: row.workflow_id,
             threadId: row.thread_id,
-            state: JSON.parse(row.state_json) as WorkflowState,
+            state: safeParseJson(row.state_json) as WorkflowState,
             timestamp: row.timestamp,
             metadata: row.metadata_json
-                ? (JSON.parse(row.metadata_json) as Record<string, unknown>)
+                ? (safeParseJson(row.metadata_json) as Record<string, unknown>)
                 : undefined,
         };
     }
@@ -243,10 +244,10 @@ export class StateManager {
             checkpointId: row.checkpoint_id,
             workflowId: row.workflow_id,
             threadId: row.thread_id,
-            state: JSON.parse(row.state_json) as WorkflowState,
+            state: safeParseJson(row.state_json) as WorkflowState,
             timestamp: row.timestamp,
             metadata: row.metadata_json
-                ? (JSON.parse(row.metadata_json) as Record<string, unknown>)
+                ? (safeParseJson(row.metadata_json) as Record<string, unknown>)
                 : undefined,
         };
     }
@@ -307,7 +308,7 @@ export class StateManager {
             lastCheckpointId: row.last_checkpoint_id || undefined,
             status: row.status as "active" | "completed" | "failed" | "interrupted",
             metadata: row.metadata_json
-                ? (JSON.parse(row.metadata_json) as Record<string, unknown>)
+                ? (safeParseJson(row.metadata_json) as Record<string, unknown>)
                 : undefined,
             createdAt: row.created_at,
             updatedAt: row.updated_at,
@@ -355,7 +356,7 @@ export class StateManager {
             lastCheckpointId: row.last_checkpoint_id || undefined,
             status: row.status as "active" | "completed" | "failed" | "interrupted",
             metadata: row.metadata_json
-                ? (JSON.parse(row.metadata_json) as Record<string, unknown>)
+                ? (safeParseJson(row.metadata_json) as Record<string, unknown>)
                 : undefined,
             createdAt: row.created_at,
             updatedAt: row.updated_at,

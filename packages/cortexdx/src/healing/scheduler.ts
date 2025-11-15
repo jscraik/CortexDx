@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { DevelopmentContext } from "../types.js";
@@ -459,7 +460,7 @@ export class MonitoringScheduler {
     if (!this.stateFile) return;
     try {
       const payload = await readFile(this.stateFile, "utf8");
-      const snapshot = JSON.parse(payload) as MonitoringStateSnapshot;
+      const snapshot = safeParseJson(payload) as MonitoringStateSnapshot;
       this.jobs.clear();
       for (const job of snapshot.jobs ?? []) {
         this.jobs.set(job.id, { ...job, running: false });

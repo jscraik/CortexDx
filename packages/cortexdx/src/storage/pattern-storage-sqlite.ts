@@ -6,6 +6,7 @@
  * with encryption at rest and automatic anonymization of sensitive data.
  */
 
+import { safeParseJson } from "../utils/json.js";
 import Database from "better-sqlite3";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 import type {
@@ -347,7 +348,7 @@ export function createSQLitePatternStorage(
         const encrypted = row.solution_data;
         try {
             const json = encryption.decrypt(encrypted);
-            return JSON.parse(json) as ResolutionPattern;
+            return safeParseJson(json) as ResolutionPattern;
         } catch (error) {
             if (!loggedDecryptFailures.has(row.id)) {
                 console.warn(
@@ -362,7 +363,7 @@ export function createSQLitePatternStorage(
             const trimmed = encrypted.trim();
             if (trimmed.startsWith("{")) {
                 try {
-                    return JSON.parse(trimmed) as ResolutionPattern;
+                    return safeParseJson(trimmed) as ResolutionPattern;
                 } catch {
                     // fall through to placeholder
                 }
@@ -525,8 +526,8 @@ export function createSQLitePatternStorage(
             return rows.map((row) => ({
                 signature: row.signature,
                 occurrences: row.occurrences,
-                solutions: JSON.parse(row.solutions),
-                contexts: JSON.parse(row.contexts),
+                solutions: safeParseJson(row.solutions),
+                contexts: safeParseJson(row.contexts),
                 firstSeen: row.first_seen,
                 lastSeen: row.last_seen,
             }));
@@ -537,7 +538,7 @@ export function createSQLitePatternStorage(
             const existing = selectCommonIssue.get(anonymizedSig) as CommonIssueRow | undefined;
 
             if (existing) {
-                const contexts = JSON.parse(existing.contexts) as string[];
+                const contexts = safeParseJson(existing.contexts) as string[];
                 if (!contexts.includes(context)) {
                     contexts.push(context);
                 }

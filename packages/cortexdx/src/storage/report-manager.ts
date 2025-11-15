@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
@@ -215,7 +216,7 @@ export class ReportManager {
     }
 
     // Delete all format files
-    const formats = JSON.parse(row.formats) as ReportFormat[];
+    const formats = safeParseJson(row.formats) as ReportFormat[];
     for (const format of formats) {
       const filePath = `${row.path}.${format}`;
       if (existsSync(filePath)) {
@@ -287,9 +288,9 @@ export class ReportManager {
       diagnosticType: row.diagnostic_type,
       createdAt: new Date(row.created_at),
       size: row.size,
-      formats: JSON.parse(row.formats) as ReportFormat[],
+      formats: safeParseJson(row.formats) as ReportFormat[],
       path: row.path,
-      tags: JSON.parse(row.tags || "[]") as string[],
+      tags: safeParseJson(row.tags || "[]") as string[],
     }));
   }
 
@@ -322,9 +323,9 @@ export class ReportManager {
       diagnosticType: row.diagnostic_type,
       createdAt: new Date(row.created_at),
       size: row.size,
-      formats: JSON.parse(row.formats) as ReportFormat[],
+      formats: safeParseJson(row.formats) as ReportFormat[],
       path: row.path,
-      tags: JSON.parse(row.tags || "[]") as string[],
+      tags: safeParseJson(row.tags || "[]") as string[],
     }));
   }
 

@@ -1,8 +1,17 @@
 import type { Finding } from "../types.js";
+import { extractTargetLabel } from "./targets.js";
 
-export function buildMarkdownReport(stamp: Record<string, unknown>, findings: Finding[]): string {
+export function buildMarkdownReport(
+  stamp: Record<string, unknown>,
+  findings: Finding[],
+): string {
+  const targetLabel = extractTargetLabel(
+    typeof stamp.targetLabel === "string" && stamp.targetLabel.length > 0
+      ? stamp.targetLabel
+      : stamp.endpoint,
+  );
   const lines: string[] = [];
-  lines.push("# CortexDx Diagnostic Report");
+  lines.push(`# CortexDx Diagnostic Report for ${targetLabel}`);
   lines.push(`- Endpoint: ${stamp.endpoint}`);
   lines.push(`- Date: ${stamp.inspectedAt}`);
   lines.push(`- Duration: ${stamp.durationMs}ms`);

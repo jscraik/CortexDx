@@ -33,8 +33,10 @@ export {
 export {
   VectorStorage, createPatternDocument,
   createProblemDocument,
+  createReferenceDocument,
   createSolutionDocument,
   createVectorStorage, type DocumentMetadata,
+  type ReferenceDocumentInput,
   type SearchOptions,
   type SearchResult,
   type VectorDocument,
@@ -65,4 +67,3 @@ export {
   type OptimizedResponse,
   type ReportSearchResult
 } from "./report-optimizer.js";
-

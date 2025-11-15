@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { existsSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
 import type { DevelopmentContext, Finding } from "../types.js";
@@ -546,7 +547,10 @@ export class InspectorAdapter {
       // Try to extract JSON from output
       const jsonMatch = output.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const inspectorData = JSON.parse(jsonMatch[0]);
+        const inspectorData = safeParseJson<Record<string, unknown>>(
+          jsonMatch[0],
+          "inspector adapter output",
+        );
         return this.convertInspectorDataToFindings(inspectorData, timestamp);
       }
     } catch (error) {

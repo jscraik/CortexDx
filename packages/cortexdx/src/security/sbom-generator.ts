@@ -4,6 +4,7 @@
  * Requirement: 21.1
  */
 
+import { safeParseJson } from "../utils/json.js";
 export interface SBOM {
   bomFormat: "CycloneDX" | "SPDX";
   specVersion: string;
@@ -221,7 +222,7 @@ export class SBOMGenerator {
     const components: Component[] = [];
 
     try {
-      const packageJson = JSON.parse(manifest.content) as {
+      const packageJson = safeParseJson(manifest.content) as {
         dependencies?: Record<string, string>;
         devDependencies?: Record<string, string>;
         name?: string;

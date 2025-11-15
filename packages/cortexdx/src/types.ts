@@ -1,7 +1,7 @@
 export type Severity = "info" | "minor" | "major" | "blocker";
 
 export interface EvidencePointer {
-  type: "url" | "file" | "log";
+  type: "url" | "file" | "log" | "resource";
   ref: string;
   lines?: [number, number];
 }

@@ -198,6 +198,43 @@ By default the smoke harness targets Context7, Vibe Check, OpenAlex, Exa, and Wi
 
 Context7 and Vibe Check now proxy directly to their hosted MCP HTTP APIs. Set `CONTEXT7_API_BASE_URL` + `CONTEXT7_API_KEY` (or pass `--credential context7:<token>`) so contextual analyses hit the latest dataset, and configure `VIBE_CHECK_HTTP_URL` (plus optional `VIBE_CHECK_API_KEY`) when running quality checks. All of these secrets should continue to flow through `op run --env-file=.env -- …` both locally and in CI.
 
+### Securing the local MCP endpoint
+
+Self-diagnostics now expect `/mcp` to be HTTPS-only and gated by either Auth0 or a local API key:
+
+1. Provide a cert/key pair (self-signed is fine for localhost) and export
+   `CORTEXDX_TLS_CERT_PATH=/absolute/path/to/cert.pem` and
+   `CORTEXDX_TLS_KEY_PATH=/absolute/path/to/key.pem` before `pnpm run server`.
+2. Enable auth by setting `REQUIRE_AUTH=true` plus `CORTEXDX_API_KEY=local-dev-key`
+   (or the full Auth0 trio `AUTH0_DOMAIN/CLIENT_ID/AUDIENCE`). Requests must now
+   send `X-CortexDx-Api-Key: local-dev-key` or a valid Auth0 bearer token.
+3. Restrict high-risk MCP tools with `CORTEXDX_ADMIN_TOKEN=admin-secret`; callers
+   must present `X-CortexDx-Admin-Token` before `cortexdx_delete_workflow`,
+   `wikidata_sparql`, and future destructive tools run. Without the token those
+   tools respond with a JSON-RPC error, which keeps the heuristics happy.
+
+Diagnose/orchestrate runs will flag `auth.zero` and transport-policy findings
+until these env vars are set, so add them to your `.env` or the self-test file
+described below.
+
+### Self Diagnostics checklist
+
+We ship a tiny helper to run CortexDx against itself with the correct secrets,
+pattern DB, and deterministic flags:
+
+1. Copy `.env.self.example` → `.env.self` and populate:
+   `CONTEXT7_API_KEY`, `VIBE_CHECK_API_KEY`, `OPENALEX_CONTACT_EMAIL`,
+   `EXA_API_KEY`, `CORTEXDX_PATTERN_KEY`, `CORTEXDX_PATTERN_DB`,
+   `CORTEXDX_API_KEY`, and `CORTEXDX_ADMIN_TOKEN`.
+2. Run `pnpm self:diagnose` (loads `.env.self`, starts the server, runs
+   `diagnose` + `orchestrate`, and stores reports under `reports/self`).
+3. Inspect `/tmp/cortexdx_self_server.log` if you need raw server output, and
+   upload `reports/self/*` with your PR or CI artifact bundle.
+
+Set `CORTEXDX_SELF_ENV=/path/to/other.env pnpm self:diagnose` if you keep
+different profiles (e.g., staging vs. prod creds). The script exits early when
+required secrets are missing so we no longer ship half-complete evidence.
+
 Artifacts (JSON + Markdown) land in `reports/research/<topic>/<timestamp>/` when `--out` is supplied, and the CLI exit code respects severity (`blocker` → 1, `major` → 2) so CI can gate on academic findings.
 
 #### Doctor Command

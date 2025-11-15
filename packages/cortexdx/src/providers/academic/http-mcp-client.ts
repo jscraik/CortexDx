@@ -1,3 +1,4 @@
+import { safeParseJson } from "../../utils/json.js";
 import { randomUUID } from "node:crypto";
 import type { McpToolResult } from "../../types.js";
 
@@ -108,7 +109,7 @@ export function extractJsonPayload<T>(result: McpToolResult): T {
     throw new Error("Remote MCP tool returned no structured or textual JSON payload");
   }
   try {
-    return JSON.parse(textual) as T;
+    return safeParseJson(textual) as T;
   } catch (error) {
     throw new Error(`Failed to parse MCP response as JSON: ${String(error)}`);
   }

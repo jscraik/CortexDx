@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,7 +26,7 @@ function loadConfig(): OllamaModelsConfig {
   }
   try {
     const raw = fs.readFileSync(CONFIG_PATH, "utf-8");
-    cachedConfig = JSON.parse(raw) as OllamaModelsConfig;
+    cachedConfig = safeParseJson(raw) as OllamaModelsConfig;
     return cachedConfig;
   } catch {
     cachedConfig = {};

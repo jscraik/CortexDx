@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { homedir } from "node:os";
@@ -218,7 +219,7 @@ async function readStatusMap(): Promise<StatusMap> {
   const stateFile = resolveStateStorePath();
   try {
     const raw = await readFile(stateFile, "utf8");
-    const parsed = JSON.parse(raw);
+    const parsed = safeParseJson(raw);
     return parsed && typeof parsed === "object" ? (parsed as StatusMap) : {};
   } catch {
     return {};

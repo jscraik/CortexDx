@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 /**
  * Studio Wrapper - stdio transport bridge for MCP Inspector
  *
@@ -112,7 +113,10 @@ class StudioWrapper {
         return;
       }
 
-      const request: JsonRpcRequest = JSON.parse(line);
+      const request: JsonRpcRequest = safeParseJson<JsonRpcRequest>(
+        line,
+        "stdio wrapper request",
+      );
 
       if (this.config.verbose) {
         console.error(`[StudioWrapper] Received request: ${JSON.stringify(request)}`);
@@ -197,7 +201,10 @@ class StudioWrapper {
       } else {
         const text = await httpResponse.text();
         try {
-          result = JSON.parse(text);
+          result = safeParseJson<unknown>(
+            text,
+            "stdio wrapper HTTP response",
+          );
         } catch {
           result = text;
         }

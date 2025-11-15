@@ -1,4 +1,5 @@
-import type { DiagnosticPlugin, FilePlan, Finding } from "../types.js";
+import type { DiagnosticPlugin, EvidencePointer, FilePlan, Finding } from "../types.js";
+import { getMcpSpecEvidence } from "../library/mcp-docs-evidence.js";
 
 /**
  * MCP Compatibility Checker Plugin
@@ -94,35 +95,44 @@ async function testProtocolVersions(
       }>("initialize", initRequest);
 
       if (response?.protocolVersion === version) {
+        const evidence = await buildSpecEvidence(ctx, `initialize protocol ${version}`);
         findings.push({
           id: `mcp.compat.version.${version.replace(/\./g, "_")}`,
           area: "version-compatibility",
           severity: "info",
           title: `Protocol ${version} supported`,
           description: `Server supports MCP protocol version ${version}`,
-          evidence: [{ type: "url", ref: ctx.endpoint }],
+          evidence,
           confidence: 0.95,
         });
       } else if (response?.protocolVersion) {
+        const evidence = await buildSpecEvidence(
+          ctx,
+          `MCP protocol ${version} negotiation initialize response`,
+        );
         findings.push({
           id: `mcp.compat.version.${version.replace(/\./g, "_")}_mismatch`,
           area: "version-compatibility",
           severity: "minor",
           title: `Protocol ${version} version mismatch`,
           description: `Requested ${version}, server responded with ${response.protocolVersion}`,
-          evidence: [{ type: "url", ref: ctx.endpoint }],
+          evidence,
           confidence: 0.9,
           recommendation: `Server may have backward compatibility issues with ${version}`,
         });
       }
     } catch (error) {
+      const evidence = await buildSpecEvidence(
+        ctx,
+        `MCP protocol ${version} initialize support`,
+      );
       findings.push({
         id: `mcp.compat.version.${version.replace(/\./g, "_")}_unsupported`,
         area: "version-compatibility",
         severity: "minor",
         title: `Protocol ${version} not supported`,
         description: `Server does not support protocol version ${version}: ${String(error)}`,
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.85,
       });
     }
@@ -292,17 +302,25 @@ async function testFeatureInterop(
   for (const feature of featureTests) {
     try {
       await ctx.jsonrpc<unknown>(feature.method);
+      const evidence = await buildSpecEvidence(
+        ctx,
+        feature.required ? `MCP capability ${feature.method}` : undefined,
+      );
       findings.push({
         id: `mcp.compat.feature.${feature.name.toLowerCase().replace(/\s+/g, "_")}`,
         area: "feature-interoperability",
         severity: "info",
         title: `${feature.name} supported`,
         description: `Server implements ${feature.method}`,
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.95,
       });
     } catch (error) {
       const severity = feature.required ? "major" : "info";
+      const evidence = await buildSpecEvidence(
+        ctx,
+        feature.required ? `MCP capability ${feature.method}` : undefined,
+      );
       findings.push({
         id: `mcp.compat.feature.${feature.name.toLowerCase().replace(/\s+/g, "_")}_unsupported`,
         area: "feature-interoperability",
@@ -311,7 +329,7 @@ async function testFeatureInterop(
         description: feature.required
           ? `Required feature ${feature.method} not implemented`
           : `Optional feature ${feature.method} not available`,
-        evidence: [{ type: "url", ref: ctx.endpoint }],
+        evidence,
         confidence: 0.9,
       });
     }
@@ -440,4 +458,18 @@ function generateCompatSummary(findings: Finding[], score: number): string {
   ).length;
 
   return `Compatibility testing complete: ${score.toFixed(1)}% compatible. Tested ${versionTests} protocol versions, ${behaviorTests} client behaviors, and ${featureTests} features.`;
+}
+
+async function buildSpecEvidence(
+  ctx: import("../types.js").DiagnosticContext,
+  query?: string,
+): Promise<EvidencePointer[]> {
+  const evidence: EvidencePointer[] = [{ type: "url", ref: ctx.endpoint }];
+  if (query) {
+    const pointer = await getMcpSpecEvidence(query);
+    if (pointer) {
+      evidence.push(pointer);
+    }
+  }
+  return evidence;
 }

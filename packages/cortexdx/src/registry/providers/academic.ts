@@ -3,6 +3,7 @@
  * FASTMCP v3.22 compliant provider registry for academic research tools
  */
 
+import { safeParseJson } from "../../utils/json.js";
 import {
   ArxivProvider,
   arxivCapabilities,
@@ -380,7 +381,7 @@ export class AcademicRegistry {
    * Export registry for external use
    */
   public exportRegistry(): AcademicProviderRegistry {
-    return JSON.parse(JSON.stringify(this.registry));
+    return safeParseJson(JSON.stringify(this.registry));
   }
 }
 

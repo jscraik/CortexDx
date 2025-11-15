@@ -4,6 +4,7 @@
  * Requirement 12.5: Maintain conversation context across sessions
  */
 
+import { safeParseJson } from "../utils/json.js";
 import Database, { type Database as DatabaseType } from "better-sqlite3";
 import type {
   ChatMessage,
@@ -317,8 +318,8 @@ export class ConversationStorage {
     stored: StoredConversation,
   ): ConversationSession | null {
     try {
-      const context: DevelopmentContext = JSON.parse(stored.context);
-      const messages: ChatMessage[] = JSON.parse(stored.messages);
+      const context: DevelopmentContext = safeParseJson(stored.context);
+      const messages: ChatMessage[] = safeParseJson(stored.messages);
 
       // Restore conversation history
       context.conversationHistory = messages;
@@ -327,7 +328,7 @@ export class ConversationStorage {
         id: stored.id,
         pluginId: stored.pluginId,
         context,
-        state: JSON.parse(stored.state),
+        state: safeParseJson(stored.state),
         startTime: stored.startTime,
         lastActivity: stored.lastActivity,
       };

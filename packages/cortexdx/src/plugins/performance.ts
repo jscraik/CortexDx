@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { ClinicAdapter } from "../adapters/clinic-adapter.js";
 import { PySpyAdapter } from "../adapters/pyspy-adapter.js";
 import { withSpan } from "../observability/otel.js";
@@ -1162,7 +1163,7 @@ async function detectCPUHotspots(
           const start = performance.now();
           const largeObject = { data: new Array(1000).fill({ value: 42 }) };
           const json = JSON.stringify(largeObject);
-          JSON.parse(json);
+          safeParseJson(json);
           return performance.now() - start;
         },
       },
@@ -1405,7 +1406,7 @@ function getCPUHotspotRecommendation(operationName: string): string {
 **Code Example**:
 \`\`\`javascript
 // Before: Parsing large JSON repeatedly
-const data = JSON.parse(largeJsonString);
+const data = safeParseJson(largeJsonString);
 
 // After: Use streaming parser for large payloads
 import { parser } from 'stream-json';
@@ -1416,7 +1417,7 @@ stream.on('data', (data) => { /* process incrementally */ });
 const cache = new Map();
 function getCachedData(key) {
   if (!cache.has(key)) {
-    cache.set(key, JSON.parse(largeJsonString));
+    cache.set(key, safeParseJson(largeJsonString));
   }
   return cache.get(key);
 }
@@ -1998,11 +1999,11 @@ export function generateOptimizationRecommendations(
 \`\`\`javascript
 // Before: Blocking synchronous operation
 const data = fs.readFileSync('large-file.json');
-const parsed = JSON.parse(data);
+const parsed = safeParseJson(data);
 
 // After: Non-blocking async operation
 const data = await fs.promises.readFile('large-file.json');
-const parsed = JSON.parse(data);
+const parsed = safeParseJson(data);
 
 // For CPU-intensive work, use worker threads
 import { Worker } from 'worker_threads';
@@ -2151,7 +2152,7 @@ await saveData(processed);
 \`\`\`javascript
 // Before: Loading entire file into memory
 const data = await fs.promises.readFile('large-file.json');
-const parsed = JSON.parse(data);
+const parsed = safeParseJson(data);
 processData(parsed);
 
 // After: Streaming large files

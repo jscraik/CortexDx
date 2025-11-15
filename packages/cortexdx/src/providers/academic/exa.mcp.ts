@@ -189,15 +189,17 @@ export class ExaProvider {
     const apiKey = this.getApiKey();
     const payload = this.buildSearchPayload(params);
 
-    const response = await fetch(`${EXA_API_URL}/search`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "User-Agent": this.userAgent,
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await this.requestWithRetry(() =>
+      fetch(`${EXA_API_URL}/search`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "User-Agent": this.userAgent,
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -256,6 +258,23 @@ export class ExaProvider {
     });
 
     return analysis;
+  }
+
+  private async requestWithRetry<T>(operation: () => Promise<T>): Promise<T> {
+    let lastError: unknown;
+    const attempts = 3;
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        const backoffMs = 200 * (attempt + 1);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Exa request failed after retries");
   }
 
   /**

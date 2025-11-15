@@ -1,12 +1,21 @@
 import type { Finding } from "../types.js";
+import { extractTargetLabel } from "./targets.js";
 
-export function buildArcTddPlan(stamp: Record<string, unknown>, findings: Finding[]): string {
+export function buildArcTddPlan(
+  stamp: Record<string, unknown>,
+  findings: Finding[],
+): string {
   const blockers = findings.filter((finding) => finding.severity === "blocker");
   const majors = findings.filter((finding) => finding.severity === "major");
   const minors = findings.filter((finding) => finding.severity === "minor");
+  const targetLabel = extractTargetLabel(
+    typeof stamp.targetLabel === "string" && stamp.targetLabel.length > 0
+      ? stamp.targetLabel
+      : stamp.endpoint,
+  );
 
   const sections = [
-    "# ArcTDD Implementation Plan (CortexDx)",
+    `# ArcTDD Implementation Plan — ${targetLabel}`,
     `**Endpoint:** ${stamp.endpoint}`,
     `**Inspected:** ${stamp.inspectedAt}`,
     `**Duration:** ${stamp.durationMs}ms`,
