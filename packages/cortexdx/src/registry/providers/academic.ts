@@ -24,9 +24,13 @@ import {
   semanticScholarCapabilities,
 } from "../../providers/academic/semantic-scholar.mcp.js";
 import {
-  VibeCheckProvider,
-  vibeCheckCapabilities,
-} from "../../providers/academic/vibe-check.mcp.js";
+  ResearchQualityProvider,
+  researchQualityCapabilities,
+} from "../../providers/academic/research-quality.mcp.js";
+import {
+  CortexVibeProvider,
+  cortexVibeCapabilities,
+} from "../../providers/academic/cortex-vibe.mcp.js";
 import {
   WikidataProvider,
   wikidataCapabilities,
@@ -88,13 +92,14 @@ export class AcademicRegistry {
         paper_search: ["semantic-scholar", "openalex", "arxiv"],
         citation_analysis: ["semantic-scholar", "openalex", "context7"],
         author_research: ["openalex", "wikidata", "semantic-scholar"],
-        quality_assessment: ["vibe-check"],
+        quality_assessment: ["research-quality"],
         contextual_analysis: ["context7", "wikidata"],
         preprint_access: ["arxiv"],
         knowledge_graph: ["wikidata"],
         institutional_research: ["openalex", "wikidata"],
-        research_integrity: ["vibe-check"],
+        research_integrity: ["research-quality"],
         cross_referencing: ["context7", "semantic-scholar"],
+        agent_oversight: ["cortex-vibe"],
       },
       discovery_endpoints: [
         "/api/v1/providers/academic/discover",
@@ -192,16 +197,28 @@ export class AcademicRegistry {
       tags: ["preprints", "papers", "categories", "academic", "search"],
     });
 
-    // Register Vibe Check provider
+    // Register Research Quality provider
     this.registerProvider({
-      id: "vibe-check",
-      name: "Vibe Check Research Quality Provider",
+      id: "research-quality",
+      name: "Research Quality Assessment Provider",
       description:
-        "Research quality assessment and academic integrity validation",
-      provider_class: VibeCheckProvider,
-      capabilities: vibeCheckCapabilities,
+        "Academic research quality assessment and integrity validation with code health analysis",
+      provider_class: ResearchQualityProvider,
+      capabilities: researchQualityCapabilities,
       requires_auth: false,
       tags: ["quality", "integrity", "assessment", "academic", "validation"],
+    });
+
+    // Register Cortex Vibe provider
+    this.registerProvider({
+      id: "cortex-vibe",
+      name: "Cortex Vibe Metacognitive Oversight Provider",
+      description:
+        "AI agent metacognitive oversight and safety alignment with Chain-Pattern Interrupts (CPI)",
+      provider_class: CortexVibeProvider,
+      capabilities: cortexVibeCapabilities,
+      requires_auth: false,
+      tags: ["metacognition", "cpi", "agent-safety", "alignment", "oversight"],
     });
 
     // Register Context7 provider
@@ -439,9 +456,10 @@ export const academicRegistryCapabilities = {
 export {
   arxivCapabilities,
   context7Capabilities,
+  cortexVibeCapabilities,
   exaCapabilities,
   openAlexCapabilities,
+  researchQualityCapabilities,
   semanticScholarCapabilities,
-  vibeCheckCapabilities,
   wikidataCapabilities,
 };

@@ -9,11 +9,12 @@ import type { DiagnosticContext, EvidencePointer, Finding } from "../types.js";
 
 export const DEFAULT_PROVIDERS = [
   "context7",
-  "vibe-check",
+  "research-quality",
   "openalex",
   "exa",
   "wikidata",
   "arxiv",
+  "cortex-vibe",
 ];
 
 interface ProviderExecutionContext {
@@ -220,24 +221,24 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       raw: analysis,
     };
   },
-  "vibe-check": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool("assess_quality", {
-      target: ctx.topic,
+  "research-quality": async (instance, registration, ctx) => {
+    const assessment = await instance.executeTool("research_quality_assess_quality", {
+      text: ctx.topic,
+      title: ctx.topic,
       criteria: ["methodology", "completeness", "accuracy"],
-      depth: "thorough",
     });
     const score = Number(
-      (assessment as { overallScore?: number })?.overallScore ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,
       providerName: registration.name,
       findings: [
         {
-          id: "research.vibe-check.1",
+          id: "research.research-quality.1",
           area: "research",
           severity: score >= 0.7 ? "info" : score >= 0.5 ? "minor" : "major",
-          title: `Vibe Check score ${(score * 100).toFixed(1)}%`,
+          title: `Research Quality score ${(score * 100).toFixed(1)}%`,
           description: JSON.stringify(assessment, null, 2).slice(0, 1000),
           evidence: [],
           tags: buildTags(ctx.topic, registration.id),
@@ -245,6 +246,30 @@ const providerExecutors: Record<string, ProviderExecutor> = {
         },
       ],
       raw: assessment,
+    };
+  },
+  "cortex-vibe": async (instance, registration, ctx) => {
+    const vibeCheck = await instance.executeTool("cortex_vibe_check", {
+      taskContext: ctx.topic,
+      currentPlan: ctx.question ?? "Analyze research topic",
+    });
+    const questions = (vibeCheck as { questions?: string[] })?.questions ?? [];
+    return {
+      providerId: registration.id,
+      providerName: registration.name,
+      findings: [
+        {
+          id: "research.cortex-vibe.1",
+          area: "research",
+          severity: "info",
+          title: "Cortex Vibe metacognitive check",
+          description: `Questions to consider:\n${questions.join("\n")}`,
+          evidence: [],
+          tags: buildTags(ctx.topic, registration.id),
+          confidence: 0.8,
+        },
+      ],
+      raw: vibeCheck,
     };
   },
   exa: async (instance, registration, ctx) => {
@@ -602,12 +627,6 @@ export const ACADEMIC_PROVIDER_CREDENTIALS: Record<
     format: (value: string) =>
       value.toLowerCase().startsWith("bearer ") ? value : `Bearer ${value}`,
   },
-  "vibe-check": {
-    envVar: "VIBE_CHECK_API_KEY",
-    header: "x-vibe-api-key",
-    required: false,
-    description: "Vibe Check API key",
-  },
 };
 
 export const ACADEMIC_PROVIDER_HEADER_OVERRIDES: Record<
@@ -622,10 +641,8 @@ export const ACADEMIC_PROVIDER_HEADER_OVERRIDES: Record<
     { envVar: "CONTEXT7_API_BASE_URL", header: "context7-base-url" },
     { envVar: "CONTEXT7_PROFILE", header: "x-context7-profile" },
   ],
-  "vibe-check": [
-    { envVar: "VIBE_CHECK_HTTP_URL", header: "vibe-check-url" },
-    { envVar: "VIBE_CHECK_PROFILE", header: "x-vibe-profile" },
-    { envVar: "VIBE_CHECK_STRICT", header: "x-vibe-strict" },
+  "cortex-vibe": [
+    { envVar: "CORTEX_VIBE_HTTP_URL", header: "cortex-vibe-base-url" },
   ],
   openalex: [
     {
@@ -657,10 +674,15 @@ export const ACADEMIC_PROVIDER_ENV_REQUIREMENTS: Record<
     required: ["CONTEXT7_API_KEY", "CONTEXT7_API_BASE_URL"],
     optional: ["CONTEXT7_PROFILE"],
   },
-  "vibe-check": {
-    name: "Vibe Check",
-    required: ["VIBE_CHECK_HTTP_URL"],
-    optional: ["VIBE_CHECK_API_KEY", "VIBE_CHECK_PROFILE", "VIBE_CHECK_STRICT"],
+  "research-quality": {
+    name: "Research Quality",
+    required: [],
+    optional: ["RESEARCH_QUALITY_API_KEY", "RESEARCH_QUALITY_HTTP_URL"],
+  },
+  "cortex-vibe": {
+    name: "Cortex Vibe",
+    required: [],
+    optional: ["CORTEX_VIBE_HTTP_URL"],
   },
   exa: {
     name: "Exa",

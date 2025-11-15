@@ -4,7 +4,7 @@
  */
 
 export {
-    AcademicRegistry, academicRegistryCapabilities, arxivCapabilities, context7Capabilities, getAcademicRegistry, openAlexCapabilities, semanticScholarCapabilities, vibeCheckCapabilities, wikidataCapabilities
+    AcademicRegistry, academicRegistryCapabilities, arxivCapabilities, context7Capabilities, cortexVibeCapabilities, getAcademicRegistry, openAlexCapabilities, researchQualityCapabilities, semanticScholarCapabilities, wikidataCapabilities
 } from "./providers/academic.js";
 
 export type {

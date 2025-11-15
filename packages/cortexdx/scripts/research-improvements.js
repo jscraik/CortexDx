@@ -134,14 +134,13 @@ async function researchBestPracticesAnalysis() {
   const ctx = createResearchContext();
   
   try {
-    // Use Vibe Check for quality assessment research
-    const vibeCheck = registry.createProviderInstance('vibe-check', ctx);
-    
-    console.log('✅ Analyzing best practices with Vibe Check...');
-    const qualityAnalysis = await vibeCheck.executeTool('assess_quality', {
-      target: 'software development best practices analysis',
-      criteria: ['methodology', 'completeness', 'accuracy', 'practicality'],
-      depth: 'thorough'
+    // Use Research Quality for quality assessment research
+    const researchQuality = registry.createProviderInstance('research-quality', ctx);
+
+    console.log('✅ Analyzing best practices with Research Quality...');
+    const qualityAnalysis = await researchQuality.executeTool('research_quality_assess_quality', {
+      text: 'software development best practices analysis',
+      title: 'Best Practices Analysis'
     });
     
     console.log('Quality analysis:', qualityAnalysis);
@@ -166,7 +165,7 @@ async function researchBestPracticesAnalysis() {
     console.log('Wikidata practices:', wikidataQuery);
     
     return {
-      vibeCheck: qualityAnalysis,
+      researchQuality: qualityAnalysis,
       wikidata: wikidataQuery,
       recommendations: [
         'Implement rule-based analysis with customizable rulesets',

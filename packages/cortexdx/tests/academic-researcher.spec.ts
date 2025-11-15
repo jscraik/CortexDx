@@ -19,7 +19,8 @@ vi.mock("../src/registry/index.js", () => ({
 const baseRegistrations: Record<string, ProviderRegistration> = {
   "context7": createRegistration("context7"),
   exa: createRegistration("exa"),
-  "vibe-check": createRegistration("vibe-check"),
+  "research-quality": createRegistration("research-quality"),
+  "cortex-vibe": createRegistration("cortex-vibe"),
 };
 
 let tempDir: string;
@@ -45,10 +46,7 @@ afterEach(() => {
   delete process.env.CONTEXT7_API_KEY;
   delete process.env.CONTEXT7_API_BASE_URL;
   delete process.env.CONTEXT7_PROFILE;
-  delete process.env.VIBE_CHECK_PROFILE;
-  delete process.env.VIBE_CHECK_HTTP_URL;
-  delete process.env.VIBE_CHECK_STRICT;
-  delete process.env.VIBE_CHECK_API_KEY;
+  delete process.env.CORTEX_VIBE_HTTP_URL;
 });
 
 describe("runAcademicResearch", () => {
@@ -106,23 +104,17 @@ describe("runAcademicResearch", () => {
     expect(capturedContext?.headers?.authorization).toBe("Bearer test-context7");
   });
 
-  it("injects Vibe Check HTTP headers from env", async () => {
-    process.env.VIBE_CHECK_API_KEY = "vk-secret";
-    process.env.VIBE_CHECK_HTTP_URL = "https://vibe-check.example.com";
-    process.env.VIBE_CHECK_PROFILE = "ai-research";
-    process.env.VIBE_CHECK_STRICT = "true";
+  it("injects Cortex Vibe HTTP headers from env", async () => {
+    process.env.CORTEX_VIBE_HTTP_URL = "https://cortex-vibe.example.com";
 
     await runAcademicResearch({
-      topic: "Research quality",
-      providers: ["vibe-check"],
+      topic: "Agent metacognitive oversight",
+      providers: ["cortex-vibe"],
     });
 
-    expect(capturedContext?.headers?.["vibe-check-url"]).toBe(
-      "https://vibe-check.example.com",
+    expect(capturedContext?.headers?.["cortex-vibe-base-url"]).toBe(
+      "https://cortex-vibe.example.com",
     );
-    expect(capturedContext?.headers?.["x-vibe-profile"]).toBe("ai-research");
-    expect(capturedContext?.headers?.["x-vibe-strict"]).toBe("true");
-    expect(capturedContext?.headers?.["x-vibe-api-key"]).toBe("vk-secret");
   });
 });
 
@@ -151,7 +143,7 @@ function createProviderInstanceStub(id: string): ProviderInstance {
       executeTool: vi.fn(async () => ({ summary: "analysis" })),
     } satisfies ProviderInstance;
   }
-  if (id === "vibe-check") {
+  if (id === "research-quality" || id === "cortex-vibe") {
     return {
       executeTool: vi.fn(async () => ({ score: 0.9 })),
     } satisfies ProviderInstance;

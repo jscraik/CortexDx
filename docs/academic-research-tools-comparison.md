@@ -7,11 +7,12 @@ This document provides a comprehensive comparison between the upstream MCP serve
 | Provider | Upstream Source | Implementation Status | Coverage | Notes |
 |----------|----------------|----------------------|----------|-------|
 | **DeepContext** | [Wildcard-Official/deepcontext-mcp](https://github.com/Wildcard-Official/deepcontext-mcp) | ✅ **Full Compliance** | 100% (4/4 tools) | All features implemented |
-| **WikidataMCP** | [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) | ⚠️ **Partial** | 57% (4/7 tools) | Missing vector search & claims |
+| **WikidataMCP** | [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) | ✅ **Full Compliance** | 100% (8/8 tools) | All features implemented |
 | **arXiv** | [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) | ✅ **Full Compliance** | 100% (5/5 tools) | Enhanced with categories |
 | **Context7** | [upstash/context7](https://github.com/upstash/context7) | ✅ **Enhanced** | 100%+ (7 tools) | Additional academic features |
 | **Semantic Scholar** | [SnippetSquid/SemanticScholarMCP](https://github.com/SnippetSquid/SemanticScholarMCP) | ✅ **Full Compliance** | 100% (7/7 tools) | Complete implementation |
-| **Vibe Check** | [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) | ✅ **Enhanced** | 100%+ (4 tools) | Academic integrity focus |
+| **Research Quality** | [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) | ✅ **Enhanced** | 100%+ (7 tools) | Academic research quality focus |
+| **Cortex Vibe** | [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) | ✅ **Full Compliance** | 100% (5 tools) | Agent oversight & CPI |
 | **OpenAlex** | Native implementation | ✅ **Native** | N/A (5 tools) | CortexDx original |
 
 ---
@@ -182,33 +183,81 @@ Context7's upstream is primarily a documentation retrieval tool. CortexDx has **
 
 ---
 
-### 6. Vibe Check
+### 6. Research Quality Provider
 
 **Upstream Repository:** [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server)
-**Implementation File:** `packages/cortexdx/src/providers/academic/vibe-check.mcp.ts`
+**Implementation File:** `packages/cortexdx/src/providers/academic/research-quality.mcp.ts`
+
+**Purpose:** Academic research quality assessment and integrity validation
+
+**Note:** Renamed from "Vibe Check" to avoid confusion with Cortex Vibe (agent oversight). This provider focuses on ACADEMIC RESEARCH QUALITY (papers, venues, citations).
 
 | Upstream Tool | CortexDx Tool | Status | Notes |
 |---------------|---------------|--------|-------|
-| Quality assessment | `vibe_check_assess_quality` | ✅ Enhanced | Multi-dimensional quality scoring |
-| Venue assessment | `vibe_check_venue_assessment` | ✅ Enhanced | Predatory publisher detection |
-| Citation analysis | `vibe_check_citation_analysis` | ✅ Enhanced | Pattern anomaly detection |
-| Methodology review | `vibe_check_methodology_review` | ✅ Enhanced | Standards validation |
+| Quality assessment | `research_quality_assess_quality` | ✅ Enhanced | Multi-dimensional quality scoring |
+| Venue assessment | `research_quality_venue_assessment` | ✅ Enhanced | Predatory publisher detection |
+| Citation analysis | `research_quality_citation_analysis` | ✅ Enhanced | Pattern anomaly detection |
+| Methodology review | `research_quality_methodology_review` | ✅ Enhanced | Standards validation |
+| (Enhancement) | `research_quality_detect_anti_patterns` | ✅ Enhanced | Code anti-pattern detection |
+| (Enhancement) | `research_quality_refactoring_suggestions` | ✅ Enhanced | Refactoring recommendations |
+| (Enhancement) | `research_quality_code_health` | ✅ Enhanced | Code health analysis |
 
 **Environment Variables:**
-- ✅ `VIBE_CHECK_API_KEY` (optional)
-- ✅ `VIBE_CHECK_HTTP_URL` (for remote instances)
+- ✅ `RESEARCH_QUALITY_API_KEY` (optional)
+- ✅ `RESEARCH_QUALITY_HTTP_URL` (for remote instances)
 
 **Additional Features:**
 - License compliance integration
 - Academic integrity validation
 - Research methodology review
 - Multi-factor quality scoring
+- Anti-pattern detection in research code
+- Refactoring suggestions
 
-**Compliance:** ✅ **100%+ - Enhanced with academic integrity focus**
+**Compliance:** ✅ **100%+ - Enhanced with code quality features beyond upstream**
 
 ---
 
-### 7. OpenAlex
+### 7. Cortex Vibe Provider
+
+**Upstream Repository:** [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) v0.0.19
+**Implementation File:** `packages/cortexdx/src/providers/academic/cortex-vibe.mcp.ts`
+
+**Purpose:** AI agent metacognitive oversight and safety alignment
+
+**Note:** This is distinct from Research Quality provider. Cortex Vibe provides Chain-Pattern Interrupts (CPI) for AI AGENT SAFETY & ALIGNMENT, not research paper quality assessment.
+
+**Tools (5 total):**
+
+| Cortex Vibe Tool | CortexDx Tool | Status | Purpose |
+|------------------|---------------|--------|---------|
+| `vibe_check` | `cortex_vibe_check` | ✅ Full | Challenge assumptions, prevent tunnel vision |
+| `vibe_learn` | `cortex_vibe_learn` | ✅ Full | Capture mistakes/successes/preferences |
+| `update_constitution` | `cortex_update_constitution` | ✅ Full | Set/merge session rules for CPI enforcement |
+| `reset_constitution` | `cortex_reset_constitution` | ✅ Full | Clear session rules |
+| `check_constitution` | `cortex_check_constitution` | ✅ Full | Inspect effective session rules |
+
+**Environment Variables:**
+- ✅ `CORTEX_VIBE_API_BASE_URL` or `CORTEX_VIBE_HTTP_URL` (optional, for remote server)
+- ✅ `CORTEXDX_DISABLE_CORTEX_VIBE_HTTP` (set to "1" to disable remote calls)
+
+**Key Features:**
+- Metacognitive self-checks using Chain-Pattern Interrupts (CPI)
+- Prevents tunnel vision and reasoning lock-in in autonomous agents
+- Session-based constitution rules for agent behavior enforcement
+- Learning capture for continuous improvement
+- HTTP MCP client integration with local fallback mode
+- Success rate improvements: 27% lift, 41% reduction in harmful actions (from upstream testing)
+
+**Integration Modes:**
+- **Remote Mode:** Connects to Cortex Vibe MCP server via HTTP
+- **Local Fallback:** Simplified CPI when remote unavailable
+
+**Compliance:** ✅ **100% - Full compliance with local fallback**
+
+---
+
+### 8. OpenAlex
 
 **Implementation File:** `packages/cortexdx/src/providers/academic/openalex.mcp.ts`
 
@@ -247,21 +296,24 @@ This is a **native CortexDx implementation** with no direct upstream MCP server.
 | Paper search | Semantic Scholar, OpenAlex, arXiv |
 | Citation analysis | Semantic Scholar, OpenAlex, Context7 |
 | Author research | OpenAlex, Wikidata, Semantic Scholar |
-| Quality assessment | Vibe Check |
+| Quality assessment | Research Quality |
+| Agent oversight | Cortex Vibe |
 | Contextual analysis | Context7, Wikidata |
 | Preprint access | arXiv |
 | Knowledge graph | Wikidata (partial) |
 | Code search | DeepContext |
-| License compliance | Context7, Vibe Check, all providers via validation plugin |
+| License compliance | Context7, Research Quality, all providers via validation plugin |
+| Metacognition/CPI | Cortex Vibe |
 
-### Missing Features (WikidataMCP)
+### Recent Implementations (Completed)
 
-| Feature | Priority | Impact | Implementation Effort |
-|---------|----------|--------|----------------------|
-| Vector search (items) | High | Semantic entity discovery | Medium |
-| Vector search (properties) | Medium | Enhanced property discovery | Medium |
-| Get entity claims | High | Graph traversal with triplets | Low |
-| Get claim values | High | Comprehensive claim data | Low |
+**WikidataMCP - Now 100% Complete:**
+- ✅ Vector search for items (semantic entity discovery)
+- ✅ Vector search for properties (property discovery via embeddings)
+- ✅ Get entity claims (graph connections in triplet format)
+- ✅ Get claim values (claims with qualifiers, ranks, references)
+
+All WikidataMCP tools are now fully implemented with fallback mechanisms for vector search.
 
 ---
 
@@ -369,6 +421,19 @@ For remote MCP server connections:
 
 ## Changelog
 
+### 2025-11-15 - WikidataMCP Full Compliance & Provider Separation
+
+- **WikidataMCP**: Achieved 100% compliance (was 57%, now 8/8 tools)
+  - Implemented vector search for items with fallback
+  - Implemented vector search for properties with fallback
+  - Implemented entity claims in triplet format
+  - Implemented claim values with qualifiers and references
+- **Provider Separation**: Split quality assessment from agent oversight
+  - Renamed Vibe Check → Research Quality Provider (academic research assessment)
+  - Added Cortex Vibe Provider (AI agent metacognitive oversight with CPI)
+  - Clear separation of concerns: research quality vs agent safety
+- **Integration Tests**: Added comprehensive test suite for all providers
+
 ### 2025-11-15 - Initial Comparison Matrix
 
 - Created comprehensive comparison between upstream and CortexDx implementations
@@ -389,6 +454,7 @@ For remote MCP server connections:
 - [upstash/context7](https://github.com/upstash/context7)
 - [SnippetSquid/SemanticScholarMCP](https://github.com/SnippetSquid/SemanticScholarMCP)
 - [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server)
+- [jscraik/Cortex-Vibe-MCP](https://github.com/jscraik/Cortex-Vibe-MCP)
 
 ### API Documentation
 
