@@ -46,7 +46,7 @@ export class RunCollector {
 	 */
 	private generateRunId(): string {
 		const now = new Date();
-		const timestamp = this.formatTimestamp(new Date());
+		const timestamp = this.formatTimestamp(now);
 		const shortId = randomUUID().substring(0, 16);
 		return `dx_${timestamp}_${shortId}`;
 	}
