@@ -6,6 +6,7 @@ import { DevtoolEnvPlugin } from "./devtool-env.js";
 import { DiscoveryPlugin } from "./discovery.js";
 import { GovernancePlugin } from "./governance.js";
 import { JsonRpcBatchPlugin } from "./jsonrpc-batch.js";
+import { McpDocsPlugin } from "./mcp-docs.js";
 import {
   ClinicJsPerformanceProfilerPlugin,
   PerformancePlugin,
@@ -76,6 +77,7 @@ export const BUILTIN_PLUGINS: DiagnosticPlugin[] = [
   LicenseValidatorPlugin,
   ComplianceMonitorPlugin,
   DependencyScannerPlugin,
+  McpDocsPlugin,
 ];
 
 export const DEVELOPMENT_PLUGINS: DevelopmentPlugin[] = [

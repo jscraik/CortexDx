@@ -3,6 +3,7 @@ pnpm-lock.yaml
 reports
 artifacts
 dist
+coverage
 .DS_Store
 .nx/
 

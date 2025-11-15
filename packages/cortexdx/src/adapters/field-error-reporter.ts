@@ -36,8 +36,12 @@ export type ErrorCategory =
   | "authentication"
   | "general";
 
-const MCP_DOCS_BASE = "https://modelcontextprotocol.io/docs";
-const MCP_SPEC_BASE = "https://spec.modelcontextprotocol.io";
+// Legacy fallback URLs (used when MCP docs adapter is unavailable)
+const MCP_DOCS_BASE_FALLBACK = "https://modelcontextprotocol.io/docs";
+const MCP_SPEC_BASE_FALLBACK = "https://spec.modelcontextprotocol.io";
+
+// Cache for documentation URLs from the MCP docs adapter
+let docUrlCache: Record<string, string> | null = null;
 
 function generateDetailedErrors(violations: FieldViolation[]): DetailedError[] {
   return violations.map(createDetailedError);
@@ -183,20 +187,68 @@ function generateSuggestion(
   return suggestionFn(violation);
 }
 
+/**
+ * Get documentation link for error category
+ * Tries MCP docs adapter first, falls back to hardcoded URLs
+ */
 function getDocumentationLink(category: ErrorCategory): string {
-  const links: Record<ErrorCategory, string> = {
-    "protocol-version": `${MCP_SPEC_BASE}/protocol/version`,
-    capabilities: `${MCP_DOCS_BASE}/concepts/capabilities`,
-    "tool-definition": `${MCP_DOCS_BASE}/concepts/tools`,
-    "resource-definition": `${MCP_DOCS_BASE}/concepts/resources`,
-    "server-info": `${MCP_DOCS_BASE}/concepts/server-info`,
-    "json-rpc": `${MCP_SPEC_BASE}/protocol/json-rpc`,
-    handshake: `${MCP_DOCS_BASE}/concepts/lifecycle#initialization`,
-    authentication: `${MCP_DOCS_BASE}/concepts/authentication`,
-    general: `${MCP_DOCS_BASE}/specification`,
+  // Try to get from cache first
+  if (docUrlCache?.[category]) {
+    return docUrlCache[category] as string;
+  }
+
+  // Fallback to hardcoded URLs (legacy)
+  const fallbackLinks: Record<ErrorCategory, string> = {
+    "protocol-version": `${MCP_SPEC_BASE_FALLBACK}/protocol/version`,
+    capabilities: `${MCP_DOCS_BASE_FALLBACK}/concepts/capabilities`,
+    "tool-definition": `${MCP_DOCS_BASE_FALLBACK}/concepts/tools`,
+    "resource-definition": `${MCP_DOCS_BASE_FALLBACK}/concepts/resources`,
+    "server-info": `${MCP_DOCS_BASE_FALLBACK}/concepts/server-info`,
+    "json-rpc": `${MCP_SPEC_BASE_FALLBACK}/protocol/json-rpc`,
+    handshake: `${MCP_DOCS_BASE_FALLBACK}/concepts/lifecycle#initialization`,
+    authentication: `${MCP_DOCS_BASE_FALLBACK}/concepts/authentication`,
+    general: `${MCP_DOCS_BASE_FALLBACK}/specification`,
   };
 
-  return links[category] || links.general;
+  return fallbackLinks[category] || fallbackLinks.general;
+}
+
+/**
+ * Initialize documentation URL cache from MCP docs adapter
+ * This is async and should be called at startup
+ */
+async function initializeDocUrlCache(): Promise<void> {
+  try {
+    const { getDocumentationForCategory } = await import(
+      "../plugins/mcp-docs.js"
+    );
+
+    const categories: ErrorCategory[] = [
+      "protocol-version",
+      "capabilities",
+      "tool-definition",
+      "resource-definition",
+      "server-info",
+      "json-rpc",
+      "handshake",
+      "authentication",
+      "general",
+    ];
+
+    const cache: Record<string, string> = {};
+
+    for (const category of categories) {
+      const url = await getDocumentationForCategory(category);
+      if (url) {
+        cache[category] = url;
+      }
+    }
+
+    docUrlCache = cache;
+  } catch (err) {
+    // Log the error for debugging; will use fallback URLs
+    console.error("[initializeDocUrlCache] Failed to initialize documentation URL cache:", err);
+  }
 }
 
 function determineSeverity(
@@ -376,8 +428,11 @@ export const FieldErrorReporter = {
   formatErrorReport,
   generateFieldPathError,
   createValidationSummary,
+  initializeDocUrlCache,
 };
 
+// Initialize documentation URL cache at startup
+FieldErrorReporter.initializeDocUrlCache();
 /**
  * Validation Summary
  */
