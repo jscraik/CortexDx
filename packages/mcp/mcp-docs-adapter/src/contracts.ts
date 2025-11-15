@@ -118,3 +118,21 @@ export interface DocManifest {
     anchors: string[];
   }[];
 }
+
+// Zod schema for DocManifest
+export const DocManifestSchema = z.object({
+  version: z.string(),
+  createdAt: z.string(),
+  commit: z.string(),
+  pages: z.array(
+    z.object({
+      id: z.string(),
+      url: z.string().url(),
+      title: z.string(),
+      sha256: z.string(),
+      anchors: z.array(z.string()),
+    })
+  ),
+});
+
+export type DocManifestType = z.infer<typeof DocManifestSchema>;
