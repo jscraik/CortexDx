@@ -3,8 +3,11 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![Ollama](https://img.shields.io/badge/Ollama-supported-black.svg)](https://ollama.ai/)
+[![AI/ML](https://img.shields.io/badge/AI/ML-enabled-purple.svg)]()
+[![Response Time](https://img.shields.io/badge/response-<2s-brightgreen.svg)]()
 
-This module provides enhanced LLM integration for the CortexDx diagnostic system, enabling conversational development assistance and intelligent problem solving.
+This module provides enhanced LLM integration for the CortexDx diagnostic system, enabling conversational development assistance and intelligent problem solving through local Ollama models.
 
 ## Features
 

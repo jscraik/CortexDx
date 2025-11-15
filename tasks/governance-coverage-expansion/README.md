@@ -2,10 +2,14 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
 [![Status](https://img.shields.io/badge/status-in--progress-yellow.svg)]()
+[![Task Type](https://img.shields.io/badge/type-governance-blue.svg)]()
+[![Priority](https://img.shields.io/badge/priority-high-orange.svg)]()
+[![ASVS](https://img.shields.io/badge/ASVS-4.0-blue.svg)](https://owasp.org/www-project-application-security-verification-standard/)
+[![MITRE](https://img.shields.io/badge/MITRE-ATT&CK-red.svg)](https://attack.mitre.org/)
 
 ## Overview
 
-This task directory contains evidence and tracking for the governance coverage expansion initiative for CortexDx. The goal is to ensure comprehensive test coverage and compliance validation across all diagnostic suites.
+This task directory contains evidence and tracking for the governance coverage expansion initiative for CortexDx. The goal is to ensure comprehensive test coverage and compliance validation across all diagnostic suites, with a focus on ASVS 4.0 and MITRE ATT&CK framework alignment.
 
 ## Objectives
 

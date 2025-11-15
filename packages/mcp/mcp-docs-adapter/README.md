@@ -1,10 +1,13 @@
 # @cortex-os/mcp-docs-adapter
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
+[![npm](https://img.shields.io/badge/npm-@cortex--os%2Fmcp--docs--adapter-CB3837.svg)](https://www.npmjs.com/package/@cortex-os/mcp-docs-adapter)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![SQLite](https://img.shields.io/badge/SQLite-FTS5-003B57.svg)](https://www.sqlite.org/)
+[![Offline](https://img.shields.io/badge/offline-first-brightgreen.svg)]()
 
-Offline MCP documentation knowledge pack with SQLite FTS search.
+Offline MCP documentation knowledge pack with SQLite FTS5 full-text search for fast, deterministic documentation lookups.
 
 ## Overview
 

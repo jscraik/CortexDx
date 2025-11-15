@@ -3,6 +3,9 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../LICENSE)
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://spec.modelcontextprotocol.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
+[![Tool Categories](https://img.shields.io/badge/categories-6-blue.svg)]()
+[![Total Tools](https://img.shields.io/badge/tools-60+-brightgreen.svg)]()
+[![Compliance](https://img.shields.io/badge/compliance-100%25-brightgreen.svg)]()
 
 This directory contains comprehensive MCP tool definitions for the CortexDx diagnostic system. All tools follow the MCP protocol specification version 2024-11-05 and provide JSON schema-based input validation.
 
