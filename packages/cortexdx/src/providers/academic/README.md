@@ -321,7 +321,8 @@ This implementation includes adaptations and inspirations from the following ope
 - **Wikidata MCP**: [philippesaade-wmde/WikidataMCP](https://github.com/philippesaade-wmde/WikidataMCP) (MIT License)
 - **arXiv MCP Server**: [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) (MIT License)
 - **Vibe Check MCP**: [PV-Bhat/vibe-check-mcp-server](https://github.com/PV-Bhat/vibe-check-mcp-server) (MIT License)
-- **Cortex Vibe MCP**: [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) (Apache-2.0)
+- **Cortex Vibe MCP**: [@brainwav/cortex-vibe-mcp](https://github.com/jscraik/Cortex-Vibe-MCP) (Apache-2.0)  
+  _(npm package maintained under @brainwav, based on/forked from jscraik/Cortex-Vibe-MCP)_
 - **Context7**: [upstash/context7](https://github.com/upstash/context7) (MIT License)
 
 All upstream projects are used in compliance with their respective licenses.
