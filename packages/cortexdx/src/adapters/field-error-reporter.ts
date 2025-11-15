@@ -431,6 +431,8 @@ export const FieldErrorReporter = {
   initializeDocUrlCache,
 };
 
+// Initialize documentation URL cache at startup
+FieldErrorReporter.initializeDocUrlCache();
 /**
  * Validation Summary
  */
