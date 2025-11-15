@@ -103,7 +103,10 @@ export interface DocChunk {
   text: string;
   anchor?: string;
   headings: string[];
-  // Reserved for future vector search functionality (e.g., semantic search using embeddings)
+  /**
+   * Reserved for future vector search functionality (e.g., semantic search using embeddings).
+   * Current implementations should ignore this field.
+   */
   embedding?: Float32Array;
 }
 
