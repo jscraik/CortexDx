@@ -59,7 +59,33 @@
                 "lightweight_rag"
             ],
             "ollama_model": "granite-embedding:278m",
-            "priority": 3
+            "priority": 4
+        },
+        "snowflake-arctic-embed2": {
+            "name": "snowflake-arctic-embed2:568m",
+            "model_tag": "snowflake-arctic-embed2:568m",
+            "dimensions": 1024,
+            "max_tokens": 8192,
+            "memory_gb": 2.5,
+            "context_length": 8192,
+            "status": "available",
+            "size_bytes": 1200000000,
+            "recommended_for": [
+                "multilingual_embedding",
+                "frontier_performance",
+                "production_rag",
+                "cross_lingual_search"
+            ],
+            "ollama_model": "snowflake-arctic-embed2:568m",
+            "priority": 3,
+            "supports_multilingual": true,
+            "model_version": "v0.12.10+",
+            "features": [
+                "frontier_performance",
+                "multilingual_support",
+                "scalability_optimized",
+                "english_performance_preserved"
+            ]
         }
     },
     "chat_models": {
@@ -241,7 +267,9 @@
         "general_purpose": "gemma3n",
         "enterprise": "granite-embed",
         "tool_calling": "qwen3-coder",
-        "state_of_art_embedding": "qwen3-embed"
+        "state_of_art_embedding": "qwen3-embed",
+        "multilingual_embedding": "snowflake-arctic-embed2",
+        "frontier_embedding": "snowflake-arctic-embed2"
     },
     "cloud_models": {
         "kimi-k2-cloud": {
@@ -518,7 +546,6 @@
         "tool_calling": "qwen3-coder",
         "function_calling": "qwen3-coder",
         "state_of_art_embedding": "qwen3-embed",
-        "multilingual_embedding": "qwen3-embed",
         "high_accuracy_search": "qwen3-embed",
         "mixture_of_experts": "kimi-k2-cloud",
         "state_of_art_reasoning": "kimi-k2-cloud",
@@ -531,6 +558,10 @@
         "governance_reports": "gpt-oss-120b-cloud",
         "performance_triage": "gpt-oss-20b-cloud",
         "multilingual_briefings": "minimax-m2-cloud",
+        "multilingual_embedding": "snowflake-arctic-embed2",
+        "frontier_embedding": "snowflake-arctic-embed2",
+        "cross_lingual_search": "snowflake-arctic-embed2",
+        "advanced_reasoning": "phi4-mini-reasoning",
         "default": "deepseek-coder"
     },
     "service_configuration": {
