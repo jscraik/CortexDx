@@ -4,7 +4,14 @@
  * Requirements: 14.1, 14.2, 14.3
  */
 
+import { safeParseJson } from "../utils/json.js";
 import { httpAdapter } from "./http.js";
+
+type JwtPayload = {
+    exp?: number;
+    scope?: string;
+    [key: string]: unknown;
+};
 
 // OAuth2 Configuration
 export interface OAuth2Config {
@@ -347,20 +354,22 @@ export class OAuthAuthenticator {
                     return { valid: false, error: "Invalid token payload" };
                 }
 
-                const payload = JSON.parse(
+                const payload = safeParseJson<JwtPayload>(
                     Buffer.from(payloadPart, "base64").toString("utf-8"),
+                    "oauth token payload",
                 );
 
                 // Check expiration
                 const now = Math.floor(Date.now() / 1000);
-                if (payload.exp && payload.exp < now) {
+                const expiration = typeof payload.exp === "number" ? payload.exp : undefined;
+                if (expiration && expiration < now) {
                     return { valid: false, error: "Token expired" };
                 }
 
                 return {
                     valid: true,
-                    expiresAt: payload.exp ? new Date(payload.exp * 1000) : undefined,
-                    scope: payload.scope ? payload.scope.split(" ") : undefined,
+                    expiresAt: expiration ? new Date(expiration * 1000) : undefined,
+                    scope: typeof payload.scope === "string" ? payload.scope.split(" ") : undefined,
                 };
             } catch (error) {
                 return {

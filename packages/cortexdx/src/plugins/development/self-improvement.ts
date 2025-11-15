@@ -1,3 +1,4 @@
+import { safeParseJson } from "../../utils/json.js";
 import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
 import { getEnhancedLlmAdapter } from "../../ml/router.js";
 import { runAcademicResearch } from "../../research/academic-researcher.js";
@@ -270,7 +271,7 @@ export async function analyzeWithLLM(
         // Extract JSON from markdown code blocks if present
         const jsonMatch = analysis.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
         const jsonStr = jsonMatch?.[1] ?? analysis;
-        analysisData = JSON.parse(jsonStr);
+        analysisData = safeParseJson(jsonStr);
 
         // Validate required fields
         if (!analysisData.quick_read) {

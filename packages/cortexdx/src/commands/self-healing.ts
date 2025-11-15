@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { join } from "node:path";
 import { InspectorAdapter } from "../adapters/inspector-adapter.js";
 import { loadProjectContext } from "../context/project-context.js";
@@ -48,7 +49,9 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
-      return text.length ? JSON.parse(text) : {};
+      return text.length
+        ? safeParseJson<Record<string, unknown>>(text, "self-healing request")
+        : {};
     },
     jsonrpc: jsonRpcStub as <T>(method: string, params?: unknown) => Promise<T>,
     sseProbe: async () => ({ ok: true }),
@@ -304,7 +307,10 @@ async function loadMonitoringConfigs(
   // Custom event emission removed - not compatible with Node.js process events
 
   const raw = await fs.readFile(options.config, "utf-8");
-  const parsed = JSON.parse(typeof raw === "string" ? raw : raw.toString());
+  const parsed = safeParseJson<unknown>(
+    typeof raw === "string" ? raw : raw.toString(),
+    "monitoring config",
+  );
   const jobs = Array.isArray(parsed)
     ? parsed
     : Array.isArray(parsed?.jobs)

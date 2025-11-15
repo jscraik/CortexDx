@@ -4,6 +4,7 @@
  * Requirements: 14.4, 14.5
  */
 
+import { safeParseJson } from "../utils/json.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
@@ -302,7 +303,10 @@ export class CredentialManager {
         let decrypted = decipher.update(encrypted.encryptedData, "hex", "utf8");
         decrypted += decipher.final("utf8");
 
-        const credentials = JSON.parse(decrypted) as Credentials;
+        const credentials = safeParseJson<Credentials>(
+            decrypted,
+            "credential manager decrypt",
+        );
 
         // Convert date strings back to Date objects
         credentials.expiresAt = new Date(credentials.expiresAt);
@@ -348,7 +352,10 @@ export class CredentialManager {
             }
 
             const data = await readFile(this.storageFile, "utf8");
-            return JSON.parse(data) as CredentialStorage;
+            return safeParseJson<CredentialStorage>(
+                data,
+                "credential storage file",
+            );
         } catch (error) {
             // If file is corrupted, start fresh
             return {

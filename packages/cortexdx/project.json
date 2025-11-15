@@ -43,6 +43,12 @@
         "command": "pnpm --dir packages/cortexdx run axe:check"
       }
     },
+    "docs-ingest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/cortexdx exec tsx src/cli.ts library ingest-docs"
+      }
+    },
     "doctor": {
       "executor": "nx:run-commands",
       "options": {

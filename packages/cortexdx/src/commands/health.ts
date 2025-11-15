@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { loadProjectContext } from "../context/project-context.js";
 import { AutoHealer } from "../healing/auto-healer.js";
 import type { DevelopmentContext } from "../types.js";
@@ -31,7 +32,9 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
-      return text.length ? JSON.parse(text) : {};
+      return text.length
+        ? safeParseJson<Record<string, unknown>>(text, "health check request")
+        : {};
     },
     jsonrpc: jsonRpcStub,
     sseProbe: async () => ({ ok: true }),

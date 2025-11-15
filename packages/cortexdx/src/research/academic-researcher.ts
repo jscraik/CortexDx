@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { getAcademicRegistry } from "../registry/index.js";
@@ -9,11 +10,12 @@ import type { DiagnosticContext, EvidencePointer, Finding } from "../types.js";
 
 export const DEFAULT_PROVIDERS = [
   "context7",
-  "vibe-check",
+  "research-quality",
   "openalex",
   "exa",
   "wikidata",
   "arxiv",
+  "cortex-vibe",
 ];
 
 interface ProviderExecutionContext {
@@ -120,15 +122,17 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     };
   },
   openalex: async (instance, registration, ctx) => {
-    const works = (await instance.executeTool("openalex_search_works", {
-      query: ctx.topic,
+    const worksResponse = (await instance.executeTool("openalex_search_works", {
+      query: ctx.question ? `${ctx.topic} ${ctx.question}` : ctx.topic,
       per_page: ctx.limit,
       sort: "cited_by_count:desc",
-      filter: ctx.question
-        ? `concepts.display_name.search:${ctx.question}`
-        : undefined,
-    })) as Array<Record<string, unknown>>;
-    const findings = (works ?? []).map((work, index) => {
+    })) as
+      | Array<Record<string, unknown>>
+      | { results?: Array<Record<string, unknown>> };
+    const works = Array.isArray(worksResponse)
+      ? worksResponse
+      : worksResponse?.results ?? [];
+    const findings = works.map((work, index) => {
       const title = String(work.title ?? `OpenAlex work ${index + 1}`);
       const summary = String(
         work.abstract ?? work.display_name ?? "No abstract available",
@@ -155,12 +159,12 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: works,
+      raw: worksResponse,
     };
   },
   arxiv: async (instance, registration, ctx) => {
-    const papers = (await instance.executeTool("arxiv_search_papers", {
-      query: ctx.topic,
+    const papers = (await instance.executeTool("arxiv_search", {
+      search_query: ctx.topic,
       max_results: ctx.limit,
       sort_by: "submittedDate",
       sort_order: "descending",
@@ -220,14 +224,44 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       raw: analysis,
     };
   },
-  "vibe-check": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool("assess_quality", {
-      target: ctx.topic,
+  "research-quality": async (instance, registration, ctx) => {
+    const assessment = await instance.executeTool("research_quality_assess_quality", {
+      text: ctx.topic,
+      title: ctx.topic,
       criteria: ["methodology", "completeness", "accuracy"],
-      depth: "thorough",
     });
     const score = Number(
-      (assessment as { overallScore?: number })?.overallScore ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
+    );
+    return {
+      providerId: registration.id,
+      providerName: registration.name,
+      findings: [
+        {
+          id: "research.research-quality.1",
+          area: "research",
+          severity: score >= 0.7 ? "info" : score >= 0.5 ? "minor" : "major",
+          title: `Research Quality score ${(score * 100).toFixed(1)}%`,
+          description: JSON.stringify(assessment, null, 2).slice(0, 1000),
+          evidence: [],
+          tags: buildTags(ctx.topic, registration.id),
+          confidence: score,
+        },
+      ],
+      raw: assessment,
+    };
+  },
+  "vibe-check": async (instance, registration, ctx) => {
+    const assessment = await instance.executeTool(
+      "vibe_check_assess_quality",
+      {
+        target: ctx.topic,
+        criteria: ["methodology", "completeness", "accuracy"],
+        depth: "thorough",
+      },
+    );
+    const score = Number(
+      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,
@@ -237,7 +271,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
           id: "research.vibe-check.1",
           area: "research",
           severity: score >= 0.7 ? "info" : score >= 0.5 ? "minor" : "major",
-          title: `Vibe Check score ${(score * 100).toFixed(1)}%`,
+          title: `Vibe Check Quality Score ${(score * 100).toFixed(1)}%`,
           description: JSON.stringify(assessment, null, 2).slice(0, 1000),
           evidence: [],
           tags: buildTags(ctx.topic, registration.id),
@@ -245,6 +279,30 @@ const providerExecutors: Record<string, ProviderExecutor> = {
         },
       ],
       raw: assessment,
+    };
+  },
+  "cortex-vibe": async (instance, registration, ctx) => {
+    const vibeCheck = await instance.executeTool("cortex_vibe_check", {
+      taskContext: ctx.topic,
+      currentPlan: ctx.question ?? "Analyze research topic",
+    });
+    const questions = (vibeCheck as { questions?: string[] })?.questions ?? [];
+    return {
+      providerId: registration.id,
+      providerName: registration.name,
+      findings: [
+        {
+          id: "research.cortex-vibe.1",
+          area: "research",
+          severity: "info",
+          title: "Cortex Vibe metacognitive check",
+          description: `Questions to consider:\n${questions.join("\n")}`,
+          evidence: [],
+          tags: buildTags(ctx.topic, registration.id),
+          confidence: 0.8,
+        },
+      ],
+      raw: vibeCheck,
     };
   },
   exa: async (instance, registration, ctx) => {
@@ -280,7 +338,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
   },
   wikidata: async (instance, registration, ctx) => {
     const query = `SELECT ?item ?itemLabel WHERE { ?item wdt:P31 wd:Q11424 . ?item rdfs:label ?itemLabel FILTER(LANG(?itemLabel) = "en") FILTER(CONTAINS(LCASE(?itemLabel), "${ctx.topic.toLowerCase()}")) } LIMIT ${ctx.limit}`;
-    const data = await instance.executeTool("sparql_query", { query });
+    const data = await instance.executeTool("wikidata_sparql", { query });
     const bindings =
       (
         data as {
@@ -326,18 +384,33 @@ function createResearchContext(
   deterministic: boolean,
   headers: Record<string, string>,
 ): DiagnosticContext {
+  const defaultHeaders = new Headers();
+  for (const [key, value] of Object.entries(headers)) {
+    if (value?.trim()) {
+      defaultHeaders.set(key, value.trim());
+    }
+  }
   return {
     endpoint: `research://${slugify(topic)}`,
     headers,
     logger: () => undefined,
     request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
-      const response = await fetch(input, init);
+      const mergedHeaders = new Headers(defaultHeaders);
+      if (init?.headers) {
+        new Headers(init.headers).forEach((value, key) => {
+          mergedHeaders.set(key, value);
+        });
+      }
+      const response = await fetch(input, {
+        ...init,
+        headers: mergedHeaders,
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
       try {
-        return JSON.parse(text) as T;
+        return safeParseJson(text) as T;
       } catch {
         return text as T;
       }
@@ -608,6 +681,12 @@ export const ACADEMIC_PROVIDER_CREDENTIALS: Record<
     required: false,
     description: "Vibe Check API key",
   },
+  openalex: {
+    envVar: "OPENALEX_API_KEY",
+    header: "x-api-key",
+    required: false,
+    description: "OpenAlex API key",
+  },
 };
 
 export const ACADEMIC_PROVIDER_HEADER_OVERRIDES: Record<
@@ -622,10 +701,8 @@ export const ACADEMIC_PROVIDER_HEADER_OVERRIDES: Record<
     { envVar: "CONTEXT7_API_BASE_URL", header: "context7-base-url" },
     { envVar: "CONTEXT7_PROFILE", header: "x-context7-profile" },
   ],
-  "vibe-check": [
-    { envVar: "VIBE_CHECK_HTTP_URL", header: "vibe-check-url" },
-    { envVar: "VIBE_CHECK_PROFILE", header: "x-vibe-profile" },
-    { envVar: "VIBE_CHECK_STRICT", header: "x-vibe-strict" },
+  "cortex-vibe": [
+    { envVar: "CORTEX_VIBE_HTTP_URL", header: "cortex-vibe-base-url" },
   ],
   openalex: [
     {
@@ -647,6 +724,7 @@ export const ACADEMIC_PROVIDER_ENV_REQUIREMENTS: Record<
   openalex: {
     name: "OpenAlex",
     required: ["OPENALEX_CONTACT_EMAIL"],
+    optional: ["OPENALEX_API_KEY"],
   },
   arxiv: {
     name: "arXiv",
@@ -657,10 +735,20 @@ export const ACADEMIC_PROVIDER_ENV_REQUIREMENTS: Record<
     required: ["CONTEXT7_API_KEY", "CONTEXT7_API_BASE_URL"],
     optional: ["CONTEXT7_PROFILE"],
   },
+  "research-quality": {
+    name: "Research Quality",
+    required: [],
+    optional: ["RESEARCH_QUALITY_API_KEY", "RESEARCH_QUALITY_HTTP_URL"],
+  },
   "vibe-check": {
     name: "Vibe Check",
-    required: ["VIBE_CHECK_HTTP_URL"],
-    optional: ["VIBE_CHECK_API_KEY", "VIBE_CHECK_PROFILE", "VIBE_CHECK_STRICT"],
+    required: [],
+    optional: ["VIBE_CHECK_API_KEY"],
+  },
+  "cortex-vibe": {
+    name: "Cortex Vibe",
+    required: [],
+    optional: ["CORTEX_VIBE_HTTP_URL"],
   },
   exa: {
     name: "Exa",

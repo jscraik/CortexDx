@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { randomUUID } from "node:crypto";
 import { sseProbe } from "../adapters/sse.js";
 import type {
@@ -34,6 +35,16 @@ export function createInspectorSession(
   base?: HeadersMap,
   options?: InspectorSessionOptions,
 ): InspectorSession {
+  const pickSessionId = (): string => {
+    const sharedSession = shared?.sessionId?.trim();
+    if (sharedSession) return sharedSession;
+    const provided = providedSessionId?.trim();
+    if (provided) return provided;
+    return `cortexdx-${Date.now().toString(36)}-${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
+  };
+
   const sessionHeaders: HeadersMap = {
     "content-type": "application/json",
     accept: "application/json, text/event-stream",
@@ -59,13 +70,25 @@ export function createInspectorSession(
     headers: () => ({ ...sessionHeaders }),
   };
 
-  if (providedSessionId) {
-    transportState.sessionId = providedSessionId;
-  }
+  const applySessionId = (value?: string | null) => {
+    if (!value) {
+      return;
+    }
+    const normalized = value.trim();
+    if (!normalized) {
+      return;
+    }
+    sessionHeaders["mcp-session-id"] = normalized;
+    sessionHeaders["Mcp-Session-Id"] = normalized;
+    sessionHeaders["MCP-Session-ID"] = normalized;
+    transcript.sessionId = normalized;
+    transportState.sessionId = normalized;
+    if (shared) {
+      shared.sessionId = normalized;
+    }
+  };
 
-  if (providedSessionId) {
-    transportState.sessionId = providedSessionId;
-  }
+  applySessionId(pickSessionId());
 
   let initialized = Boolean(options?.preinitialized && providedSessionId);
   let requestCounter = 1;
@@ -96,15 +119,16 @@ export function createInspectorSession(
     });
 
     const body = await safeJsonParse(response);
-    const sessionId =
+    const headerSessionId =
       response.headers.get("mcp-session-id") ||
       response.headers.get("Mcp-Session-Id") ||
-      sessionHeaders["mcp-session-id"] ||
-      randomUUID();
+      response.headers.get("MCP-Session-ID");
+    applySessionId(headerSessionId || sessionHeaders["mcp-session-id"]);
+    if (!transcript.sessionId) {
+      applySessionId(randomUUID());
+    }
 
     sessionHeaders.accept = "application/json, text/event-stream";
-    transcript.sessionId = sessionId;
-    transportState.sessionId = sessionId;
     transcript.initialize = buildExchange(
       "initialize",
       initRequest,
@@ -216,7 +240,10 @@ async function safeJsonParse(
   const text = await response.text();
   if (!text) return undefined;
   try {
-    const parsed = JSON.parse(text);
+    const parsed = safeParseJson<Record<string, unknown>>(
+      text,
+      "inspector session transcript",
+    );
     if (
       typeof parsed === "object" &&
       parsed !== null &&

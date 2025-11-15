@@ -3,6 +3,7 @@
  * Manages conversation context, session handling, and prompt engineering with <2s response time requirement
  */
 
+import { safeParseJson } from "../utils/json.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import {
   type ModelManager,
@@ -159,7 +160,7 @@ export class LlmOrchestrator {
       if (this.config.enableCaching) {
         const cached = this.getCachedResponse(cacheKey);
         if (cached) {
-          return JSON.parse(cached.response);
+          return safeParseJson(cached.response);
         }
       }
 
@@ -231,7 +232,7 @@ export class LlmOrchestrator {
       if (this.config.enableCaching) {
         const cached = this.getCachedResponse(cacheKey);
         if (cached) {
-          return JSON.parse(cached.response);
+          return safeParseJson(cached.response);
         }
       }
 
@@ -365,7 +366,7 @@ export class LlmOrchestrator {
       if (this.config.enableCaching) {
         const cached = this.getCachedResponse(cacheKey);
         if (cached) {
-          return JSON.parse(cached.response);
+          return safeParseJson(cached.response);
         }
       }
 

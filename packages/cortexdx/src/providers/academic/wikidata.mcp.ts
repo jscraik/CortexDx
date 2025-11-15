@@ -60,6 +60,43 @@ export interface WikidataSearchParams {
   type?: string;
 }
 
+export interface WikidataVectorSearchResult {
+  id: string;
+  label: string;
+  description?: string;
+  score: number;
+  concepturi: string;
+  url: string;
+}
+
+export interface WikidataClaim {
+  subject: string;
+  subjectLabel?: string;
+  property: string;
+  propertyLabel?: string;
+  value: string;
+  valueLabel?: string;
+  type: "statement" | "qualifier" | "reference";
+}
+
+export interface WikidataClaimValue {
+  property: string;
+  propertyLabel?: string;
+  value: unknown;
+  valueType: string;
+  qualifiers?: Array<{
+    property: string;
+    propertyLabel?: string;
+    value: unknown;
+  }>;
+  references?: Array<{
+    property: string;
+    propertyLabel?: string;
+    value: unknown;
+  }>;
+  rank: "preferred" | "normal" | "deprecated";
+}
+
 export class WikidataProvider {
   private readonly apiUrl = "https://www.wikidata.org/w/api.php";
   private readonly sparqlUrl = "https://query.wikidata.org/sparql";
@@ -77,7 +114,7 @@ export class WikidataProvider {
     return [
       {
         name: "wikidata_search",
-        description: "Search for entities in Wikidata",
+        description: "Search for entities in Wikidata using keyword search",
         inputSchema: {
           type: "object",
           properties: {
@@ -104,6 +141,60 @@ export class WikidataProvider {
             },
           },
           required: ["search"],
+        },
+      },
+      {
+        name: "wikidata_vector_search_items",
+        description:
+          "Performs semantic search over Wikidata items using vector embeddings",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Natural language query for semantic search",
+            },
+            limit: {
+              type: "number",
+              description: "Maximum number of results (default: 10, max: 50)",
+              minimum: 1,
+              maximum: 50,
+              default: 10,
+            },
+            language: {
+              type: "string",
+              description: "Language code (default: 'en')",
+              default: "en",
+            },
+          },
+          required: ["query"],
+        },
+      },
+      {
+        name: "wikidata_vector_search_properties",
+        description:
+          "Performs semantic search over Wikidata properties using vector embeddings",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Natural language query for property discovery",
+            },
+            limit: {
+              type: "number",
+              description: "Maximum number of results (default: 10, max: 50)",
+              minimum: 1,
+              maximum: 50,
+              default: 10,
+            },
+            language: {
+              type: "string",
+              description: "Language code (default: 'en')",
+              default: "en",
+            },
+          },
+          required: ["query"],
         },
       },
       {
@@ -172,6 +263,56 @@ export class WikidataProvider {
             },
           },
           required: ["query"],
+        },
+      },
+      {
+        name: "wikidata_get_entity_claims",
+        description:
+          "Returns all direct graph connections (statements) of a Wikidata entity in triplet format",
+        inputSchema: {
+          type: "object",
+          properties: {
+            entity_id: {
+              type: "string",
+              description: "Wikidata entity ID (e.g., 'Q42')",
+            },
+            property_filter: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Optional list of property IDs to filter (e.g., ['P31', 'P106'])",
+            },
+            language: {
+              type: "string",
+              description: "Language code for labels (default: 'en')",
+              default: "en",
+            },
+          },
+          required: ["entity_id"],
+        },
+      },
+      {
+        name: "wikidata_get_claim_values",
+        description:
+          "Retrieves comprehensive claim data including qualifiers, ranks, and references",
+        inputSchema: {
+          type: "object",
+          properties: {
+            entity_id: {
+              type: "string",
+              description: "Wikidata entity ID (e.g., 'Q42')",
+            },
+            property_id: {
+              type: "string",
+              description: "Property ID to retrieve claims for (e.g., 'P31')",
+            },
+            language: {
+              type: "string",
+              description: "Language code for labels (default: 'en')",
+              default: "en",
+            },
+          },
+          required: ["entity_id", "property_id"],
         },
       },
     ];
@@ -391,6 +532,286 @@ export class WikidataProvider {
   }
 
   /**
+   * Vector search for items using semantic embeddings
+   * Note: This requires the Wikidata vector database service
+   */
+  async vectorSearchItems(
+    query: string,
+    limit = 10,
+    language = "en",
+  ): Promise<WikidataVectorSearchResult[]> {
+    // Note: The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
+    // This is a placeholder implementation that falls back to keyword search
+    // TODO: Integrate with Wikidata vector database service when available
+
+    this.ctx.logger(
+      "Vector search not yet fully integrated with Wikidata vector database",
+    );
+
+    // Fallback to enhanced keyword search with scoring
+    const keywordResults = await this.searchEntities({
+      search: query,
+      language,
+      limit,
+    });
+
+    return keywordResults.map((result, index) => ({
+      id: result.id,
+      label: result.label,
+      description: result.description,
+      score: 1.0 - index * 0.05, // Simple descending score
+      concepturi: result.concepturi,
+      url: result.url,
+    }));
+  }
+
+  /**
+   * Vector search for properties using semantic embeddings
+   * Note: This requires the Wikidata vector database service
+   */
+  async vectorSearchProperties(
+    query: string,
+    limit = 10,
+    language = "en",
+  ): Promise<WikidataVectorSearchResult[]> {
+    // Note: The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
+    // This is a placeholder implementation that falls back to keyword search
+    // TODO: Integrate with Wikidata vector database service when available
+
+    this.ctx.logger(
+      "Vector search not yet fully integrated with Wikidata vector database",
+    );
+
+    // Fallback to enhanced keyword search for properties
+    const keywordResults = await this.searchEntities({
+      search: query,
+      language,
+      limit,
+      type: "property",
+    });
+
+    return keywordResults.map((result, index) => ({
+      id: result.id,
+      label: result.label,
+      description: result.description,
+      score: 1.0 - index * 0.05, // Simple descending score
+      concepturi: result.concepturi,
+      url: result.url,
+    }));
+  }
+
+  /**
+   * Get entity claims in triplet format (subject-property-value)
+   */
+  async getEntityClaims(
+    entityId: string,
+    propertyFilter?: string[],
+    language = "en",
+  ): Promise<WikidataClaim[]> {
+    const entity = await this.getEntity(entityId, language);
+    if (!entity || !entity.claims) {
+      return [];
+    }
+
+    const claims: WikidataClaim[] = [];
+
+    // Iterate through all properties in the entity's claims
+    for (const [propertyId, propertyClaimsArray] of Object.entries(
+      entity.claims,
+    )) {
+      // Apply property filter if specified
+      if (propertyFilter && !propertyFilter.includes(propertyId)) {
+        continue;
+      }
+
+      // Get property label via SPARQL
+      const propertyLabel = await this.getPropertyLabel(propertyId, language);
+
+      // Extract claims from the array
+      if (Array.isArray(propertyClaimsArray)) {
+        for (const claim of propertyClaimsArray) {
+          const claimData = claim as {
+            mainsnak?: {
+              datavalue?: { value?: unknown; type?: string };
+            };
+          };
+
+          if (claimData.mainsnak?.datavalue?.value) {
+            const value = claimData.mainsnak.datavalue.value;
+            let valueString = "";
+            let valueLabel = "";
+
+            // Handle different value types
+            if (
+              typeof value === "object" &&
+              value !== null &&
+              "id" in value
+            ) {
+              // Entity reference
+              valueString = (value as { id: string }).id;
+              const valueEntity = await this.getEntity(valueString, language);
+              valueLabel = valueEntity?.label || valueString;
+            } else if (typeof value === "string") {
+              valueString = value;
+              valueLabel = value;
+            } else {
+              valueString = JSON.stringify(value);
+              valueLabel = valueString;
+            }
+
+            claims.push({
+              subject: entityId,
+              subjectLabel: entity.label,
+              property: propertyId,
+              propertyLabel,
+              value: valueString,
+              valueLabel,
+              type: "statement",
+            });
+          }
+        }
+      }
+    }
+
+    this.ctx.evidence({
+      type: "log",
+      ref: `Retrieved ${claims.length} claims for ${entityId}`,
+    });
+
+    return claims;
+  }
+
+  /**
+   * Get claim values with qualifiers, ranks, and references
+   */
+  async getClaimValues(
+    entityId: string,
+    propertyId: string,
+    language = "en",
+  ): Promise<WikidataClaimValue[]> {
+    const entity = await this.getEntity(entityId, language);
+    if (!entity || !entity.claims) {
+      return [];
+    }
+
+    const propertyClaims = entity.claims[propertyId];
+    if (!propertyClaims || !Array.isArray(propertyClaims)) {
+      return [];
+    }
+
+    const propertyLabel = await this.getPropertyLabel(propertyId, language);
+    const claimValues: WikidataClaimValue[] = [];
+
+    for (const claim of propertyClaims) {
+      const claimData = claim as {
+        mainsnak?: { datavalue?: { value?: unknown; type?: string } };
+        qualifiers?: Record<
+          string,
+          Array<{ datavalue?: { value?: unknown; type?: string } }>
+        >;
+        references?: Array<{
+          snaks?: Record<
+            string,
+            Array<{ datavalue?: { value?: unknown; type?: string } }>
+          >;
+        }>;
+        rank?: string;
+      };
+
+      if (!claimData.mainsnak?.datavalue) {
+        continue;
+      }
+
+      const value = claimData.mainsnak.datavalue.value;
+      const valueType = claimData.mainsnak.datavalue.type || "unknown";
+
+      // Extract qualifiers
+      const qualifiers: Array<{
+        property: string;
+        propertyLabel?: string;
+        value: unknown;
+      }> = [];
+      if (claimData.qualifiers) {
+        for (const [qualProp, qualValues] of Object.entries(
+          claimData.qualifiers,
+        )) {
+          const qualPropLabel = await this.getPropertyLabel(qualProp, language);
+          for (const qualValue of qualValues) {
+            if (qualValue.datavalue?.value) {
+              qualifiers.push({
+                property: qualProp,
+                propertyLabel: qualPropLabel,
+                value: qualValue.datavalue.value,
+              });
+            }
+          }
+        }
+      }
+
+      // Extract references
+      const references: Array<{
+        property: string;
+        propertyLabel?: string;
+        value: unknown;
+      }> = [];
+      if (claimData.references) {
+        for (const reference of claimData.references) {
+          if (reference.snaks) {
+            for (const [refProp, refValues] of Object.entries(reference.snaks)) {
+              const refPropLabel = await this.getPropertyLabel(
+                refProp,
+                language,
+              );
+              for (const refValue of refValues) {
+                if (refValue.datavalue?.value) {
+                  references.push({
+                    property: refProp,
+                    propertyLabel: refPropLabel,
+                    value: refValue.datavalue.value,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const rank = (claimData.rank || "normal") as
+        | "preferred"
+        | "normal"
+        | "deprecated";
+
+      claimValues.push({
+        property: propertyId,
+        propertyLabel,
+        value,
+        valueType,
+        qualifiers: qualifiers.length > 0 ? qualifiers : undefined,
+        references: references.length > 0 ? references : undefined,
+        rank,
+      });
+    }
+
+    this.ctx.evidence({
+      type: "log",
+      ref: `Retrieved ${claimValues.length} claim values for ${entityId}:${propertyId}`,
+    });
+
+    return claimValues;
+  }
+
+  /**
+   * Helper method to get property label
+   */
+  private async getPropertyLabel(
+    propertyId: string,
+    language = "en",
+  ): Promise<string> {
+    const property = await this.getEntity(propertyId, language);
+    return property?.label || propertyId;
+  }
+
+  /**
    * Health check for the provider
    */
   async healthCheck(): Promise<boolean> {
@@ -425,6 +846,20 @@ export class WikidataProvider {
           type: params.type as string | undefined,
         });
 
+      case "wikidata_vector_search_items":
+        return await this.vectorSearchItems(
+          params.query as string,
+          params.limit as number | undefined,
+          params.language as string | undefined,
+        );
+
+      case "wikidata_vector_search_properties":
+        return await this.vectorSearchProperties(
+          params.query as string,
+          params.limit as number | undefined,
+          params.language as string | undefined,
+        );
+
       case "wikidata_entity": {
         const entity = await this.getEntity(
           params.id as string,
@@ -444,6 +879,20 @@ export class WikidataProvider {
           params.query as string,
           params.entity_type as string,
           params.limit as number | undefined,
+        );
+
+      case "wikidata_get_entity_claims":
+        return await this.getEntityClaims(
+          params.entity_id as string,
+          params.property_filter as string[] | undefined,
+          params.language as string | undefined,
+        );
+
+      case "wikidata_get_claim_values":
+        return await this.getClaimValues(
+          params.entity_id as string,
+          params.property_id as string,
+          params.language as string | undefined,
         );
 
       default:

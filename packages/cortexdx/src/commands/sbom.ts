@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -225,12 +226,11 @@ async function maybeUploadToDependencyTrack(params: {
 }
 function parseManifestVersion(manifest: PackageManifest): string | undefined {
   if (manifest.type === "npm") {
-    try {
-      const parsed = JSON.parse(manifest.content) as { version?: string };
-      return parsed.version;
-    } catch {
-      return undefined;
-    }
+    const parsed = safeParseJson<{ version?: string }>(
+      manifest.content,
+      "sbom manifest",
+    );
+    return parsed.version;
   }
   return undefined;
 }

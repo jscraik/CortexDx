@@ -15,7 +15,7 @@ async function main() {
         errors: results.errors,
     };
     process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
-    if (results.errors.length > 0) {
+    if (normalized.length > 0) {
         process.exitCode = 1;
     }
 }

@@ -1,4 +1,5 @@
 // CortexDx Web Interface
+import { safeParseJson } from "../utils/json.js";
 class CortexDxClient {
     constructor() {
         this.baseUrl = window.location.origin;
@@ -59,7 +60,7 @@ class CortexDxClient {
         this.eventSource = new EventSource(`${this.baseUrl}/events`);
         
         this.eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            const data = safeParseJson(event.data);
             this.handleServerEvent(data);
         };
 
@@ -142,7 +143,7 @@ class CortexDxClient {
         
         try {
             const content = result.content?.[0]?.text;
-            const findings = content ? JSON.parse(content) : result;
+            const findings = content ? safeParseJson(content) : result;
             
             if (!findings || !findings.findings || findings.findings.length === 0) {
                 resultsPanel.innerHTML = '<div class="finding info"><div class="finding-title">No Issues Found</div><div class="finding-description">The MCP server appears to be functioning correctly.</div></div>';
@@ -206,7 +207,7 @@ class CortexDxClient {
             
             if (data.result) {
                 const content = data.result.content?.[0]?.text;
-                const responseData = content ? JSON.parse(content) : data.result;
+                const responseData = content ? safeParseJson(content) : data.result;
                 this.addChatMessage('assistant', responseData.response || responseData.message || JSON.stringify(responseData));
             } else if (data.error) {
                 this.addChatMessage('assistant', `Error: ${data.error.message}`);
@@ -292,7 +293,7 @@ class CortexDxClient {
     loadConfiguration() {
         const saved = localStorage.getItem('cortexdx-config');
         if (saved) {
-            const config = JSON.parse(saved);
+            const config = safeParseJson(saved);
             document.getElementById('llm-backend').value = config.llmBackend || 'ollama';
             document.getElementById('llm-model').value = config.llmModel || 'llama3';
             document.getElementById('expertise-level').value = config.expertiseLevel || 'intermediate';

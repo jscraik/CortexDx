@@ -4,6 +4,7 @@
  * Requirements: 12.1, 12.2, 6.5
  */
 
+import { safeParseJson } from "../utils/json.js";
 import type { Cipher, Decipher } from "node:crypto";
 import {
   createCipheriv,
@@ -193,7 +194,7 @@ export class SecureLocalStorage {
     if (!encrypted) return null;
 
     const decrypted = this.encryption.decrypt(encrypted);
-    return JSON.parse(decrypted) as T;
+    return safeParseJson(decrypted) as T;
   }
 
   /**

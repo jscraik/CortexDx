@@ -4,6 +4,7 @@
  * Requirements: 12.5, 9.4
  */
 
+import { safeParseJson } from "../utils/json.js";
 import type { Solution } from "../types.js";
 
 export interface ResolutionPattern {
@@ -50,6 +51,15 @@ export interface PatternStorage {
     saveCommonIssue: (issue: CommonIssuePattern) => Promise<void>;
     loadCommonIssues: () => Promise<CommonIssuePattern[]>;
     updateCommonIssue: (signature: string, context: string) => Promise<void>;
+}
+
+interface PersistedPatternStore {
+    patterns?: ResolutionPattern[];
+    commonIssues?: CommonIssuePattern[];
+    metadata?: {
+        lastUpdated?: number;
+        version?: string;
+    };
 }
 
 export function createInMemoryStorage(): PatternStorage {
@@ -236,7 +246,10 @@ export function createPersistentStorage(persistencePath: string): EnhancedPatter
         try {
             const fs = await import("node:fs/promises");
             const data = await fs.readFile(persistencePath, "utf-8");
-            const parsed = JSON.parse(data);
+            const parsed = safeParseJson<PersistedPatternStore>(
+                data,
+                "pattern-storage persistence",
+            );
 
             if (parsed.patterns) {
                 for (const pattern of parsed.patterns) {

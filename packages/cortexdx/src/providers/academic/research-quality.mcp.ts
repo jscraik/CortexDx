@@ -1,8 +1,11 @@
 /**
- * Vibe Check MCP Provider
- * FASTMCP v3.22 compliant provider for research quality assessment and academic integrity
+ * Research Quality MCP Provider
+ * FASTMCP v3.22 compliant provider for academic research quality assessment and integrity validation
  * Based on research quality metrics and inspired by PV-Bhat/vibe-check-mcp-server
  * Enhanced with anti-pattern detection, refactoring suggestions, and code health analysis
+ *
+ * Note: This provider focuses on ACADEMIC RESEARCH QUALITY (papers, venues, citations).
+ * For AI agent metacognitive oversight, see cortex-vibe.mcp.ts
  */
 
 import {
@@ -115,7 +118,7 @@ export interface CodeHealthAnalysis {
   recommendations: string[];
 }
 
-export class VibeCheckProvider {
+export class ResearchQualityProvider {
   private readonly userAgent =
     "CortexDx/1.0.0 (Academic Research Quality Assessment)";
   private readonly licenseValidator: LicenseValidatorPlugin;
@@ -191,7 +194,7 @@ export class VibeCheckProvider {
   static getToolDefinitions() {
     return [
       {
-        name: "vibe_check_assess_quality",
+        name: "research_quality_assess_quality",
         description: "Assess the quality and integrity of academic research",
         inputSchema: {
           type: "object",
@@ -245,7 +248,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_venue_assessment",
+        name: "research_quality_venue_assessment",
         description: "Assess the quality and reputation of a publication venue",
         inputSchema: {
           type: "object",
@@ -268,7 +271,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_citation_analysis",
+        name: "research_quality_citation_analysis",
         description: "Analyze citation patterns for potential manipulation",
         inputSchema: {
           type: "object",
@@ -295,7 +298,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_methodology_review",
+        name: "research_quality_methodology_review",
         description: "Review research methodology for common issues",
         inputSchema: {
           type: "object",
@@ -331,7 +334,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_detect_anti_patterns",
+        name: "research_quality_detect_anti_patterns",
         description: "Detect anti-patterns in code and suggest refactoring",
         inputSchema: {
           type: "object",
@@ -354,7 +357,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_refactoring_suggestions",
+        name: "research_quality_refactoring_suggestions",
         description: "Generate refactoring suggestions for code improvements",
         inputSchema: {
           type: "object",
@@ -381,7 +384,7 @@ export class VibeCheckProvider {
         },
       },
       {
-        name: "vibe_check_code_health",
+        name: "research_quality_code_health",
         description: "Comprehensive code health analysis with Finding types",
         inputSchema: {
           type: "object",
@@ -413,13 +416,13 @@ export class VibeCheckProvider {
     params: IntegrityCheckParams,
   ): Promise<QualityAssessment> {
     const remote = await this.callRemoteTool<QualityAssessment>(
-      "vibe_check_assess_quality",
+      "research_quality_assess_quality",
       { ...params } as Record<string, unknown>,
     );
     if (remote) {
       this.ctx.evidence({
         type: "log",
-        ref: "Vibe Check remote assessment",
+        ref: "Research Quality remote assessment",
       });
       return remote;
     }
@@ -521,7 +524,7 @@ export class VibeCheckProvider {
       score: number;
       flags: QualityFlag[];
       recommendations: string[];
-    }>("vibe_check_methodology_review", { methodology_text: text });
+    }>("research_quality_methodology_review", { methodology_text: text });
     if (remote) return remote;
 
     const flags: QualityFlag[] = [];
@@ -583,7 +586,7 @@ export class VibeCheckProvider {
     const remote = await this.callRemoteTool<{
       quality: PeerReviewIndicators["venue_quality"];
       flags: QualityFlag[];
-    }>("vibe_check_venue_assessment", { venue_name: venueName });
+    }>("research_quality_venue_assessment", { venue_name: venueName });
     if (remote) return remote;
 
     const flags: QualityFlag[] = [];
@@ -836,7 +839,7 @@ export class VibeCheckProvider {
     researchSources?: ResearchContent[],
   ): Promise<AntiPattern[]> {
     const remote = await this.callRemoteTool<AntiPattern[]>(
-      "vibe_check_detect_anti_patterns",
+      "research_quality_detect_anti_patterns",
       {
         code,
         language,
@@ -898,7 +901,7 @@ export class VibeCheckProvider {
     focusAreas?: string[],
   ): Promise<RefactoringPlan> {
     const remote = await this.callRemoteTool<RefactoringPlan>(
-      "vibe_check_refactoring_suggestions",
+      "research_quality_refactoring_suggestions",
       {
         code,
         focus_areas: focusAreas,
@@ -983,7 +986,7 @@ export class VibeCheckProvider {
     researchSources?: ResearchContent[],
   ): Promise<CodeHealthAnalysis> {
     const remote = await this.callRemoteTool<CodeHealthAnalysis>(
-      "vibe_check_code_health",
+      "research_quality_code_health",
       {
         code,
         language,
@@ -1116,39 +1119,39 @@ export class VibeCheckProvider {
     params: Record<string, unknown>,
   ): Promise<unknown> {
     switch (toolName) {
-      case "vibe_check_assess_quality":
+      case "research_quality_assess_quality":
         return await this.assessQuality(params as IntegrityCheckParams);
 
-      case "vibe_check_venue_assessment":
+      case "research_quality_venue_assessment":
         return await this.assessVenue(params.venue_name as string);
 
-      case "vibe_check_citation_analysis":
+      case "research_quality_citation_analysis":
         return (
           (await this.callRemoteTool(
-            "vibe_check_citation_analysis",
+            "research_quality_citation_analysis",
             params,
           )) ?? {
             message: "Citation analysis unavailable (remote service offline)",
           }
         );
 
-      case "vibe_check_methodology_review":
+      case "research_quality_methodology_review":
         return await this.assessMethodology(params.methodology_text as string);
 
-      case "vibe_check_detect_anti_patterns":
+      case "research_quality_detect_anti_patterns":
         return await this.detectAntiPatterns(
           params.code as string,
           params.language as string | undefined,
           params.research_sources as ResearchContent[] | undefined,
         );
 
-      case "vibe_check_refactoring_suggestions":
+      case "research_quality_refactoring_suggestions":
         return await this.generateRefactoringSuggestions(
           params.code as string,
           params.focus_areas as string[] | undefined,
         );
 
-      case "vibe_check_code_health":
+      case "research_quality_code_health":
         return await this.analyzeCodeHealth(
           params.code as string,
           params.language as string | undefined,
@@ -1164,9 +1167,9 @@ export class VibeCheckProvider {
 /**
  * FASTMCP v3.22 capability registration
  */
-export const vibeCheckCapabilities = {
-  id: "vibe-check",
-  name: "Vibe Check Research Quality Provider",
+export const researchQualityCapabilities = {
+  id: "research-quality",
+  name: "Research Quality Research Quality Provider",
   version: "1.0.0",
   description: "Research quality assessment and academic integrity validation",
   tools: VibeCheckProvider.getToolDefinitions(),

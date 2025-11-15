@@ -4,6 +4,7 @@
  * Requirements: 6.4, 7.1
  */
 
+import { timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Auth0Config } from "./auth.js";
 import { validateAuth0Token } from "./auth.js";
@@ -83,6 +84,7 @@ export interface AuthenticatedRequest extends IncomingMessage {
  */
 export const createAuthMiddleware = (config: AuthMiddlewareConfig) => {
   const rolePermissions = config.rolePermissions || ROLE_PERMISSIONS;
+  const staticApiKey = process.env.CORTEXDX_API_KEY?.trim();
 
   return async (
     req: IncomingMessage,
@@ -99,8 +101,37 @@ export const createAuthMiddleware = (config: AuthMiddlewareConfig) => {
 
     // Skip auth if not required
     if (!config.requireAuth) {
+      // Attach synthetic auth context when API key is present so downstream RBAC can use it
+      if (staticApiKey) {
+        const apiKeyHeader = extractHeader(req.headers["x-cortexdx-api-key"]);
+        if (apiKeyHeader && safeCompare(apiKeyHeader, staticApiKey)) {
+          const authReq = req as AuthenticatedRequest;
+          authReq.auth = {
+            userId: "api-key-user",
+            roles: ["admin"],
+            permissions: ["*"],
+            expiresAt: Date.now() + 60 * 60 * 1000,
+          };
+        }
+      }
       next();
       return;
+    }
+
+    // Static API key fallback
+    if (staticApiKey) {
+      const apiKeyHeader = extractHeader(req.headers["x-cortexdx-api-key"]);
+      if (apiKeyHeader && safeCompare(apiKeyHeader, staticApiKey)) {
+        const authReq = req as AuthenticatedRequest;
+        authReq.auth = {
+          userId: "api-key-user",
+          roles: ["admin"],
+          permissions: ["*"],
+          expiresAt: Date.now() + 60 * 60 * 1000,
+        };
+        next();
+        return;
+      }
     }
 
     // Extract token from Authorization header
@@ -152,6 +183,22 @@ export const createAuthMiddleware = (config: AuthMiddlewareConfig) => {
 
     next();
   };
+};
+
+const extractHeader = (value: string | string[] | undefined): string | null => {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+  return typeof value === "string" ? value : null;
+};
+
+const safeCompare = (a: string, b: string): boolean => {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) {
+    return false;
+  }
+  return timingSafeEqual(aBuf, bBuf);
 };
 
 /**

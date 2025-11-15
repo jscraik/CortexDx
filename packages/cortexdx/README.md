@@ -256,6 +256,21 @@ The `resolveCredentialHeaders` helper also accepts CLI overrides (`--credential 
 
 Supported providers: **Context7**, **Vibe Check**, **OpenAlex**, **Exa**, **Wikidata**, **arXiv**, plus the preview-only **Semantic Scholar** integration. Provider ids are normalized case-insensitively and deduplicated before execution—`--providers context7,Context7,EXA` still runs Context7 + Exa exactly once. Skip the flag altogether to run the production set above, or use the `research:smoke` test (`op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke`) to validate your secret bundle against the live endpoints.
 
+### MCP Session & SSE Checklist
+
+FastMCP’s HTTP transport rejects any JSON-RPC request that lacks a valid `MCP-Session-ID`. CortexDx now seeds that header before the very first `initialize` call, reuses it for every follow-up method (including `rpc.ping`), and mirrors it into SSE probes. This behavior is informed by:
+
+- The MCP blog post _“Server Instructions: Giving LLMs a user manual for your server”_ (Nov 3 2025).
+- The latest research sweeps stored at `packages/cortexdx/packages/cortexdx/reports/research-mcp-comms/cortex-vibe-mcp/.../2025-11-14T20-27-37-459Z/` and `packages/cortexdx/packages/cortexdx/reports/research-mcp-comms/openalex-jsonrpc-only/.../2025-11-14T20-32-47-630Z/`, which document JSON-RPC/SSE handshake failures and remediation tactics.
+
+When running `diagnose` (or implementing your own client), follow the same guardrails:
+
+1. **Pin a session id up front.** Generate a UUID (or reuse `cortexdx-<timestamp>`) and send it as `MCP-Session-ID` on the very first `initialize` call; the header must match every subsequent JSON-RPC request.
+2. **Initialize before probing.** Always call `initialize` before `rpc.ping`, streaming probes, or `tools/list` to avoid FastMCP’s “No valid session ID provided” error.
+3. **Propagate the session to SSE.** Reuse the header on `/events` or `/sse` and retry with `?mcp-session-id=<id>` if the server expects it in the query string.
+4. **Publish server instructions.** Keep global usage guidance (ordering, rate limits, dependencies) in your MCP server instructions, per the MCP blog, so CortexDx doesn’t have to over-describe each tool.
+5. **Share findings via URLs.** Set `--report-out <dir>` plus `CORTEXDX_REPORT_DIR`/`CORTEXDX_REPORT_URL` so ReportManager emits a shareable link (pre-signed bucket, Cloudflare R2, etc.) that you can send directly to the client MCP team.
+
 #### Smoke Tests
 
 - Local: set `CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1` (or run `op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke`) to execute `tests/academic-provider-smoke.spec.ts`. The suite skips automatically when the required provider secrets are missing.

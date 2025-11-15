@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import type { DiagnosticArtifacts } from "../types.js";
 
 export function loadArtifactsFromEnv(): DiagnosticArtifacts | undefined {
@@ -6,7 +7,7 @@ export function loadArtifactsFromEnv(): DiagnosticArtifacts | undefined {
   if (!raw) return undefined;
 
   try {
-    const data = JSON.parse(raw);
+    const data = safeParseJson<unknown[]>(raw, "manifest artifacts");
     if (!Array.isArray(data)) {
       return undefined;
     }

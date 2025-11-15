@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import type { DiagnosticPlugin, Finding } from "../types.js";
 
 // Enhanced Auth0 integration types
@@ -84,7 +85,7 @@ export async function validateAuth0Token(
       return { valid: false, error: "Invalid token payload" };
     }
 
-    const payload = JSON.parse(
+    const payload = safeParseJson(
       Buffer.from(payloadPart, "base64").toString("utf-8"),
     );
 

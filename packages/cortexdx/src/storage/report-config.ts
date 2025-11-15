@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -156,7 +157,7 @@ export class ReportConfigManager {
   private async readConfigFile(path: string): Promise<Partial<ReportConfig>> {
     try {
       const content = await readFile(path, "utf-8");
-      const parsed = JSON.parse(content) as Partial<ReportConfig>;
+      const parsed = safeParseJson(content) as Partial<ReportConfig>;
       return parsed;
     } catch (error) {
       throw new Error(

@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type {
@@ -47,7 +48,7 @@ export async function loadConversationHistory(
   if (!historyPath) return [];
   const absolutePath = resolve(workspaceRoot, historyPath);
   const raw = await readFile(absolutePath, "utf8");
-  const parsed = JSON.parse(raw);
+  const parsed = safeParseJson(raw);
   if (!Array.isArray(parsed)) return [];
   return parsed
     .filter((entry) => entry && typeof entry.content === "string")
@@ -87,7 +88,7 @@ export async function runSelfImprovementCli(
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
-      return text.length ? JSON.parse(text) : {};
+      return text.length ? safeParseJson(text) : {};
     },
     jsonrpc: async () => ({}) as unknown,
     sseProbe: async () => ({ ok: true }),

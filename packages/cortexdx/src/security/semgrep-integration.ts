@@ -4,6 +4,11 @@
  * Requirements: 20.3
  */
 
+import { safeParseJson } from "../utils/json.js";
+import { execFile } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve as resolvePath } from "node:path";
 import type { DiagnosticContext } from "../types.js";
 
 export interface SemgrepRule {
@@ -74,16 +79,46 @@ export class SemgrepIntegration {
         path: string,
         rules: SemgrepRule[],
     ): Promise<SemgrepResults> {
-        // Note: This requires Semgrep CLI to be installed
-        // For now, return placeholder results
-        // TODO: Implement actual Semgrep execution when CLI is available
+        if (rules.length === 0) {
+            return { findings: [], errors: [], executionTime: 0, rulesRun: 0 };
+        }
 
-        return {
-            findings: [],
-            errors: ["Semgrep CLI not installed or not in PATH"],
-            executionTime: 0,
-            rulesRun: rules.length,
-        };
+        const semgrepBin = process.env.SEMGREP_BIN || "semgrep";
+        const start = Date.now();
+        const tempDir = await mkdtemp(join(tmpdir(), "semgrep-"));
+        const configPath = join(tempDir, "mcp-rules.yaml");
+        const configYAML = this.buildSemgrepConfig(rules);
+        await writeFile(configPath, configYAML, "utf8");
+        const baseDir = process.env.INIT_CWD ?? process.cwd();
+        const targetPath = path.startsWith("/") ? path : resolvePath(baseDir, path);
+
+        try {
+            const { stdout } = await this.execSemgrep(semgrepBin, [
+                "--config",
+                configPath,
+                "--json",
+                "--quiet",
+                targetPath,
+            ]);
+            const parsed = this.parseSemgrepJson(stdout);
+            return {
+                findings: parsed.findings,
+                errors: parsed.errors,
+                executionTime: Date.now() - start,
+                rulesRun: rules.length,
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : String(error);
+            return {
+                findings: [],
+                errors: [message],
+                executionTime: Date.now() - start,
+                rulesRun: rules.length,
+            };
+        } finally {
+            await rm(tempDir, { recursive: true, force: true });
+        }
     }
 
     /**
@@ -259,7 +294,7 @@ export class SemgrepIntegration {
             {
                 id: "mcp-unsafe-deserialization",
                 pattern: "JSON.parse($UNTRUSTED_INPUT)",
-                message: "Unsafe deserialization of untrusted input.",
+                message: "Direct JSON.parse on untrusted input. Use safeParseJson() + schema validation.",
                 severity: "WARNING",
                 languages: ["typescript", "javascript"],
                 metadata: {
@@ -293,6 +328,87 @@ export class SemgrepIntegration {
             if (Array.isArray(maybe)) return maybe;
         }
         return [];
+    }
+
+    private buildSemgrepConfig(rules: SemgrepRule[]): string {
+        const ruleBlocks = rules
+            .map((rule) => {
+                const languages = rule.languages
+                    .map((lang) => `'${lang}'`)
+                    .join(", ");
+                const message = rule.message.replace(/"/g, '\\"');
+                const patternBody = rule.pattern
+                    .split("\n")
+                    .map((line) => (line.length > 0 ? `      ${line}` : ""))
+                    .join("\n");
+                return `
+  - id: ${rule.id}
+    pattern: |
+${patternBody}
+    message: "${message}"
+    languages: [${languages}]
+    severity: ${rule.severity}`;
+            })
+            .join("\n");
+        return `rules:${ruleBlocks}`;
+    }
+
+    private execSemgrep(binary: string, args: string[]): Promise<{ stdout: string }> {
+        return new Promise((resolve, reject) => {
+            execFile(
+                binary,
+                args,
+                { maxBuffer: 10 * 1024 * 1024 },
+                (error, stdout, stderr) => {
+                    if (error) {
+                        const message = stderr?.trim() || stdout?.trim() || error.message;
+                        reject(new Error(message));
+                        return;
+                    }
+                    resolve({ stdout });
+                },
+            );
+        });
+    }
+
+    private parseSemgrepJson(
+        payload: string,
+    ): { findings: SemgrepFinding[]; errors: string[] } {
+        try {
+            const data = safeParseJson(payload) as {
+                results?: Array<{
+                    check_id: string;
+                    path?: { filename?: string };
+                    start?: { line?: number; col?: number };
+                    extra?: { message?: string; severity?: string; lines?: string; fix?: string };
+                }>;
+                errors?: Array<{ message?: string }>;
+            };
+            const findings =
+                data.results?.map((result) => {
+                    const filename =
+                        typeof (result.path as unknown) === "string"
+                            ? (result.path as string)
+                            : result.path?.filename ?? "unknown";
+                    return {
+                        ruleId: result.check_id,
+                        path: filename,
+                        line: result.start?.line ?? 1,
+                        column: result.start?.col ?? 1,
+                        message: result.extra?.message ?? "Semgrep finding",
+                        severity: (result.extra?.severity?.toUpperCase() as SemgrepFinding["severity"]) || "WARNING",
+                        code: result.extra?.lines ?? "",
+                        fix: result.extra?.fix,
+                    };
+                }) ?? [];
+            const errors =
+                data.errors?.map((error) => error.message ?? "Semgrep error") ?? [];
+            return { findings, errors };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : "Failed to parse Semgrep output";
+            return { findings: [], errors: [message] };
+        }
     }
 }
 

@@ -6,6 +6,9 @@
     "build": "NX_CLOUD=false nx run cortexdx:build",
     "test": "NX_CLOUD=false nx run cortexdx:test",
     "lint": "NX_CLOUD=false nx run cortexdx:lint",
+    "docs:mcp:index": "ts-node --project tsconfig.base.json scripts/mcp/docs-index.ts",
+    "docs:mcp:ingest": "pnpm --filter @brainwav/cortexdx exec tsx src/cli.ts library ingest-docs",
+    "self:diagnose": "bash scripts/self/self-diagnose.sh",
     "postinstall": "patch-package",
     "doctor": "NX_CLOUD=false nx run cortexdx:doctor",
     "docs:validate": "node scripts/validate-docs.js",
@@ -33,11 +36,17 @@
     "@ai-sdk/openai": "^2.0.65",
     "@biomejs/biome": "1.9.4",
     "@nx/js": "19.8.4",
+    "@types/jsdom": "^27.0.0",
+    "@types/turndown": "^5.0.6",
+    "jsdom": "^25.0.1",
     "mcp-evals": "1.0.18",
     "nx": "19.8.4",
     "patch-package": "^8.0.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@brainwav/cortex-vibe-mcp": "^0.0.19"
   }
 }

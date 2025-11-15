@@ -1,3 +1,4 @@
+import { safeParseJson } from "../utils/json.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { existsSync } from "node:fs";
@@ -254,7 +255,7 @@ export class DeepContextClient {
     let data: unknown;
     if (combinedText.startsWith("{") || combinedText.startsWith("[")) {
       try {
-        data = JSON.parse(combinedText);
+        data = safeParseJson(combinedText);
       } catch {
         // Ignore parse errors and fall back to raw text
       }
