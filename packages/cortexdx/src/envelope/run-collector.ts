@@ -11,7 +11,7 @@ import type {
 	DxEnvelope,
 	RunSummary,
 } from "./types.js";
-import { validateEnvelope } from "./validator.js";
+import { validateEnvelope, formatValidationErrors } from "./validator.js";
 
 /**
  * Run collector that builds and validates diagnostic envelopes
