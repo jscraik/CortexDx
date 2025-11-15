@@ -1,5 +1,9 @@
 # CortexDx IDE Extensions
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blue.svg)](https://spec.modelcontextprotocol.io/)
+
 This directory contains IDE-specific extensions and plugins for integrating CortexDx with popular development environments.
 
 ## Available Extensions
@@ -179,20 +183,22 @@ Each IDE extension has its own configuration:
 
 To contribute IDE extension improvements:
 
-1. Follow [AGENTS.md](../../AGENTS.md) guidelines
+1. Follow [CONTRIBUTING.md](../../../CONTRIBUTING.md) and [AGENTS.md](../../../AGENTS.md) guidelines
 2. Test with multiple IDEs
 3. Ensure MCP protocol compliance
 4. Add tests for new features
 5. Update documentation
 
+See the main [Contributing Guide](../../../CONTRIBUTING.md) for complete development setup and coding standards.
+
 ## Support
 
 For issues or questions:
 
-- GitHub Issues: <https://github.com/brainwav/cortexdx/issues>
-- Documentation: [IDE Integration Guide](../docs/ide-integration.md)
-- MCP Specification: <https://spec.modelcontextprotocol.io/>
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: [IDE Integration Guide](../docs/IDE_INTEGRATION.md) and main [CortexDx Documentation](../../../README.md)
+- **MCP Specification**: <https://spec.modelcontextprotocol.io/>
 
 ## License
 
-Apache 2.0 - See [LICENSE](../LICENSE) for details.
+Licensed under the [Apache License 2.0](../../../LICENSE)

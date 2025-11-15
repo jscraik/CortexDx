@@ -1,5 +1,9 @@
 # CortexDx Helm Chart
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../../../LICENSE)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.20+-blue.svg)](https://kubernetes.io/)
+[![Helm](https://img.shields.io/badge/Helm-3.0+-blue.svg)](https://helm.sh/)
+
 This Helm chart deploys CortexDx on a Kubernetes cluster.
 
 ## Prerequisites
@@ -149,9 +153,26 @@ kubectl port-forward svc/cortexdx 3000:80
 curl http://localhost:3000/health
 ```
 
+## Contributing
+
+When contributing improvements to the Helm chart:
+
+1. Follow Helm best practices
+2. Test with multiple Kubernetes versions
+3. Update values.yaml with new configuration options
+4. Document all parameters in this README
+5. Test all three licensing tiers
+
+See the main [Contributing Guide](../../../../../../CONTRIBUTING.md) for complete development setup and coding standards.
+
 ## Support
 
-For issues and questions, please visit:
+For issues and questions:
 
-- GitHub: https://github.com/brainwav/cortexdx
-- Documentation: https://brainwav.dev/docs/cortexdx
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../../../../README.md)
+- **Helm Documentation**: <https://helm.sh/docs/>
+
+## License
+
+Licensed under the [Apache License 2.0](../../../../../../LICENSE)

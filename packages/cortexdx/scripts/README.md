@@ -1,5 +1,9 @@
 # CortexDx Release Scripts
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
+[![Shell](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](../package.json)
+
 This directory contains scripts for building, publishing, deploying, and experimentally researching CortexDx v1.0.0. Production-ready utilities are documented below; anything marked as **experimental** must never be bundled with release artifacts.
 
 > **Experimental tooling:** `scripts/research-improvements.js` runs academic MCP providers to prototype debugging/codegen ideas. It is for internal research only and should not be invoked in production pipelines.
@@ -339,10 +343,25 @@ publish-npm:
 - Automated security scanning
 - Dependency vulnerability checks
 
+## Contributing
+
+When adding new scripts:
+
+1. Follow existing script structure and naming conventions
+2. Add comprehensive documentation with usage examples
+3. Include environment variable documentation
+4. Add error handling and validation
+5. Test scripts thoroughly before committing
+
+See the main [Contributing Guide](../../../CONTRIBUTING.md) for more details.
+
 ## Support
 
 For issues with release scripts:
 
-- GitHub Issues: https://github.com/brainwav/cortexdx/issues
-- Email: support@brainwav.io
-- Documentation: https://docs.brainwav.io/cortexdx
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+- **Documentation**: See main [CortexDx Documentation](../../../README.md)
+
+## License
+
+Licensed under the [Apache License 2.0](../../../LICENSE)

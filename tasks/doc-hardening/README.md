@@ -1,9 +1,17 @@
-# Doc Hardening Evidence Hub
+# Documentation Hardening Task
+
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
+[![Status](https://img.shields.io/badge/status-in--progress-yellow.svg)]()
+
+## Overview
+
+This task directory serves as an evidence hub for documentation hardening activities. It ensures documentation quality, consistency, and compliance with industry standards through systematic validation and tracking.
 
 ## Scope
-- Establish a dedicated, slugged evidence folder for documentation hardening tasks.
-- Capture authoritative build, lint, and test outputs with timestamps for reproducibility.
-- Synchronize governance references with the new evidence location and preserve automation hooks (trace + memory IDs).
+
+- Establish a dedicated, slugged evidence folder for documentation hardening tasks
+- Capture authoritative build, lint, and test outputs with timestamps for reproducibility
+- Synchronize governance references with the new evidence location and preserve automation hooks (trace + memory IDs)
 
 ## ArcTDD Arcs
 1. **Scaffold Evidence Topology** — Created `tasks/doc-hardening/` with `evidence/`, `reports/`, `json/`, and `verification/` directories to host future artifacts while keeping paths deterministic.
@@ -17,5 +25,22 @@
 
 > **Note:** Evidence file names use the compact ISO-8601 format `YYYYMMDDTHHMMSSZ` (e.g., `20251110T234206Z`) for filesystem compatibility, while `trace.log` uses the extended format `YYYY-MM-DDTHH:MM:SSZ` (e.g., `2025-11-10T23:42:08Z`) for human readability.
 ## Next Steps
-- Investigate failing Vitest suites surfaced in `20251110T234206Z-pnpm-test.log` before promoting the evidence bundle to governance sign-off.
-- Extend `reports/` with summarized findings or dashboards once remediation work begins.
+
+- Investigate failing Vitest suites surfaced in `20251110T234206Z-pnpm-test.log` before promoting the evidence bundle to governance sign-off
+- Extend `reports/` with summarized findings or dashboards once remediation work begins
+
+## Related Documentation
+
+- Main [CortexDx Documentation](../../README.md)
+- [Contributing Guide](../../CONTRIBUTING.md)
+- [ArcTDD Methodology](../../AGENTS.md)
+
+## Support
+
+For questions about this task:
+
+- **GitHub Issues**: [CortexDx Issues](https://github.com/jscraik/CortexDx/issues)
+
+## License
+
+Licensed under the [Apache License 2.0](../../LICENSE)
