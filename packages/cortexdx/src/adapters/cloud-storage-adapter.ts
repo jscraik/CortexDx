@@ -68,8 +68,7 @@ export class CloudStorageAdapter {
 	 * Create S3 client based on provider
 	 */
 	private createS3Client(config: CloudStorageConfig): S3Client {
-		// Dynamic import to avoid bundling issues
-		const { S3Client } = require("@aws-sdk/client-s3");
+		// Use statically imported S3Client for type safety and tree-shaking
 
 		if (config.provider === "r2") {
 			// Cloudflare R2 configuration
