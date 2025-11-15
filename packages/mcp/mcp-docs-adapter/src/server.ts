@@ -32,9 +32,11 @@ export class McpDocsAdapter {
   private dataRoot: string;
 
   constructor(dataRoot?: string) {
-    // Find workspace root: from dist/ go up to workspace root
-    // dist/ -> mcp-docs-adapter/ -> mcp/ -> packages/ -> CortexDx/
-    const workspaceRoot = path.resolve(__dirname, "../../../..");
+    // Find workspace root: use environment variable or process.cwd() as fallback
+    // You can set MCP_DOCS_WORKSPACE_ROOT to override the default workspace root
+    const workspaceRoot =
+      process.env.MCP_DOCS_WORKSPACE_ROOT ??
+      process.cwd();
     this.dataRoot =
       dataRoot ?? path.join(workspaceRoot, "data/knowledge/mcp-docs");
     this.activeVersion = process.env.MCP_DOCS_VERSION ?? "v2025-06-18";
