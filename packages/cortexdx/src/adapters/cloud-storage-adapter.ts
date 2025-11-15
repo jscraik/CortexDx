@@ -284,7 +284,6 @@ export class CloudStorageAdapter {
 					caseId,
 					assertionId,
 					evidenceKind: kind,
-					uploadedAt: new Date().toISOString(),
 				},
 				// Evidence is short-lived, cache accordingly
 				CacheControl: "public, max-age=3600",
