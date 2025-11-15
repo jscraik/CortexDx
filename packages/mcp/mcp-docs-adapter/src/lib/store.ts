@@ -11,10 +11,11 @@ export class DocsStore {
   constructor(dbPath: string) {
     try {
       this.db = new Database(dbPath);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       throw new Error(
         `Failed to open SQLite database at path "${dbPath}".\n` +
-        `Error: ${err.message}\n` +
+        `Error: ${message}\n` +
         `Troubleshooting steps:\n` +
         `- Ensure the path exists and is correct.\n` +
         `- Check file and directory permissions.\n` +
