@@ -202,14 +202,14 @@ describe("Envelope Schema Validation", () => {
 			expect(result.data).toEqual(testCase);
 		});
 
-		it("rejects case without assertions", () => {
+		it("accepts case with empty assertions array", () => {
 			const testCase = {
 				id: "handshake",
 				name: "MCP Handshake",
 				assertions: [],
 			};
 
-			// Empty assertions array is technically valid per schema
+			// Empty assertions array is valid per schema
 			const result = validateCase(testCase);
 			expect(result.success).toBe(true);
 		});
