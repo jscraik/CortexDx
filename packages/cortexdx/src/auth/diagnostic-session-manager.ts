@@ -463,15 +463,16 @@ export class DiagnosticSessionManager {
     }
 }
 
-// Singleton instance
-let diagnosticSessionManagerInstance: DiagnosticSessionManager | null = null;
+// Map of DiagnosticSessionManager instances keyed by dbPath
+const diagnosticSessionManagers = new Map<string, DiagnosticSessionManager>();
 
 /**
- * Get or create diagnostic session manager instance
+ * Get or create diagnostic session manager instance for a given dbPath
  */
 export function getDiagnosticSessionManager(dbPath?: string): DiagnosticSessionManager {
-    if (!diagnosticSessionManagerInstance) {
-        diagnosticSessionManagerInstance = new DiagnosticSessionManager(dbPath);
+    const path = dbPath || join(process.cwd(), '.cortexdx', 'diagnostic-sessions.db');
+    if (!diagnosticSessionManagers.has(path)) {
+        diagnosticSessionManagers.set(path, new DiagnosticSessionManager(path));
     }
-    return diagnosticSessionManagerInstance;
+    return diagnosticSessionManagers.get(path)!;
 }
