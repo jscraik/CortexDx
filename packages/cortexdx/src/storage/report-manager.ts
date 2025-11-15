@@ -5,6 +5,10 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { Finding } from "../types.js";
+import {
+	CloudStorageAdapter,
+	createCloudStorageFromEnv,
+} from "../adapters/cloud-storage-adapter.js";
 
 export type ReportFormat = "json" | "markdown" | "html";
 
@@ -25,6 +29,16 @@ export interface ReportMetadata {
   formats: ReportFormat[];
   path: string;
   tags: string[];
+  cloudUrls?: {
+    html?: string;
+    json?: string;
+    markdown?: string;
+    htmlSha256?: string;
+    jsonSha256?: string;
+    sbom?: string;
+    sbomSha256?: string;
+    meta?: string;
+  };
 }
 
 export interface ReportFilters {
@@ -80,9 +94,24 @@ const DEFAULT_CONFIG: ReportConfig = {
 export class ReportManager {
   private config: ReportConfig;
   private db: Database.Database | null = null;
+  private cloudStorage: CloudStorageAdapter | null = null;
 
   constructor(config?: Partial<ReportConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+  }
+
+  /**
+   * Enable cloud storage for reports
+   */
+  enableCloudStorage(adapter: CloudStorageAdapter): void {
+    this.cloudStorage = adapter;
+  }
+
+  /**
+   * Get cloud storage adapter (if enabled)
+   */
+  getCloudStorage(): CloudStorageAdapter | null {
+    return this.cloudStorage;
   }
 
   async initialize(): Promise<void> {
@@ -105,9 +134,10 @@ export class ReportManager {
         path TEXT NOT NULL,
         tags TEXT,
         endpoint TEXT,
-        duration_ms INTEGER
+        duration_ms INTEGER,
+        cloud_urls TEXT
       );
-      
+
       CREATE INDEX IF NOT EXISTS idx_session_id ON reports(session_id);
       CREATE INDEX IF NOT EXISTS idx_diagnostic_type ON reports(diagnostic_type);
       CREATE INDEX IF NOT EXISTS idx_created_at ON reports(created_at);
@@ -133,9 +163,11 @@ export class ReportManager {
     // Store in multiple formats
     const formats: ReportFormat[] = opts.formats || this.config.formats;
     const sizes: number[] = [];
+    const formattedContent: Record<string, string> = {};
 
     for (const format of formats) {
       const content = this.formatReport(report, format);
+      formattedContent[format] = content;
       const filePath = `${storagePath}.${format}`;
       await writeFile(filePath, content, "utf-8");
       const stats = await stat(filePath);
@@ -155,11 +187,45 @@ export class ReportManager {
       tags: report.tags || [],
     };
 
+    // Upload to cloud storage if enabled
+    if (this.cloudStorage) {
+      try {
+        const cloudUrls: ReportMetadata["cloudUrls"] = {};
+
+        // Upload HTML if available
+        if (formattedContent.html) {
+          const htmlResult = await this.cloudStorage.uploadReport(
+            reportId,
+            formattedContent.html,
+            "html",
+          );
+          cloudUrls.html = htmlResult.url;
+          cloudUrls.htmlSha256 = htmlResult.sha256;
+        }
+
+        // Upload JSON if available
+        if (formattedContent.json) {
+          const jsonResult = await this.cloudStorage.uploadReport(
+            reportId,
+            formattedContent.json,
+            "json",
+          );
+          cloudUrls.json = jsonResult.url;
+          cloudUrls.jsonSha256 = jsonResult.sha256;
+        }
+
+        metadata.cloudUrls = cloudUrls;
+      } catch (error) {
+        // Log cloud upload error but don't fail the entire operation
+        console.error("Cloud storage upload failed:", error);
+      }
+    }
+
     this.db
       ?.prepare(`
       INSERT INTO reports (
-        id, session_id, diagnostic_type, created_at, size, formats, path, tags, endpoint, duration_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, session_id, diagnostic_type, created_at, size, formats, path, tags, endpoint, duration_ms, cloud_urls
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .run(
         metadata.id,
@@ -172,6 +238,7 @@ export class ReportManager {
         JSON.stringify(metadata.tags),
         report.endpoint,
         report.durationMs,
+        metadata.cloudUrls ? JSON.stringify(metadata.cloudUrls) : null,
       );
 
     return metadata;
@@ -279,6 +346,7 @@ export class ReportManager {
       formats: string;
       path: string;
       tags: string;
+      cloud_urls: string | null;
     }>;
 
     return rows.map((row) => ({
@@ -291,6 +359,9 @@ export class ReportManager {
       formats: safeParseJson(row.formats) as ReportFormat[],
       path: row.path,
       tags: safeParseJson(row.tags || "[]") as string[],
+      cloudUrls: row.cloud_urls
+        ? (safeParseJson(row.cloud_urls) as ReportMetadata["cloudUrls"])
+        : undefined,
     }));
   }
 
@@ -301,7 +372,7 @@ export class ReportManager {
 
     const rows = this.db
       ?.prepare(`
-      SELECT * FROM reports 
+      SELECT * FROM reports
       WHERE diagnostic_type LIKE ? OR tags LIKE ?
       ORDER BY created_at DESC
     `)
@@ -314,6 +385,7 @@ export class ReportManager {
       formats: string;
       path: string;
       tags: string;
+      cloud_urls: string | null;
     }>;
 
     return rows.map((row) => ({
@@ -326,6 +398,9 @@ export class ReportManager {
       formats: safeParseJson(row.formats) as ReportFormat[],
       path: row.path,
       tags: safeParseJson(row.tags || "[]") as string[],
+      cloudUrls: row.cloud_urls
+        ? (safeParseJson(row.cloud_urls) as ReportMetadata["cloudUrls"])
+        : undefined,
     }));
   }
 

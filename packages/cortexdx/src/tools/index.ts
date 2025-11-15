@@ -14,6 +14,7 @@ export { ideIntegrationTools } from "./ide-integration-tools.js";
 export { createLicenseValidationTools } from "./license-validation-tools.js";
 export { createPluginOrchestrationTools, executePluginOrchestrationTool } from "./plugin-orchestration-tools.js";
 export { createMcpDocsTools, executeMcpDocsTool } from "./mcp-docs-tools.js";
+export { reportTools, handleGetLatest, handleGetByRun, type ReportRef, type GetLatestParams, type GetByRunParams } from "./report-tools.js";
 
 import type { McpTool } from "../types.js";
 import { createAcademicIntegrationTools } from "./academic-integration-tools.js";
@@ -27,6 +28,7 @@ import { ideIntegrationTools } from "./ide-integration-tools.js";
 import { createLicenseValidationTools } from "./license-validation-tools.js";
 import { createPluginOrchestrationTools } from "./plugin-orchestration-tools.js";
 import { createMcpDocsTools } from "./mcp-docs-tools.js";
+import { reportTools } from "./report-tools.js";
 
 /**
  * Get all MCP tools organized by category
@@ -43,6 +45,7 @@ export const getAllMcpTools = (): Record<string, McpTool[]> => ({
   orchestration: createPluginOrchestrationTools(),
   agentOrchestration: createAgentOrchestrationTools(),
   mcpDocs: createMcpDocsTools(),
+  reports: reportTools,
 });
 
 /**

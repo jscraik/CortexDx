@@ -71,3 +71,12 @@ export {
   type PySpyOptions,
   type PySpyProfile,
 } from "./pyspy-adapter.js";
+
+// Cloud storage adapter for diagnostic reports
+export {
+  CloudStorageAdapter,
+  createCloudStorageFromEnv,
+  type CloudStorageConfig,
+  type ObjectMetadata,
+  type UploadResult,
+} from "./cloud-storage-adapter.js";
