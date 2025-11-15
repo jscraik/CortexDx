@@ -32,7 +32,7 @@ const mockContext: DiagnosticContext = {
 };
 
 describe("Academic Provider License Integration (Task 14.1.3)", () => {
-  describe("All 7 Academic Providers with License Validation", () => {
+  describe("All 8 Academic Providers with License Validation", () => {
     it("should verify all 8 academic providers are registered", () => {
       const registry = getAcademicRegistry();
       const providers = registry.getAllProviders();
