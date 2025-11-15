@@ -97,6 +97,31 @@ const sampleChunks: DocChunk[] = [
     text: "During initialization, servers provide information about themselves including name and version. The server name should be between 3-100 characters and use semantic versioning (e.g., '1.0.0' or '1.0'). Server info helps clients identify and diagnose issues with specific MCP server implementations.",
     headings: ["Server Information"],
   },
+  // GitHub repository content
+  {
+    id: "fastmcp-readme-chunk-0",
+    pageId: "fastmcp-punkpeye-readme",
+    url: "https://github.com/punkpeye/fastmcp/blob/main/README.md",
+    title: "FastMCP - README",
+    text: "FastMCP is a Python library that simplifies building Model Context Protocol (MCP) servers. It provides decorators and utilities to quickly expose functions as MCP tools, manage resources, and handle server lifecycle. FastMCP automatically generates JSON schemas from function signatures and supports async/await patterns for efficient I/O operations.",
+    headings: ["FastMCP"],
+  },
+  {
+    id: "mcp-spec-readme-chunk-0",
+    pageId: "mcp-specification-readme",
+    url: "https://github.com/modelcontextprotocol/specification/blob/main/README.md",
+    title: "MCP Specification - README",
+    text: "The Model Context Protocol (MCP) specification repository contains the official protocol definition, schemas, and reference documentation. It defines the JSON-RPC 2.0 based communication protocol between MCP clients and servers, including message formats, capability negotiation, and lifecycle management. The specification is versioned using YYYY-MM-DD format and maintains backward compatibility.",
+    headings: ["MCP Specification"],
+  },
+  {
+    id: "ollama-readme-chunk-0",
+    pageId: "ollama-readme",
+    url: "https://github.com/ollama/ollama/blob/main/README.md",
+    title: "Ollama - README",
+    text: "Ollama is a tool for running large language models locally. It provides a simple API for model management, supports various model formats, and enables easy deployment of LLMs on personal hardware. Ollama can be integrated with MCP servers to provide local AI capabilities without requiring cloud services or API keys.",
+    headings: ["Ollama"],
+  },
 ];
 
 const sampleManifest: DocManifest = {
@@ -158,6 +183,27 @@ const sampleManifest: DocManifest = {
       url: "https://modelcontextprotocol.io/docs/concepts/server",
       title: "Server Information",
       sha256: "sample-server-info-sha256",
+      anchors: [],
+    },
+    {
+      id: "fastmcp-punkpeye-readme",
+      url: "https://github.com/punkpeye/fastmcp/blob/main/README.md",
+      title: "FastMCP - README",
+      sha256: "sample-fastmcp-sha256",
+      anchors: [],
+    },
+    {
+      id: "mcp-specification-readme",
+      url: "https://github.com/modelcontextprotocol/specification/blob/main/README.md",
+      title: "MCP Specification - README",
+      sha256: "sample-mcp-spec-sha256",
+      anchors: [],
+    },
+    {
+      id: "ollama-readme",
+      url: "https://github.com/ollama/ollama/blob/main/README.md",
+      title: "Ollama - README",
+      sha256: "sample-ollama-sha256",
       anchors: [],
     },
   ],

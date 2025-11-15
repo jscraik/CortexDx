@@ -27,48 +27,87 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 interface PageSpec {
   id: string;
   url: string;
+  type?: "web" | "github";
+  paths?: string[]; // For GitHub: specific files to fetch
 }
 
 const PAGES: PageSpec[] = [
+  // Official MCP documentation
   {
     id: "intro",
     url: "https://modelcontextprotocol.io/docs/getting-started/intro",
+    type: "web",
   },
   {
     id: "spec-2025-06-18",
     url: "https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/",
+    type: "web",
   },
   {
     id: "about",
     url: "https://modelcontextprotocol.io/about",
+    type: "web",
   },
   {
     id: "concepts-capabilities",
     url: "https://modelcontextprotocol.io/docs/concepts/capabilities",
+    type: "web",
   },
   {
     id: "concepts-tools",
     url: "https://modelcontextprotocol.io/docs/concepts/tools",
+    type: "web",
   },
   {
     id: "concepts-resources",
     url: "https://modelcontextprotocol.io/docs/concepts/resources",
+    type: "web",
   },
   {
     id: "concepts-prompts",
     url: "https://modelcontextprotocol.io/docs/concepts/prompts",
+    type: "web",
   },
   {
     id: "concepts-server-info",
     url: "https://modelcontextprotocol.io/docs/concepts/server",
+    type: "web",
   },
   {
     id: "concepts-lifecycle",
     url: "https://modelcontextprotocol.io/docs/concepts/lifecycle",
+    type: "web",
   },
   {
     id: "concepts-authentication",
     url: "https://modelcontextprotocol.io/docs/concepts/authentication",
+    type: "web",
+  },
+
+  // GitHub repositories
+  {
+    id: "fastmcp-punkpeye",
+    url: "https://github.com/punkpeye/fastmcp",
+    type: "github",
+    paths: ["README.md", "docs/**/*.md"],
+  },
+  {
+    id: "fastmcp-jlowin",
+    url: "https://github.com/jlowin/fastmcp",
+    type: "github",
+    paths: ["README.md", "docs/**/*.md"],
+  },
+  {
+    id: "mcp-specification",
+    url: "https://github.com/modelcontextprotocol/specification",
+    type: "github",
+    paths: ["README.md", "docs/**/*.md", "spec/**/*.md"],
+  },
+  {
+    id: "ollama",
+    url: "https://github.com/ollama/ollama",
+    type: "github",
+    paths: ["README.md", "docs/**/*.md"],
   },
 ];
 
@@ -190,27 +229,90 @@ async function fetchPages(specs: PageSpec[]): Promise<PageData[]> {
 
   for (const spec of specs) {
     try {
-      const response = await fetch(spec.url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText} for ${spec.url}`);
+      const type = spec.type ?? "web";
+
+      if (type === "github") {
+        // Fetch from GitHub repository
+        const githubPages = await fetchGitHubRepo(spec);
+        pages.push(...githubPages);
+      } else {
+        // Fetch from web URL
+        const response = await fetch(spec.url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText} for ${spec.url}`);
+        }
+
+        const html = await response.text();
+        const sha256 = createHash("sha256").update(html).digest("hex");
+        const title = extractTitle(html);
+
+        pages.push({
+          id: spec.id,
+          url: spec.url,
+          title,
+          html,
+          sha256,
+          fetchedAt: new Date().toISOString(),
+        });
       }
-
-      const html = await response.text();
-      const sha256 = createHash("sha256").update(html).digest("hex");
-      const title = extractTitle(html);
-
-      pages.push({
-        id: spec.id,
-        url: spec.url,
-        title,
-        html,
-        sha256,
-        fetchedAt: new Date().toISOString(),
-      });
     } catch (error) {
       console.error(`   ❌ Failed to fetch ${spec.id}: ${String(error)}`);
     }
   }
+
+  return pages;
+}
+
+/**
+ * Fetch documentation from a GitHub repository
+ */
+async function fetchGitHubRepo(spec: PageSpec): Promise<PageData[]> {
+  const pages: PageData[] = [];
+  const repoMatch = spec.url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+
+  if (!repoMatch) {
+    throw new Error(`Invalid GitHub URL: ${spec.url}`);
+  }
+
+  const [, owner, repo] = repoMatch;
+  const repoClean = repo.replace(/\.git$/, "");
+
+  // Try both main and master branches
+  const branches = ["main", "master"];
+
+  for (const branch of branches) {
+    const readmeUrl = `https://raw.githubusercontent.com/${owner}/${repoClean}/${branch}/README.md`;
+
+    try {
+      const response = await fetch(readmeUrl);
+      if (response.ok) {
+        const markdown = await response.text();
+        const sha256 = createHash("sha256").update(markdown).digest("hex");
+
+        pages.push({
+          id: `${spec.id}-readme`,
+          url: `${spec.url}/blob/${branch}/README.md`,
+          title: `${repoClean} - README`,
+          html: `<html><body><pre>${markdown}</pre></body></html>`, // Wrap markdown for consistency
+          sha256,
+          fetchedAt: new Date().toISOString(),
+        });
+        console.log(`      ✅ Fetched ${spec.id} README.md (${branch})`);
+        break; // Found README, stop trying other branches
+      }
+    } catch (error) {
+      // Try next branch
+      continue;
+    }
+  }
+
+  if (pages.length === 0) {
+    console.error(`      ⚠️  Could not fetch README for ${spec.id} (tried main/master)`);
+  }
+
+  // TODO: Fetch additional paths specified in spec.paths
+  // This would require GitHub API to list directory contents
+  // For now, we're fetching READMEs which is the most valuable content
 
   return pages;
 }

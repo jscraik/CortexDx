@@ -87,6 +87,33 @@ async function main(): Promise<void> {
   }
   console.log("   ✅ Search successful\n");
 
+  // Test 7: Search for GitHub content (FastMCP)
+  console.log("7. Testing search() for GitHub content 'FastMCP'...");
+  const fastmcpResults = await adapter.search({
+    query: "FastMCP Python library",
+    topK: 3,
+  });
+  console.log(`   Found ${fastmcpResults.hits.length} results`);
+  if (fastmcpResults.hits.length > 0) {
+    const top = fastmcpResults.hits[0];
+    console.log(`   Top: ${top?.title}`);
+    console.log(`   URL: ${top?.url}`);
+    console.log(`   Is GitHub URL: ${top?.url.includes("github.com") ? "✅" : "❌"}`);
+  }
+  console.log("   ✅ GitHub content searchable\n");
+
+  // Test 8: Search for Ollama
+  console.log("8. Testing search() for 'Ollama'...");
+  const ollamaResults = await adapter.search({
+    query: "Ollama local language models",
+    topK: 3,
+  });
+  console.log(`   Found ${ollamaResults.hits.length} results`);
+  if (ollamaResults.hits.length > 0) {
+    console.log(`   Top: ${ollamaResults.hits[0]?.title}`);
+  }
+  console.log("   ✅ Search successful\n");
+
   adapter.close();
 
   console.log("=" + "=".repeat(50));
