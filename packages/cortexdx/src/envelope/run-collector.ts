@@ -47,7 +47,8 @@ export class RunCollector {
 	private generateRunId(): string {
 		const now = new Date();
 		const pad = (n: number, width: number = 2) => n.toString().padStart(width, "0");
-		const timestamp = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}T${pad(now.getUTCHours())}-${pad(now.getUTCMinutes())}-${pad(now.getUTCSeconds())}.${pad(now.getUTCMilliseconds(), 3)}Z`;
+		// Note: time components separated by underscores for filesystem safety (not ISO 8601)
+		const timestamp = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}T${pad(now.getUTCHours())}_${pad(now.getUTCMinutes())}_${pad(now.getUTCSeconds())}.${pad(now.getUTCMilliseconds(), 3)}Z`;
 		const shortId = randomUUID().substring(0, 16);
 		return `dx_${timestamp}_${shortId}`;
 	}
