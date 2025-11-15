@@ -17,7 +17,7 @@ The diagnostic envelope provides a structured, standardized format for MCP diagn
 ### Basic Usage
 
 ```typescript
-import { RunCollector, AssertionEmitter } from '@cortexdx/envelope';
+import { RunCollector, AssertionEmitter } from './index.js';
 
 // Create a run collector
 const collector = new RunCollector(
