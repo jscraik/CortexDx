@@ -100,11 +100,11 @@ export class McpDocsAdapter {
 
     const chunks = this.store.search(parsed.query, parsed.topK);
 
-    const hits: Passage[] = chunks.map((chunk, idx) => ({
+    const hits: Passage[] = chunks.map((chunk) => ({
       id: chunk.id,
       url: chunk.url,
       title: chunk.title,
-      score: 1.0 / (idx + 1), // Simple ranking score
+      score: Math.abs(chunk.score ?? 0), // FTS5 rank is negative, lower is better
       text: chunk.text,
       anchor: chunk.anchor,
     }));
