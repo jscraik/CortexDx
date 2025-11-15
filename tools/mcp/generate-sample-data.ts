@@ -67,15 +67,15 @@ const sampleChunks: DocChunk[] = [
   {
     id: "protocol-version-chunk-0",
     pageId: "spec",
-    url: "https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/",
+    url: "https://spec.modelcontextprotocol.io/specification/2024-01-15/basic/lifecycle/",
     title: "Protocol Version and Specification",
-    text: "MCP protocol versions follow the YYYY-MM-DD format. The current specification version is 2025-03-26. Clients and servers must negotiate a compatible protocol version during initialization. Version negotiation ensures backward compatibility and allows for protocol evolution over time.",
+    text: "MCP protocol versions follow the YYYY-MM-DD format. The current specification version is 2024-01-15. Clients and servers must negotiate a compatible protocol version during initialization. Version negotiation ensures backward compatibility and allows for protocol evolution over time.",
     headings: ["Specification", "Protocol Version"],
   },
   {
     id: "jsonrpc-chunk-0",
     pageId: "spec",
-    url: "https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle/#json-rpc",
+    url: "https://spec.modelcontextprotocol.io/specification/2024-01-15/basic/lifecycle/#json-rpc",
     title: "JSON-RPC 2.0",
     text: "MCP uses JSON-RPC 2.0 as its message format. All requests must include: jsonrpc (set to '2.0'), method (the RPC method name), and id (a unique request identifier). Responses include: jsonrpc, id (matching the request), and either result or error. Notifications omit the id field.",
     anchor: "json-rpc",
