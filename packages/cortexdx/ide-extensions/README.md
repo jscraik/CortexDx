@@ -2,9 +2,12 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
-[![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blue.svg)](https://spec.modelcontextprotocol.io/)
+[![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-blue.svg)](https://spec.modelcontextprotocol.io/)
+[![VS Code](https://img.shields.io/badge/VS%20Code-Extension-007ACC.svg)](https://code.visualstudio.com/)
+[![IntelliJ](https://img.shields.io/badge/IntelliJ-Plugin-000000.svg)](https://www.jetbrains.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 
-This directory contains IDE-specific extensions and plugins for integrating CortexDx with popular development environments.
+This directory contains IDE-specific extensions and plugins for integrating CortexDx with popular development environments, providing real-time MCP validation, code completions, and diagnostic tools.
 
 ## Available Extensions
 

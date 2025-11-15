@@ -1,12 +1,23 @@
 # CortexDx Release Scripts
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../LICENSE)
-[![Shell](https://img.shields.io/badge/Shell-Bash-green.svg)](https://www.gnu.org/software/bash/)
+[![Shell](https://img.shields.io/badge/Shell-Bash-89E051.svg)](https://www.gnu.org/software/bash/)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](../package.json)
+[![CI/CD Ready](https://img.shields.io/badge/CI/CD-ready-brightgreen.svg)]()
+[![Automation](https://img.shields.io/badge/automation-yes-blue.svg)]()
 
 This directory contains scripts for building, publishing, deploying, and experimentally researching CortexDx v1.0.0. Production-ready utilities are documented below; anything marked as **experimental** must never be bundled with release artifacts.
 
-> **Experimental tooling:** `scripts/research-improvements.js` runs academic MCP providers to prototype debugging/codegen ideas. It is for internal research only and should not be invoked in production pipelines.
+> **⚠️ Experimental tooling:** `scripts/research-improvements.js` runs academic MCP providers to prototype debugging/codegen ideas. It is for internal research only and should not be invoked in production pipelines.
+
+## Script Classification
+
+| Script | Status | Use Case | CI/CD Safe |
+|--------|--------|----------|------------|
+| `build-docker-images.sh` | ✅ Production | Docker image builds | ✅ Yes |
+| `publish-npm.sh` | ✅ Production | NPM package publishing | ✅ Yes |
+| `quick-deploy.sh` | ✅ Production | Quick deployments | ✅ Yes |
+| `research-improvements.js` | ⚠️ Experimental | Research prototypes | ❌ No |
 
 ## Scripts Overview
 

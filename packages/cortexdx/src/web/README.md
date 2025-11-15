@@ -2,9 +2,13 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../LICENSE)
 [![WCAG](https://img.shields.io/badge/WCAG-2.2%20AA-green.svg)](https://www.w3.org/WAI/WCAG22/quickref/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://www.ecma-international.org/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E.svg)](https://www.ecma-international.org/)
+[![Chrome](https://img.shields.io/badge/Chrome-90+-4285F4.svg)](https://www.google.com/chrome/)
+[![Firefox](https://img.shields.io/badge/Firefox-88+-FF7139.svg)](https://www.mozilla.org/firefox/)
+[![Safari](https://img.shields.io/badge/Safari-14+-000000.svg)](https://www.apple.com/safari/)
+[![SSE](https://img.shields.io/badge/SSE-enabled-brightgreen.svg)]()
 
-A minimal, accessible web-based interface for visual MCP development and debugging.
+A minimal, accessible web-based interface for visual MCP development and debugging, supporting modern browsers with ES6+ and real-time updates.
 
 ## Overview
 

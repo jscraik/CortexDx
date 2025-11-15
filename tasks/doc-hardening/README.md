@@ -2,10 +2,14 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
 [![Status](https://img.shields.io/badge/status-in--progress-yellow.svg)]()
+[![Task Type](https://img.shields.io/badge/type-documentation-blue.svg)]()
+[![Priority](https://img.shields.io/badge/priority-medium-yellow.svg)]()
+[![ArcTDD](https://img.shields.io/badge/methodology-ArcTDD-purple.svg)](../../AGENTS.md)
+[![Evidence](https://img.shields.io/badge/evidence-tracked-brightgreen.svg)]()
 
 ## Overview
 
-This task directory serves as an evidence hub for documentation hardening activities. It ensures documentation quality, consistency, and compliance with industry standards through systematic validation and tracking.
+This task directory serves as an evidence hub for documentation hardening activities. It ensures documentation quality, consistency, and compliance with industry standards through systematic validation and tracking using the ArcTDD methodology.
 
 ## Scope
 

@@ -1,10 +1,13 @@
 # CortexDx Helm Chart
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../../../../../LICENSE)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.20+-blue.svg)](https://kubernetes.io/)
-[![Helm](https://img.shields.io/badge/Helm-3.0+-blue.svg)](https://helm.sh/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.20+-326CE5.svg)](https://kubernetes.io/)
+[![Helm](https://img.shields.io/badge/Helm-3.0+-0F1689.svg)](https://helm.sh/)
+[![Chart Version](https://img.shields.io/badge/chart-1.0.0-blue.svg)]()
+[![App Version](https://img.shields.io/badge/app-1.0.0-blue.svg)]()
+[![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)]()
 
-This Helm chart deploys CortexDx on a Kubernetes cluster.
+Official Helm chart for deploying CortexDx MCP diagnostic inspector on Kubernetes clusters with support for Community, Professional, and Enterprise tiers.
 
 ## Prerequisites
 
