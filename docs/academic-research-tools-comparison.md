@@ -389,17 +389,12 @@ For remote MCP server connections:
 
 ### Immediate Actions (High Priority)
 
-1. **Implement Missing WikidataMCP Tools**
-   - Add `vector_search_items` and `vector_search_properties`
-   - Add `get_entity_claims` and `get_claim_values`
-   - Integrate with Wikidata vector database service
-
-2. **Add Integration Tests**
+1. **Add Integration Tests**
    - Create tests against live upstream servers
    - Add mock servers for offline testing
    - Validate tool compatibility
 
-3. **Update Documentation**
+2. **Update Documentation**
    - Correct arXiv reference (already fixed in this document)
    - Add implementation status badges to README
 
