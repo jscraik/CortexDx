@@ -274,11 +274,12 @@ export class AssertionEmitter {
 		runId: string,
 		caseId: string,
 		message: string,
+		severity: Severity = "high",
 		cloudStorage?: CloudStorageAdapter,
 	): AssertionEmitter {
 		return new AssertionEmitter(id, title, runId, caseId, cloudStorage)
 			.status("error")
-			.severity("high")
+			.severity(severity)
 			.message(message);
 	}
 }
