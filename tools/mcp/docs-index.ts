@@ -192,7 +192,7 @@ async function fetchPages(specs: PageSpec[]): Promise<PageData[]> {
     try {
       const response = await fetch(spec.url);
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} for ${spec.url}`);
       }
 
       const html = await response.text();
