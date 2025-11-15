@@ -59,7 +59,7 @@ export class RunCollector {
 			pad(now.getUTCMilliseconds(), 3),
 			"Z"
 		].join("");
-		const shortId = randomUUID().substring(0, 8);
+		const shortId = randomUUID().substring(0, 16);
 		return `dx_${timestamp}_${shortId}`;
 	}
 
