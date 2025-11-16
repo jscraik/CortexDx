@@ -5,6 +5,59 @@ All notable changes to CortexDx will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### MCP Specification Migration (November 2025)
+
+> **Note:** The following status updates and countdowns are time-sensitive and reflect the state as of the **Last Updated** date above. For the latest migration status, see [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md).
+
+**🚨 URGENT UPDATE**: RC validation window is NOW ACTIVE. Final specification release is scheduled for November 25, 2025.
+
+**Current Status**:
+- SDK v1.22.0 (published Nov 13) is **likely the RC version**
+- RC validation testing must **start immediately**
+- Final specification releases **November 25, 2025**
+
+**Timeline**:
+- ✅ **RC (Release Candidate)**: November 14, 2025 - **PUBLISHED** (v1.22.0 on Nov 13)
+- ⏰ **Final Specification**: November 25, 2025 - **PENDING**
+- 🎯 **Validation Deadline**: November 24, 2025
+
+**Key Changes in New Spec**:
+- Asynchronous/long-running operations support (status polling, callbacks, webhooks)
+- Enhanced OAuth/identity flows (consent screens, resource scopes, client signing)
+- Improved streaming operation guidance
+
+**CortexDx Readiness**:
+- ✅ Current SDK: `@modelcontextprotocol/sdk` v1.22.0 (published Nov 13, 2025)
+- ✅ Async operations foundation: LangGraph checkpoint/resume already implemented
+- ✅ OAuth support: Auth0 integration with dual authentication
+- ✅ Streaming: SSE and WebSocket testing already in place
+- 🚀 **NOW**: RC validation testing in progress
+- 🎯 **Nov 25**: Final validation & release
+
+**Immediate Actions Required**:
+1. Run quick-start validation: `./scripts/rc-validation-quickstart.sh`
+2. Complete core validation (Nov 16-18)
+3. Deep testing and analysis (Nov 19-23)
+4. Final validation and release prep (Nov 24-25)
+
+See [MCP Spec Migration Tracker](docs/MCP_SPEC_MIGRATION.md) for detailed validation plan and [RC Validation Quick Start](scripts/rc-validation-quickstart.sh) to begin testing immediately.
+
+### Planned
+
+#### Async Operation Enhancements
+- Status polling endpoints for long-running diagnostics
+- Webhook/callback support for async completion notifications
+- Enhanced checkpoint metadata with operation progress
+- Configurable timeout/TTL for long-running operations
+
+#### OAuth/Identity Improvements
+- Device code flow implementation (Phase 5 roadmap)
+- Consent screen integration documentation
+- OAuth scope validation against new MCP resource model
+- Client certificate support for signed clients
+
 ## [1.0.0] - 2025-11-07
 
 ### Added

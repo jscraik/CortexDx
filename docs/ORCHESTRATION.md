@@ -34,6 +34,84 @@ Key options:
 
 Always finish a phase by running `pnpm lint && pnpm test && pnpm build` plus at least one deterministic `cortexdx diagnose --suites security` so the reports and workflows stay in sync.
 
+## Asynchronous Operations & MCP Spec Alignment
+
+**Note**: The upcoming MCP specification (November 2025) emphasizes support for long-running operations with status polling and callbacks. CortexDx's LangGraph-based orchestration already provides the foundation for these capabilities.
+
+### Current Async Capabilities
+
+CortexDx already supports asynchronous, resumable operations through:
+
+1. **Persistent State Storage**: SQLite checkpoints preserve workflow state across restarts
+2. **Thread Resumption**: `--resume-thread` allows restarting interrupted runs from last checkpoint
+3. **Deterministic Replay**: Checkpoint-based recovery without re-executing completed steps
+4. **Long-Running Support**: Workflows can run for hours and resume across process restarts
+
+Example of current async workflow:
+
+```bash
+# Start long-running diagnostic (may take hours)
+cortexdx orchestrate https://mcp.example.com \
+  --workflow agent.langgraph.comprehensive \
+  --state-db .cortexdx/workflows.db
+
+# Returns: thread_id=agent-thread-1731789600000
+
+# Process can be stopped/restarted - resume from checkpoint:
+cortexdx orchestrate https://mcp.example.com \
+  --workflow agent.langgraph.comprehensive \
+  --resume-thread agent-thread-1731789600000
+```
+
+### Upcoming Enhancements (MCP Spec Alignment)
+
+To fully align with the new MCP async operation model, planned enhancements include:
+
+#### Status Polling
+```bash
+# Future: Query status of long-running operation
+cortexdx orchestrate --status agent-thread-1731789600000
+
+# Returns: { status: 'in_progress', progress: 45, eta: '10m', currentStage: 'security-scan' }
+```
+
+#### Webhook Notifications
+```bash
+# Future: Register callback for completion
+cortexdx orchestrate https://mcp.example.com \
+  --workflow agent.langgraph.security \
+  --callback https://your-server.com/webhook \
+  --callback-events progress,complete,error
+```
+
+**Supported callback events:**
+- `progress` - Workflow progress updates (percentage, stage changes)
+- `complete` - Workflow completion with final results
+- `error` - Workflow errors and failures
+- `paused` - Workflow paused (if pause/resume is implemented)
+- `resumed` - Workflow resumed after pause
+
+Events should be specified as a comma-separated list. Invalid event names will be rejected at runtime.
+
+#### Progress Tracking
+Enhanced checkpoint metadata will expose:
+- Current operation stage and substep
+- Percentage complete (0-100)
+- Estimated time to completion
+- Partial results available for streaming
+- Resource usage metrics
+
+#### Timeout Configuration
+```bash
+# Future: Configure operation timeouts
+cortexdx orchestrate https://mcp.example.com \
+  --workflow agent.langgraph.baseline \
+  --timeout 3600 \
+  --checkpoint-interval 300
+```
+
+See [MCP Spec Migration](MCP_SPEC_MIGRATION.md) for full async operation roadmap and migration timeline.
+
 ## MCP Tool Exposure
 
 Agent workflows are now exposed as first-class MCP tools (see `src/tools/agent-orchestration-tools.ts`):

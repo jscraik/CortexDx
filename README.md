@@ -7,6 +7,18 @@
 
 **Stateless, plugin-based diagnostics for Model Context Protocol (MCP) servers and clients.** CortexDx is the comprehensive diagnostic tool that helps you harden MCP implementations before production deployment.
 
+> **🚨 URGENT: MCP Specification Update**
+
+> **Status:**  
+> RC likely published (v1.22.0 on Nov 13) — validation window **NOW ACTIVE**
+
+> **Deadline:**  
+> Final Spec: **November 25, 2025**
+
+> **Action Required:**  
+> Run `./scripts/rc-validation-quickstart.sh` to start validation testing.
+> See [MCP Spec Migration](docs/MCP_SPEC_MIGRATION.md) for details.
+
 ## 🚀 Key Features
 
 - **🔍 Comprehensive MCP Analysis**: HTTP/HTTPS, SSE, WebSocket, JSON-RPC, and gRPC protocol testing
