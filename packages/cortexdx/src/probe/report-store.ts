@@ -293,15 +293,17 @@ export class ReportStore {
     }
 }
 
-// Singleton instance
-let reportStoreInstance: ReportStore | null = null;
+// Map of ReportStore instances keyed by dbPath
+const reportStoreMap: Map<string, ReportStore> = new Map();
 
 /**
- * Get or create report store instance
+ * Get or create report store instance for a given dbPath
  */
 export function getReportStore(dbPath?: string): ReportStore {
-    if (!reportStoreInstance) {
-        reportStoreInstance = new ReportStore(dbPath);
+    // Use a default path if none provided
+    const resolvedPath = dbPath ?? join(process.cwd(), "cortexdx-report-store.db");
+    if (!reportStoreMap.has(resolvedPath)) {
+        reportStoreMap.set(resolvedPath, new ReportStore(resolvedPath));
     }
-    return reportStoreInstance;
+    return reportStoreMap.get(resolvedPath)!;
 }
