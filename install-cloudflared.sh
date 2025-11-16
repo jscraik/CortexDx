@@ -32,14 +32,24 @@ for line in config.read_text().splitlines():
 PY
 }
 
+CLOUDFLARED_TOKEN="${CORTEXDX_CLOUDFLARED_TOKEN:-${CLOUDFLARE_TUNNEL_TOKEN:-}}"
 TUNNEL_NAME="${CORTEXDX_CLOUDFLARED_TUNNEL:-}"
-if [ -z "$TUNNEL_NAME" ]; then
-    TUNNEL_NAME="$(parse_tunnel 2>/dev/null || true)"
-fi
 
-if [ -z "$TUNNEL_NAME" ]; then
-    echo -e "${RED}❌ Unable to determine tunnel name. Set CORTEXDX_CLOUDFLARED_TUNNEL or add 'tunnel:' to $CLOUDFLARED_CONFIG${NC}"
-    exit 1
+# Token-based authentication doesn't require a tunnel name
+if [ -z "$CLOUDFLARED_TOKEN" ]; then
+    if [ -z "$TUNNEL_NAME" ]; then
+        TUNNEL_NAME="$(parse_tunnel 2>/dev/null || true)"
+    fi
+
+    if [ -z "$TUNNEL_NAME" ]; then
+        echo -e "${RED}❌ Unable to determine tunnel name. Either:${NC}"
+        echo -e "${RED}   - Set CLOUDFLARE_TUNNEL_TOKEN or CORTEXDX_CLOUDFLARED_TOKEN for token-based auth, or${NC}"
+        echo -e "${RED}   - Set CORTEXDX_CLOUDFLARED_TUNNEL or add 'tunnel:' to $CLOUDFLARED_CONFIG${NC}"
+        exit 1
+    fi
+else
+    echo -e "${BLUE}Using token-based authentication (tunnel name not required)${NC}"
+    TUNNEL_NAME="token-auth"
 fi
 
 echo -e "${BLUE}🚀 Installing CortexDx Cloudflare Tunnel LaunchAgent${NC}"
@@ -50,8 +60,9 @@ if ! command -v cloudflared >/dev/null 2>&1; then
     exit 1
 fi
 
-if [ ! -f "$CLOUDFLARED_CONFIG" ]; then
+if [ -z "$CLOUDFLARED_TOKEN" ] && [ ! -f "$CLOUDFLARED_CONFIG" ]; then
     echo -e "${RED}❌ Tunnel config not found: $CLOUDFLARED_CONFIG${NC}"
+    echo -e "${RED}   Set CLOUDFLARE_TUNNEL_TOKEN or CORTEXDX_CLOUDFLARED_TOKEN for token-based auth${NC}"
     exit 1
 fi
 
@@ -63,7 +74,7 @@ RENDERED_PLIST="$(mktemp)"
 cleanup() { rm -f "$RENDERED_PLIST"; }
 trap cleanup EXIT
 
-export PLIST_TEMPLATE REPO_ROOT PATH_VALUE LOG_DIR CLOUDFLARED_CONFIG TUNNEL_NAME
+export PLIST_TEMPLATE REPO_ROOT PATH_VALUE LOG_DIR CLOUDFLARED_CONFIG TUNNEL_NAME CLOUDFLARED_TOKEN
 python3 - <<'PY' > "$RENDERED_PLIST"
 import os
 from pathlib import Path
@@ -75,6 +86,7 @@ mapping = {
     'LOG_DIR': os.environ['LOG_DIR'],
     'CLOUDFLARED_CONFIG': os.environ['CLOUDFLARED_CONFIG'],
     'CLOUDFLARED_TUNNEL': os.environ['TUNNEL_NAME'],
+    'CLOUDFLARED_TOKEN': os.environ.get('CLOUDFLARED_TOKEN', ''),
 }
 
 for key, value in mapping.items():

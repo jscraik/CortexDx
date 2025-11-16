@@ -105,7 +105,7 @@ If you expose CortexDx via Cloudflare, install the companion LaunchAgent so
 
 By default it reads `~/.cloudflared/config.yml`, writes logs to
 `~/Library/Logs/cortexdx-cloudflared`, and pings
-`https://cortexdx-mcp.brainwav.io/health` every 60 seconds. Override the config
+`https://cortexdx.brainwav.io/health` every 60 seconds. Override the config
 or health targets with `CORTEXDX_CLOUDFLARED_*` env vars before installing.
 
 #### Optional: reuse `.Cortex-OS` toggle (Cortex ↔ CortexDx)

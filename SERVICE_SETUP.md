@@ -195,7 +195,7 @@ Key details:
 - Label: `com.brainwav.cortexdx-cloudflared`
 - Runs `scripts/cloudflared/run-cloudflared.sh`, which
   - rotates logs in `~/Library/Logs/cortexdx-cloudflared`
-  - polls `https://cortexdx-mcp.brainwav.io/health` every 60s and records reachability
+  - polls `https://cortexdx.brainwav.io/health` every 60s and records reachability
   - restarts automatically via `launchd` if the tunnel exits
 - Manage with `./manage-cloudflared.sh {start|stop|restart|status|logs}`
 
