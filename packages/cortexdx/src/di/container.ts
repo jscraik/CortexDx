@@ -14,6 +14,7 @@ export class DIContainer {
   private singletons = new Map<string, unknown>();
   private factories = new Map<string, Factory<unknown>>();
   private asyncFactories = new Map<string, AsyncFactory<unknown>>();
+  private transients = new Set<string>();
 
   /**
    * Register a singleton dependency
@@ -21,6 +22,7 @@ export class DIContainer {
    */
   registerSingleton<T>(key: string, factory: Factory<T>): void {
     this.factories.set(key, factory as Factory<unknown>);
+    this.transients.delete(key); // Ensure it's not marked as transient
   }
 
   /**
@@ -29,7 +31,7 @@ export class DIContainer {
    */
   registerTransient<T>(key: string, factory: Factory<T>): void {
     this.factories.set(key, factory as Factory<unknown>);
-    // Mark as transient by not caching in singletons
+    this.transients.add(key); // Mark as transient to skip caching
   }
 
   /**
@@ -51,8 +53,8 @@ export class DIContainer {
    * Throws if dependency is not registered or is async
    */
   get<T>(key: string): T {
-    // Check if already instantiated
-    if (this.singletons.has(key)) {
+    // Check if already instantiated (only for singletons)
+    if (this.singletons.has(key) && !this.transients.has(key)) {
       return this.singletons.get(key) as T;
     }
 
@@ -67,8 +69,11 @@ export class DIContainer {
       throw new Error(`Dependency "${key}" is async. Use getAsync() instead.`);
     }
 
-    // Cache for singletons
-    this.singletons.set(key, instance);
+    // Cache for singletons only (skip transients)
+    if (!this.transients.has(key)) {
+      this.singletons.set(key, instance);
+    }
+
     return instance as T;
   }
 
@@ -76,8 +81,8 @@ export class DIContainer {
    * Get a dependency asynchronously
    */
   async getAsync<T>(key: string): Promise<T> {
-    // Check if already instantiated
-    if (this.singletons.has(key)) {
+    // Check if already instantiated (only for singletons)
+    if (this.singletons.has(key) && !this.transients.has(key)) {
       return this.singletons.get(key) as T;
     }
 
@@ -85,7 +90,10 @@ export class DIContainer {
     const asyncFactory = this.asyncFactories.get(key);
     if (asyncFactory) {
       const instance = await asyncFactory();
-      this.singletons.set(key, instance);
+      // Cache for singletons only (skip transients)
+      if (!this.transients.has(key)) {
+        this.singletons.set(key, instance);
+      }
       return instance as T;
     }
 
@@ -97,7 +105,10 @@ export class DIContainer {
 
     const result = factory();
     const instance = result instanceof Promise ? await result : result;
-    this.singletons.set(key, instance);
+    // Cache for singletons only (skip transients)
+    if (!this.transients.has(key)) {
+      this.singletons.set(key, instance);
+    }
     return instance as T;
   }
 
@@ -119,6 +130,7 @@ export class DIContainer {
     this.singletons.delete(key);
     this.factories.delete(key);
     this.asyncFactories.delete(key);
+    this.transients.delete(key);
   }
 
   /**
@@ -128,6 +140,7 @@ export class DIContainer {
     this.singletons.clear();
     this.factories.clear();
     this.asyncFactories.clear();
+    this.transients.clear();
   }
 
   /**

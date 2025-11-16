@@ -40,11 +40,20 @@ export function toRecord<T extends Record<string, unknown>>(
 /**
  * Safely access a field from a Finding object
  * Returns undefined if field doesn't exist
+ *
+ * NOTE: This uses a controlled type cast since Finding is a complex interface
+ * that may have dynamic fields based on plugin implementation. Runtime validation
+ * ensures the finding is a valid object before access.
  */
 export function getFindingField(
   finding: Finding,
   fieldName: string
 ): unknown {
+  if (typeof finding !== "object" || finding === null) {
+    throw new Error(
+      `Invalid finding: expected object, got ${typeof finding}`
+    );
+  }
   const findingAsRecord = finding as Record<string, unknown>;
   return findingAsRecord[fieldName];
 }

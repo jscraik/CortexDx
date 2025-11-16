@@ -8,7 +8,7 @@ import { END, MemorySaver, START, StateGraph, type StateGraphArgs } from "@langc
 import type { DiagnosticContext, Finding } from "../types.js";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
 import type { StateManager } from "./state-manager.js";
-import { toRecord, fromRecord } from "../utils/type-helpers.js";
+import { toRecord, fromRecord, hasProperty } from "../utils/type-helpers.js";
 
 /**
  * Workflow state that flows through the graph
@@ -281,10 +281,13 @@ export class AgentOrchestrator {
             for await (const event of stream) {
                 // Extract state from event
                 const nodeId = Object.keys(event)[0];
-                if (nodeId && typeof event === "object" && event !== null) {
-                    const nodeState = (event as Record<string, unknown>)[nodeId] as Partial<WorkflowState>;
-
-                    finalState = { ...finalState, ...nodeState };
+                if (nodeId && hasProperty(event, nodeId)) {
+                    const nodeStateRaw = event[nodeId];
+                    // Validate it's an object before treating as state
+                    if (typeof nodeStateRaw === "object" && nodeStateRaw !== null) {
+                        const nodeState = nodeStateRaw as Partial<WorkflowState>;
+                        finalState = { ...finalState, ...nodeState };
+                    }
 
                     // Emit event if handler provided
                     if (options.onEvent) {
