@@ -1,6 +1,6 @@
 {
+  "__NOTE__": "Fields with pipe-separated values (e.g., 'pending | approved | expired | revoked') are placeholders. Replace the entire string with a single valid value before use.",
   "$schema": "./waiver.schema.json",
-  "waiver_id": "WAIVER-[YYYY-MM-DD]-[COUNTER]",
   "created": "2025-MM-DD",
   "type": "temporary | permanent | grace_period",
   "status": "pending | approved | expired | revoked",
