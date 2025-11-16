@@ -269,7 +269,7 @@ export class InspectorAdapter {
         return;
       }
 
-      const stdioTimeout = Math.floor(getTimeoutWithOverride('stdioWrapper') / 1000);
+      const stdioTimeout = Math.max(1, Math.floor(getTimeoutWithOverride('stdioWrapper') / 1000));
       const wrapperArgs = ["--endpoint", mcpEndpoint, "--timeout", stdioTimeout.toString()];
       if (process.env.CORTEXDX_INSPECTOR_VERBOSE === "1") {
         wrapperArgs.push("--verbose");
