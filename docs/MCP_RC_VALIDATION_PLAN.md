@@ -232,10 +232,11 @@ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp \
   --deterministic \
   --out reports/rc-validation/rc/oauth-client-creds
 
-# Test 2: Device code flow (if implemented in Phase 5)
+# Test 2: Device code flow (planned for Phase 5)
 # NOTE: Device code flow support is not yet implemented in CortexDx (planned for Phase 5).
-# Uncomment and use these commands when device code flow is available.
-#
+# The following commands are provided as examples for future use.
+# Do not use or uncomment these until device code flow support is available.
+# Example (for future use only):
 # cortexdx diagnose https://cortex-mcp.brainwav.io/mcp \
 #   --auth0-device-code \
 #   --out reports/rc-validation/rc/oauth-device-code
