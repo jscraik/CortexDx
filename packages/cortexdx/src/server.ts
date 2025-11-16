@@ -29,6 +29,7 @@ import {
 import { getGlobalMonitoring } from "./observability/monitoring.js";
 import { runPlugins } from "./plugin-host.js";
 import { type AuthMiddlewareConfig, type AuthenticatedRequest, checkToolAccess, createAuthMiddleware } from "./plugins/auth-middleware.js";
+import { createDiagnosticSessionMiddleware } from "./plugins/diagnostic-session-middleware.js";
 import type { LicenseKey } from "./plugins/commercial-licensing.js";
 import { type LicenseEnforcementConfig, createFeatureAccessMiddleware, createLicenseEnforcementMiddleware } from "./plugins/license-enforcement.js";
 import { getAcademicRegistry } from "./registry/index.js";
@@ -40,6 +41,9 @@ import { getMcpDocsResource, listMcpDocsResources } from "./resources/mcp-docs-s
 import { findMcpTool, getAllMcpToolsFlat, executeDeepContextTool } from "./tools/index.js";
 import { executeAcademicIntegrationTool } from "./tools/academic-integration-tools.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
+import { executeMcpProbeTool } from "./tools/mcp-probe-tools.js";
+import { getDiagnosticSessionManager, type DiagnosticSessionConfig } from "./auth/diagnostic-session-manager.js";
+import { getReportStore } from "./probe/report-store.js";
 import type {
     DevelopmentContext,
     DiagnosticContext,
@@ -92,6 +96,14 @@ type MonitoringActionPayload = {
 type ProviderExecutePayload = {
     tool: string;
     params?: Record<string, unknown>;
+};
+
+type DiagnosticSessionCreatePayload = {
+    requestedBy: string;
+    scope: string[];
+    duration: number;
+    allowedEndpoints?: string[];
+    metadata?: Record<string, unknown>;
 };
 
 // Auth0 configuration from environment
@@ -241,6 +253,8 @@ const executeDevelopmentTool = async (tool: McpTool, args: unknown, ctx: Develop
         case 'cortexdx_mcp_docs_lookup':
         case 'cortexdx_mcp_docs_versions':
             return await executeMcpDocsTool(tool, args, ctx);
+        case 'cortexdx_probe_mcp_server':
+            return await executeMcpProbeTool(tool, args, ctx);
         default:
             throw new Error(`Unknown development tool: ${tool.name}`);
     }
@@ -426,6 +440,9 @@ const authMiddlewareConfig: AuthMiddlewareConfig = {
 };
 
 const authMiddleware = createAuthMiddleware(authMiddlewareConfig);
+
+// Initialize diagnostic session middleware
+const diagnosticSessionMiddleware = createDiagnosticSessionMiddleware();
 
 // Initialize license enforcement middleware
 const licenseEnforcementConfig: LicenseEnforcementConfig = {
@@ -754,6 +771,390 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
             return;
         }
 
+        // Diagnostic session management endpoints
+        if (route === '/api/v1/diagnostic-session/create' && method === 'POST') {
+            // Create diagnostic session endpoint (requires Auth0 authentication)
+            let body = '';
+            req.on('data', (chunk) => {
+                body += chunk;
+            });
+            req.on('end', async () => {
+                try {
+                    // Verify Auth0 authentication
+                    const authReq = req as AuthenticatedRequest;
+                    if (!authReq.auth && REQUIRE_AUTH) {
+                        res.writeHead(401);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Authentication required. Provide valid Auth0 Bearer token.',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    const payload: DiagnosticSessionCreatePayload = safeParseJson<DiagnosticSessionCreatePayload>(
+                        body,
+                        "diagnostic session create payload"
+                    );
+
+                    // Validate required fields
+                    if (!payload.requestedBy || !payload.scope || !Array.isArray(payload.scope) || !payload.duration) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Missing required fields: requestedBy, scope (array), duration (seconds)',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+
+                    // Validate scope array contents
+                    const allowedScopePattern = /^(read|write|execute):\*$/;
+                    if (
+                        !payload.scope.every(
+                            (s) => typeof s === "string" && allowedScopePattern.test(s)
+                        )
+                    ) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Invalid scope value(s). Allowed patterns: read:*, write:*, execute:*',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    // Validate duration (min 60 seconds, max 24 hours)
+                    if (payload.duration < 60) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Duration must be at least 60 seconds',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+                    if (payload.duration > 86400) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Duration cannot exceed 86400 seconds (24 hours)',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+
+                    const sessionManager = getDiagnosticSessionManager();
+                    const config: DiagnosticSessionConfig = {
+                        requestedBy: payload.requestedBy,
+                        scope: payload.scope,
+                        duration: payload.duration,
+                        allowedEndpoints: payload.allowedEndpoints,
+                        metadata: {
+                            ...payload.metadata,
+                            createdBy: authReq.auth?.userId || 'unknown',
+                            createdVia: 'api'
+                        }
+                    };
+
+                    const session = sessionManager.createSession(config);
+
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        session,
+                        message: 'Diagnostic session created successfully. Store the apiKey securely - it will not be shown again.',
+                        timestamp: new Date().toISOString(),
+                    }));
+                } catch (error) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: String(error),
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            });
+            return;
+        }
+
+        if (route.startsWith('/api/v1/diagnostic-session/') && route.endsWith('/revoke') && method === 'POST') {
+            // Revoke diagnostic session endpoint
+            // Robustly extract session ID from route
+            const segments = route.split('/').filter(Boolean); // Remove empty segments
+            // Expected: ['api', 'v1', 'diagnostic-session', '<sessionId>', 'revoke']
+            if (
+                segments.length !== 5 ||
+                segments[0] !== 'api' ||
+                segments[1] !== 'v1' ||
+                segments[2] !== 'diagnostic-session' ||
+                segments[4] !== 'revoke'
+            ) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Malformed route. Expected /api/v1/diagnostic-session/:sessionId/revoke',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+            const sessionId = segments[3];
+            if (!sessionId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Session ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const sessionManager = getDiagnosticSessionManager();
+                const revoked = sessionManager.revokeSession(sessionId);
+
+                if (revoked) {
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        message: `Diagnostic session ${sessionId} revoked successfully`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Session ${sessionId} not found or already revoked`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route.match(/^\/api\/v1\/diagnostic-session\/[^\/]+$/) && method === 'GET') {
+            // Get diagnostic session info endpoint
+            // Robustly extract session ID from route
+            const segments = route.split('/').filter(Boolean); // Remove empty segments
+            // Expected: ['api', 'v1', 'diagnostic-session', '<sessionId>']
+            if (
+                segments.length !== 4 ||
+                segments[0] !== 'api' ||
+                segments[1] !== 'v1' ||
+                segments[2] !== 'diagnostic-session'
+            ) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Malformed route. Expected /api/v1/diagnostic-session/:sessionId',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+            const sessionId = segments[3];
+            if (!sessionId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Session ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const sessionManager = getDiagnosticSessionManager();
+                const session = sessionManager.getSession(sessionId);
+
+                if (session) {
+                    const usage = sessionManager.getSessionUsage(sessionId);
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        session,
+                        usage,
+                        timestamp: new Date().toISOString(),
+                    }));
+                } else {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Session ${sessionId} not found`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/diagnostic-session' && method === 'GET') {
+            // List diagnostic sessions endpoint
+            try {
+                // Use a static, trusted base URL to avoid Host header injection
+                const url = new URL(req.url || '', process.env.CORTEXDX_BASE_URL || 'http://localhost');
+                const requestedBy = url.searchParams.get('requestedBy');
+                const status = url.searchParams.get('status') as "active" | "revoked" | "expired" | null;
+
+                if (!requestedBy) {
+                    res.writeHead(400);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: 'requestedBy query parameter required',
+                        timestamp: new Date().toISOString(),
+                    }));
+                    return;
+                }
+
+                const sessionManager = getDiagnosticSessionManager();
+                const sessions = sessionManager.listSessions(requestedBy, status || undefined);
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    sessions,
+                    count: sessions.length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        // Diagnostic report endpoints
+        if (route.match(/^\/api\/v1\/reports\/[^\/]+$/) && method === 'GET') {
+            // Get diagnostic report by ID
+            const reportId = route.split('/').pop();
+            if (!reportId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Report ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const reportStore = getReportStore();
+                const report = reportStore.getReport(reportId);
+
+                if (!report) {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Report ${reportId} not found or expired`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                    return;
+                }
+
+                // Check format query parameter
+                const host = process.env.PUBLIC_HOST || 'localhost';
+                const url = new URL(req.url, `http://${host}`);
+                const format = url.searchParams.get('format') || 'json';
+
+                if (format === 'markdown' || format === 'md') {
+                    res.writeHead(200, { 'Content-Type': 'text/markdown' });
+                    res.end(report.markdown);
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(report.json);
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/reports' && method === 'GET') {
+            // List reports
+            try {
+                const url = new URL(req.url || '', 'http://localhost');
+                // Use a fixed base URL to avoid Host header injection
+                const url = new URL(req.url || '', 'http://localhost');
+                const reportStore = getReportStore();
+                const targetUrl = url.searchParams.get('targetUrl');
+                const limit = Number.parseInt(url.searchParams.get('limit') || '20');
+
+                const reports = targetUrl
+                    ? reportStore.listReportsByTarget(targetUrl, limit)
+                    : reportStore.listRecentReports(limit);
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    reports: reports.map(r => ({
+                        id: r.id,
+                        targetUrl: r.targetUrl,
+                        timestamp: r.timestamp,
+                        duration: r.duration,
+                        score: r.score,
+                        compliant: r.compliant,
+                        createdAt: new Date(r.createdAt).toISOString(),
+                        expiresAt: new Date(r.expiresAt).toISOString(),
+                        url: `/api/v1/reports/${r.id}`
+                    })),
+                    count: reports.length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/reports/stats' && method === 'GET') {
+            // Get report statistics
+            try {
+                const reportStore = getReportStore();
+                const stats = reportStore.getStatistics();
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    statistics: stats,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
         // 404 for unknown API endpoints
         res.writeHead(404);
         res.end(JSON.stringify({
@@ -816,6 +1217,16 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
 
     if (!authPassed) {
         return; // Auth middleware already sent response
+    }
+
+    // Apply diagnostic session middleware (allows alternative auth via session key)
+    let sessionPassed = false;
+    await diagnosticSessionMiddleware(req, res, () => {
+        sessionPassed = true;
+    });
+
+    if (!sessionPassed) {
+        return; // Diagnostic session middleware already sent response
     }
 
     // Apply license enforcement middleware

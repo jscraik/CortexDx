@@ -13,6 +13,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHash } from "node:crypto";
+import type { Evidence, EvidenceKind } from "../envelope/types.js";
 
 export interface CloudStorageConfig {
 	provider: "s3" | "r2" | "gcs" | "azure";
@@ -245,6 +246,95 @@ export class CloudStorageAdapter {
 			url,
 			size: Buffer.byteLength(content, "utf8"),
 		};
+	}
+
+	/**
+	 * Upload evidence artifact for envelope diagnostics
+	 * Supports multiple evidence kinds: log, trace, http, screenshot, diff, artifact
+	 */
+	async uploadEvidence(
+		runId: string,
+		caseId: string,
+		assertionId: string,
+		artifactName: string,
+		content: string | Buffer,
+		kind: EvidenceKind,
+		contentType?: string,
+	): Promise<Evidence> {
+		const key = `${this.config.prefix}${runId}/${caseId}/${assertionId}/${artifactName}`;
+
+		// Compute SHA-256 hash
+		const sha256 = createHash("sha256")
+			.update(content)
+			.digest("hex");
+
+		// Determine content type based on kind if not provided
+		const inferredContentType = contentType || this.inferContentType(kind, artifactName);
+
+		// Upload to cloud storage
+		await this.s3Client.send(
+			new PutObjectCommand({
+				Bucket: this.config.bucket,
+				Key: key,
+				Body: content,
+				ContentType: inferredContentType,
+				Metadata: {
+					sha256,
+					runId,
+					caseId,
+					assertionId,
+					evidenceKind: kind,
+				},
+				// Evidence is short-lived, cache accordingly
+				CacheControl: "public, max-age=3600",
+			}),
+		);
+
+		// Generate presigned URL with expiration
+		const url = await this.makePresignedUrl(key);
+		const expiresAt = new Date();
+		expiresAt.setSeconds(expiresAt.getSeconds() + (this.config.ttlSeconds || 900));
+
+		return {
+			kind,
+			url,
+			sha256,
+			content_type: inferredContentType,
+			expires_at: expiresAt.toISOString(),
+		};
+	}
+
+	/**
+	 * Infer content type from evidence kind and artifact name
+	 */
+	private inferContentType(kind: EvidenceKind, artifactName: string): string {
+		const extensionContentTypeMap: Record<string, string> = {
+			json: "application/json",
+			txt: "text/plain",
+			log: "text/plain",
+			png: "image/png",
+			jpg: "image/jpeg",
+			jpeg: "image/jpeg",
+			patch: "text/x-diff",
+			diff: "text/x-diff",
+			har: "application/json",
+		};
+		const kindContentTypeMap: Record<EvidenceKind, string> = {
+			log: "application/json",
+			trace: "application/json",
+			http: "application/json",
+			diff: "text/x-diff",
+			screenshot: "image/png",
+			artifact: "application/octet-stream",
+		};
+		const ext = artifactName.split(".").pop()?.toLowerCase();
+		if (ext && extensionContentTypeMap[ext]) {
+			return extensionContentTypeMap[ext];
+		}
+		if (kindContentTypeMap[kind]) {
+			return kindContentTypeMap[kind];
+		}
+		// All valid EvidenceKind values are covered above; unreachable.
 	}
 
 	/**
