@@ -23,18 +23,10 @@ This checklist allows you to:
 
 ### Phase 1: SDK Version Verification (10 minutes)
 
-- [x] ✅ **Confirm SDK installed**: v1.22.0
+- [ ] ✅ **Confirm SDK installed**: v1.22.0
   ```bash
   find node_modules -name "@modelcontextprotocol" -type d | head -1
   # Check package.json in that directory
-  ```
-
-- [x] ✅ **Verify publication date**: November 13, 2025
-  ```bash
-  npm view @modelcontextprotocol/sdk time.1.22.0
-  ```
-
-- [x] ✅ **Check if RC**: Published 1 day before RC target (Nov 14)
   - **Conclusion**: v1.22.0 is very likely the RC version
 
 ### Phase 2: Code Inspection (30-60 minutes)
