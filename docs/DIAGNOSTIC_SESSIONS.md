@@ -422,7 +422,7 @@ const client = await createDiagnosticMcpClient({
 - The endpoint being accessed is not in the `allowedEndpoints` list
 - Check session configuration
 
-**400 Bad Request - "Duration cannot exceed or equal 86400 seconds (24 hours)"**
+**400 Bad Request - "Duration cannot equal or exceed 86400 seconds (24 hours)"**
 - Requested session duration is too long
 - Maximum is 24 hours (86400 seconds)
 
