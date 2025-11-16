@@ -17,6 +17,7 @@ import type {
   MultipleInputs,
   Problem,
 } from "../../types.js";
+import { getSessionState } from "../../utils/type-helpers.js";
 
 // Academic research integration
 interface AcademicDebuggingContext {
@@ -233,7 +234,7 @@ export const InteractiveDebuggerPlugin: ConversationalPlugin = {
       };
     }
 
-    const state = session.state as unknown as DebuggingState;
+    const state = getSessionState<DebuggingState>(session);
 
     // Check if user is providing multiple inputs (logs, configs, code)
     const inputs = parseMultipleInputs(userInput);

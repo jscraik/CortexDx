@@ -6,6 +6,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { resolveCodexContextDir } from "./status-store.js";
+import { hasProperty } from "../utils/type-helpers.js";
 
 const API_KEY_ENV_PRIORITY = [
   "WILDCARD_API_KEY",
@@ -233,16 +234,21 @@ export class DeepContextClient {
         `[DeepContext] call ${name} args=${JSON.stringify(args, null, 2)} cwd=${projectRoot ?? runtimeCwd}`,
       );
       await client.connect(transport);
-      const child = (
-        transport as unknown as {
-          _process?: { stderr?: NodeJS.ReadableStream };
+      // Access private _process property if available (for stderr logging)
+      if (hasProperty(transport, '_process')) {
+        const processObj = transport._process;
+        if (
+          typeof processObj === 'object' && processObj !== null &&
+          hasProperty(processObj, 'stderr')
+        ) {
+          const stderr = processObj.stderr as NodeJS.ReadableStream;
+          stderr?.on("data", (data: Buffer) => {
+            const chunk = data.toString();
+            stderrChunks.push(chunk);
+            this.logger?.(`[DeepContext stderr] ${chunk.trim()}`);
+          });
         }
-      )._process;
-      child?.stderr?.on("data", (data: Buffer) => {
-        const chunk = data.toString();
-        stderrChunks.push(chunk);
-        this.logger?.(`[DeepContext stderr] ${chunk.trim()}`);
-      });
+      }
       const response = await client.callTool({
         name,
         arguments: args,

@@ -8,6 +8,7 @@ import { END, MemorySaver, START, StateGraph, type StateGraphArgs } from "@langc
 import type { DiagnosticContext, Finding } from "../types.js";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
 import type { StateManager } from "./state-manager.js";
+import { toRecord, fromRecord } from "../utils/type-helpers.js";
 
 /**
  * Workflow state that flows through the graph
@@ -273,7 +274,7 @@ export class AgentOrchestrator {
 
         if (options?.streamEvents) {
             // Stream execution events
-            const stream = await app.stream(state as unknown as Record<string, unknown>, {
+            const stream = await app.stream(toRecord(state), {
                 configurable: { thread_id: threadId },
             });
 
@@ -298,10 +299,10 @@ export class AgentOrchestrator {
             }
         } else {
             // Regular execution
-            const result = await app.invoke(state as unknown as Record<string, unknown>, {
+            const result = await app.invoke(toRecord(state), {
                 configurable: { thread_id: threadId },
             });
-            finalState = result as unknown as WorkflowState;
+            finalState = fromRecord<WorkflowState>(result, ['endpoint', 'findings', 'errors']);
         }
 
         const executionTime = Date.now() - startTime;
