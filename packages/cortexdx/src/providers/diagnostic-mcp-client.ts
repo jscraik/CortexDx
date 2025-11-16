@@ -4,7 +4,7 @@
  */
 
 import { HttpMcpClient, type HttpMcpClientOptions } from "./academic/http-mcp-client.js";
-import { getDiagnosticSessionManager, type DiagnosticSessionConfig } from "../auth/diagnostic-session-manager.js";
+import { type DiagnosticSessionConfig } from "../auth/diagnostic-session-manager.js";
 import { resolveAuthHeaders } from "../auth/auth0-handshake.js";
 
 export interface DiagnosticMcpClientOptions {
