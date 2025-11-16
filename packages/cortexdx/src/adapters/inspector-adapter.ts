@@ -1,12 +1,12 @@
-import { safeParseJson } from "../utils/json.js";
 import { existsSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
+import { getTimeoutWithOverride } from "../config/timeouts.js";
 import type { DevelopmentContext, Finding } from "../types.js";
 import {
   formatHeadersForCli,
   resolveInternalHeaders,
 } from "../utils/internal-endpoint.js";
-import { getTimeoutWithOverride } from "../config/timeouts.js";
+import { safeParseJson } from "../utils/json.js";
 
 const DEFAULT_INSPECTOR_RUNTIME_MS = 60000;
 const MIN_INSPECTOR_RUNTIME_MS = 1000;
@@ -269,8 +269,16 @@ export class InspectorAdapter {
         return;
       }
 
-      const stdioTimeout = Math.floor(getTimeoutWithOverride('stdioWrapper') / 1000);
-      const wrapperArgs = ["--endpoint", mcpEndpoint, "--timeout", stdioTimeout.toString()];
+      const stdioTimeout = Math.max(
+        1,
+        Math.floor(getTimeoutWithOverride("stdioWrapper") / 1000),
+      );
+      const wrapperArgs = [
+        "--endpoint",
+        mcpEndpoint,
+        "--timeout",
+        stdioTimeout.toString(),
+      ];
       if (process.env.CORTEXDX_INSPECTOR_VERBOSE === "1") {
         wrapperArgs.push("--verbose");
       }
@@ -281,7 +289,7 @@ export class InspectorAdapter {
       }
 
       // Build args for MCP Inspector (using stdio transport)
-      const inspectorTimeout = getTimeoutWithOverride('inspector');
+      const inspectorTimeout = getTimeoutWithOverride("inspector");
       const inspectorArgs = [
         "diagnose",
         "--transport",
@@ -1059,7 +1067,7 @@ export class InspectorAdapter {
     };
 
     const controller = new AbortController();
-    const timeoutMs = getTimeoutWithOverride('handshake');
+    const timeoutMs = getTimeoutWithOverride("handshake");
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
@@ -1136,7 +1144,10 @@ export class InspectorAdapter {
     }
 
     const stderrSnippet = stderr.trim().slice(0, 200);
-    const detail = stderrSnippet.length > 0 ? `stderr: ${stderrSnippet}` : "no stderr output";
+    const detail =
+      stderrSnippet.length > 0
+        ? `stderr: ${stderrSnippet}`
+        : "no stderr output";
     return this.createErrorFindings(
       endpoint,
       probes,
@@ -1182,9 +1193,7 @@ export class InspectorAdapter {
   }
 
   private async resolveInspectorProxyPort(): Promise<number> {
-    const explicitPort = Number(
-      process.env.CORTEXDX_INSPECTOR_PROXY_PORT,
-    );
+    const explicitPort = Number(process.env.CORTEXDX_INSPECTOR_PROXY_PORT);
     if (!Number.isNaN(explicitPort) && explicitPort > 0) {
       const available = await this.isPortAvailable(explicitPort);
       if (available) {

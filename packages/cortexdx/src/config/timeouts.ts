@@ -71,6 +71,14 @@ const DEFAULT_TIMEOUTS: TimeoutConfig = {
 
 /**
  * Parse timeout value from environment variable
+ *
+ * @param value - The timeout value to parse (in milliseconds)
+ * @param defaultValue - The default timeout value to use if parsing fails
+ * @returns The parsed timeout value in milliseconds (must be whole number)
+ *
+ * @remarks
+ * Timeout values must be specified in whole milliseconds. Values less than 0 are invalid
+ * and will fall back to the default value.
  */
 function parseTimeout(value: string | undefined, defaultValue: number): number {
   if (!value) return defaultValue;
@@ -85,6 +93,22 @@ function parseTimeout(value: string | undefined, defaultValue: number): number {
 
 /**
  * Get timeout configuration from environment variables
+ *
+ * @remarks
+ * Supports both CORTEXDX_TIMEOUT_* and legacy TIMEOUT_* environment variables
+ * for backward compatibility. The CORTEXDX_TIMEOUT_* prefix takes precedence.
+ *
+ * **Deprecation Notice**: Legacy TIMEOUT_* variables are deprecated and will be
+ * removed in a future version. Please migrate to CORTEXDX_TIMEOUT_* variables.
+ *
+ * @example
+ * ```bash
+ * # Preferred (new format)
+ * CORTEXDX_TIMEOUT_INSPECTOR=45000
+ *
+ * # Legacy (deprecated)
+ * TIMEOUT_INSPECTOR=45000
+ * ```
  */
 export function getTimeoutConfig(): TimeoutConfig {
   return {
@@ -101,15 +125,18 @@ export function getTimeoutConfig(): TimeoutConfig {
       DEFAULT_TIMEOUTS.embedding,
     ),
     stdioWrapper: parseTimeout(
-      process.env.CORTEXDX_TIMEOUT_STDIO_WRAPPER || process.env.TIMEOUT_STDIO_WRAPPER,
+      process.env.CORTEXDX_TIMEOUT_STDIO_WRAPPER ||
+        process.env.TIMEOUT_STDIO_WRAPPER,
       DEFAULT_TIMEOUTS.stdioWrapper,
     ),
     problemResolver: parseTimeout(
-      process.env.CORTEXDX_TIMEOUT_PROBLEM_RESOLVER || process.env.TIMEOUT_PROBLEM_RESOLVER,
+      process.env.CORTEXDX_TIMEOUT_PROBLEM_RESOLVER ||
+        process.env.TIMEOUT_PROBLEM_RESOLVER,
       DEFAULT_TIMEOUTS.problemResolver,
     ),
     httpMcpClient: parseTimeout(
-      process.env.CORTEXDX_TIMEOUT_HTTP_MCP_CLIENT || process.env.TIMEOUT_HTTP_MCP_CLIENT,
+      process.env.CORTEXDX_TIMEOUT_HTTP_MCP_CLIENT ||
+        process.env.TIMEOUT_HTTP_MCP_CLIENT,
       DEFAULT_TIMEOUTS.httpMcpClient,
     ),
     pluginOrchestrator: parseTimeout(
@@ -118,11 +145,13 @@ export function getTimeoutConfig(): TimeoutConfig {
       DEFAULT_TIMEOUTS.pluginOrchestrator,
     ),
     humanInLoop: parseTimeout(
-      process.env.CORTEXDX_TIMEOUT_HUMAN_IN_LOOP || process.env.TIMEOUT_HUMAN_IN_LOOP,
+      process.env.CORTEXDX_TIMEOUT_HUMAN_IN_LOOP ||
+        process.env.TIMEOUT_HUMAN_IN_LOOP,
       DEFAULT_TIMEOUTS.humanInLoop,
     ),
     integrationTest: parseTimeout(
-      process.env.CORTEXDX_TIMEOUT_INTEGRATION_TEST || process.env.TIMEOUT_INTEGRATION_TEST,
+      process.env.CORTEXDX_TIMEOUT_INTEGRATION_TEST ||
+        process.env.TIMEOUT_INTEGRATION_TEST,
       DEFAULT_TIMEOUTS.integrationTest,
     ),
     handshake: parseTimeout(
@@ -143,9 +172,26 @@ export function getTimeout(key: keyof TimeoutConfig): number {
 /**
  * Set global timeout for all operations (override)
  * This can be useful for testing or when you want all timeouts to be the same
+ *
+ * @remarks
+ * Supports both CORTEXDX_GLOBAL_TIMEOUT and legacy GLOBAL_TIMEOUT environment variables
+ * for backward compatibility. The CORTEXDX_GLOBAL_TIMEOUT prefix takes precedence.
+ *
+ * **Deprecation Notice**: Legacy GLOBAL_TIMEOUT variable is deprecated and will be
+ * removed in a future version. Please migrate to CORTEXDX_GLOBAL_TIMEOUT.
+ *
+ * @example
+ * ```bash
+ * # Preferred (new format)
+ * CORTEXDX_GLOBAL_TIMEOUT=60000
+ *
+ * # Legacy (deprecated)
+ * GLOBAL_TIMEOUT=60000
+ * ```
  */
 export function getGlobalTimeout(): number | null {
-  const globalTimeout = process.env.CORTEXDX_GLOBAL_TIMEOUT || process.env.GLOBAL_TIMEOUT;
+  const globalTimeout =
+    process.env.CORTEXDX_GLOBAL_TIMEOUT || process.env.GLOBAL_TIMEOUT;
   if (!globalTimeout) return null;
 
   const parsed = Number.parseInt(globalTimeout, 10);

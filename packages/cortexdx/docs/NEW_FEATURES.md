@@ -83,6 +83,8 @@ Rate limiting has been integrated into the probe endpoint to prevent abuse and e
 | Professional | 300      | 1 minute|
 | Enterprise   | 1000     | 1 minute|
 
+> **Note:** The rate limiting implementation uses a **rolling (sliding) 60-second window**. This means that requests are counted over the last 60 seconds from the current time, not aligned to the calendar minute. Limits reset dynamically as time passes, so requests are not reset at exactly minute:00 or at fixed boundaries. For example, if you make 60 requests in 10 seconds, you must wait until enough requests fall outside the 60-second window before making more requests.
+
 #### Environment Variables
 
 ```bash
@@ -90,6 +92,9 @@ Rate limiting has been integrated into the probe endpoint to prevent abuse and e
 CORTEXDX_DEFAULT_RATE_LIMIT_TIER=community
 
 # Set tier for specific IP addresses
+# Note: IPv4 addresses only. Replace dots with underscores.
+# IPv6 addresses are not supported via environment variables.
+# For IPv6 support, use programmatic configuration or JSON config file.
 CORTEXDX_RATE_LIMIT_IP_192_168_1_1=professional
 CORTEXDX_RATE_LIMIT_IP_10_0_0_5=enterprise
 
