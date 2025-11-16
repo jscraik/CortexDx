@@ -10,6 +10,18 @@ import {
 // Rate limit store (in-memory for now, can be replaced with Redis)
 const rateLimitStore = new Map<string, RateLimitState>();
 
+// Periodic cleanup to prevent memory leak: remove expired rate limit states
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, state] of rateLimitStore.entries()) {
+    // Assume RateLimitState has windowStart (ms) and windowMs (duration in ms)
+    if (typeof state.windowStart === "number" && typeof state.windowMs === "number") {
+      if (now - state.windowStart > state.windowMs) {
+        rateLimitStore.delete(key);
+      }
+    }
+  }
+}, 60 * 1000); // Run every 60 seconds
 export interface RateLimitOptions {
   /**
    * Default tier for unauthenticated requests
