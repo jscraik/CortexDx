@@ -49,7 +49,7 @@ if [ -z "$CLOUDFLARED_TOKEN" ]; then
     fi
 else
     echo -e "${BLUE}Using token-based authentication (tunnel name not required)${NC}"
-    TUNNEL_NAME=""
+    TUNNEL_NAME="token-auth"
 fi
 
 echo -e "${BLUE}🚀 Installing CortexDx Cloudflare Tunnel LaunchAgent${NC}"
