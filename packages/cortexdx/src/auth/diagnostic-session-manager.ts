@@ -425,6 +425,7 @@ export class DiagnosticSessionManager {
                 console.error('[DiagnosticSessionManager] Cleanup failed:', error);
             }
         }, 60 * 60 * 1000); // 1 hour
+        this.cleanupTimer.unref();
     }
 
     private generateSecureToken(bytes: number): string {
