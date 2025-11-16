@@ -30,7 +30,7 @@ echo "Building project..."
 pnpm build 2>&1 | tee reports/rc-validation/rc/build-$(date -u +%Y%m%d).log
 BUILD_STATUS=$?
 
-if [ $BUILD_STATUS -eq 0 ]; then
+if [ "$BUILD_STATUS" -eq 0 ]; then
   echo "✅ Build successful"
 else
   echo "❌ Build failed - see reports/rc-validation/rc/build-$(date -u +%Y%m%d).log"
@@ -43,7 +43,7 @@ echo "Running test suite..."
 pnpm test 2>&1 | tee reports/rc-validation/rc/test-$(date -u +%Y%m%d).log
 TEST_STATUS=$?
 
-if [ $TEST_STATUS -eq 0 ]; then
+if [ "$TEST_STATUS" -eq 0 ]; then
   echo "✅ Tests passed"
 else
   echo "⚠️  Tests failed - see reports/rc-validation/rc/test-$(date -u +%Y%m%d).log"
@@ -63,7 +63,7 @@ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp \
 
 SMOKE_STATUS=$?
 
-if [ $SMOKE_STATUS -eq 0 ]; then
+if [ "$SMOKE_STATUS" -eq 0 ]; then
   echo "✅ Smoke test passed"
 else
   echo "❌ Smoke test failed"
@@ -73,14 +73,14 @@ fi
 echo ""
 echo "📊 Phase 1 Results Summary"
 echo "========================="
-echo "Build: $([ $BUILD_STATUS -eq 0 ] && echo '✅ PASS' || echo '❌ FAIL')"
-echo "Tests: $([ $TEST_STATUS -eq 0 ] && echo '✅ PASS' || echo '⚠️  FAIL (review logs)')"
-echo "Smoke: $([ $SMOKE_STATUS -eq 0 ] && echo '✅ PASS' || echo '❌ FAIL')"
+echo "Build: $([ "$BUILD_STATUS" -eq 0 ] && echo '✅ PASS' || echo '❌ FAIL')"
+echo "Tests: $([ "$TEST_STATUS" -eq 0 ] && echo '✅ PASS' || echo '⚠️  FAIL (review logs)')"
+echo "Smoke: $([ "$SMOKE_STATUS" -eq 0 ] && echo '✅ PASS' || echo '❌ FAIL')"
 echo ""
 echo "Results saved to: reports/rc-validation/rc/"
 echo ""
 
-if [ $BUILD_STATUS -eq 0 ] && [ $SMOKE_STATUS -eq 0 ]; then
+if [ "$BUILD_STATUS" -eq 0 ] && [ "$SMOKE_STATUS" -eq 0 ]; then
   echo "✅ Phase 1 Complete - Ready for comprehensive testing"
   echo ""
   echo "Next Steps:"
@@ -93,8 +93,6 @@ else
   echo "⚠️  Phase 1 Issues Detected"
   echo "1. Review build logs: reports/rc-validation/rc/build-$(date -u +%Y%m%d).log"
   echo "2. Review test logs: reports/rc-validation/rc/test-$(date -u +%Y%m%d).log"
-  echo "1. Review build logs: reports/rc-validation/rc/build-$(date +%Y%m%d).log"
-  echo "2. Review test logs: reports/rc-validation/rc/test-$(date +%Y%m%d).log"
   echo "3. Review smoke test: reports/rc-validation/rc/smoke-test/"
   echo "4. Document issues in reports/rc-validation/day1-issues.md"
   echo "5. Escalate critical failures to team"
@@ -102,7 +100,7 @@ fi
 
 echo ""
 echo "Validation start time: $(date)" > reports/rc-validation/validation-log.txt
-echo "SDK version: v1.22.0" >> reports/rc-validation/validation-log.txt
+echo "SDK version: ${SDK_VERSION:-unknown}" >> reports/rc-validation/validation-log.txt
 echo "Build status: $BUILD_STATUS" >> reports/rc-validation/validation-log.txt
 echo "Test status: $TEST_STATUS" >> reports/rc-validation/validation-log.txt
 echo "Smoke status: $SMOKE_STATUS" >> reports/rc-validation/validation-log.txt

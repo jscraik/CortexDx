@@ -17,11 +17,11 @@
 - **Current**: `@modelcontextprotocol/sdk` v1.22.0 (published Nov 13, 2025)
 - **Status**: ⚠️ **Likely the RC version** (published 1 day before RC date)
 - **Target Protocol**: MCP v2024-11-05
-- **Next Action**: **BEGIN RC VALIDATION IMMEDIATELY** using v1.22.0
+- **Next Action**: **BEGIN RC VALIDATION IMMEDIATELY**
 
 ### ⚠️ URGENT: RC Validation Must Start NOW
 
-**You're already on v1.22.0 (published Nov 13) - this is likely the RC!**
+**You're already on the RC version - start validation immediately!**
 
 **Critical Timeline**:
 - ✅ **Today (Nov 16)**: Start validation testing

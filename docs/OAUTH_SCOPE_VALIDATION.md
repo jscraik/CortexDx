@@ -5,6 +5,8 @@
 **Last Updated**: 2025-11-16
 **Related**: [AUTH0_SETUP.md](AUTH0_SETUP.md), [MCP_SPEC_MIGRATION.md](MCP_SPEC_MIGRATION.md)
 
+> **Note on Date Maintenance**: This document and related MCP RC validation documents contain time-sensitive dates (November 14, 16, 25, 2025) that will become stale after the final specification release. These dates appear across multiple files: `MCP_SPEC_MIGRATION.md`, `MCP_RC_VALIDATION_PLAN.md`, `OAUTH_SCOPE_VALIDATION.md`, `MANUAL_RC_VALIDATION.md`, `CHANGELOG.md`, and `README.md`. Consider archiving or updating these documents after November 25, 2025.
+
 ## Current OAuth Configuration
 
 ### Authentication Methods Supported

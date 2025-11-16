@@ -84,6 +84,15 @@ cortexdx orchestrate https://mcp.example.com \
   --callback-events progress,complete,error
 ```
 
+**Supported callback events:**
+- `progress` - Workflow progress updates (percentage, stage changes)
+- `complete` - Workflow completion with final results
+- `error` - Workflow errors and failures
+- `paused` - Workflow paused (if pause/resume is implemented)
+- `resumed` - Workflow resumed after pause
+
+Events should be specified as a comma-separated list. Invalid event names will be rejected at runtime.
+
 #### Progress Tracking
 Enhanced checkpoint metadata will expose:
 - Current operation stage and substep
