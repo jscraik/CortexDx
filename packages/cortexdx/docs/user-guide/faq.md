@@ -481,7 +481,7 @@ cortexdx diagnose <endpoint> \
 cortexdx best-practices <endpoint> --standards your-standards.json
 ```
 
-See [Best Practices: Standards Enforcement](best-practices.md#standards-enforcement) for details.
+See [Configuration: Standards Enforcement](configuration.md#standards-enforcement) for details.
 
 ### Can I extend CortexDx with custom output formats?
 
