@@ -416,9 +416,13 @@ export class DiagnosticSessionManager {
     private startCleanupTimer(): void {
         // Run cleanup every hour
         this.cleanupTimer = setInterval(() => {
-            const cleaned = this.cleanupExpiredSessions();
-            if (cleaned > 0) {
-                console.log(`[DiagnosticSessionManager] Cleaned up ${cleaned} expired sessions`);
+            try {
+                const cleaned = this.cleanupExpiredSessions();
+                if (cleaned > 0) {
+                    console.log(`[DiagnosticSessionManager] Cleaned up ${cleaned} expired sessions`);
+                }
+            } catch (error) {
+                console.error('[DiagnosticSessionManager] Cleanup failed:', error);
             }
         }, 60 * 60 * 1000); // 1 hour
     }
