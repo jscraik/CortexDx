@@ -92,29 +92,16 @@
 - Document model IDs, vector shapes, and latency in the logs
 
 11. **Plan Step Limit** — Any plan shown to a model must be ≤ 7 concrete steps; split excess into new arcs.
-
-8. **Secrets via 1Password CLI** — Fetch with `op`; never persist secrets in repo or long-lived env vars.
-9. **Feature Flags** — **OpenFeature** is the only approved flag API and provider model for all new and migrated flags. Use evaluation API, provider configuration, and hooks consistently across services. Deprecate ad-hoc env-flag reads. Observability hooks must include `trace_id` and `brand:"brAInwav"`.
-10. **Model Live-Only Rule** — Embeddings, rerankers, generations must use live engines (Ollama, Frontier). No stubs, dry-runs, or recorded outputs. Capture model health and smoke test results in logs with `[brAInwav]`, `brand:"brAInwav"`, `trace_id`, and latency metadata.
-
-   **Health Check via MCP:**
-
-- For MLX-based models, use the RAG package's health check endpoints
-- For Ollama models, query the Ollama API health endpoint directly
-- Store results in `logs/models/<slug>-<timestamp>-{health,smoke}.log`
-- Document model IDs, vector shapes, and latency in the logs
-
-9. **Plan Step Limit** — Any plan shown to a model must be ≤ 7 concrete steps; split excess into new arcs.
    - Scaffold compliant manifests with `pnpm arc:new --slug <arc-slug> --title "<Arc Title>" [--steps 1-7]`.
    - Use `--inherit-plan` to pull unfinished checklist items from the parent arc when you split work; reviewers expect inherited tasks to appear at the top of the new phase templates.
    - Use `--preview` (or `--dry-run` for metadata only) during design reviews to print the manifest/phase diff without touching disk.
    - When refactors overflow, chain follow-on arcs explicitly: `pnpm arc:new --slug <arc-slug>-2 --title "<Arc Title> (Arc 2)" --parent <arc-slug>` (repeat for Arc 3 as needed). The scaffolder now updates the parent `arc-manifest.json` with `metadata.childArcs` automatically (see `packages/agents/__tests__/scripts/arc-new.spec.ts`).
    - Validate local edits with `pnpm arc:lint` (blocks any manifest where `metadata.stepBudget > 7`) and, when integrating tooling, load the schema at `packages/agents/contracts/arc-manifest.schema.json` (`$id` `https://cortex-os.dev/schemas/arc-manifest.schema.json`).
-10. **State Recap Rule** — After every 400–700 generated tokens, append a one-line recap to `evidence/recaps.log`: green tests, pending tests, next step.
-11. **Trace Context Preflight** — Before pushing code, run `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` on representative logs; failures block commit. Every log line MUST include a W3C Trace Context `trace_id` (32 lowercase hex) and `traceparent` field propagated from OpenTelemetry.
-12. **Supply-Chain Evidence** — Generate and attest SBOMs locally: `pnpm sbom:generate` (CycloneDX **1.7**) → `pnpm attest:sign` (SLSA **v1.1** provenance) → `pnpm verify:attest` (Cosign **v3 bundle** format). Store SBOM JSON under `sbom/` and attestation bundles under `attestations/`; add pointers in `run-manifest.json` and evidence attachments in the PR checklist.
-13. **Identity Gate** — CI workflows and long-lived services MUST authenticate via GitHub Actions OIDC/WIF (AWS/Azure/GCP) rather than static credentials. Document provider role bindings in `docs/security/supply-chain.md`.
-14. **HTTP Cancellation** — All HTTP/tool calls must support **cancellation** (`AbortSignal` or SDK equivalent). Lint/semgrep policies enforce this requirement.
+12. **State Recap Rule** — After every 400–700 generated tokens, append a one-line recap to `evidence/recaps.log`: green tests, pending tests, next step.
+13. **Trace Context Preflight** — Before pushing code, run `pnpm tsx scripts/ci/verify-trace-context.ts <logfile>` on representative logs; failures block commit. Every log line MUST include a W3C Trace Context `trace_id` (32 lowercase hex) and `traceparent` field propagated from OpenTelemetry.
+14. **Supply-Chain Evidence** — Generate and attest SBOMs locally: `pnpm sbom:generate` (CycloneDX **1.7**) → `pnpm attest:sign` (SLSA **v1.1** provenance) → `pnpm verify:attest` (Cosign **v3 bundle** format). Store SBOM JSON under `sbom/` and attestation bundles under `attestations/`; add pointers in `run-manifest.json` and evidence attachments in the PR checklist.
+15. **Identity Gate** — CI workflows and long-lived services MUST authenticate via GitHub Actions OIDC/WIF (AWS/Azure/GCP) rather than static credentials. Document provider role bindings in `docs/security/supply-chain.md`.
+16. **HTTP Cancellation** — All HTTP/tool calls must support **cancellation** (`AbortSignal` or SDK equivalent). Lint/semgrep policies enforce this requirement.
 
 ⸻
 

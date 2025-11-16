@@ -1,0 +1,52 @@
+{
+  "$schema": "./waiver.schema.json",
+  "waiver_id": "WAIVER-2025-11-16-002",
+  "created": "2025-11-16",
+  "type": "temporary",
+  "status": "pending",
+  "rule": {
+    "rule_id": "agentic-phase-policy.G-model-health",
+    "rule_description": "Live model health and smoke test evidence required",
+    "rule_reference": ".cortexdx/rules/agentic-phase-policy.md:51",
+    "severity": "BLOCKER"
+  },
+  "request": {
+    "requestor": "@example-user",
+    "team": "platform",
+    "pr_number": null,
+    "issue_number": null,
+    "related_links": []
+  },
+  "justification": {
+    "reason": "The required tool 'pnpm models:health' is not yet implemented. Tool is tracked in .cortexdx/MISSING_TOOLS.md as HIGH priority. Manual verification performed as compensating control.",
+    "business_impact": "Blocking PRs on missing tooling would halt all development until tool implementation is complete.",
+    "technical_constraints": "Tool implementation requires integration with MLX/Ollama health check APIs and MCP adapter development, estimated 2-3 weeks.",
+    "alternatives_considered": [
+      "Implement tool immediately - rejected due to time constraints and need for proper design",
+      "Manual verification with documented evidence - accepted as interim measure",
+      "Skip health checks entirely - rejected as unsafe"
+    ]
+  },
+  "compensating_controls": {
+    "description": "Manual model health verification with documented evidence logs",
+    "measures": [
+      {
+        "control": "Manual health check executed and logged",
+        "effectiveness": "Provides same verification as automated tool would",
+        "verification": "Health check output saved to logs/models/<slug>-<timestamp>-health.json with model IDs, vector dims, latency"
+      },
+      {
+        "control": "Tool implementation tracked in backlog",
+        "effectiveness": "Ensures automated tool will be available before waiver expires",
+        "verification": "GitHub issue created, assigned to platform team, linked in waiver"
+      }
+    ]
+  },
+  "expiration": {
+    "expires_on": "2025-12-20",
+    "auto_renew": false,
+    "renewal_requires": "same_level",
+    "expiration_action": "block"
+  },
+  "approvals": []
+}

@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "waiver.schema.json",
+  "title": "Governance Waiver",
+  "description": "Schema for governance policy waiver documents",
+  "type": "object",
+  "required": [
+    "waiver_id",
+    "created",
+    "type",
+    "status",
+    "rule",
+    "request",
+    "justification",
+    "compensating_controls",
+    "expiration"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "waiver_id": {
+      "type": "string",
+      "pattern": "^WAIVER-\\d{4}-\\d{2}-\\d{2}-\\d+$"
+    },
+    "created": {
+      "type": "string",
+      "format": "date"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["temporary", "permanent", "grace_period"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "expired", "revoked"]
+    },
+    "rule": {
+      "type": "object",
+      "required": ["rule_id", "rule_description", "severity"],
+      "properties": {
+        "rule_id": {
+          "type": "string"
+        },
+        "rule_description": {
+          "type": "string"
+        },
+        "rule_reference": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["BLOCKER", "MAJOR", "MINOR"]
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["requestor"],
+      "properties": {
+        "requestor": {
+          "type": "string",
+          "pattern": "^@[a-zA-Z0-9_-]+$"
+        },
+        "team": {
+          "type": "string"
+        },
+        "pr_number": {
+          "type": ["number", "null"]
+        },
+        "issue_number": {
+          "type": ["number", "null"]
+        },
+        "related_links": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "justification": {
+      "type": "object",
+      "required": ["reason"],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 50
+        },
+        "business_impact": {
+          "type": "string"
+        },
+        "technical_constraints": {
+          "type": "string"
+        },
+        "alternatives_considered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "compensating_controls": {
+      "type": "object",
+      "required": ["description", "measures"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 30
+        },
+        "measures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["control", "effectiveness"],
+            "properties": {
+              "control": {
+                "type": "string"
+              },
+              "effectiveness": {
+                "type": "string"
+              },
+              "verification": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "expiration": {
+      "type": "object",
+      "required": ["expires_on"],
+      "properties": {
+        "expires_on": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "string",
+              "const": "permanent"
+            }
+          ]
+        },
+        "auto_renew": {
+          "type": "boolean"
+        },
+        "renewal_requires": {
+          "type": "string",
+          "enum": ["same_level", "higher_level"]
+        },
+        "expiration_action": {
+          "type": "string",
+          "enum": ["block", "warn", "notify"]
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["approver", "role", "date"],
+        "properties": {
+          "approver": {
+            "type": "string",
+            "pattern": "^@[a-zA-Z0-9_-]+$"
+          },
+          "role": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "approval_method": {
+            "type": "string"
+          },
+          "approval_link": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

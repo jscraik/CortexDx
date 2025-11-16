@@ -1,0 +1,60 @@
+{
+  "$schema": "./waiver.schema.json",
+  "waiver_id": "WAIVER-2025-11-16-001",
+  "created": "2025-11-16",
+  "type": "grace_period",
+  "status": "approved",
+  "rule": {
+    "rule_id": "code-review-checklist.2.reuse-first",
+    "rule_description": "Reuse-first attestation requirement in code review",
+    "rule_reference": ".cortexdx/rules/code-review-checklist.md:53-75",
+    "severity": "MAJOR"
+  },
+  "request": {
+    "requestor": "@example-user",
+    "team": "platform",
+    "pr_number": null,
+    "issue_number": null,
+    "related_links": []
+  },
+  "justification": {
+    "reason": "This PR was initiated during the grace period (2025-11-12 to 2025-12-10) when reuse-first attestation operates in WARN/MAJOR mode rather than BLOCKER mode.",
+    "business_impact": "Blocking this PR would delay critical feature delivery during the approved transition period.",
+    "technical_constraints": "Team is actively preparing reuse evidence artifacts but requires additional time to complete the full attestation process.",
+    "alternatives_considered": [
+      "Delay PR until full attestation ready - rejected due to transition grace period allowance",
+      "Provide partial evidence - accepted as interim measure with remediation plan"
+    ]
+  },
+  "compensating_controls": {
+    "description": "Remediation ticket created to complete full reuse attestation before grace period ends",
+    "measures": [
+      {
+        "control": "GitHub issue created tracking reuse attestation completion",
+        "effectiveness": "Ensures work is tracked and completed before enforcement date",
+        "verification": "Issue linked in PR, assigned to team lead, due before 2025-12-11"
+      },
+      {
+        "control": "Evidence preparation documented in task folder",
+        "effectiveness": "Partial evidence available for review, demonstrates good faith effort",
+        "verification": "Evidence artifacts present in analysis/reuse-evaluation.md"
+      }
+    ]
+  },
+  "expiration": {
+    "expires_on": "2025-12-10",
+    "auto_renew": false,
+    "renewal_requires": "higher_level",
+    "expiration_action": "block"
+  },
+  "approvals": [
+    {
+      "approver": "@maintainer",
+      "role": "Maintainer",
+      "date": "2025-11-16",
+      "approval_method": "Grace period policy",
+      "approval_link": ".cortexdx/rules/code-review-checklist.md:12-15",
+      "conditions": ["Remediation plan must be completed before 2025-12-11"]
+    }
+  ]
+}
