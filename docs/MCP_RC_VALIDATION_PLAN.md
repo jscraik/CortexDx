@@ -391,6 +391,7 @@ grep -r "v2024-11-05" docs/ packages/ | \
 
 ### Final Validation Run
 
+> **Note:** The automation script `./scripts/rc-validation/final-validation.sh` referenced in planning does **not** yet exist. The following commands should be run manually until the script is implemented. This section is a placeholder for future automation.
 ```bash
 # Complete end-to-end validation
 pnpm build           # Full build
