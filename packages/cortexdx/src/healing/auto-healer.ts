@@ -478,7 +478,11 @@ export class AutoHealer {
       const estimatedTime = this.summarizeEstimatedTime(templates);
 
       const highRiskFindings = analyzedFindings.filter(f => f.riskLevel === 'high').length;
-      const riskLevel = highRiskFindings > 0 ? 'high' : highRiskFindings > 2 ? 'medium' : 'low';
+      const riskLevel = highRiskFindings > 2
+        ? 'high'
+        : highRiskFindings > 0
+          ? 'medium'
+          : 'low';
 
       return {
         findings: analyzedFindings,
