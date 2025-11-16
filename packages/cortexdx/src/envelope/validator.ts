@@ -181,7 +181,7 @@ export function validateEvidence(data: unknown): ValidationResult<Evidence> {
  */
 export function formatValidationErrors(errors: z.ZodError): string[] {
 	return errors.errors.map((err) => {
-		const path = err.path.join(".");
+		const path = err.path.length > 0 ? err.path.join(".") : "(root)";
 		return `${path}: ${err.message}`;
 	});
 }
