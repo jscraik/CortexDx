@@ -14,6 +14,9 @@
 - [Security Terms](#security-terms)
 - [Development Terms](#development-terms)
 - [Tooling Terms](#tooling-terms)
+- [LLM Terms](#llm-terms)
+- [Network Terms](#network-terms)
+- [Abbreviations](#abbreviations)
 
 ---
 
