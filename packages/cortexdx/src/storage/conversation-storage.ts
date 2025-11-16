@@ -4,6 +4,7 @@
  * Requirement 12.5: Maintain conversation context across sessions
  */
 
+import { createLogger } from "../logging/logger.js";
 import { safeParseJson } from "../utils/json.js";
 import Database, { type Database as DatabaseType } from "better-sqlite3";
 import type {
@@ -27,6 +28,8 @@ export interface ConversationExport {
   exportDate: number;
   conversations: StoredConversation[];
 }
+
+const logger = createLogger("conversation-storage");
 
 /**
  * Persistent storage for conversation sessions
@@ -236,7 +239,7 @@ export class ConversationStorage {
       }
       return restored;
     } catch (error) {
-      console.error("Failed to restore conversations from SQLite", error);
+      logger.error({ error }, "Failed to restore conversations from SQLite");
       return 0;
     }
   }
@@ -259,7 +262,7 @@ export class ConversationStorage {
         )
         .run();
     } catch (error) {
-      console.error("Failed to initialize conversation database", error);
+      logger.error({ error }, "Failed to initialize conversation database");
       this.db = undefined;
     }
   }
@@ -283,7 +286,7 @@ export class ConversationStorage {
         )
         .run(conversation);
     } catch (error) {
-      console.error("Failed to persist conversation", error);
+      logger.error({ error }, "Failed to persist conversation");
     }
   }
 
@@ -294,7 +297,7 @@ export class ConversationStorage {
     try {
       this.db.prepare("DELETE FROM conversations WHERE id = ?").run(sessionId);
     } catch (error) {
-      console.error("Failed to delete conversation", error);
+      logger.error({ error }, "Failed to delete conversation");
     }
   }
 
@@ -307,7 +310,7 @@ export class ConversationStorage {
         .prepare("DELETE FROM conversations WHERE last_activity < ?")
         .run(threshold);
     } catch (error) {
-      console.error("Failed to cleanup old conversations", error);
+      logger.error({ error }, "Failed to cleanup old conversations");
     }
   }
 
@@ -333,7 +336,7 @@ export class ConversationStorage {
         lastActivity: stored.lastActivity,
       };
     } catch (error) {
-      console.error(`Failed to deserialize conversation ${stored.id}:`, error);
+      logger.error({ error, conversationId: stored.id }, "Failed to deserialize conversation");
       return null;
     }
   }

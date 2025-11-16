@@ -987,7 +987,7 @@ export async function handleSelfHealingAPI(
       }),
     );
   } catch (error) {
-    console.error("Self-healing API error:", error);
+    serverLogger.error({ error }, "Self-healing API error");
     res.writeHead(500);
     res.end(
       JSON.stringify({
@@ -1490,7 +1490,7 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(singleResponse));
         } catch (error) {
-          console.error("JSON-RPC parse error:", error);
+          serverLogger.error({ error }, "JSON-RPC parse error");
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(
             JSON.stringify({
@@ -1514,7 +1514,7 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Not found" }));
   } catch (error) {
-    console.error("Server error:", error);
+    serverLogger.error({ error }, "Server error");
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
@@ -1976,8 +1976,9 @@ if (SHOULD_LISTEN) {
 
       monitoring.setContext(ctx);
       monitoring.start();
-      console.log(
-        `\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`,
+      monitoringLogger.info(
+        { intervalMs: MONITORING_INTERVAL_MS },
+        "Monitoring enabled",
       );
     }
     });
@@ -1989,19 +1990,19 @@ if (SHOULD_LISTEN) {
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("Received SIGTERM, shutting down gracefully");
+  serverLogger.info({}, "Received SIGTERM, shutting down gracefully");
   monitoring.stop();
   server.close(() => {
-    console.log("Server closed");
+    serverLogger.info({}, "Server closed");
     process.exit(0);
   });
 });
 
 process.on("SIGINT", () => {
-  console.log("Received SIGINT, shutting down gracefully");
+  serverLogger.info({}, "Received SIGINT, shutting down gracefully");
   monitoring.stop();
   server.close(() => {
-    console.log("Server closed");
+    serverLogger.info({}, "Server closed");
     process.exit(0);
   });
 });
