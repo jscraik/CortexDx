@@ -1,0 +1,100 @@
+{
+  "$schema": "./waiver.schema.json",
+  "waiver_id": "WAIVER-2025-11-16-002",
+  "created": "2025-11-16",
+  "type": "temporary",
+  "status": "pending",
+  "rule": {
+    "rule_id": "agentic-phase-policy.G-model-health",
+    "rule_description": "Live model health and smoke test evidence required",
+    "rule_reference": ".cortexdx/rules/agentic-phase-policy.md:51",
+    "severity": "BLOCKER"
+  },
+  "request": {
+    "requestor": "@example-user",
+    "team": "platform",
+    "pr_number": null,
+    "issue_number": null,
+    "related_links": []
+  },
+  "justification": {
+    "reason": "The required tool 'pnpm models:health' is not yet implemented. Tool is tracked in .cortexdx/MISSING_TOOLS.md as HIGH priority. Manual verification performed as compensating control.",
+    "business_impact": "Blocking PRs on missing tooling would halt all development until tool implementation is complete.",
+    "technical_constraints": "Tool implementation requires integration with MLX/Ollama health check APIs and MCP adapter development, estimated 2-3 weeks.",
+    "alternatives_considered": [
+      "Implement tool immediately - rejected due to time constraints and need for proper design",
+      "Manual verification with documented evidence - accepted as interim measure",
+      "Skip health checks entirely - rejected as unsafe"
+    ]
+  },
+  "compensating_controls": {
+    "description": "Manual model health verification with documented evidence logs",
+    "measures": [
+      {
+        "control": "Manual health check executed and logged",
+        "effectiveness": "Provides same verification as automated tool would",
+        "verification": "Health check output saved to logs/models/<slug>-<timestamp>-health.json with model IDs, vector dims, latency"
+      },
+      {
+        "control": "Tool implementation tracked in backlog",
+        "effectiveness": "Ensures automated tool will be available before waiver expires",
+        "verification": "GitHub issue created, assigned to platform team, linked in waiver"
+      }
+    ]
+  },
+  "scope": {
+    "affected_components": ["model health verification"],
+    "affected_files": [],
+    "affected_services": []
+  },
+  "remediation": {
+    "required": true,
+    "plan": "Implement pnpm models:health and models:smoke tools",
+    "timeline": [
+      {
+        "milestone": "Design tool interface and MCP integration",
+        "target_date": "2025-11-30",
+        "status": "pending"
+      },
+      {
+        "milestone": "Implement health check tool",
+        "target_date": "2025-12-15",
+        "status": "pending"
+      },
+      {
+        "milestone": "Deploy and document tool",
+        "target_date": "2025-12-20",
+        "status": "pending"
+      }
+    ],
+    "completion_criteria": "Tool exists in package.json scripts, documentation updated, CI uses automated tool instead of manual process",
+    "blocking_issues": []
+  },
+  "expiration": {
+    "expires_on": "2025-12-20",
+    "auto_renew": false,
+    "renewal_requires": "same_level",
+    "expiration_action": "block"
+  },
+  "approvals": [],
+  "monitoring": {
+    "metrics": ["Tool implementation progress", "Manual verification consistency"],
+    "alerts": ["14 days before expiration", "7 days before expiration"],
+    "review_frequency": "weekly"
+  },
+  "audit_trail": [
+    {
+      "date": "2025-11-16",
+      "action": "created",
+      "actor": "@example-user",
+      "details": "Waiver created for missing models:health tool"
+    }
+  ],
+  "extensions": [],
+  "metadata": {
+    "tags": ["missing-tool", "models-health", "temporary"],
+    "related_waivers": [],
+    "supersedes": null,
+    "superseded_by": null
+  }
+}

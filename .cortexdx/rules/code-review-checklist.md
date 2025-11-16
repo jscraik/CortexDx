@@ -9,7 +9,10 @@ alwaysApply: true
 >
 > **Charter gate:** Reviewers MUST confirm that the PR template sections **Policy diff**, **Summary**, and **Checks** ([`.github/PULL_REQUEST_TEMPLATE/default.md`](../../.github/PULL_REQUEST_TEMPLATE/default.md)) are completed with substantive entries. If any required section is empty, the PR must be updated before review can conclude. Reviewers must manually verify that any `blocked:charter` label is cleared and the PR body contains meaningful information before checking the box below.
 >
-> **Transition Notice (Reuse-First Delivery Policy):** From **2025-11-12** through **2025-12-10**, the new reuse-first attestation in §2 operates in **WARN/MAJOR** mode; merge is permitted with documented remediation plans. On **2025-12-11**, CI will flip the rule to **BLOCKER** and block merges without compliant evidence.
+> **Transition Notice (Reuse-First Delivery Policy):**
+> - **Grace Period (Active):** 2025-11-12 through 2025-12-10 - The new reuse-first attestation in §2 operates in **WARN/MAJOR** mode; merge is permitted with documented remediation plans.
+> - **Full Enforcement (Upcoming):** Starting 2025-12-11 - CI will flip the rule to **BLOCKER** and block merges without compliant evidence.
+> - **Current Status:** As of 2025-11-16, we are IN the grace period. Teams should prepare reuse evidence artifacts now to avoid blocking on 2025-12-11.
 
 ## 0. Preconditions & Governance
 

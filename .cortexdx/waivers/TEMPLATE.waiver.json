@@ -1,0 +1,93 @@
+{
+  "$schema": "./waiver.schema.json",
+  "waiver_id": "WAIVER-[YYYY-MM-DD]-[COUNTER]",
+  "created": "2025-MM-DD",
+  "type": "temporary | permanent | grace_period",
+  "status": "pending | approved | expired | revoked",
+  "rule": {
+    "rule_id": "GOV-XXX | constitution.section | charter.guardrail",
+    "rule_description": "Brief description of the rule being waived",
+    "rule_reference": "Path to governance doc and line number",
+    "severity": "BLOCKER | MAJOR | MINOR"
+  },
+  "request": {
+    "requestor": "@github-username",
+    "team": "team-name",
+    "pr_number": null,
+    "issue_number": null,
+    "related_links": []
+  },
+  "justification": {
+    "reason": "Detailed explanation of why waiver is necessary",
+    "business_impact": "What happens if waiver is not granted",
+    "technical_constraints": "Technical reasons compliance is not possible",
+    "alternatives_considered": [
+      "Alternative 1: why not viable",
+      "Alternative 2: why not viable"
+    ]
+  },
+  "compensating_controls": {
+    "description": "How risk is mitigated without full compliance",
+    "measures": [
+      {
+        "control": "Specific compensating control",
+        "effectiveness": "How well it addresses the original rule intent",
+        "verification": "How control effectiveness is verified"
+      }
+    ]
+  },
+  "scope": {
+    "affected_components": ["component1", "component2"],
+    "affected_files": ["path/to/file1.ts", "path/to/file2.ts"],
+    "affected_services": []
+  },
+  "remediation": {
+    "required": true,
+    "plan": "Steps to achieve full compliance",
+    "timeline": [
+      {
+        "milestone": "Description",
+        "target_date": "2025-MM-DD",
+        "status": "pending | in_progress | completed"
+      }
+    ],
+    "completion_criteria": "How we know remediation is complete",
+    "blocking_issues": []
+  },
+  "expiration": {
+    "expires_on": "2025-MM-DD | permanent",
+    "auto_renew": false,
+    "renewal_requires": "same_level | higher_level",
+    "expiration_action": "block | warn | notify"
+  },
+  "approvals": [
+    {
+      "approver": "@github-username",
+      "role": "Tech Lead | Maintainer | Architecture",
+      "date": "2025-MM-DD",
+      "approval_method": "GitHub comment | Email | Meeting",
+      "approval_link": "URL to approval evidence",
+      "conditions": []
+    }
+  ],
+  "monitoring": {
+    "metrics": ["Metrics to track waiver impact"],
+    "alerts": ["Alert conditions for waiver violations"],
+    "review_frequency": "weekly | monthly | quarterly"
+  },
+  "audit_trail": [
+    {
+      "date": "2025-MM-DD",
+      "action": "created | approved | extended | expired | revoked",
+      "actor": "@github-username",
+      "details": "Description of action taken"
+    }
+  ],
+  "extensions": [],
+  "metadata": {
+    "tags": ["grace-period", "external-contributor", "missing-tool", "legacy"],
+    "related_waivers": [],
+    "supersedes": null,
+    "superseded_by": null
+  }
+}
