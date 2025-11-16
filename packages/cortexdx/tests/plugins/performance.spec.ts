@@ -134,14 +134,6 @@ describe('Performance Plugin', () => {
     });
 
     it('should include transcript data if available', async () => {
-      const mockTranscript: TransportTranscript = {
-        type: 'websocket',
-        messages: [
-          { direction: 'sent', timestamp: Date.now(), data: 'test' },
-          { direction: 'received', timestamp: Date.now() + 100, data: 'response' },
-        ],
-      };
-
       mockContext.request = vi.fn().mockResolvedValue({ status: 200 });
       // Note: transcript is typically accessed differently, this is illustrative
 
