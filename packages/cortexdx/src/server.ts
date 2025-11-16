@@ -1032,6 +1032,7 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                 }
 
                 // Check format query parameter
+                const url = new URL(req.url || '', `http://${req.headers.host}`);
                 const url = new URL(req.url, `http://${req.headers.host}`);
                 const format = url.searchParams.get('format') || 'json';
 
