@@ -115,7 +115,7 @@ RUN npm install -g @brainwav/cortexdx
 CMD ["cortexdx", "--help"]
 ```
 
-See [Integrations: Docker](integrations.md#docker-integration) for complete Docker setup.
+For complete Docker setup instructions, see the example above or refer to the [README.md](../../README.md#docker-usage).
 
 ### How do I configure authentication for multiple environments?
 
