@@ -12,11 +12,11 @@ export interface CodePattern {
 }
 
 export const CodePatterns: Record<string, CodePattern> = {
-  'security.rateLimit': {
-    id: 'security.rateLimit',
-    name: 'Rate Limiting Middleware',
-    description: 'Express rate limiting middleware configuration',
-    language: 'typescript',
+  "security.rateLimit": {
+    id: "security.rateLimit",
+    name: "Rate Limiting Middleware",
+    description: "Express rate limiting middleware configuration",
+    language: "typescript",
     pattern: `
 import rateLimit from 'express-rate-limit';
 
@@ -31,19 +31,19 @@ const limiter = rateLimit({
 app.use('{{route}}', limiter);
     `,
     variables: {
-      windowMs: '15 * 60 * 1000',
-      windowMsDescription: '15 minutes',
-      maxRequests: '100',
-      errorMessage: 'Too many requests, please try again later',
-      route: '/mcp',
+      windowMs: "15 * 60 * 1000",
+      windowMsDescription: "15 minutes",
+      maxRequests: "100",
+      errorMessage: "Too many requests, please try again later",
+      route: "/mcp",
     },
   },
 
-  'security.headers': {
-    id: 'security.headers',
-    name: 'Security Headers Middleware',
-    description: 'Security headers middleware for Express',
-    language: 'typescript',
+  "security.headers": {
+    id: "security.headers",
+    name: "Security Headers Middleware",
+    description: "Security headers middleware for Express",
+    language: "typescript",
     pattern: `
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -55,15 +55,16 @@ app.use((req, res, next) => {
 });
     `,
     variables: {
-      additionalHeaders: "// Add more headers as needed\n  // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');",
+      additionalHeaders:
+        "// Add more headers as needed\n  // res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');",
     },
   },
 
-  'cors.middleware': {
-    id: 'cors.middleware',
-    name: 'CORS Middleware Configuration',
-    description: 'Environment-aware CORS configuration',
-    language: 'typescript',
+  "cors.middleware": {
+    id: "cors.middleware",
+    name: "CORS Middleware Configuration",
+    description: "Environment-aware CORS configuration",
+    language: "typescript",
     pattern: `
 import cors from 'cors';
 
@@ -90,17 +91,17 @@ app.use('{{route}}', cors(corsOptions));
     : true`,
       allowedMethods: "'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'",
       allowedHeaders: "'Content-Type', 'Authorization', 'X-Requested-With'",
-      credentials: 'true',
-      optionsSuccessStatus: '200',
-      route: '/mcp',
+      credentials: "true",
+      optionsSuccessStatus: "200",
+      route: "/mcp",
     },
   },
 
-  'error.handling': {
-    id: 'error.handling',
-    name: 'Global Error Handler',
-    description: 'Global error handling middleware',
-    language: 'typescript',
+  "error.handling": {
+    id: "error.handling",
+    name: "Global Error Handler",
+    description: "Global error handling middleware",
+    language: "typescript",
     pattern: `
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('{{errorPrefix}}', err);
@@ -117,17 +118,17 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
     `,
     variables: {
-      errorPrefix: '[Error]',
-      productionMessage: 'Internal server error',
-      statusCode: '500',
+      errorPrefix: "[Error]",
+      productionMessage: "Internal server error",
+      statusCode: "500",
     },
   },
 
-  'logging.middleware': {
-    id: 'logging.middleware',
-    name: 'Request Logging Middleware',
-    description: 'HTTP request logging middleware',
-    language: 'typescript',
+  "logging.middleware": {
+    id: "logging.middleware",
+    name: "Request Logging Middleware",
+    description: "HTTP request logging middleware",
+    language: "typescript",
     pattern: `
 app.use((req, Request, res: Response, next: NextFunction) => {
   const start = Date.now();
@@ -142,15 +143,15 @@ app.use((req, Request, res: Response, next: NextFunction) => {
 });
     `,
     variables: {
-      timestamp: 'new Date().toISOString()',
+      timestamp: "new Date().toISOString()",
     },
   },
 
-  'health.check': {
-    id: 'health.check',
-    name: 'Health Check Endpoint',
-    description: 'Basic health check endpoint',
-    language: 'typescript',
+  "health.check": {
+    id: "health.check",
+    name: "Health Check Endpoint",
+    description: "Basic health check endpoint",
+    language: "typescript",
     pattern: `
 app.get('{{healthEndpoint}}', (req: Request, res: Response) => {
   const health = {
@@ -165,16 +166,18 @@ app.get('{{healthEndpoint}}', (req: Request, res: Response) => {
 });
     `,
     variables: {
-      healthEndpoint: '/health',
+      healthEndpoint: "/health",
     },
   },
 
-  'sse.connection': {
-    id: 'sse.connection',
-    name: 'SSE Connection Handler',
-    description: 'Server-Sent Events connection handler with cleanup',
-    language: 'typescript',
+  "sse.connection": {
+    id: "sse.connection",
+    name: "SSE Connection Handler",
+    description: "Server-Sent Events connection handler with cleanup",
+    language: "typescript",
     pattern: `
+import { randomUUID } from 'node:crypto';
+
 export class SSEConnection {
   private connections = new Map<string, { response: Response; cleanup: () => void }>();
 
@@ -213,20 +216,20 @@ export class SSEConnection {
   }
 
   private generateSessionId(): string {
-    return \`sse_\${Date.now()}_\${Math.random().toString(36).slice(2)}\`;
+    return \`sse_\${randomUUID()}\`;
   }
 }
     `,
     variables: {
-      heartbeatInterval: '30000', // 30 seconds
+      heartbeatInterval: "30000", // 30 seconds
     },
   },
 
-  'memory.monitor': {
-    id: 'memory.monitor',
-    name: 'Memory Monitor',
-    description: 'Memory usage monitoring with alerts',
-    language: 'typescript',
+  "memory.monitor": {
+    id: "memory.monitor",
+    name: "Memory Monitor",
+    description: "Memory usage monitoring with alerts",
+    language: "typescript",
     pattern: `
 export class MemoryMonitor {
   private checkInterval: NodeJS.Timeout | null = null;
@@ -260,16 +263,16 @@ export class MemoryMonitor {
 }
     `,
     variables: {
-      memoryThreshold: '500',
-      checkInterval: '60000', // 1 minute
+      memoryThreshold: "500",
+      checkInterval: "60000", // 1 minute
     },
   },
 
-  'jsonrpc.batch.handler': {
-    id: 'jsonrpc.batch.handler',
-    name: 'JSON-RPC Batch Handler',
-    description: 'JSON-RPC batch request handler with proper error handling',
-    language: 'typescript',
+  "jsonrpc.batch.handler": {
+    id: "jsonrpc.batch.handler",
+    name: "JSON-RPC Batch Handler",
+    description: "JSON-RPC batch request handler with proper error handling",
+    language: "typescript",
     pattern: `
 export async function handleBatchRequest(
   requests: JsonRpcRequest[],
@@ -328,7 +331,7 @@ export function getCodePattern(id: string): CodePattern | undefined {
  */
 export function renderCodePattern(
   patternId: string,
-  variables: Record<string, string> = {}
+  variables: Record<string, string> = {},
 ): string {
   const pattern = getCodePattern(patternId);
   if (!pattern) {
@@ -340,13 +343,13 @@ export function renderCodePattern(
   // Apply pattern variables first
   if (pattern.variables) {
     for (const [key, value] of Object.entries(pattern.variables)) {
-      code = code.replace(new RegExp(`{{${key}}}`, 'g'), value);
+      code = code.replace(new RegExp(`{{${key}}}`, "g"), value);
     }
   }
 
   // Apply custom variables (can override pattern defaults)
   for (const [key, value] of Object.entries(variables)) {
-    code = code.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    code = code.replace(new RegExp(`{{${key}}}`, "g"), value);
   }
 
   return code;
@@ -363,5 +366,7 @@ export function getAllCodePatterns(): CodePattern[] {
  * Get code patterns by language
  */
 export function getCodePatternsByLanguage(language: string): CodePattern[] {
-  return Object.values(CodePatterns).filter(pattern => pattern.language === language);
+  return Object.values(CodePatterns).filter(
+    (pattern) => pattern.language === language,
+  );
 }

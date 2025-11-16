@@ -52,149 +52,184 @@ export class GitleaksIntegration {
      * Scan repository for secrets (requires gitleaks CLI)
      */
     async scanRepository(repoPath: string): Promise<SecretFindings> {
-        // Note: This requires gitleaks CLI to be installed
-        // For now, return placeholder results
-        // TODO: Implement actual gitleaks execution when CLI is available
+        try {
+            // Note: This requires gitleaks CLI to be installed
+            // For now, return placeholder results
+            // TODO: Implement actual gitleaks execution when CLI is available
 
-        return {
-            secrets: [],
-            totalFound: 0,
-            byType: {},
-            executionTime: 0,
-        };
+            return {
+                secrets: [],
+                totalFound: 0,
+                byType: {},
+                executionTime: 0,
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to scan repository at ${repoPath}: ${message}`);
+        }
     }
 
     /**
      * Scan configuration files for secrets
      */
     async scanConfiguration(configFiles: string[]): Promise<SecretFindings> {
-        const secrets: Secret[] = [];
+        try {
+            const secrets: Secret[] = [];
 
-        for (const file of configFiles) {
-            const fileSecrets = await this.scanFile(file);
-            secrets.push(...fileSecrets);
+            for (const file of configFiles) {
+                const fileSecrets = await this.scanFile(file);
+                secrets.push(...fileSecrets);
+            }
+
+            const byType: Record<string, number> = {};
+            for (const secret of secrets) {
+                byType[secret.type] = (byType[secret.type] || 0) + 1;
+            }
+
+            return {
+                secrets,
+                totalFound: secrets.length,
+                byType,
+                executionTime: 0,
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to scan configuration files: ${message}`);
         }
-
-        const byType: Record<string, number> = {};
-        for (const secret of secrets) {
-            byType[secret.type] = (byType[secret.type] || 0) + 1;
-        }
-
-        return {
-            secrets,
-            totalFound: secrets.length,
-            byType,
-            executionTime: 0,
-        };
     }
 
     /**
      * Scan a single file for secrets
      */
     private async scanFile(filePath: string): Promise<Secret[]> {
-        // Placeholder implementation
-        // TODO: Implement actual file scanning
-        return [];
+        try {
+            // Placeholder implementation
+            // TODO: Implement actual file scanning
+            return [];
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to scan file ${filePath}: ${message}`);
+        }
     }
 
     /**
      * Detect API keys in content
      */
     async detectAPIKeys(content: string): Promise<Secret[]> {
-        const secrets: Secret[] = [];
-        const rules = this.defaultRules.filter((r) =>
-            r.id.toLowerCase().includes("api"),
-        );
+        try {
+            const secrets: Secret[] = [];
+            const rules = this.defaultRules.filter((r) =>
+                r.id.toLowerCase().includes("api"),
+            );
 
-        for (const rule of rules) {
-            const regex = new RegExp(rule.regex, "gi");
-            const matches = Array.from(content.matchAll(regex));
+            for (const rule of rules) {
+                const regex = new RegExp(rule.regex, "gi");
+                const matches = Array.from(content.matchAll(regex));
 
-            for (const match of matches) {
-                secrets.push({
-                    type: rule.description,
-                    match: this.redactSecret(match[0]),
-                    file: "content",
-                    line: this.getLineNumber(content, match.index || 0),
-                });
+                for (const match of matches) {
+                    secrets.push({
+                        type: rule.description,
+                        match: this.redactSecret(match[0]),
+                        file: "content",
+                        line: this.getLineNumber(content, match.index || 0),
+                    });
+                }
             }
-        }
 
-        return secrets;
+            return secrets;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to detect API keys in content: ${message}`);
+        }
     }
 
     /**
      * Detect tokens in content
      */
     async detectTokens(content: string): Promise<Secret[]> {
-        const secrets: Secret[] = [];
-        const rules = this.defaultRules.filter((r) =>
-            r.id.toLowerCase().includes("token"),
-        );
+        try {
+            const secrets: Secret[] = [];
+            const rules = this.defaultRules.filter((r) =>
+                r.id.toLowerCase().includes("token"),
+            );
 
-        for (const rule of rules) {
-            const regex = new RegExp(rule.regex, "gi");
-            const matches = Array.from(content.matchAll(regex));
+            for (const rule of rules) {
+                const regex = new RegExp(rule.regex, "gi");
+                const matches = Array.from(content.matchAll(regex));
 
-            for (const match of matches) {
-                secrets.push({
-                    type: rule.description,
-                    match: this.redactSecret(match[0]),
-                    file: "content",
-                    line: this.getLineNumber(content, match.index || 0),
-                });
+                for (const match of matches) {
+                    secrets.push({
+                        type: rule.description,
+                        match: this.redactSecret(match[0]),
+                        file: "content",
+                        line: this.getLineNumber(content, match.index || 0),
+                    });
+                }
             }
-        }
 
-        return secrets;
+            return secrets;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to detect tokens in content: ${message}`);
+        }
     }
 
     /**
      * Detect credentials in content
      */
     async detectCredentials(content: string): Promise<Secret[]> {
-        const secrets: Secret[] = [];
-        const rules = this.defaultRules.filter(
-            (r) =>
-                r.id.toLowerCase().includes("password") ||
-                r.id.toLowerCase().includes("credential"),
-        );
+        try {
+            const secrets: Secret[] = [];
+            const rules = this.defaultRules.filter(
+                (r) =>
+                    r.id.toLowerCase().includes("password") ||
+                    r.id.toLowerCase().includes("credential"),
+            );
 
-        for (const rule of rules) {
-            const regex = new RegExp(rule.regex, "gi");
-            const matches = Array.from(content.matchAll(regex));
+            for (const rule of rules) {
+                const regex = new RegExp(rule.regex, "gi");
+                const matches = Array.from(content.matchAll(regex));
 
-            for (const match of matches) {
-                secrets.push({
-                    type: rule.description,
-                    match: this.redactSecret(match[0]),
-                    file: "content",
-                    line: this.getLineNumber(content, match.index || 0),
-                });
+                for (const match of matches) {
+                    secrets.push({
+                        type: rule.description,
+                        match: this.redactSecret(match[0]),
+                        file: "content",
+                        line: this.getLineNumber(content, match.index || 0),
+                    });
+                }
             }
-        }
 
-        return secrets;
+            return secrets;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to detect credentials in content: ${message}`);
+        }
     }
 
     /**
      * Scan MCP context for exposed secrets
      */
     async scanMCPContext(ctx: DiagnosticContext): Promise<Secret[]> {
-        const secrets: Secret[] = [];
+        try {
+            const secrets: Secret[] = [];
 
-        // Check headers for exposed tokens
-        if (ctx.headers) {
-            const headersStr = JSON.stringify(ctx.headers);
-            const headerSecrets = await this.detectTokens(headersStr);
-            secrets.push(...headerSecrets);
+            // Check headers for exposed tokens
+            if (ctx.headers) {
+                const headersStr = JSON.stringify(ctx.headers);
+                const headerSecrets = await this.detectTokens(headersStr);
+                secrets.push(...headerSecrets);
+            }
+
+            // Check endpoint for embedded credentials
+            const endpointSecrets = await this.detectCredentials(ctx.endpoint);
+            secrets.push(...endpointSecrets);
+
+            return secrets;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to scan MCP context for secrets: ${message}`);
         }
-
-        // Check endpoint for embedded credentials
-        const endpointSecrets = await this.detectCredentials(ctx.endpoint);
-        secrets.push(...endpointSecrets);
-
-        return secrets;
     }
 
     /**
@@ -320,19 +355,24 @@ export class GitleaksIntegration {
 export function normalizeGitleaksResults(
     results: SecretFindings,
 ): NormalizedSecretFinding[] {
-    return results.secrets.map((secret) => ({
-        id: `gitleaks-${secret.type.toLowerCase().replace(/\s+/g, "-")}`,
-        tool: "gitleaks",
-        severity: "critical",
-        title: `${secret.type} Detected`,
-        description: `Secret detected: ${secret.type}\nLocation: ${secret.file}:${secret.line}\nMatch: ${secret.match}`,
-        location: {
-            path: secret.file,
-            line: secret.line,
-        },
-        secretType: secret.type,
-        confidence: 0.95,
-    }));
+    try {
+        return results.secrets.map((secret) => ({
+            id: `gitleaks-${secret.type.toLowerCase().replace(/\s+/g, "-")}`,
+            tool: "gitleaks",
+            severity: "critical" as const,
+            title: `${secret.type} Detected`,
+            description: `Secret detected: ${secret.type}\nLocation: ${secret.file}:${secret.line}\nMatch: ${secret.match}`,
+            location: {
+                path: secret.file,
+                line: secret.line,
+            },
+            secretType: secret.type,
+            confidence: 0.95,
+        }));
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to normalize gitleaks results: ${message}`);
+    }
 }
 
 export interface NormalizedSecretFinding {

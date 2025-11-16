@@ -4,6 +4,7 @@
  * Requirements: 12.5, 10.2
  */
 
+import { randomUUID } from "node:crypto";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import type {
@@ -374,7 +375,7 @@ export class RagSystem {
       }
     } else {
       const newPattern: ResolutionPattern = {
-        id: `pattern_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        id: `pattern_${randomUUID()}`,
         problemType: problem.type,
         problemSignature,
         solution,

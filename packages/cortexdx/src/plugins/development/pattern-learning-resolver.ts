@@ -1,11 +1,12 @@
 /**
  * Pattern Learning Problem Resolver
  * Requirements: 16.1, 16.3, 16.5
- * 
+ *
  * Integrates pattern learning with problem resolution for automatic solution application
  * and continuous learning from successful fixes.
  */
 
+import { randomUUID } from "node:crypto";
 import type { EnhancedPatternMatcher, PatternMatch } from "../../learning/pattern-matcher.js";
 import type { EnhancedPatternStorage, ResolutionPattern } from "../../storage/pattern-storage.js";
 import type {
@@ -205,7 +206,7 @@ export async function learnFromSuccess(
     } else {
         // Create new pattern
         const newPattern: ResolutionPattern = {
-            id: `pattern_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            id: `pattern_${randomUUID()}`,
             problemType: problem.type,
             problemSignature,
             solution,

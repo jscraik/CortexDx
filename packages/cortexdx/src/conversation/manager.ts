@@ -4,6 +4,7 @@
  * Enhanced with persistent storage for cross-session learning
  */
 
+import { randomUUID } from "node:crypto";
 import type {
     ChatMessage,
     ConversationResponse,
@@ -47,7 +48,7 @@ export class ConversationManager {
         intent: string,
         context?: string
     ): Promise<ConversationSession> {
-        const sessionId = `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const sessionId = `conv-${randomUUID()}`;
 
         const session: ConversationSession = {
             id: sessionId,

@@ -4,6 +4,8 @@
  * Requirements: 6.4, 7.1, 10.5
  */
 
+import { randomUUID } from "node:crypto";
+
 export interface AuditEntry {
   id: string;
   timestamp: Date;
@@ -81,7 +83,7 @@ export class AuditLogger {
   }
 
   private generateId(): string {
-    return `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `audit-${randomUUID()}`;
   }
 }
 
@@ -131,7 +133,7 @@ export class SecurityMonitor {
   }
 
   private generateId(): string {
-    return `alert-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `alert-${randomUUID()}`;
   }
 
   private mapSeverity(
@@ -285,6 +287,6 @@ export class ComplianceReporter {
   }
 
   private generateId(): string {
-    return `report-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `report-${randomUUID()}`;
   }
 }

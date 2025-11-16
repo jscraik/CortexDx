@@ -40,9 +40,7 @@ export function createInspectorSession(
     if (sharedSession) return sharedSession;
     const provided = providedSessionId?.trim();
     if (provided) return provided;
-    return `cortexdx-${Date.now().toString(36)}-${Math.random()
-      .toString(36)
-      .slice(2, 10)}`;
+    return `cortexdx-${randomUUID()}`;
   };
 
   const sessionHeaders: HeadersMap = {

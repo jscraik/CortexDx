@@ -59,26 +59,37 @@ export class OwaspSecurityScanner {
   }
 
   async scan(ctx: DiagnosticContext): Promise<SecurityScanResult> {
-    const vulnerabilities: VulnerabilityReport[] = [];
-    const timestamp = new Date();
+    try {
+      const vulnerabilities: VulnerabilityReport[] = [];
+      const timestamp = new Date();
 
-    for (const rule of this.detectionRules) {
-      const results = await rule.check(ctx);
-      vulnerabilities.push(...results);
+      for (const rule of this.detectionRules) {
+        try {
+          const results = await rule.check(ctx);
+          vulnerabilities.push(...results);
+        } catch (error) {
+          // Log but don't fail entire scan if one rule fails
+          const ruleName = rule.constructor.name;
+          console.warn(`[security-validator] Rule ${ruleName} failed:`, error);
+        }
+      }
+
+      const score = this.calculateScore(vulnerabilities);
+      const passed = score >= 70;
+      const recommendations = this.generateRecommendations(vulnerabilities);
+
+      return {
+        endpoint: ctx.endpoint,
+        timestamp,
+        vulnerabilities,
+        score,
+        passed,
+        recommendations,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Security scan failed for ${ctx.endpoint}: ${message}`);
     }
-
-    const score = this.calculateScore(vulnerabilities);
-    const passed = score >= 70;
-    const recommendations = this.generateRecommendations(vulnerabilities);
-
-    return {
-      endpoint: ctx.endpoint,
-      timestamp,
-      vulnerabilities,
-      score,
-      passed,
-      recommendations,
-    };
   }
 
   private initializeRules(): SecurityRule[] {
@@ -93,29 +104,41 @@ export class OwaspSecurityScanner {
   }
 
   private calculateScore(vulns: VulnerabilityReport[]): number {
-    if (vulns.length === 0) return 100;
+    try {
+      if (vulns.length === 0) return 100;
 
-    const weights = { critical: 25, high: 15, medium: 8, low: 3 };
-    const totalDeductions = vulns.reduce(
-      (sum, v) => sum + weights[v.severity],
-      0,
-    );
+      const weights = { critical: 25, high: 15, medium: 8, low: 3 };
+      const totalDeductions = vulns.reduce(
+        (sum, v) => sum + weights[v.severity],
+        0,
+      );
 
-    return Math.max(0, 100 - totalDeductions);
+      return Math.max(0, 100 - totalDeductions);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[security-validator] Score calculation failed: ${message}`);
+      return 0; // Return worst score on error
+    }
   }
 
   private generateRecommendations(
     vulns: VulnerabilityReport[],
   ): SecurityRecommendation[] {
-    const recommendations: SecurityRecommendation[] = [];
-    const categories = new Set(vulns.map((v) => v.category));
+    try {
+      const recommendations: SecurityRecommendation[] = [];
+      const categories = new Set(vulns.map((v) => v.category));
 
-    for (const category of categories) {
-      const rec = this.getRecommendationForCategory(category);
-      if (rec) recommendations.push(rec);
+      for (const category of categories) {
+        const rec = this.getRecommendationForCategory(category);
+        if (rec) recommendations.push(rec);
+      }
+
+      return recommendations;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[security-validator] Recommendation generation failed: ${message}`);
+      return []; // Return empty recommendations on error
     }
-
-    return recommendations;
   }
 
   private getRecommendationForCategory(
@@ -222,39 +245,49 @@ export class SecurityValidator {
   }
 
   async validate(ctx: DiagnosticContext): Promise<Finding[]> {
-    const scanResult = await this.scanner.scan(ctx);
-    return this.convertToFindings(scanResult);
+    try {
+      const scanResult = await this.scanner.scan(ctx);
+      return this.convertToFindings(scanResult);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Security validation failed for ${ctx.endpoint}: ${message}`);
+    }
   }
 
   private convertToFindings(result: SecurityScanResult): Finding[] {
-    const findings: Finding[] = [];
+    try {
+      const findings: Finding[] = [];
 
-    for (const vuln of result.vulnerabilities) {
+      for (const vuln of result.vulnerabilities) {
+        findings.push({
+          id: vuln.id,
+          area: "security",
+          severity: this.mapSeverity(vuln.severity),
+          title: vuln.title,
+          description: `${vuln.description}\n\nRecommendation: ${vuln.recommendation}`,
+          evidence: vuln.evidence.map((ref) => ({ type: "url", ref })),
+          tags: [vuln.category, "owasp"],
+          confidence: vuln.confidence,
+        });
+      }
+
       findings.push({
-        id: vuln.id,
+        id: "security-score",
         area: "security",
-        severity: this.mapSeverity(vuln.severity),
-        title: vuln.title,
-        description: `${vuln.description}\n\nRecommendation: ${vuln.recommendation}`,
-        evidence: vuln.evidence.map((ref) => ({ type: "url", ref })),
-        tags: [vuln.category, "owasp"],
-        confidence: vuln.confidence,
+        severity: result.passed ? "info" : "major",
+        title: `Security Score: ${result.score}/100`,
+        description: result.passed
+          ? "Security scan passed with acceptable score"
+          : "Security scan identified critical issues requiring attention",
+        evidence: [{ type: "url", ref: result.endpoint }],
+        confidence: 0.95,
       });
+
+      return findings;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to convert security scan results to findings: ${message}`);
     }
-
-    findings.push({
-      id: "security-score",
-      area: "security",
-      severity: result.passed ? "info" : "major",
-      title: `Security Score: ${result.score}/100`,
-      description: result.passed
-        ? "Security scan passed with acceptable score"
-        : "Security scan identified critical issues requiring attention",
-      evidence: [{ type: "url", ref: result.endpoint }],
-      confidence: 0.95,
-    });
-
-    return findings;
   }
 
   private mapSeverity(
@@ -316,45 +349,55 @@ class InjectionDetectionRule implements SecurityRule {
 
 class AuthenticationRule implements SecurityRule {
   async check(ctx: DiagnosticContext): Promise<VulnerabilityReport[]> {
-    const vulnerabilities: VulnerabilityReport[] = [];
+    try {
+      const vulnerabilities: VulnerabilityReport[] = [];
 
-    if (!ctx.headers || Object.keys(ctx.headers).length === 0) {
-      vulnerabilities.push({
-        id: "owasp-a07-no-auth",
-        category: "broken-auth",
-        severity: "medium",
-        title: "No Authentication Headers Detected",
-        description: "Server may lack proper authentication",
-        cwe: "CWE-306",
-        recommendation: "Implement OAuth 2.0 or API key authentication",
-        confidence: 0.7,
-        evidence: [ctx.endpoint],
-      });
+      if (!ctx.headers || Object.keys(ctx.headers).length === 0) {
+        vulnerabilities.push({
+          id: "owasp-a07-no-auth",
+          category: "broken-auth",
+          severity: "medium",
+          title: "No Authentication Headers Detected",
+          description: "Server may lack proper authentication",
+          cwe: "CWE-306",
+          recommendation: "Implement OAuth 2.0 or API key authentication",
+          confidence: 0.7,
+          evidence: [ctx.endpoint],
+        });
+      }
+
+      return vulnerabilities;
+    } catch (error) {
+      console.warn("[security-validator] AuthenticationRule check failed:", error);
+      return [];
     }
-
-    return vulnerabilities;
   }
 }
 
 class SensitiveDataRule implements SecurityRule {
   async check(ctx: DiagnosticContext): Promise<VulnerabilityReport[]> {
-    const vulnerabilities: VulnerabilityReport[] = [];
+    try {
+      const vulnerabilities: VulnerabilityReport[] = [];
 
-    if (ctx.endpoint.startsWith("http://")) {
-      vulnerabilities.push({
-        id: "owasp-a02-no-tls",
-        category: "sensitive-data",
-        severity: "high",
-        title: "Unencrypted Connection",
-        description: "Using HTTP instead of HTTPS",
-        cwe: "CWE-319",
-        recommendation: "Use HTTPS/TLS for all connections",
-        confidence: 1.0,
-        evidence: [ctx.endpoint],
-      });
+      if (ctx.endpoint.startsWith("http://")) {
+        vulnerabilities.push({
+          id: "owasp-a02-no-tls",
+          category: "sensitive-data",
+          severity: "high",
+          title: "Unencrypted Connection",
+          description: "Using HTTP instead of HTTPS",
+          cwe: "CWE-319",
+          recommendation: "Use HTTPS/TLS for all connections",
+          confidence: 1.0,
+          evidence: [ctx.endpoint],
+        });
+      }
+
+      return vulnerabilities;
+    } catch (error) {
+      console.warn("[security-validator] SensitiveDataRule check failed:", error);
+      return [];
     }
-
-    return vulnerabilities;
   }
 }
 
@@ -429,22 +472,27 @@ class SecurityMisconfigRule implements SecurityRule {
 
 class LoggingMonitoringRule implements SecurityRule {
   async check(ctx: DiagnosticContext): Promise<VulnerabilityReport[]> {
-    const vulnerabilities: VulnerabilityReport[] = [];
+    try {
+      const vulnerabilities: VulnerabilityReport[] = [];
 
-    if (!ctx.logger) {
-      vulnerabilities.push({
-        id: "owasp-a09-logging",
-        category: "insufficient-logging",
-        severity: "low",
-        title: "Insufficient Logging",
-        description: "No logging mechanism detected",
-        cwe: "CWE-778",
-        recommendation: "Implement comprehensive security event logging",
-        confidence: 0.6,
-        evidence: [ctx.endpoint],
-      });
+      if (!ctx.logger) {
+        vulnerabilities.push({
+          id: "owasp-a09-logging",
+          category: "insufficient-logging",
+          severity: "low",
+          title: "Insufficient Logging",
+          description: "No logging mechanism detected",
+          cwe: "CWE-778",
+          recommendation: "Implement comprehensive security event logging",
+          confidence: 0.6,
+          evidence: [ctx.endpoint],
+        });
+      }
+
+      return vulnerabilities;
+    } catch (error) {
+      console.warn("[security-validator] LoggingMonitoringRule check failed:", error);
+      return [];
     }
-
-    return vulnerabilities;
   }
 }

@@ -4,6 +4,7 @@
  * Requirements: 17.2, 17.3, 17.4
  */
 
+import { randomUUID } from "node:crypto";
 import {
   BUILTIN_PLUGINS,
   DEVELOPMENT_PLUGINS,
@@ -247,9 +248,7 @@ export class PluginOrchestrator {
   ): PluginWorkflow {
     const { id, ...rest } = definition;
     const workflow: PluginWorkflow = {
-      id:
-        id ??
-        `workflow-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      id: id ?? `workflow-${randomUUID()}`,
       ...rest,
     };
 

@@ -4,6 +4,7 @@
  * Requirements: 6.4, 7.1, 10.5
  */
 
+import { randomUUID } from "node:crypto";
 import {
   AuditLogger,
   ComplianceReporter,
@@ -196,7 +197,7 @@ export class ThreatDetectionEngine {
   }
 
   private generateId(): string {
-    return `threat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `threat-${randomUUID()}`;
   }
 }
 

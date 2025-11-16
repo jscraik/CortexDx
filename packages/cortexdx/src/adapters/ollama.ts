@@ -3,6 +3,7 @@
  * Provides local LLM capabilities through Ollama with model management and conversation support
  */
 
+import { randomUUID } from "node:crypto";
 import { safeParseJson } from "../utils/json.js";
 import {
   getDefaultOllamaBaseUrl,
@@ -120,18 +121,23 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
 
   // Basic LlmAdapter interface implementation
   async complete(prompt: string, maxTokens?: number): Promise<string> {
-    const response = await this.makeRequest("/api/generate", {
-      model: this.config.defaultModel,
-      prompt,
-      stream: false,
-      options: {
-        num_predict: maxTokens || 2048,
-        temperature: this.config.temperature,
-        seed: this.config.deterministicSeed,
-      },
-    });
+    try {
+      const response = await this.makeRequest("/api/generate", {
+        model: this.config.defaultModel,
+        prompt,
+        stream: false,
+        options: {
+          num_predict: maxTokens || 2048,
+          temperature: this.config.temperature,
+          seed: this.config.deterministicSeed,
+        },
+      });
 
-    return extractResponseText(response);
+      return extractResponseText(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Ollama completion failed: ${message}`);
+    }
   }
 
   // Enhanced adapter methods
@@ -161,8 +167,13 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
   }
 
   async unloadModel(modelId: string): Promise<void> {
-    // Ollama doesn't have explicit unload, but we can track loaded models
-    this.loadedModels.delete(modelId);
+    try {
+      // Ollama doesn't have explicit unload, but we can track loaded models
+      this.loadedModels.delete(modelId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to unload model ${modelId}: ${message}`);
+    }
   }
 
   async getSupportedModels(): Promise<string[]> {
@@ -198,31 +209,36 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
   async startConversation(
     context: ConversationContext,
   ): Promise<ConversationId> {
-    const conversationId = `ollama-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const model = this.selectModelForContext(context);
+    try {
+      const conversationId = `ollama-${randomUUID()}`;
+      const model = this.selectModelForContext(context);
 
-    const session: ConversationSession = {
-      id: conversationId,
-      context,
-      messages: [],
-      model,
-      startTime: Date.now(),
-      lastActivity: Date.now(),
-      seed: context.deterministicSeed ?? this.config.deterministicSeed,
-    };
+      const session: ConversationSession = {
+        id: conversationId,
+        context,
+        messages: [],
+        model,
+        startTime: Date.now(),
+        lastActivity: Date.now(),
+        seed: context.deterministicSeed ?? this.config.deterministicSeed,
+      };
 
-    // Add system message based on context
-    const systemMessage = this.createSystemMessage(context);
-    if (systemMessage) {
-      session.messages.push({
-        role: "system",
-        content: systemMessage,
-        timestamp: Date.now(),
-      });
+      // Add system message based on context
+      const systemMessage = this.createSystemMessage(context);
+      if (systemMessage) {
+        session.messages.push({
+          role: "system",
+          content: systemMessage,
+          timestamp: Date.now(),
+        });
+      }
+
+      this.conversations.set(conversationId, session);
+      return conversationId;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to start conversation: ${message}`);
     }
-
-    this.conversations.set(conversationId, session);
-    return conversationId;
   }
 
   async continueConversation(
@@ -276,12 +292,18 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
   }
 
   async endConversation(id: ConversationId): Promise<void> {
-    this.conversations.delete(id);
+    try {
+      this.conversations.delete(id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to end conversation ${id}: ${message}`);
+    }
   }
 
   // Specialized completion methods
   async analyzeCode(code: string, context: string): Promise<CodeAnalysis> {
-    const prompt = `Analyze the following code for issues, suggestions, and metrics:
+    try {
+      const prompt = `Analyze the following code for issues, suggestions, and metrics:
 
 Context: ${context}
 
@@ -298,23 +320,27 @@ Please provide a detailed analysis including:
 
 Respond in JSON format.`;
 
-    const response = await this.complete(prompt, 1024);
+      const response = await this.complete(prompt, 1024);
 
-    try {
-      return safeParseJson<CodeAnalysis>(response, "ollama code analysis");
-    } catch {
-      // Fallback if JSON parsing fails
-      return {
-        issues: [],
-        suggestions: [],
-        metrics: {
-          complexity: 0.5,
-          maintainability: 0.5,
-          testability: 0.5,
-          performance: 0.5,
-        },
-        confidence: 0.3,
-      };
+      try {
+        return safeParseJson<CodeAnalysis>(response, "ollama code analysis");
+      } catch {
+        // Fallback if JSON parsing fails
+        return {
+          issues: [],
+          suggestions: [],
+          metrics: {
+            complexity: 0.5,
+            maintainability: 0.5,
+            testability: 0.5,
+            performance: 0.5,
+          },
+          confidence: 0.3,
+        };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Code analysis failed: ${message}`);
     }
   }
 
@@ -322,7 +348,8 @@ Respond in JSON format.`;
     problem: Problem,
     constraints: Constraints,
   ): Promise<Solution> {
-    const prompt = `Generate a solution for the following problem:
+    try {
+      const prompt = `Generate a solution for the following problem:
 
 Problem: ${problem.description}
 User Level: ${problem.userLevel}
@@ -347,40 +374,45 @@ Please provide a comprehensive solution including:
 
 Respond in JSON format.`;
 
-    const response = await this.complete(prompt, 2048);
+      const response = await this.complete(prompt, 2048);
 
-    try {
-      return safeParseJson<Solution>(response, "ollama solution");
-    } catch {
-      // Fallback solution
-      return {
-        id: `solution-${Date.now()}`,
-        type: "manual",
-        confidence: 0.5,
-        description: "Manual investigation required",
-        userFriendlyDescription:
-          "This issue requires manual investigation and resolution",
-        steps: [],
-        codeChanges: [],
-        configChanges: [],
-        testingStrategy: {
+      try {
+        return safeParseJson<Solution>(response, "ollama solution");
+      } catch {
+        // Fallback solution
+        return {
+          id: `solution-${randomUUID()}`,
           type: "manual",
-          tests: [],
-          coverage: 0,
-          automated: false,
-        },
-        rollbackPlan: {
+          confidence: 0.5,
+          description: "Manual investigation required",
+          userFriendlyDescription:
+            "This issue requires manual investigation and resolution",
           steps: [],
-          automated: false,
-          backupRequired: true,
-          riskLevel: "medium",
-        },
-      };
+          codeChanges: [],
+          configChanges: [],
+          testingStrategy: {
+            type: "manual",
+            tests: [],
+            coverage: 0,
+            automated: false,
+          },
+          rollbackPlan: {
+            steps: [],
+            automated: false,
+            backupRequired: true,
+            riskLevel: "medium",
+          },
+        };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Solution generation failed: ${message}`);
     }
   }
 
   async explainError(error: Error, context: Context): Promise<Explanation> {
-    const prompt = `Explain the following error in a clear, helpful way:
+    try {
+      const prompt = `Explain the following error in a clear, helpful way:
 
 Error: ${error.message}
 Stack: ${error.stack || "No stack trace available"}
@@ -397,27 +429,31 @@ Please provide:
 
 Respond in JSON format.`;
 
-    const response = await this.complete(prompt, 1024);
+      const response = await this.complete(prompt, 1024);
 
-    try {
-      return safeParseJson<Explanation>(response, "ollama error explanation");
-    } catch {
-      // Fallback explanation
-      return {
-        summary: "An error occurred",
-        details: error.message,
-        userFriendlyExplanation:
-          "Something went wrong. Please check the error message for more details.",
-        technicalDetails:
-          error.stack || "No additional technical details available",
-        relatedConcepts: [],
-        nextSteps: [
-          "Check the error message",
-          "Review the configuration",
-          "Consult documentation",
-        ],
-        confidence: 0.3,
-      };
+      try {
+        return safeParseJson<Explanation>(response, "ollama error explanation");
+      } catch {
+        // Fallback explanation
+        return {
+          summary: "An error occurred",
+          details: error.message,
+          userFriendlyExplanation:
+            "Something went wrong. Please check the error message for more details.",
+          technicalDetails:
+            error.stack || "No additional technical details available",
+          relatedConcepts: [],
+          nextSteps: [
+            "Check the error message",
+            "Review the configuration",
+            "Consult documentation",
+          ],
+          confidence: 0.3,
+        };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error explanation failed: ${message}`);
     }
   }
 
@@ -551,14 +587,19 @@ Respond in JSON format.`;
   }
 
   private buildUrl(endpoint: string): string {
-    const base = this.config.baseUrl.replace(/\/+$/, "");
-    let path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    if (base.endsWith("/api") && path.startsWith("/api/")) {
-      path = path.slice(4);
-    } else if (/\/v\d+$/.test(base) && path.startsWith("/api/")) {
-      path = path.slice(4);
+    try {
+      const base = this.config.baseUrl.replace(/\/+$/, "");
+      let path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+      if (base.endsWith("/api") && path.startsWith("/api/")) {
+        path = path.slice(4);
+      } else if (/\/v\d+$/.test(base) && path.startsWith("/api/")) {
+        path = path.slice(4);
+      }
+      return `${base}${path}`;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to build URL for endpoint ${endpoint}: ${message}`);
     }
-    return `${base}${path}`;
   }
 }
 

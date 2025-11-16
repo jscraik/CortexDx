@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
+import { randomUUID } from "node:crypto";
 import { getTimeoutWithOverride } from "../config/timeouts.js";
 import type { DevelopmentContext, Finding } from "../types.js";
 import {
@@ -102,7 +103,7 @@ export class InspectorAdapter {
    * Run diagnostic tests on an MCP endpoint using Inspector
    */
   async diagnose(endpoint: string, probes: string[]): Promise<InspectorReport> {
-    const jobId = `inspector_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const jobId = `inspector_${randomUUID()}`;
     const startedAt = new Date().toISOString();
     const traceId = this.ctx.sessionId ?? jobId;
 
@@ -168,42 +169,54 @@ export class InspectorAdapter {
    * Convert Inspector findings to CortexDx Finding format
    */
   convertFindings(inspectorFindings: InspectorFinding[]): Finding[] {
-    return inspectorFindings.map((finding) => ({
-      id: `inspector_${finding.id}`,
-      area: this.mapInspectorArea(finding.area),
-      severity: finding.severity,
-      title: `Inspector: ${finding.area}`,
-      description: finding.description,
-      evidence: finding.evidence
-        ? [
-            {
-              type: "log",
-              ref: finding.evidence.path || "unknown",
-              lines: finding.evidence.line
-                ? [finding.evidence.line, finding.evidence.line]
-                : undefined,
-            },
-          ]
-        : [],
-      recommendation: finding.remediation?.suggestion,
-      tags: ["inspector", finding.area, "auto-generated"],
-      inspectorData: finding.raw ?? finding,
-      requiresLLMAnalysis: true, // Flag for enhanced processing
-    }));
+    try {
+      return inspectorFindings.map((finding) => ({
+        id: `inspector_${finding.id}`,
+        area: this.mapInspectorArea(finding.area),
+        severity: finding.severity,
+        title: `Inspector: ${finding.area}`,
+        description: finding.description,
+        evidence: finding.evidence
+          ? [
+              {
+                type: "log",
+                ref: finding.evidence.path || "unknown",
+                lines: finding.evidence.line
+                  ? [finding.evidence.line, finding.evidence.line]
+                  : undefined,
+              },
+            ]
+          : [],
+        recommendation: finding.remediation?.suggestion,
+        tags: ["inspector", finding.area, "auto-generated"],
+        inspectorData: finding.raw ?? finding,
+        requiresLLMAnalysis: true, // Flag for enhanced processing
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.ctx.logger?.(`[Inspector] Failed to convert findings: ${message}`);
+      throw new Error(`Failed to convert Inspector findings: ${message}`);
+    }
   }
 
   /**
    * Run self-diagnostic on the running CortexDx instance
    */
   async selfDiagnose(): Promise<InspectorReport> {
-    const selfEndpoint =
-      this.ctx.endpoint ||
-      process.env.CORTEXDX_INTERNAL_ENDPOINT ||
-      "http://127.0.0.1:5001";
-    const probes = ["handshake", "protocol", "security", "performance", "sse"];
+    try {
+      const selfEndpoint =
+        this.ctx.endpoint ||
+        process.env.CORTEXDX_INTERNAL_ENDPOINT ||
+        "http://127.0.0.1:5001";
+      const probes = ["handshake", "protocol", "security", "performance", "sse"];
 
-    this.ctx.logger?.(`[Inspector] Running self-diagnosis on ${selfEndpoint}`);
-    return this.diagnose(selfEndpoint, probes);
+      this.ctx.logger?.(`[Inspector] Running self-diagnosis on ${selfEndpoint}`);
+      return this.diagnose(selfEndpoint, probes);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.ctx.logger?.(`[Inspector] Self-diagnosis failed: ${message}`);
+      throw new Error(`Self-diagnosis failed: ${message}`);
+    }
   }
 
   private async runInspectorCli(
@@ -654,55 +667,68 @@ export class InspectorAdapter {
     inspectorData: InspectorJsonPayload,
     timestamp: number,
   ): InspectorFinding[] {
-    const findings: InspectorFinding[] = [];
+    try {
+      const findings: InspectorFinding[] = [];
 
-    // Handle different Inspector output formats
-    if (inspectorData.findings && Array.isArray(inspectorData.findings)) {
-      // Direct findings array
-      for (const finding of inspectorData.findings) {
+      // Handle different Inspector output formats
+      if (inspectorData.findings && Array.isArray(inspectorData.findings)) {
+        // Direct findings array
+        for (const finding of inspectorData.findings) {
+          findings.push({
+            id: finding.id || `inspector_${timestamp}_${findings.length}`,
+            severity: finding.severity || "info",
+            area: finding.area || "protocol",
+            description: finding.description || "Inspector finding",
+            evidence: finding.evidence || { raw: finding },
+            remediation: finding.remediation,
+            raw: finding,
+          });
+        }
+      } else if (inspectorData.probes) {
+        // Probe-based results
+        for (const [probeName, probeResult] of Object.entries(
+          inspectorData.probes,
+        )) {
+          const result: InspectorProbeResult = probeResult;
+          findings.push({
+            id: `probe_${probeName}_${timestamp}`,
+            severity:
+              result.status === "passed"
+                ? "info"
+                : result.status === "failed"
+                  ? "major"
+                  : "minor",
+            area: this.mapProbeToArea(probeName),
+            description: result.message || `Probe ${probeName}: ${result.status}`,
+            evidence: { raw: result },
+            raw: result,
+          });
+        }
+      } else {
+        // Generic result
         findings.push({
-          id: finding.id || `inspector_${timestamp}_${findings.length}`,
-          severity: finding.severity || "info",
-          area: finding.area || "protocol",
-          description: finding.description || "Inspector finding",
-          evidence: finding.evidence || { raw: finding },
-          remediation: finding.remediation,
-          raw: finding,
+          id: `inspector_result_${timestamp}`,
+          severity: "info",
+          area: "protocol",
+          description: "MCP Inspector analysis completed",
+          evidence: { raw: inspectorData },
+          raw: inspectorData,
         });
       }
-    } else if (inspectorData.probes) {
-      // Probe-based results
-      for (const [probeName, probeResult] of Object.entries(
-        inspectorData.probes,
-      )) {
-        const result: InspectorProbeResult = probeResult;
-        findings.push({
-          id: `probe_${probeName}_${timestamp}`,
-          severity:
-            result.status === "passed"
-              ? "info"
-              : result.status === "failed"
-                ? "major"
-                : "minor",
-          area: this.mapProbeToArea(probeName),
-          description: result.message || `Probe ${probeName}: ${result.status}`,
-          evidence: { raw: result },
-          raw: result,
-        });
-      }
-    } else {
-      // Generic result
-      findings.push({
-        id: `inspector_result_${timestamp}`,
-        severity: "info",
+
+      return findings;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.ctx.logger?.(`[Inspector] Failed to convert Inspector data to findings: ${message}`);
+      // Return a safe default finding on error
+      return [{
+        id: `inspector_error_${timestamp}`,
+        severity: "minor",
         area: "protocol",
-        description: "MCP Inspector analysis completed",
+        description: `Failed to parse Inspector data: ${message}`,
         evidence: { raw: inspectorData },
-        raw: inspectorData,
-      });
+      }];
     }
-
-    return findings;
   }
 
   /**
@@ -1171,25 +1197,37 @@ export class InspectorAdapter {
   }
 
   private mapProbes(probeNames: string[]): InspectorProbeConfig[] {
-    return probeNames.map((name) => ({
-      kind: name as InspectorProbeConfig["kind"],
-      args: {},
-    }));
+    try {
+      return probeNames.map((name) => ({
+        kind: name as InspectorProbeConfig["kind"],
+        args: {},
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.ctx.logger?.(`[Inspector] Failed to map probes: ${message}`);
+      return [];
+    }
   }
 
   private mapInspectorArea(inspectorArea: string): Finding["area"] {
-    const areaMap: Record<string, Finding["area"]> = {
-      protocol: "protocol",
-      schema: "protocol",
-      auth: "security",
-      streaming: "performance",
-      cors: "protocol",
-      proxy: "performance",
-      perf: "performance",
-      security: "security",
-    };
+    try {
+      const areaMap: Record<string, Finding["area"]> = {
+        protocol: "protocol",
+        schema: "protocol",
+        auth: "security",
+        streaming: "performance",
+        cors: "protocol",
+        proxy: "performance",
+        perf: "performance",
+        security: "security",
+      };
 
-    return areaMap[inspectorArea] || "protocol";
+      return areaMap[inspectorArea] || "protocol";
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.ctx.logger?.(`[Inspector] Failed to map inspector area: ${message}`);
+      return "protocol"; // Safe default
+    }
   }
 
   private async resolveInspectorProxyPort(): Promise<number> {

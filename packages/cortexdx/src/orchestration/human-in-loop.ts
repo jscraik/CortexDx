@@ -4,6 +4,7 @@
  * Requirements: 18.4
  */
 
+import { randomUUID } from "node:crypto";
 import type { Finding } from "../types.js";
 import type { WorkflowState } from "./agent-orchestrator.js";
 
@@ -212,7 +213,7 @@ export class HumanInLoopManager {
         }
     ): UserPrompt {
         return {
-            id: `prompt-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            id: `prompt-${randomUUID()}`,
             type,
             title,
             message,
