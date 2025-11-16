@@ -3,7 +3,7 @@
  * Tests for health check, monitoring, and server endpoints
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 describe('Server Health Endpoints', () => {
