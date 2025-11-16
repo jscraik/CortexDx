@@ -225,7 +225,7 @@ See [Basics: Diagnostic Suites](basics.md#diagnostic-suites) for complete suite 
 
 **In CI/CD:** Configure failure thresholds based on severity.
 
-See [CI/CD: Exit Codes](ci-cd.md#exit-codes) for automation details.
+See [Exit Codes](../README.md#exit-codes) for automation details.
 
 ### Can I create custom diagnostic plugins?
 
