@@ -6,6 +6,7 @@ import {
   formatHeadersForCli,
   resolveInternalHeaders,
 } from "../utils/internal-endpoint.js";
+import { getTimeoutWithOverride } from "../config/timeouts.js";
 
 const DEFAULT_INSPECTOR_RUNTIME_MS = 60000;
 const MIN_INSPECTOR_RUNTIME_MS = 1000;
@@ -268,7 +269,8 @@ export class InspectorAdapter {
         return;
       }
 
-      const wrapperArgs = ["--endpoint", mcpEndpoint, "--timeout", "30"];
+      const stdioTimeout = Math.floor(getTimeoutWithOverride('stdioWrapper') / 1000);
+      const wrapperArgs = ["--endpoint", mcpEndpoint, "--timeout", stdioTimeout.toString()];
       if (process.env.CORTEXDX_INSPECTOR_VERBOSE === "1") {
         wrapperArgs.push("--verbose");
       }
@@ -279,11 +281,12 @@ export class InspectorAdapter {
       }
 
       // Build args for MCP Inspector (using stdio transport)
+      const inspectorTimeout = getTimeoutWithOverride('inspector');
       const inspectorArgs = [
         "diagnose",
         "--transport",
         "stdio",
-        "--timeout=30000",
+        `--timeout=${inspectorTimeout}`,
         "--log-level=error",
         "--json",
         "--no-proxy",
@@ -1056,7 +1059,8 @@ export class InspectorAdapter {
     };
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeoutMs = getTimeoutWithOverride('handshake');
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
       const response = await this.ctx.request<{ result?: unknown }>(

@@ -162,3 +162,193 @@ describe("InspectorAdapter handshake verification", () => {
     expect(finding.evidence.raw.handshakeError).toContain("network down");
   });
 });
+
+describe("InspectorAdapter diagnose", () => {
+  it("should successfully run diagnostics and generate report", async () => {
+    const adapter = new InspectorAdapter({
+      ...baseContext(),
+      request: async () => ({
+        jsonrpc: "2.0",
+        result: {
+          protocolVersion: "2024-11-05",
+          serverInfo: { name: "TestServer", version: "1.0.0" },
+        },
+      }),
+    });
+
+    const report = await adapter.diagnose("https://example.com", ["handshake", "security"]);
+
+    expect(report).toBeDefined();
+    expect(report.jobId).toContain("inspector_");
+    expect(report.endpoint).toBe("https://example.com");
+    expect(report.findings).toBeDefined();
+    expect(Array.isArray(report.findings)).toBe(true);
+    expect(report.metrics.probesRun).toBe(2);
+  });
+
+  it("should handle invalid endpoint gracefully", async () => {
+    const adapter = new InspectorAdapter(baseContext());
+
+    const report = await adapter.diagnose("invalid-endpoint", ["handshake"]);
+
+    expect(report).toBeDefined();
+    expect(report.findings.length).toBeGreaterThan(0);
+    expect(report.findings[0].severity).toBe("blocker");
+    expect(report.metrics.failures).toBe(1);
+  });
+
+  it("should generate mock findings in test mode", async () => {
+    const adapter = new InspectorAdapter(baseContext());
+
+    const report = await adapter.diagnose("http://test.com", ["security", "performance"]);
+
+    expect(report).toBeDefined();
+    expect(report.findings.length).toBe(2);
+    expect(report.findings.some(f => f.area === "security")).toBe(true);
+    expect(report.findings.some(f => f.area === "perf")).toBe(true);
+  });
+});
+
+describe("InspectorAdapter probe mapping", () => {
+  it("should map probe names to correct areas", () => {
+    const adapter = new InspectorAdapter(baseContext());
+
+    const mapProbeToArea = (adapter as unknown as {
+      mapProbeToArea(probeName: string): string;
+    }).mapProbeToArea;
+
+    expect(mapProbeToArea.call(adapter, "handshake")).toBe("protocol");
+    expect(mapProbeToArea.call(adapter, "security")).toBe("security");
+    expect(mapProbeToArea.call(adapter, "performance")).toBe("perf");
+    expect(mapProbeToArea.call(adapter, "stream_sse")).toBe("streaming");
+    expect(mapProbeToArea.call(adapter, "cors_preflight")).toBe("cors");
+  });
+});
+
+describe("InspectorAdapter finding conversion", () => {
+  it("should convert inspector findings to CortexDx format", () => {
+    const adapter = new InspectorAdapter(baseContext());
+
+    const inspectorFindings = [
+      {
+        id: "test-1",
+        severity: "major" as const,
+        area: "security" as const,
+        description: "Security issue detected",
+        evidence: { raw: { test: "data" }, path: "test.ts", line: 42 },
+        remediation: { suggestion: "Fix the issue" },
+      },
+    ];
+
+    const converted = adapter.convertFindings(inspectorFindings);
+
+    expect(converted.length).toBe(1);
+    expect(converted[0].id).toBe("inspector_test-1");
+    expect(converted[0].severity).toBe("major");
+    expect(converted[0].area).toBe("security");
+    expect(converted[0].title).toBe("Inspector: security");
+    expect(converted[0].description).toBe("Security issue detected");
+    expect(converted[0].recommendation).toBe("Fix the issue");
+    expect(converted[0].tags).toContain("inspector");
+    expect(converted[0].tags).toContain("security");
+    expect(converted[0].requiresLLMAnalysis).toBe(true);
+  });
+
+  it("should handle findings without evidence", () => {
+    const adapter = new InspectorAdapter(baseContext());
+
+    const inspectorFindings = [
+      {
+        id: "test-2",
+        severity: "minor" as const,
+        area: "protocol" as const,
+        description: "Protocol issue",
+        evidence: undefined as any,
+      },
+    ];
+
+    const converted = adapter.convertFindings(inspectorFindings);
+
+    expect(converted.length).toBe(1);
+    expect(converted[0].evidence).toEqual([]);
+  });
+});
+
+describe("InspectorAdapter output parsing", () => {
+  it("should parse JSON output with findings array", () => {
+    const adapter = new InspectorAdapter(baseContext());
+    const output = JSON.stringify({
+      findings: [
+        {
+          id: "json-finding-1",
+          severity: "major",
+          area: "security",
+          description: "Security finding",
+          evidence: { raw: { data: "test" } },
+        },
+      ],
+    });
+
+    const findings = (adapter as unknown as {
+      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
+    }).parseInspectorOutput(output, "https://test.com", []);
+
+    expect(findings.length).toBe(1);
+    expect(findings[0].id).toBe("json-finding-1");
+    expect(findings[0].severity).toBe("major");
+  });
+
+  it("should parse JSON output with probes object", () => {
+    const adapter = new InspectorAdapter(baseContext());
+    const output = JSON.stringify({
+      probes: {
+        handshake: { status: "passed", message: "Handshake successful" },
+        security: { status: "failed", message: "Security check failed" },
+      },
+    });
+
+    const findings = (adapter as unknown as {
+      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
+    }).parseInspectorOutput(output, "https://test.com", []);
+
+    expect(findings.length).toBe(2);
+    expect(findings[0].area).toBe("protocol"); // handshake maps to protocol
+    expect(findings[1].area).toBe("security");
+    expect(findings[1].severity).toBe("major"); // failed status
+  });
+
+  it("should handle port conflict errors", () => {
+    const adapter = new InspectorAdapter(baseContext());
+    const output = "Error: PORT IS IN USE - Proxy server cannot start";
+
+    const findings = (adapter as unknown as {
+      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
+    }).parseInspectorOutput(output, "https://test.com", []);
+
+    expect(findings.length).toBe(1);
+    expect(findings[0].severity).toBe("major");
+    expect(findings[0].description).toContain("proxy port conflict");
+  });
+});
+
+describe("InspectorAdapter self-diagnose", () => {
+  it("should run self-diagnosis on default endpoint", async () => {
+    const adapter = new InspectorAdapter({
+      ...baseContext(),
+      endpoint: "http://localhost:5001",
+      request: async () => ({
+        jsonrpc: "2.0",
+        result: {
+          protocolVersion: "2024-11-05",
+          serverInfo: { name: "CortexDx", version: "1.0.0" },
+        },
+      }),
+    });
+
+    const report = await adapter.selfDiagnose();
+
+    expect(report).toBeDefined();
+    expect(report.endpoint).toBe("http://localhost:5001");
+    expect(report.metrics.probesRun).toBe(5); // handshake, protocol, security, performance, sse
+  });
+});
