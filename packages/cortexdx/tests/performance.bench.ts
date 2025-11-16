@@ -3,7 +3,7 @@
  * Run with: pnpm test:bench or vitest bench
  */
 
-import { describe, bench, beforeAll } from 'vitest';
+import { describe, bench } from 'vitest';
 import { performance } from 'node:perf_hooks';
 
 describe('Performance Benchmarks', () => {
