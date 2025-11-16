@@ -846,7 +846,25 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
 
         if (route.startsWith('/api/v1/diagnostic-session/') && route.endsWith('/revoke') && method === 'POST') {
             // Revoke diagnostic session endpoint
-            const sessionId = route.split('/')[4]; // Extract session ID
+            // Robustly extract session ID from route
+            const segments = route.split('/').filter(Boolean); // Remove empty segments
+            // Expected: ['api', 'v1', 'diagnostic-session', '<sessionId>', 'revoke']
+            if (
+                segments.length !== 5 ||
+                segments[0] !== 'api' ||
+                segments[1] !== 'v1' ||
+                segments[2] !== 'diagnostic-session' ||
+                segments[4] !== 'revoke'
+            ) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Malformed route. Expected /api/v1/diagnostic-session/:sessionId/revoke',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+            const sessionId = segments[3];
             if (!sessionId) {
                 res.writeHead(400);
                 res.end(JSON.stringify({
