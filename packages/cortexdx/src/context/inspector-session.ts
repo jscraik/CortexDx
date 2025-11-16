@@ -1,4 +1,3 @@
-import { safeParseJson } from "../utils/json.js";
 import { randomUUID } from "node:crypto";
 import { sseProbe } from "../adapters/sse.js";
 import type {
@@ -8,6 +7,7 @@ import type {
   TransportState,
   TransportTranscript,
 } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
 
 export interface SharedSessionState {
   sessionId?: string;
@@ -134,7 +134,7 @@ export function createInspectorSession(
       response.status,
     );
     if (shared) {
-      shared.sessionId = sessionId;
+      shared.sessionId = transcript.sessionId;
       shared.initialize = transcript.initialize
         ? { ...transcript.initialize }
         : undefined;
@@ -245,9 +245,12 @@ async function safeJsonParse(
     if (
       typeof parsed === "object" &&
       parsed !== null &&
-      parsed.jsonrpc === "2.0"
+      "jsonrpc" in parsed &&
+      parsed.jsonrpc === "2.0" &&
+      ("id" in parsed || "result" in parsed || "error" in parsed)
     ) {
-      return parsed as JsonRpcResponse;
+      // Type assertion is safe here because we've checked all required properties
+      return parsed as unknown as JsonRpcResponse;
     }
     return {
       jsonrpc: "2.0",

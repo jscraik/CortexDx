@@ -20,7 +20,7 @@ const ctx: DiagnosticContext = {
     const text = await res.text();
     return text as unknown as Record<string, unknown>;
   },
-  jsonrpc: async () => ({ result: "noop" }),
+  jsonrpc: async <T>() => ({ result: "noop" }) as T,
   sseProbe: async () => ({ ok: true }),
   evidence: () => undefined,
   deterministic: true,

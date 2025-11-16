@@ -69,7 +69,11 @@ function getClientIp(req: IncomingMessage): string {
   if (forwarded) {
     const ips =
       typeof forwarded === "string" ? forwarded.split(",") : forwarded;
-    return ips[0].trim();
+    // With noUncheckedIndexedAccess, ips[0] could be undefined
+    // But we know it exists since forwarded is truthy and we split it
+    if (ips.length > 0 && ips[0] !== undefined) {
+      return ips[0].trim();
+    }
   }
 
   // Check X-Real-IP header

@@ -1,12 +1,11 @@
-import { safeParseJson } from "../utils/json.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { safeParseJson } from "../utils/json.js";
 import { resolveCodexContextDir } from "./status-store.js";
-import { hasProperty } from "../utils/type-helpers.js";
 
 const API_KEY_ENV_PRIORITY = [
   "WILDCARD_API_KEY",
@@ -235,14 +234,14 @@ export class DeepContextClient {
       );
       await client.connect(transport);
       // Access private _process property if available (for stderr logging)
-      if (hasProperty(transport, '_process')) {
-        const processObj = transport._process;
-        if (
-          typeof processObj === 'object' && processObj !== null &&
-          hasProperty(processObj, 'stderr')
-        ) {
-          const stderr = processObj.stderr as NodeJS.ReadableStream;
-          stderr?.on("data", (data: Buffer) => {
+      const transportWithProcess = transport as unknown as {
+        _process?: { stderr?: NodeJS.ReadableStream };
+      };
+      if (transportWithProcess._process) {
+        const processObj = transportWithProcess._process;
+        if (processObj.stderr) {
+          const stderr = processObj.stderr;
+          stderr.on("data", (data: Buffer) => {
             const chunk = data.toString();
             stderrChunks.push(chunk);
             this.logger?.(`[DeepContext stderr] ${chunk.trim()}`);

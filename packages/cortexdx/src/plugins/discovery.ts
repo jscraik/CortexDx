@@ -15,8 +15,9 @@ export const DiscoveryPlugin: DiagnosticPlugin = {
           area: "discovery",
           severity: "minor",
           title: "Could not enumerate tools via JSON-RPC",
-          description: "Endpoint did not respond to 'tools/list'. Server may use a different method.",
-          evidence: [{ type: "url", ref: ctx.endpoint }]
+          description:
+            "Endpoint did not respond to 'tools/list'. Server may use a different method.",
+          evidence: [{ type: "url", ref: ctx.endpoint }],
         });
       } else {
         const count = tools.length;
@@ -26,7 +27,7 @@ export const DiscoveryPlugin: DiagnosticPlugin = {
           severity: "info",
           title: `Discovered ${count} tool(s)`,
           description: "Tools retrieved via JSON-RPC 'tools/list'.",
-          evidence: [{ type: "url", ref: ctx.endpoint }]
+          evidence: [{ type: "url", ref: ctx.endpoint }],
         });
       }
     } catch (error) {
@@ -36,11 +37,11 @@ export const DiscoveryPlugin: DiagnosticPlugin = {
         severity: "major",
         title: "Discovery failed",
         description: String(error),
-        evidence: [{ type: "log", ref: "DiscoveryPlugin" }]
+        evidence: [{ type: "log", ref: "DiscoveryPlugin" }],
       });
     }
     return findings;
-  }
+  },
 };
 
 // Enhanced MCP Inspector Plugin extending discovery functionality
@@ -67,7 +68,7 @@ export const EnhancedMcpInspectorPlugin: DiagnosticPlugin = {
           title: "Analysis time exceeded threshold",
           description: `MCP inspection took ${analysisTime}ms, exceeding 30s requirement`,
           evidence: [{ type: "log", ref: "EnhancedMcpInspectorPlugin" }],
-          confidence: 1.0
+          confidence: 1.0,
         });
       } else {
         findings.push({
@@ -77,10 +78,9 @@ export const EnhancedMcpInspectorPlugin: DiagnosticPlugin = {
           title: `MCP inspection completed in ${analysisTime}ms`,
           description: "Analysis completed within performance requirements",
           evidence: [{ type: "url", ref: ctx.endpoint }],
-          confidence: 1.0
+          confidence: 1.0,
         });
       }
-
     } catch (error) {
       findings.push({
         id: "mcp.inspector.error",
@@ -89,15 +89,17 @@ export const EnhancedMcpInspectorPlugin: DiagnosticPlugin = {
         title: "Enhanced MCP inspection failed",
         description: `Inspection error: ${String(error)}`,
         evidence: [{ type: "log", ref: "EnhancedMcpInspectorPlugin" }],
-        confidence: 0.9
+        confidence: 0.9,
       });
     }
 
     return findings;
-  }
+  },
 };
 
-async function performMcpInspection(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function performMcpInspection(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   // Enhanced tool discovery with MCP-specific validation
@@ -123,11 +125,19 @@ async function performMcpInspection(ctx: import("../types.js").DiagnosticContext
   return findings;
 }
 
-async function inspectMcpTools(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function inspectMcpTools(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
-    const toolsResponse = await ctx.jsonrpc<{ tools?: Array<{ name: string, description?: string, inputSchema?: unknown }> }>("tools/list");
+    const toolsResponse = await ctx.jsonrpc<{
+      tools?: Array<{
+        name: string;
+        description?: string;
+        inputSchema?: unknown;
+      }>;
+    }>("tools/list");
     const tools = toolsResponse?.tools || [];
 
     if (tools.length === 0) {
@@ -138,7 +148,7 @@ async function inspectMcpTools(ctx: import("../types.js").DiagnosticContext): Pr
         title: "No tools discovered",
         description: "MCP server reported no available tools",
         evidence: [{ type: "url", ref: ctx.endpoint }],
-        confidence: 0.99
+        confidence: 0.99,
       });
     } else {
       // Validate tool schema compliance
@@ -155,9 +165,10 @@ async function inspectMcpTools(ctx: import("../types.js").DiagnosticContext): Pr
             area: "mcp-tools",
             severity: "major",
             title: `Invalid tool schema: ${tool.name}`,
-            description: "Tool does not conform to MCP tool schema requirements",
+            description:
+              "Tool does not conform to MCP tool schema requirements",
             evidence: [{ type: "url", ref: ctx.endpoint }],
-            confidence: 0.95
+            confidence: 0.95,
           });
         }
       }
@@ -167,9 +178,9 @@ async function inspectMcpTools(ctx: import("../types.js").DiagnosticContext): Pr
         area: "mcp-tools",
         severity: "info",
         title: `Tools inspection: ${validTools} valid, ${invalidTools} invalid`,
-        description: `Discovered ${tools.length} tools with ${(validTools / tools.length * 100).toFixed(1)}% schema compliance`,
+        description: `Discovered ${tools.length} tools with ${((validTools / tools.length) * 100).toFixed(1)}% schema compliance`,
         evidence: [{ type: "url", ref: ctx.endpoint }],
-        confidence: 0.99
+        confidence: 0.99,
       });
     }
   } catch (error) {
@@ -180,18 +191,27 @@ async function inspectMcpTools(ctx: import("../types.js").DiagnosticContext): Pr
       title: "Tool inspection failed",
       description: `Failed to inspect MCP tools: ${String(error)}`,
       evidence: [{ type: "log", ref: "inspectMcpTools" }],
-      confidence: 0.9
+      confidence: 0.9,
     });
   }
 
   return findings;
 }
 
-async function inspectMcpResources(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function inspectMcpResources(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
-    const resourcesResponse = await ctx.jsonrpc<{ resources?: Array<{ uri: string, name?: string, description?: string, mimeType?: string }> }>("resources/list");
+    const resourcesResponse = await ctx.jsonrpc<{
+      resources?: Array<{
+        uri: string;
+        name?: string;
+        description?: string;
+        mimeType?: string;
+      }>;
+    }>("resources/list");
     const resources = resourcesResponse?.resources || [];
 
     findings.push({
@@ -199,9 +219,12 @@ async function inspectMcpResources(ctx: import("../types.js").DiagnosticContext)
       area: "mcp-resources",
       severity: "info",
       title: `Discovered ${resources.length} resource(s)`,
-      description: resources.length > 0 ? "MCP server provides resource access capabilities" : "No resources available",
+      description:
+        resources.length > 0
+          ? "MCP server provides resource access capabilities"
+          : "No resources available",
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.99
+      confidence: 0.99,
     });
 
     // Validate resource URIs and schemas
@@ -214,32 +237,40 @@ async function inspectMcpResources(ctx: import("../types.js").DiagnosticContext)
           title: "Resource missing URI",
           description: "Resource definition lacks required URI field",
           evidence: [{ type: "url", ref: ctx.endpoint }],
-          confidence: 0.95
+          confidence: 0.95,
         });
       }
     }
-
-  } catch (error) {
+  } catch (_error) {
     // Resources endpoint is optional in MCP
     findings.push({
       id: "mcp.resources.unavailable",
       area: "mcp-resources",
       severity: "info",
       title: "Resources not available",
-      description: "Server does not support resource listing (optional feature)",
+      description:
+        "Server does not support resource listing (optional feature)",
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.8
+      confidence: 0.8,
     });
   }
 
   return findings;
 }
 
-async function inspectMcpPrompts(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function inspectMcpPrompts(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
-    const promptsResponse = await ctx.jsonrpc<{ prompts?: Array<{ name: string, description?: string, arguments?: unknown }> }>("prompts/list");
+    const promptsResponse = await ctx.jsonrpc<{
+      prompts?: Array<{
+        name: string;
+        description?: string;
+        arguments?: unknown;
+      }>;
+    }>("prompts/list");
     const prompts = promptsResponse?.prompts || [];
 
     findings.push({
@@ -247,12 +278,14 @@ async function inspectMcpPrompts(ctx: import("../types.js").DiagnosticContext): 
       area: "mcp-prompts",
       severity: "info",
       title: `Discovered ${prompts.length} prompt(s)`,
-      description: prompts.length > 0 ? "MCP server provides prompt templates" : "No prompts available",
+      description:
+        prompts.length > 0
+          ? "MCP server provides prompt templates"
+          : "No prompts available",
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.99
+      confidence: 0.99,
     });
-
-  } catch (error) {
+  } catch (_error) {
     // Prompts endpoint is optional in MCP
     findings.push({
       id: "mcp.prompts.unavailable",
@@ -261,49 +294,57 @@ async function inspectMcpPrompts(ctx: import("../types.js").DiagnosticContext): 
       title: "Prompts not available",
       description: "Server does not support prompt listing (optional feature)",
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.8
+      confidence: 0.8,
     });
   }
 
   return findings;
 }
 
-async function inspectServerInstructions(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function inspectServerInstructions(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
   try {
-    const response = await ctx.jsonrpc<{ instructions?: string | string[] }>("server/instructions");
+    const response = await ctx.jsonrpc<{ instructions?: string | string[] }>(
+      "server/instructions",
+    );
     const instructions = normalizeServerInstructions(response?.instructions);
     if (instructions.length > 0) {
-      const preview = instructions[0].slice(0, 240);
-      findings.push({
-        id: "mcp.instructions.present",
-        area: "mcp-governance",
-        severity: "info",
-        title: `Server instructions available (${instructions.length})`,
-        description: `Example: ${preview}`,
-        evidence: [{ type: "url", ref: ctx.endpoint }],
-        confidence: 0.95
-      });
+      const firstInstruction = instructions[0];
+      if (firstInstruction !== undefined) {
+        const preview = firstInstruction.slice(0, 240);
+        findings.push({
+          id: "mcp.instructions.present",
+          area: "mcp-governance",
+          severity: "info",
+          title: `Server instructions available (${instructions.length})`,
+          description: `Example: ${preview}`,
+          evidence: [{ type: "url", ref: ctx.endpoint }],
+          confidence: 0.95,
+        });
+      }
     } else {
       findings.push({
         id: "mcp.instructions.empty",
         area: "mcp-governance",
         severity: "info",
         title: "Server instructions endpoint returned no data",
-        description: "Consider publishing concise server instructions to guide MCP clients.",
+        description:
+          "Consider publishing concise server instructions to guide MCP clients.",
         evidence: [{ type: "url", ref: ctx.endpoint }],
-        confidence: 0.75
+        confidence: 0.75,
       });
     }
-  } catch (error) {
+  } catch (_error) {
     findings.push({
       id: "mcp.instructions.unavailable",
       area: "mcp-governance",
       severity: "info",
       title: "Server instructions not exposed",
-      description: `server/instructions call failed: ${String(error)}`,
+      description: `server/instructions call failed: ${String(_error)}`,
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.6
+      confidence: 0.6,
     });
   }
   return findings;
@@ -323,14 +364,23 @@ function normalizeServerInstructions(input: unknown): string[] {
   return [];
 }
 
-async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function inspectServerCapabilities(
+  ctx: import("../types.js").DiagnosticContext,
+): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
-    const initResponse = await ctx.jsonrpc<{ capabilities?: { tools?: unknown, resources?: unknown, prompts?: unknown, logging?: unknown } }>("initialize", {
+    const initResponse = await ctx.jsonrpc<{
+      capabilities?: {
+        tools?: unknown;
+        resources?: unknown;
+        prompts?: unknown;
+        logging?: unknown;
+      };
+    }>("initialize", {
       protocolVersion: "2024-11-05",
       capabilities: {},
-      clientInfo: { name: "cortexdx-inspector", version: "1.0.0" }
+      clientInfo: { name: "cortexdx-inspector", version: "1.0.0" },
     });
 
     const capabilities = initResponse?.capabilities || {};
@@ -343,7 +393,7 @@ async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticCo
       title: `Server capabilities: ${supportedFeatures.join(", ") || "none"}`,
       description: `MCP server supports ${supportedFeatures.length} capability categories`,
       evidence: [{ type: "url", ref: ctx.endpoint }],
-      confidence: 0.99
+      confidence: 0.99,
     });
 
     // Validate protocol version support
@@ -355,10 +405,9 @@ async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticCo
         title: "Server does not support initialization",
         description: "MCP server failed to respond to initialize request",
         evidence: [{ type: "url", ref: ctx.endpoint }],
-        confidence: 0.99
+        confidence: 0.99,
       });
     }
-
   } catch (error) {
     findings.push({
       id: "mcp.capabilities.error",
@@ -367,20 +416,24 @@ async function inspectServerCapabilities(ctx: import("../types.js").DiagnosticCo
       title: "Capabilities inspection failed",
       description: `Failed to inspect server capabilities: ${String(error)}`,
       evidence: [{ type: "log", ref: "inspectServerCapabilities" }],
-      confidence: 0.9
+      confidence: 0.9,
     });
   }
 
   return findings;
 }
 
-function validateToolSchema(tool: { name: string, description?: string, inputSchema?: unknown }): boolean {
+function validateToolSchema(tool: {
+  name: string;
+  description?: string;
+  inputSchema?: unknown;
+}): boolean {
   // Basic MCP tool schema validation
-  if (!tool.name || typeof tool.name !== 'string') {
+  if (!tool.name || typeof tool.name !== "string") {
     return false;
   }
 
-  if (tool.inputSchema && typeof tool.inputSchema !== 'object') {
+  if (tool.inputSchema && typeof tool.inputSchema !== "object") {
     return false;
   }
 

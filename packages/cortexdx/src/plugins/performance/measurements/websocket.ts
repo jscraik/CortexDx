@@ -2,18 +2,19 @@
  * WebSocket performance measurement
  */
 
-import type { Finding, TransportTranscript } from "../../../types.js";
-import type { WebSocketMetrics, PerformanceHarness } from "../types.js";
+import type { Finding } from "../../../types.js";
+import type { PerformanceHarness, WebSocketMetrics } from "../types.js";
 
 /**
  * Measure WebSocket performance from transcript
  */
 export function measureWebSocket(
-  harness: PerformanceHarness
+  harness: PerformanceHarness,
 ): WebSocketMetrics {
   const transcript = harness.transcript();
 
-  if (!transcript || transcript.type !== "websocket") {
+  // Check if transcript is available (simplified check since TransportTranscript doesn't have type/messages)
+  if (!transcript) {
     return {
       messageCount: 0,
       maxGapMs: undefined,
@@ -21,16 +22,19 @@ export function measureWebSocket(
     };
   }
 
-  const messages = transcript.messages || [];
+  // Use exchanges instead of messages since TransportTranscript has exchanges property
+  const messages = transcript.exchanges || [];
   let reconnects = 0;
   let maxGap = 0;
 
   // Count reconnects by looking for connection events
   // (This is simplified - actual implementation would parse message types)
   for (const msg of messages) {
+    // Check if msg has a data property before accessing it
     if (
-      typeof msg.data === "string" &&
-      msg.data.includes("reconnect")
+      msg &&
+      typeof (msg as any).data === "string" &&
+      (msg as any).data.includes("reconnect")
     ) {
       reconnects++;
     }
@@ -38,8 +42,19 @@ export function measureWebSocket(
 
   // Calculate max gap between messages
   for (let i = 1; i < messages.length; i++) {
-    const gap = messages[i].timestamp - messages[i - 1].timestamp;
-    maxGap = Math.max(maxGap, gap);
+    const currentMsg = messages[i];
+    const previousMsg = messages[i - 1];
+    // Check if messages have timestamp property
+    if (
+      currentMsg &&
+      previousMsg &&
+      typeof (currentMsg as any).timestamp === "number" &&
+      typeof (previousMsg as any).timestamp === "number"
+    ) {
+      const gap =
+        (currentMsg as any).timestamp - (previousMsg as any).timestamp;
+      maxGap = Math.max(maxGap, gap);
+    }
   }
 
   return {
@@ -73,7 +88,7 @@ export function buildWebSocketDescription(metrics: WebSocketMetrics): string {
  */
 export function buildWebSocketFindings(
   metrics: WebSocketMetrics,
-  endpoint: string
+  endpoint: string,
 ): Finding[] {
   const findings: Finding[] = [];
 
@@ -103,9 +118,7 @@ export function buildWebSocketFindings(
       severity: metrics.reconnects > 2 ? "major" : "minor",
       title: `WebSocket reconnects: ${metrics.reconnects}`,
       description: `WebSocket connection reconnected ${metrics.reconnects} times, indicating stability issues`,
-      evidence: [
-        { type: "log", ref: `Reconnects: ${metrics.reconnects}` },
-      ],
+      evidence: [{ type: "log", ref: `Reconnects: ${metrics.reconnects}` }],
       confidence: 0.9,
     });
   }
@@ -118,9 +131,7 @@ export function buildWebSocketFindings(
       severity: "minor",
       title: `Large message gap: ${metrics.maxGapMs.toFixed(2)}ms`,
       description: `Maximum gap between WebSocket messages is ${metrics.maxGapMs.toFixed(2)}ms`,
-      evidence: [
-        { type: "log", ref: `Max gap: ${metrics.maxGapMs}ms` },
-      ],
+      evidence: [{ type: "log", ref: `Max gap: ${metrics.maxGapMs}ms` }],
       confidence: 0.8,
     });
   }

@@ -4,11 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  type Auth0Config,
-  checkRoleAccess,
-  trackAuthUsage,
-} from "../src/plugins/auth.js";
+import { checkRoleAccess, trackAuthUsage } from "../src/plugins/auth.js";
 import {
   clearBillingData,
   generateAdminDashboard,
@@ -32,12 +28,6 @@ import {
 } from "../src/plugins/license-enforcement.js";
 
 describe("Auth0 Integration", () => {
-  const mockAuth0Config: Auth0Config = {
-    domain: "test.auth0.com",
-    clientId: "test-client-id",
-    audience: "test-audience",
-  };
-
   it("should validate role access correctly", () => {
     const rolePermissions = {
       admin: ["*"],
@@ -176,7 +166,7 @@ describe("License Tier Enforcement", () => {
         tier: "community" as const,
         features: ["basic-diagnostics"],
       },
-    } as EnforcedRequest;
+    } as unknown as EnforcedRequest;
 
     // Community tier has limit of 10 per hour for diagnose_mcp_server
     for (let i = 0; i < 10; i++) {
@@ -202,7 +192,7 @@ describe("License Tier Enforcement", () => {
         tier: "professional" as const,
         features: ["advanced-diagnostics"],
       },
-    } as EnforcedRequest;
+    } as unknown as EnforcedRequest;
 
     trackFeatureUsage(mockRequest, "advanced-diagnostics", 1500);
 
@@ -338,7 +328,7 @@ describe("Integration Tests", () => {
         expiresAt: 0,
       },
       license,
-    } as EnforcedRequest;
+    } as unknown as EnforcedRequest;
 
     // Check feature access
     const featureAccess = checkFeatureAllowed(

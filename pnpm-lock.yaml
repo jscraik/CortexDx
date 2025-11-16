@@ -104,7 +104,7 @@ importers:
         specifier: ^7.6.13
         version: 7.6.13
       '@types/node':
-        specifier: ^22.8.5
+        specifier: ^22.19.1
         version: 22.19.1
       '@types/ws':
         specifier: ^8.5.12

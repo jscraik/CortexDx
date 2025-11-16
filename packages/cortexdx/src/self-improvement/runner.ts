@@ -1,18 +1,18 @@
-import { safeParseJson } from "../utils/json.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { loadProjectContext } from "../context/project-context.js";
+import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
 import type {
   ChatMessage,
   DevelopmentContext,
   Finding,
   ProjectContext,
 } from "../types.js";
-import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
-import { loadProjectContext } from "../context/project-context.js";
 import {
   mergeHeaders,
   resolveInternalHeaders,
 } from "../utils/internal-endpoint.js";
+import { safeParseJson } from "../utils/json.js";
 
 const DEFAULT_MEMORY_PATH = "/debug/memory";
 const DEFAULT_MEMORY_THRESHOLD_MB = 512;
@@ -70,7 +70,9 @@ export async function runSelfImprovementCli(
   });
 
   if (!projectContext) {
-    throw new Error(`Unable to load project context for ${options.projectRoot}`);
+    throw new Error(
+      `Unable to load project context for ${options.projectRoot}`,
+    );
   }
 
   const history =
@@ -81,16 +83,18 @@ export async function runSelfImprovementCli(
   const ctx: DevelopmentContext = {
     endpoint: options.endpoint,
     logger: (...args) => console.log("[self-improvement]", ...args),
-    request: async (input, init) => {
+    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
       const mergedInit = mergeHeaders(init, defaultHeaders);
       const response = await fetch(input, mergedInit);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       const text = await response.text();
-      return text.length ? safeParseJson(text) : {};
+      return text.length ? safeParseJson(text) : ({} as T);
     },
-    jsonrpc: async () => ({}) as unknown,
+    jsonrpc: async <T>(_method: string, _params?: unknown): Promise<T> => {
+      return {} as T;
+    },
     sseProbe: async () => ({ ok: true }),
     evidence: () => undefined,
     deterministic: true,
@@ -121,7 +125,8 @@ function resolveMemoryCheck(
   if (!probe || probe.enabled === false) {
     return undefined;
   }
-  const path = probe.path && probe.path.length > 0 ? probe.path : DEFAULT_MEMORY_PATH;
+  const path =
+    probe.path && probe.path.length > 0 ? probe.path : DEFAULT_MEMORY_PATH;
   const threshold =
     probe.thresholdMb && probe.thresholdMb > 0
       ? probe.thresholdMb

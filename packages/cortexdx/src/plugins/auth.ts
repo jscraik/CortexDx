@@ -1,5 +1,5 @@
-import { safeParseJson } from "../utils/json.js";
 import type { DiagnosticPlugin, Finding } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
 
 // Enhanced Auth0 integration types
 export interface Auth0Config {
@@ -85,9 +85,21 @@ export async function validateAuth0Token(
       return { valid: false, error: "Invalid token payload" };
     }
 
-    const payload = safeParseJson(
+    const payloadRaw = safeParseJson(
       Buffer.from(payloadPart, "base64").toString("utf-8"),
     );
+
+    // Type guard to ensure payload is an object
+    if (typeof payloadRaw !== "object" || payloadRaw === null) {
+      return { valid: false, error: "Invalid token payload" };
+    }
+
+    const payload = payloadRaw as {
+      exp?: number;
+      aud?: string;
+      sub?: string;
+      [key: string]: unknown;
+    };
 
     const now = Math.floor(Date.now() / 1000);
     if (payload.exp && payload.exp < now) {
@@ -101,8 +113,8 @@ export async function validateAuth0Token(
     return {
       valid: true,
       userId: payload.sub,
-      roles: payload["https://cortexdx/roles"] || [],
-      permissions: payload.permissions || [],
+      roles: (payload["https://cortexdx/roles"] as string[] | undefined) || [],
+      permissions: (payload.permissions as string[] | undefined) || [],
       expiresAt: payload.exp,
     };
   } catch (error) {

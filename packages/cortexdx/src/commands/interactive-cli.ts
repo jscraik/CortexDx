@@ -7,16 +7,19 @@
 import { readFile } from "node:fs/promises";
 import * as readline from "node:readline";
 import {
-  createProgressIndicator,
-  formatOutput,
-  parseCSV,
-} from "./cli-utils.js";
-import { runAcademicResearch, selectConfiguredProviders } from "../research/academic-researcher.js";
-import {
   DeepContextClient,
   resolveDeepContextApiKey,
 } from "../deepcontext/client.js";
 import { createCliLogger } from "../logging/logger.js";
+import {
+  runAcademicResearch,
+  selectConfiguredProviders,
+} from "../research/academic-researcher.js";
+import {
+  createProgressIndicator,
+  formatOutput,
+  parseCSV,
+} from "./cli-utils.js";
 
 interface InteractiveModeOptions {
   expertise: string;
@@ -730,12 +733,17 @@ function printTutorialSummary(
   opts: TutorialOptions,
   research: TutorialResearch | null,
 ): void {
-  logger.info(formatOutput("\n✓ Tutorial created successfully!", "success", true));
+  logger.info(
+    formatOutput("\n✓ Tutorial created successfully!", "success", true),
+  );
   logger.info(formatOutput(`\nTopic: ${topic}`, "info", true));
   logger.info(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
   logger.info(formatOutput(`Language: ${opts.lang}`, "info", true));
 
-  printListSection("\nOutline:", buildTutorialOutline(topic, opts.expertise, research));
+  printListSection(
+    "\nOutline:",
+    buildTutorialOutline(topic, opts.expertise, research),
+  );
   printCodeSection(opts.lang, topic);
 
   if (opts.exercises) {
@@ -837,8 +845,8 @@ async function gatherTutorialResearch(
     const { ready, missing } = selectConfiguredProviders(requested);
     if (missing.length) {
       logger.warn(
-        "[Tutorial] Skipping providers with missing env vars:",
-        missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
+        "[Tutorial] Skipping providers with missing env vars: " +
+          missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
       );
     }
     if (ready.length === 0) {
@@ -859,10 +867,12 @@ async function gatherTutorialResearch(
     }
     const highlights = report.providers
       .flatMap((provider) =>
-        provider.findings.slice(0, 1).map(
-          (finding) =>
-            `${provider.providerName}: ${finding.title} (${finding.severity})`,
-        ),
+        provider.findings
+          .slice(0, 1)
+          .map(
+            (finding) =>
+              `${provider.providerName}: ${finding.title} (${finding.severity})`,
+          ),
       )
       .slice(0, 3);
     const deepContextSnippets = await gatherDeepContextSnippets(topic);
@@ -873,8 +883,8 @@ async function gatherTutorialResearch(
     };
   } catch (error) {
     logger.warn(
-      "[Tutorial] Skipping academic research probe:",
-      error instanceof Error ? error.message : String(error),
+      "[Tutorial] Skipping academic research probe: " +
+        (error instanceof Error ? error.message : String(error)),
     );
     return null;
   }
@@ -907,8 +917,8 @@ async function gatherDeepContextSnippets(topic: string): Promise<string[]> {
     });
   } catch (error) {
     logger.warn(
-      "[Tutorial] DeepContext search failed:",
-      error instanceof Error ? error.message : String(error),
+      "[Tutorial] DeepContext search failed: " +
+        (error instanceof Error ? error.message : String(error)),
     );
     return [];
   }
@@ -927,7 +937,9 @@ function buildTutorialOutline(
   if (expertise === "beginner") {
     outline.unshift("Review MCP handshake basics and CLI invocation.");
   } else if (expertise === "expert") {
-    outline.push("Cross-link findings to governance packs and mitigation playbooks.");
+    outline.push(
+      "Cross-link findings to governance packs and mitigation playbooks.",
+    );
   }
   if (research?.highlights.length) {
     outline.push(`Incorporate research insight: ${research.highlights[0]}`);
@@ -974,7 +986,7 @@ function createTutorialSnippet(lang: string, topic: string): string {
           "    from cortexdx import diagnose",
           "    result = diagnose(endpoint, suites=['protocol', 'security'])",
           "    for finding in result.findings:",
-          "        print(f\"{finding.severity}: {finding.title}\")",
+          '        print(f"{finding.severity}: {finding.title}")',
         ]
       : [
           "import { runDiagnose } from '@brainwav/cortexdx';",
@@ -986,14 +998,19 @@ function createTutorialSnippet(lang: string, topic: string): string {
           "  console.log(`Findings for ${endpoint}: ${result}`);",
           "}",
         ];
-  return `${header}\n// Focus: ${topic}\n${body.join("\n")}\n\`\`\``;
+  return `${header}
+// Focus: ${topic}
+${body.join("\n")}
+\`\`\``;
 }
 
 function printResearchSection(research: TutorialResearch | null): void {
   if (!research) return;
   printListSection("\nResearch Highlights:", research.highlights);
   if (research.artifactsDir) {
-    logger.info(formatOutput(`Artifacts: ${research.artifactsDir}`, "info", true));
+    logger.info(
+      formatOutput(`Artifacts: ${research.artifactsDir}`, "info", true),
+    );
   }
   printListSection("\nDeepContext References:", research.deepContextSnippets);
 }

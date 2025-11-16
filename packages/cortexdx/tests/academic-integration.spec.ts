@@ -3,19 +3,19 @@
  * Tests against actual provider implementations
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { WikidataProvider } from "../src/providers/academic/wikidata.mcp.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ArxivProvider } from "../src/providers/academic/arxiv.mcp.js";
 import { Context7Provider } from "../src/providers/academic/context7.mcp.js";
+import { WikidataProvider } from "../src/providers/academic/wikidata.mcp.js";
 import type { DiagnosticContext } from "../src/types.js";
 
 // Mock diagnostic context for testing
 function createMockDiagnosticContext(): DiagnosticContext {
   return {
-    logger: (message: string) => console.log(`[TEST] ${message}`),
+    logger: (...args: unknown[]) => console.log("[TEST]", ...args),
     evidence: () => {},
-    request: async <T>(url: string, options?: RequestInit): Promise<T> => {
-      const response = await fetch(url, options);
+    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+      const response = await fetch(input as string, init);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -101,10 +101,7 @@ describe("WikidataMCP Integration Tests", () => {
   });
 
   it("should perform vector search for properties (with fallback)", async () => {
-    const results = await provider.vectorSearchProperties(
-      "date of birth",
-      5,
-    );
+    const results = await provider.vectorSearchProperties("date of birth", 5);
 
     expect(results).toBeDefined();
     expect(Array.isArray(results)).toBe(true);

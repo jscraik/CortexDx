@@ -30,8 +30,9 @@ export function calculateVariance(values: number[]): number {
   if (values.length === 0) return 0;
 
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
-  const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
+  const squaredDiffs = values.map((val) => (val - mean) ** 2);
+  const variance =
+    squaredDiffs.reduce((sum, val) => sum + val, 0) / values.length;
 
   return variance;
 }
@@ -39,7 +40,10 @@ export function calculateVariance(values: number[]): number {
 /**
  * Calculate percentile value from array
  */
-export function calculatePercentile(values: number[], percentile: number): number {
+export function calculatePercentile(
+  values: number[],
+  percentile: number,
+): number {
   if (values.length === 0) return 0;
   if (percentile < 0 || percentile > 100) {
     throw new Error("Percentile must be between 0 and 100");
@@ -51,11 +55,14 @@ export function calculatePercentile(values: number[], percentile: number): numbe
   const upper = Math.ceil(index);
   const weight = index % 1;
 
+  // Add bounds checking to satisfy TypeScript
   if (lower === upper) {
-    return sorted[lower];
+    return sorted[lower] ?? 0;
   }
 
-  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+  const lowerValue = sorted[lower] ?? 0;
+  const upperValue = sorted[upper] ?? 0;
+  return lowerValue * (1 - weight) + upperValue * weight;
 }
 
 /**
@@ -68,7 +75,7 @@ export function formatBytes(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 /**
@@ -84,7 +91,9 @@ export function formatDuration(ms: number): string {
 /**
  * Create a performance harness from diagnostic context
  */
-export function createHarness(ctx: import("../../types.js").DiagnosticContext): import("./types.js").PerformanceHarness {
+export function createHarness(
+  ctx: import("../../types.js").DiagnosticContext,
+): import("./types.js").PerformanceHarness {
   return {
     now: () => performance.now(),
     fetch: fetch,

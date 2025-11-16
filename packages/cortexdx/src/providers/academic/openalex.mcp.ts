@@ -106,7 +106,9 @@ export class OpenAlexProvider {
   private readonly licenseValidator: LicenseValidatorPlugin;
   private readonly remoteClient?: HttpMcpClient;
   private readonly contactEmail?: string;
-  private readonly cache: LRUCache<OpenAlexWork[] | OpenAlexWork | OpenAlexAuthor | OpenAlexInstitution>;
+  private readonly cache: LRUCache<
+    OpenAlexWork[] | OpenAlexWork | OpenAlexAuthor | OpenAlexInstitution
+  >;
   private lastRequestAt = 0;
   private readonly throttleMs =
     Number.parseInt(process.env.OPENALEX_THROTTLE_MS ?? "200", 10) || 200;
@@ -114,9 +116,12 @@ export class OpenAlexProvider {
   constructor(private ctx: DiagnosticContext) {
     this.licenseValidator = createLicenseValidator(ctx);
     this.remoteClient = initializeOpenAlexClient(ctx);
-    const headerContact = ctx.headers?.["x-openalex-contact"] as string | undefined;
+    const headerContact = ctx.headers?.["x-openalex-contact"] as
+      | string
+      | undefined;
     const envContact = process.env.OPENALEX_CONTACT_EMAIL;
-    this.contactEmail = (headerContact ?? envContact ?? "").trim().toLowerCase() || undefined;
+    this.contactEmail =
+      (headerContact ?? envContact ?? "").trim().toLowerCase() || undefined;
 
     // Initialize cache with 5-minute TTL and max 1000 items
     this.cache = new LRUCache({
@@ -131,14 +136,14 @@ export class OpenAlexProvider {
     if (!this.contactEmail) {
       ctx.logger(
         "[OpenAlex] PERFORMANCE WARNING: OPENALEX_CONTACT_EMAIL not set. " +
-        "You are using the standard rate limit (100 requests/minute). " +
-        "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
-        "(10x higher rate limit: 1000 requests/minute). " +
-        "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com."
+          "You are using the standard rate limit (100 requests/minute). " +
+          "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
+          "(10x higher rate limit: 1000 requests/minute). " +
+          "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com.",
       );
     } else {
       ctx.logger(
-        `[OpenAlex] Using polite pool with contact email: ${this.contactEmail} (1000 req/min rate limit)`
+        `[OpenAlex] Using polite pool with contact email: ${this.contactEmail} (1000 req/min rate limit)`,
       );
     }
   }
@@ -324,13 +329,17 @@ export class OpenAlexProvider {
   async searchWorks(
     params: OpenAlexSearchParams,
   ): Promise<{ results: OpenAlexWork[]; meta: unknown }> {
-    const cacheKey = createCacheKey('works', params);
+    const cacheKey = createCacheKey("works", params);
 
     // Try cache first
     const cached = this.cache.get(cacheKey);
     if (cached) {
-      this.ctx.logger(`OpenAlex searchWorks cache HIT`);
-      return cached as { results: OpenAlexWork[]; meta: unknown };
+      this.ctx.logger("OpenAlex searchWorks cache HIT");
+      // Type assertion is safe here because we know the cache structure
+      return { results: cached as OpenAlexWork[], meta: {} } as {
+        results: OpenAlexWork[];
+        meta: unknown;
+      };
     }
 
     const searchParams = new URLSearchParams();
@@ -354,8 +363,9 @@ export class OpenAlexProvider {
       ref: target,
     });
 
-    this.cache.set(cacheKey, response);
-    this.ctx.logger(`OpenAlex searchWorks cache MISS`);
+    // Cache only the results array, not the full response
+    this.cache.set(cacheKey, response.results);
+    this.ctx.logger("OpenAlex searchWorks cache MISS");
     return response;
   }
 
@@ -600,7 +610,7 @@ export class OpenAlexProvider {
  * Initialize HTTP MCP client for OpenAlex
  */
 function initializeOpenAlexClient(
-  ctx: DiagnosticContext,
+  _ctx: DiagnosticContext,
 ): HttpMcpClient | undefined {
   if (process.env.CORTEXDX_DISABLE_OPENALEX_HTTP === "1") {
     return undefined;

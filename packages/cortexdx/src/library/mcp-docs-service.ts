@@ -1,21 +1,21 @@
-import { safeParseJson } from "../utils/json.js";
 import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
-  createVectorStorage,
   type VectorDocument,
   type VectorStorage,
+  createVectorStorage,
 } from "../storage/vector-storage.js";
-import type { McpDocsManifest } from "./mcp-docs.js";
+import { safeParseJson } from "../utils/json.js";
 import {
   MCP_DOCS_LIBRARY_ROOT,
   MCP_DOCS_STAGING_DIR,
   MCP_DOCS_VECTOR_PATH,
 } from "./mcp-docs-paths.js";
+import type { McpDocsManifest } from "./mcp-docs.js";
 
 const searchMatchSchema = z.object({
   chunkId: z.string(),
@@ -86,7 +86,9 @@ export async function searchMcpDocs(
   });
 
   const matches = searchResults.map((result) =>
-    searchMatchSchema.parse(convertDocumentToMatch(result.document, result.similarity)),
+    searchMatchSchema.parse(
+      convertDocumentToMatch(result.document, result.similarity),
+    ),
   );
 
   const version =
@@ -100,7 +102,9 @@ export async function searchMcpDocs(
   return { version, matches };
 }
 
-export async function lookupMcpDoc(options: McpDocsLookupOptions): Promise<McpDocsSearchMatch> {
+export async function lookupMcpDoc(
+  options: McpDocsLookupOptions,
+): Promise<McpDocsSearchMatch> {
   const docs = await loadReferenceDocuments(options.storagePath);
   let target: VectorDocument | undefined;
 
@@ -177,7 +181,9 @@ async function hydrateVectorStorage(
   return storage;
 }
 
-async function loadReferenceDocuments(storagePath?: string): Promise<VectorDocument[]> {
+async function loadReferenceDocuments(
+  storagePath?: string,
+): Promise<VectorDocument[]> {
   const storage = await hydrateVectorStorage(undefined, storagePath);
   return storage.getDocumentsByType("reference");
 }
@@ -248,8 +254,8 @@ async function resolveActiveVersion(
   }
   const dir =
     scope === "staging"
-      ? options.stagingDir ?? MCP_DOCS_STAGING_DIR
-      : options.rootDir ?? MCP_DOCS_LIBRARY_ROOT;
+      ? (options.stagingDir ?? MCP_DOCS_STAGING_DIR)
+      : (options.rootDir ?? MCP_DOCS_LIBRARY_ROOT);
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   const versions = entries
     .filter((entry) => entry.isDirectory() && entry.name !== "_staging")
@@ -261,5 +267,7 @@ async function resolveActiveVersion(
       `No MCP docs snapshots found under ${scope === "staging" ? MCP_DOCS_STAGING_DIR : MCP_DOCS_LIBRARY_ROOT}`,
     );
   }
-  return versions[0];
+  // We know versions[0] exists because we checked length > 0 above
+  const firstVersion = versions[0];
+  return firstVersion as string;
 }

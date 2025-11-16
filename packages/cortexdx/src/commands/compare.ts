@@ -1,8 +1,12 @@
-import { safeParseJson } from "../utils/json.js";
 import { readFileSync } from "node:fs";
 import { diffFindings } from "../compare/diff.js";
+import type { Finding } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
 
-export async function runCompare(oldFile: string, newFile: string): Promise<number> {
+export async function runCompare(
+  oldFile: string,
+  newFile: string,
+): Promise<number> {
   const oldData = safeParseJson<{ findings?: unknown[] }>(
     readFileSync(oldFile, "utf-8"),
     "compare old report",
@@ -11,7 +15,10 @@ export async function runCompare(oldFile: string, newFile: string): Promise<numb
     readFileSync(newFile, "utf-8"),
     "compare new report",
   );
-  const diff = diffFindings(oldData.findings ?? [], newData.findings ?? []);
+  const diff = diffFindings(
+    (oldData.findings ?? []) as Finding[],
+    (newData.findings ?? []) as Finding[],
+  );
   const added = diff.added.length;
   const removed = diff.removed.length;
   console.log(`[brAInwav] Compare: +${added} / -${removed}`);

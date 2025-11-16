@@ -3,14 +3,14 @@
  */
 
 import type { DiagnosticContext, Finding } from "../../../types.js";
-import type { SseMetrics, PerformanceHarness } from "../types.js";
+import type { PerformanceHarness, SseMetrics } from "../types.js";
 
 /**
  * Measure SSE performance
  */
 export async function measureSse(
   ctx: DiagnosticContext,
-  harness: PerformanceHarness
+  harness: PerformanceHarness,
 ): Promise<SseMetrics> {
   try {
     const result = await harness.sseProbe(ctx.endpoint);
@@ -22,7 +22,7 @@ export async function measureSse(
     return {
       firstEventMs: result.firstEventMs,
       heartbeatMs: result.heartbeatMs,
-      jitterMs: result.jitterMs,
+      // jitterMs is calculated separately, not part of SseResult
     };
   } catch (_error) {
     return {};
@@ -32,20 +32,23 @@ export async function measureSse(
 /**
  * Calculate SSE jitter from event timings
  */
-export function calculateSseJitter(
-  eventTimings: number[]
-): number | undefined {
+export function calculateSseJitter(eventTimings: number[]): number | undefined {
   if (eventTimings.length < 2) return undefined;
 
   const intervals: number[] = [];
   for (let i = 1; i < eventTimings.length; i++) {
-    intervals.push(eventTimings[i] - eventTimings[i - 1]);
+    const current = eventTimings[i];
+    const previous = eventTimings[i - 1];
+    if (current !== undefined && previous !== undefined) {
+      intervals.push(current - previous);
+    }
   }
 
   // Calculate standard deviation as jitter
   const mean = intervals.reduce((sum, val) => sum + val, 0) / intervals.length;
-  const squaredDiffs = intervals.map(val => Math.pow(val - mean, 2));
-  const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / intervals.length;
+  const squaredDiffs = intervals.map((val) => (val - mean) ** 2);
+  const variance =
+    squaredDiffs.reduce((sum, val) => sum + val, 0) / intervals.length;
   const stdDev = Math.sqrt(variance);
 
   return stdDev;
@@ -75,7 +78,7 @@ export function buildSseDescription(metrics: SseMetrics): string {
  */
 export function buildSseFindings(
   metrics: SseMetrics,
-  endpoint: string
+  endpoint: string,
 ): Finding[] {
   const findings: Finding[] = [];
 
@@ -105,9 +108,7 @@ export function buildSseFindings(
       severity: "minor",
       title: `High SSE jitter: ${metrics.jitterMs.toFixed(2)}ms`,
       description: `SSE stream has high timing variability (jitter: ${metrics.jitterMs.toFixed(2)}ms)`,
-      evidence: [
-        { type: "log", ref: `Jitter: ${metrics.jitterMs}ms` },
-      ],
+      evidence: [{ type: "log", ref: `Jitter: ${metrics.jitterMs}ms` }],
       confidence: 0.8,
     });
   }

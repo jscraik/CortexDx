@@ -12,11 +12,11 @@ import type { ConversationSession, Finding } from "../types.js";
  * Validates that the state is an object before casting
  */
 export function getSessionState<T extends Record<string, unknown>>(
-  session: ConversationSession
+  session: ConversationSession,
 ): T {
   if (typeof session.state !== "object" || session.state === null) {
     throw new Error(
-      `Invalid session state: expected object, got ${typeof session.state}`
+      `Invalid session state: expected object, got ${typeof session.state}`,
     );
   }
   return session.state as T;
@@ -27,13 +27,13 @@ export function getSessionState<T extends Record<string, unknown>>(
  * Used for API boundaries that require this type
  */
 export function toRecord<T extends Record<string, unknown>>(
-  obj: T
+  obj: T,
 ): Record<string, unknown> {
   if (typeof obj !== "object" || obj === null) {
     throw new Error(`Cannot convert ${typeof obj} to Record`);
   }
   return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [key, value])
+    Object.entries(obj).map(([key, value]) => [key, value]),
   );
 }
 
@@ -45,17 +45,16 @@ export function toRecord<T extends Record<string, unknown>>(
  * that may have dynamic fields based on plugin implementation. Runtime validation
  * ensures the finding is a valid object before access.
  */
-export function getFindingField(
-  finding: Finding,
-  fieldName: string
-): unknown {
+export function getFindingField(finding: Finding, fieldName: string): unknown {
   if (typeof finding !== "object" || finding === null) {
-    throw new Error(
-      `Invalid finding: expected object, got ${typeof finding}`
-    );
+    throw new Error(`Invalid finding: expected object, got ${typeof finding}`);
   }
-  const findingAsRecord = finding as Record<string, unknown>;
-  return findingAsRecord[fieldName];
+  // Use keyof to safely access properties without casting
+  const key = fieldName as keyof Finding;
+  if (key in finding) {
+    return finding[key];
+  }
+  return undefined;
 }
 
 /**
@@ -64,7 +63,7 @@ export function getFindingField(
  */
 export function extractFindingFields(
   findings: Finding[],
-  fieldName: string
+  fieldName: string,
 ): unknown[] {
   return findings
     .map((f) => getFindingField(f, fieldName))
@@ -77,7 +76,7 @@ export function extractFindingFields(
  */
 export function fromRecord<T extends Record<string, unknown>>(
   record: Record<string, unknown>,
-  requiredKeys?: (keyof T)[]
+  requiredKeys?: (keyof T)[],
 ): T {
   if (requiredKeys) {
     for (const key of requiredKeys) {
@@ -94,7 +93,7 @@ export function fromRecord<T extends Record<string, unknown>>(
  */
 export function hasProperty<K extends string>(
   obj: unknown,
-  key: K
+  key: K,
 ): obj is Record<K, unknown> {
   return typeof obj === "object" && obj !== null && key in obj;
 }
@@ -105,7 +104,7 @@ export function hasProperty<K extends string>(
  */
 export function getNestedProperty(
   obj: Record<string, unknown>,
-  path: string[]
+  path: string[],
 ): unknown {
   let current: unknown = obj;
   for (const key of path) {

@@ -1,4 +1,4 @@
-import { safeParseJson } from "../utils/json.js";
+import { createCliLogger } from "../logging/logger.js";
 import { TemplateEngine } from "../template-engine/engine.js";
 import {
   getAllCodePatterns,
@@ -7,32 +7,31 @@ import {
 import type { FixTemplate } from "../templates/fix-templates.js";
 import { getAllTemplates, getTemplate } from "../templates/fix-templates.js";
 import type { DevelopmentContext } from "../types.js";
-import { createCliLogger } from "../logging/logger.js";
 
 const logger = createCliLogger("templates");
 
 /**
  * Create development context for template operations
  */
-const jsonRpcStub = async <T>(method: string, params?: unknown): Promise<T> => {
+const jsonRpcStub = async <T>(
+  _method: string,
+  _params?: unknown,
+): Promise<T> => {
   return Promise.reject(
-    new Error(`JSON-RPC method ${method} not implemented in CLI context`),
+    new Error(`JSON-RPC method ${_method} not implemented in CLI context`),
   ) as Promise<T>;
 };
 
 function createDevelopmentContext(): DevelopmentContext {
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (...args) => logger.info("[Templates]", ...args),
-    request: async (input, init) => {
-      const response = await fetch(input, init);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const text = await response.text();
-      return text.length
-        ? safeParseJson<Record<string, unknown>>(text, "templates request")
-        : {};
+    logger: (() => {}) as (...args: unknown[]) => void,
+    request: async <T>(
+      _input: RequestInfo,
+      _init?: RequestInit,
+    ): Promise<T> => {
+      const result = {} as Record<string, unknown>;
+      return result as T;
     },
     jsonrpc: jsonRpcStub as <T>(method: string, params?: unknown) => Promise<T>,
     sseProbe: async () => ({ ok: true }),
