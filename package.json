@@ -30,9 +30,14 @@
     "deepcontext:status": "pnpm --filter @brainwav/cortexdx run deepcontext:status",
     "research:smoke": "pnpm --filter @brainwav/cortexdx run research:smoke",
     "sbom": "pnpm --filter @brainwav/cortexdx run sbom",
+    "sbom:generate": "pnpm --filter @brainwav/cortexdx run sbom",
     "governance:validate": "tsx scripts/governance/validate.ts",
     "governance:validate:verbose": "tsx scripts/governance/validate.ts --verbose",
-    "evidence:collect": "bash scripts/governance/collect-evidence.sh"
+    "evidence:collect": "bash scripts/governance/collect-evidence.sh",
+    "evidence:triplet:verify": "tsx scripts/governance/evidence-triplet-verify.ts",
+    "arc:new": "tsx scripts/governance/arc-new.ts",
+    "models:health": "bash scripts/governance/models-health.sh",
+    "models:smoke": "bash scripts/governance/models-smoke.sh"
   },
   "devDependencies": {
     "@ai-sdk/openai": "^2.0.65",

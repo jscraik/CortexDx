@@ -20,7 +20,7 @@ This document tracks tools referenced in governance documents that are not yet i
 
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
-| `pnpm arc:new` | ❌ | agentic-coding-workflow.md:108 | HIGH | Scaffolds new arc with template |
+| `pnpm arc:new` | ✅ | agentic-coding-workflow.md:108 | HIGH | Scaffolds new arc with template - **IMPLEMENTED (Phase 3)** |
 | `pnpm arc:lint` | ❌ | agentic-coding-workflow.md:112 | HIGH | Validates arc manifest step budget ≤7 |
 | `pnpm changelog:new` | ❌ | agentic-coding-workflow.md:567 | HIGH | Creates task folder structure |
 | `pnpm session:reset` | ❌ | agentic-coding-workflow.md:490 | MEDIUM | Records session reset in manifest |
@@ -29,7 +29,7 @@ This document tracks tools referenced in governance documents that are not yet i
 
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
-| `pnpm evidence:triplet:verify` | ❌ | agentic-coding-workflow.md:592 | HIGH | Validates Evidence Triplet completeness |
+| `pnpm evidence:triplet:verify` | ✅ | agentic-coding-workflow.md:592 | HIGH | Validates Evidence Triplet completeness - **IMPLEMENTED (Phase 3)** |
 | `pnpm evidence:collect` | ✅ | Analysis recommendation | MEDIUM | Automated evidence aggregation - **IMPLEMENTED** |
 | `pnpm perf:verify` | ❌ | code-review-checklist.md:146 | MEDIUM | Generates performance verification reports |
 
@@ -45,14 +45,14 @@ This document tracks tools referenced in governance documents that are not yet i
 
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
-| `pnpm models:health` | ❌ | agentic-coding-workflow.md:583 | HIGH | Live model health check |
-| `pnpm models:smoke` | ❌ | agentic-coding-workflow.md:583 | HIGH | Live model smoke tests |
+| `pnpm models:health` | ✅ | agentic-coding-workflow.md:583 | HIGH | Live model health check - **IMPLEMENTED (Phase 3)** |
+| `pnpm models:smoke` | ✅ | agentic-coding-workflow.md:583 | HIGH | Live model smoke tests - **IMPLEMENTED (Phase 3)** |
 
 ### Supply Chain & Security Tools
 
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
-| `pnpm sbom:generate` | ⚠️ | agentic-coding-workflow.md:115 | HIGH | Exists as `pnpm sbom` - needs rename/alias |
+| `pnpm sbom:generate` | ✅ | agentic-coding-workflow.md:115 | HIGH | Alias added to `pnpm sbom` - **IMPLEMENTED (Phase 3)** |
 | `pnpm attest:sign` | ❌ | agentic-coding-workflow.md:115 | HIGH | Sign SLSA provenance with Cosign v3 |
 | `pnpm verify:attest` | ❌ | agentic-coding-workflow.md:115 | HIGH | Verify Cosign bundle signatures |
 | `pnpm structure:validate` | ❌ | agentic-phase-policy.md:72 | MEDIUM | Validates project structure against rules |
