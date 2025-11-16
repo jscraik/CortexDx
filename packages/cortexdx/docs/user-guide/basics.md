@@ -105,7 +105,7 @@ cortexdx doctor
 #           ✓ Plugin system functional
 ```
 
-> ⚠️ **Troubleshooting:** See [FAQ](faq.md#installation-issues) for common installation problems.
+> ⚠️ **Troubleshooting:** See [FAQ](faq.md#installation--setup) for common installation problems.
 
 ---
 
