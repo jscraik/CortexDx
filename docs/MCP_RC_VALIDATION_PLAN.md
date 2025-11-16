@@ -392,15 +392,14 @@ grep -r "v2024-11-05" docs/ packages/ | \
 
 ```bash
 # Complete end-to-end validation
-./scripts/rc-validation/final-validation.sh
+pnpm build           # Full build
+pnpm test            # All test suites
+pnpm run self-diagnose   # Self-diagnostics (if available)
+pnpm run benchmark   # Performance benchmarks (if available)
+pnpm run security-scan   # Security scans (if available)
+pnpm run docs        # Documentation generation
 
-# Should include:
-# - Full build
-# - All test suites
-# - Self-diagnostics
-# - Performance benchmarks
-# - Security scans
-# - Documentation generation
+# If any of the above commands are not available, refer to the README for manual steps.
 ```
 
 ## RC Validation Report Template
