@@ -34,7 +34,7 @@
 
 ## MCP Spec Alignment Checklist
 
-### Pre-RC Validation (Before November 14, 2025)
+### Post-RC Validation (After November 14, 2025)
 
 #### Scope Hygiene
 - [ ] [TODO] **Remove unused scopes**: Audit `docs.write` and `code.write` - remove if not actively used
