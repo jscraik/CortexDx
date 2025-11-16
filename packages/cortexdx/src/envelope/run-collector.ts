@@ -280,34 +280,29 @@ export class RunCollector {
 	/**
 	 * Get all failed assertions across all cases
 	 */
-	getFailedAssertions(): Array<{ case: Case; assertion: Assertion }> {
-		const failed: Array<{ case: Case; assertion: Assertion }> = [];
-
+	private getAssertionsByStatus(status: Assertion["status"]): Array<{ case: Case; assertion: Assertion }> {
+		const result: Array<{ case: Case; assertion: Assertion }> = [];
 		for (const testCase of this.cases) {
 			for (const assertion of testCase.assertions) {
-				if (assertion.status === "fail") {
-					failed.push({ case: testCase, assertion });
+				if (assertion.status === status) {
+					result.push({ case: testCase, assertion });
 				}
 			}
 		}
+		return result;
+	}
 
-		return failed;
+	/**
+	 * Get all failed assertions across all cases
+	 */
+	getFailedAssertions(): Array<{ case: Case; assertion: Assertion }> {
+		return this.getAssertionsByStatus("fail");
 	}
 
 	/**
 	 * Get all errored assertions across all cases
 	 */
 	getErroredAssertions(): Array<{ case: Case; assertion: Assertion }> {
-		const errored: Array<{ case: Case; assertion: Assertion }> = [];
-
-		for (const testCase of this.cases) {
-			for (const assertion of testCase.assertions) {
-				if (assertion.status === "error") {
-					errored.push({ case: testCase, assertion });
-				}
-			}
-		}
-
-		return errored;
+		return this.getAssertionsByStatus("error");
 	}
 }
