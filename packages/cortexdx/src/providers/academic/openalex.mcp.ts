@@ -123,7 +123,7 @@ export class OpenAlexProvider {
         "You are using the standard rate limit (100 requests/minute). " +
         "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
         "(10x higher rate limit: 1000 requests/minute). " +
-        "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com"
+        "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com."
       );
     } else {
       ctx.logger(
