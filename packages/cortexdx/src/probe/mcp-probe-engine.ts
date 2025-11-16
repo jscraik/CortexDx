@@ -15,7 +15,6 @@
 import { randomUUID } from "node:crypto";
 import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
 import { runPlugins } from "../plugin-host.js";
-import { createDiagnosticContext } from "../context/context-factory.js";
 import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
 import type { Finding, McpToolResult } from "../types.js";
 
