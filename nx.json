@@ -7,16 +7,23 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["{projectRoot}/dist"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": [
+        "build"
+      ]
     },
     "lint": {
       "dependsOn": []
     }
   },
   "generators": {},
-  "plugins": []
+  "plugins": [],
+  "nxCloudId": "691a4829c1f4b85617193daa"
 }
