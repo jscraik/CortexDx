@@ -9,16 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### MCP Specification Migration (November 2025)
 
-**🚨 URGENT UPDATE (Nov 16, 2025)**: RC validation window is NOW ACTIVE - only 9 days until final spec release!
+> **Note:** The following status updates and countdowns are time-sensitive and reflect the state as of **November 16, 2025**. For the latest migration status, see [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md).
+
+**🚨 URGENT UPDATE (Nov 16, 2025)**: RC validation window is NOW ACTIVE. Final specification release is scheduled for November 25, 2025.
 
 **Current Status**:
 - SDK v1.22.0 (published Nov 13) is **likely the RC version**
 - RC validation testing must **start immediately**
-- Final specification releases **November 25, 2025** (9 days away)
+- Final specification releases **November 25, 2025**
 
 **Timeline**:
 - ✅ **RC (Release Candidate)**: November 14, 2025 - **PUBLISHED** (v1.22.0 on Nov 13)
-- ⏰ **Final Specification**: November 25, 2025 - **PENDING (9 DAYS AWAY)**
+- ⏰ **Final Specification**: November 25, 2025 - **PENDING**
 - 🎯 **Validation Deadline**: November 24, 2025
 
 **Key Changes in New Spec**:
