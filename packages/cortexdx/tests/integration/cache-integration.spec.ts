@@ -161,6 +161,7 @@ describe('Cache Integration Tests', () => {
       // Different search - new API call
       const result3 = await performSearch('deep learning', 10);
       expect(mockContext.request).toHaveBeenCalledTimes(2);
+      expect(result3.papers).toHaveLength(2);
       expect(result3).toEqual(mockSearchResults);
     });
 
