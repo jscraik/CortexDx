@@ -1,15 +1,11 @@
 import { randomUUID } from "node:crypto";
-import type {
-  ChatMessage,
-  DevelopmentContext,
-  Finding,
-} from "../types.js";
 import { InspectorAdapter } from "../adapters/inspector-adapter.js";
 import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
+import { analyzeWithLLM } from "../plugins/development/self-improvement.js";
 import { TemplateEngine } from "../template-engine/engine.js";
 import { getTemplateRecommendations } from "../templates/fix-templates.js";
 import type { FixTemplate } from "../templates/fix-templates.js";
-import { analyzeWithLLM } from "../plugins/development/self-improvement.js";
+import type { ChatMessage, DevelopmentContext, Finding } from "../types.js";
 
 export interface HealingReport {
   jobId: string;
@@ -42,7 +38,7 @@ export interface ValidationSummary {
 }
 
 export interface HealingSummary {
-  severity: 'success' | 'partial' | 'failed';
+  severity: "success" | "partial" | "failed";
   message: string;
   recommendations: string[];
   nextSteps: string[];
@@ -65,11 +61,13 @@ export class AutoHealer {
   /**
    * Run complete self-healing cycle
    */
-  async healSelf(options: {
-    autoFix?: boolean;
-    dryRun?: boolean;
-    severityThreshold?: 'blocker' | 'major' | 'minor' | 'info';
-  } = {}): Promise<HealingReport> {
+  async healSelf(
+    options: {
+      autoFix?: boolean;
+      dryRun?: boolean;
+      severityThreshold?: "blocker" | "major" | "minor" | "info";
+    } = {},
+  ): Promise<HealingReport> {
     const jobId = `heal_${randomUUID()}`;
     const startedAt = new Date().toISOString();
 
@@ -85,14 +83,20 @@ export class AutoHealer {
       // 3. Apply automated fixes if enabled
       const fixes: FixAttempt[] = [];
       if (options.autoFix) {
-        fixes.push(...await this.applyAutomatedFixes(analyzedFindings, options));
+        fixes.push(
+          ...(await this.applyAutomatedFixes(analyzedFindings, options)),
+        );
       }
 
       // 4. Run validation to verify fixes
       const validation = await this.validateFixes(analyzedFindings, fixes);
 
       // 5. Generate summary and recommendations
-      const summary = await this.generateSummary(validation, analyzedFindings, fixes);
+      const summary = await this.generateSummary(
+        validation,
+        analyzedFindings,
+        fixes,
+      );
 
       const finishedAt = new Date().toISOString();
 
@@ -106,12 +110,16 @@ export class AutoHealer {
         summary,
       };
 
-      this.ctx.logger?.(`[AutoHealer] Self-healing job ${jobId} completed: ${summary.severity}`);
+      this.ctx.logger?.(
+        `[AutoHealer] Self-healing job ${jobId} completed: ${summary.severity}`,
+      );
 
       return report;
-
     } catch (error) {
-      this.ctx.logger?.(`[AutoHealer] Self-healing job ${jobId} failed:`, error);
+      this.ctx.logger?.(
+        `[AutoHealer] Self-healing job ${jobId} failed:`,
+        error,
+      );
 
       const finishedAt = new Date().toISOString();
 
@@ -130,10 +138,10 @@ export class AutoHealer {
           blockersRemaining: 0,
         },
         summary: {
-          severity: 'failed',
+          severity: "failed",
           message: `Self-healing failed: ${String(error)}`,
-          recommendations: ['Review error logs and try again'],
-          nextSteps: ['Check system health and dependencies'],
+          recommendations: ["Review error logs and try again"],
+          nextSteps: ["Check system health and dependencies"],
         },
       };
     }
@@ -143,35 +151,47 @@ export class AutoHealer {
    * Run comprehensive diagnostics using Inspector and self-improvement
    */
   private async runDiagnostics(): Promise<Finding[]> {
-    this.ctx.logger?.('[AutoHealer] Running comprehensive diagnostics');
+    this.ctx.logger?.("[AutoHealer] Running comprehensive diagnostics");
 
     const findings: Finding[] = [];
 
     // 1. Run Inspector self-diagnosis
     try {
       const inspectorReport = await this.inspector.selfDiagnose();
-      const inspectorFindings = this.inspector.convertFindings(inspectorReport.findings);
+      const inspectorFindings = this.inspector.convertFindings(
+        inspectorReport.findings,
+      );
       findings.push(...inspectorFindings);
-      this.ctx.logger?.(`[AutoHealer] Inspector found ${inspectorFindings.length} issues`);
+      this.ctx.logger?.(
+        `[AutoHealer] Inspector found ${inspectorFindings.length} issues`,
+      );
     } catch (error) {
-      this.ctx.logger?.('[AutoHealer] Inspector diagnostics failed:', error);
+      this.ctx.logger?.("[AutoHealer] Inspector diagnostics failed:", error);
     }
 
     // 2. Run self-improvement plugin
     try {
       const selfFindings = await SelfImprovementPlugin.run(this.ctx);
       findings.push(...selfFindings);
-      this.ctx.logger?.(`[AutoHealer] Self-improvement found ${selfFindings.length} issues`);
+      this.ctx.logger?.(
+        `[AutoHealer] Self-improvement found ${selfFindings.length} issues`,
+      );
     } catch (error) {
-      this.ctx.logger?.('[AutoHealer] Self-improvement diagnostics failed:', error);
+      this.ctx.logger?.(
+        "[AutoHealer] Self-improvement diagnostics failed:",
+        error,
+      );
     }
 
     // Remove duplicates
-    const uniqueFindings = findings.filter((finding, index, self) =>
-      index === self.findIndex(f => f.id === finding.id)
+    const uniqueFindings = findings.filter(
+      (finding, index, self) =>
+        index === self.findIndex((f) => f.id === finding.id),
     );
 
-    this.ctx.logger?.(`[AutoHealer] Total unique findings: ${uniqueFindings.length}`);
+    this.ctx.logger?.(
+      `[AutoHealer] Total unique findings: ${uniqueFindings.length}`,
+    );
     return uniqueFindings;
   }
 
@@ -184,10 +204,10 @@ export class AutoHealer {
     }
 
     try {
-      this.ctx.logger?.('[AutoHealer] Analyzing findings with LLM');
+      this.ctx.logger?.("[AutoHealer] Analyzing findings with LLM");
       return await analyzeWithLLM(findings, this.ctx);
     } catch (error) {
-      this.ctx.logger?.('[AutoHealer] LLM analysis failed:', error);
+      this.ctx.logger?.("[AutoHealer] LLM analysis failed:", error);
       return findings; // Return original findings if LLM fails
     }
   }
@@ -197,34 +217,33 @@ export class AutoHealer {
    */
   private async applyAutomatedFixes(
     findings: Finding[],
-    options: { dryRun?: boolean; severityThreshold?: string }
+    options: { dryRun?: boolean; severityThreshold?: string },
   ): Promise<FixAttempt[]> {
-    try {
-      const fixes: FixAttempt[] = [];
-      const threshold = options.severityThreshold || 'minor';
+    const fixes: FixAttempt[] = [];
+    const threshold = options.severityThreshold || "minor";
 
-      // Filter findings that should be auto-fixed
-      const fixableFindings = findings.filter(finding =>
+    // Filter findings that should be auto-fixed
+    const fixableFindings = findings.filter(
+      (finding) =>
         finding.canAutoFix &&
-        this.meetsSeverityThreshold(finding.severity, threshold)
-      );
+        this.meetsSeverityThreshold(finding.severity, threshold),
+    );
 
-      this.ctx.logger?.(`[AutoHealer] Attempting to fix ${fixableFindings.length} findings automatically`);
+    this.ctx.logger?.(
+      `[AutoHealer] Attempting to fix ${fixableFindings.length} findings automatically`,
+    );
 
-      for (const finding of fixableFindings) {
-        const fixAttempt = await this.attemptFix(finding, options);
-        fixes.push(fixAttempt);
-      }
-
-      const successfulFixes = fixes.filter(f => f.success && f.applied);
-      this.ctx.logger?.(`[AutoHealer] Successfully applied ${successfulFixes.length} automated fixes`);
-
-      return fixes;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.ctx.logger?.(`[AutoHealer] Automated fixes failed: ${message}`);
-      return []; // Return empty array on error
+    for (const finding of fixableFindings) {
+      const fixAttempt = await this.attemptFix(finding, options);
+      fixes.push(fixAttempt);
     }
+
+    const successfulFixes = fixes.filter((f) => f.success && f.applied);
+    this.ctx.logger?.(
+      `[AutoHealer] Successfully applied ${successfulFixes.length} automated fixes`,
+    );
+
+    return fixes;
   }
 
   /**
@@ -232,7 +251,7 @@ export class AutoHealer {
    */
   private async attemptFix(
     finding: Finding,
-    options: { dryRun?: boolean }
+    options: { dryRun?: boolean },
   ): Promise<FixAttempt> {
     const startTime = Date.now();
     const fixAttempt: FixAttempt = {
@@ -250,7 +269,7 @@ export class AutoHealer {
       const template = templates[0];
 
       if (!template) {
-        fixAttempt.error = 'No suitable template found for this finding';
+        fixAttempt.error = "No suitable template found for this finding";
         return fixAttempt;
       }
 
@@ -265,21 +284,25 @@ export class AutoHealer {
           dryRun: options.dryRun || false,
           backupEnabled: true,
           skipValidation: false,
-        }
+        },
       );
 
       fixAttempt.success = result.success;
-      fixAttempt.applied = result.codeChanges?.some(change => change.applied) || false;
-      fixAttempt.validated = result.validationResults?.every(r => r.passed) || false;
+      fixAttempt.applied =
+        result.codeChanges?.some((change) => change.applied) || false;
+      fixAttempt.validated =
+        result.validationResults?.every((r) => r.passed) || false;
       fixAttempt.rollbackAvailable = result.rollbackAvailable || false;
 
       if (!result.success) {
-        fixAttempt.error = result.error || 'Template application failed';
+        fixAttempt.error = result.error || "Template application failed";
       }
-
     } catch (error) {
       fixAttempt.error = String(error);
-      this.ctx.logger?.(`[AutoHealer] Fix attempt failed for ${finding.id}:`, error);
+      this.ctx.logger?.(
+        `[AutoHealer] Fix attempt failed for ${finding.id}:`,
+        error,
+      );
     }
 
     fixAttempt.timeTaken = Date.now() - startTime;
@@ -291,22 +314,28 @@ export class AutoHealer {
    */
   private async validateFixes(
     originalFindings: Finding[],
-    fixes: FixAttempt[]
+    fixes: FixAttempt[],
   ): Promise<ValidationSummary> {
     try {
-      this.ctx.logger?.('[AutoHealer] Validating applied fixes');
+      this.ctx.logger?.("[AutoHealer] Validating applied fixes");
 
-      const successfulFixes = fixes.filter(f => f.success && f.applied);
+      const successfulFixes = fixes.filter((f) => f.success && f.applied);
       const issuesFixed = successfulFixes.length;
-      const autoFixed = successfulFixes.filter(f => f.validated).length;
+      const autoFixed = successfulFixes.filter((f) => f.validated).length;
 
       // Find findings that still need attention
-      const fixedFindingIds = new Set(successfulFixes.map(f => f.findingId));
-      const remainingFindings = originalFindings.filter(f => !fixedFindingIds.has(f.id));
+      const fixedFindingIds = new Set(successfulFixes.map((f) => f.findingId));
+      const remainingFindings = originalFindings.filter(
+        (f) => !fixedFindingIds.has(f.id),
+      );
 
       const issuesRemaining = remainingFindings.length;
-      const blockersRemaining = remainingFindings.filter(f => f.severity === 'blocker').length;
-      const manualReviewRequired = remainingFindings.filter(f => !f.canAutoFix).length;
+      const blockersRemaining = remainingFindings.filter(
+        (f) => f.severity === "blocker",
+      ).length;
+      const manualReviewRequired = remainingFindings.filter(
+        (f) => !f.canAutoFix,
+      ).length;
 
       const validation: ValidationSummary = {
         totalFindings: originalFindings.length,
@@ -317,7 +346,7 @@ export class AutoHealer {
         blockersRemaining,
       };
 
-      this.ctx.logger?.('[AutoHealer] Validation summary:', validation);
+      this.ctx.logger?.("[AutoHealer] Validation summary:", validation);
       return validation;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -329,7 +358,9 @@ export class AutoHealer {
         issuesRemaining: originalFindings.length,
         autoFixed: 0,
         manualReviewRequired: originalFindings.length,
-        blockersRemaining: originalFindings.filter(f => f.severity === 'blocker').length,
+        blockersRemaining: originalFindings.filter(
+          (f) => f.severity === "blocker",
+        ).length,
       };
     }
   }
@@ -340,50 +371,54 @@ export class AutoHealer {
   private generateSummary(
     validation: ValidationSummary,
     findings: Finding[],
-    fixes: FixAttempt[]
+    _fixes: FixAttempt[],
   ): HealingSummary {
     try {
-      let severity: HealingSummary['severity'];
+      let severity: HealingSummary["severity"];
       let message: string;
       const recommendations: string[] = [];
       const nextSteps: string[] = [];
 
       if (validation.blockersRemaining > 0) {
-        severity = 'failed';
+        severity = "failed";
         message = `Critical issues remain: ${validation.blockersRemaining} blockers unresolved`;
-        recommendations.push('Address remaining blocker issues immediately');
-        recommendations.push('Consider manual intervention for complex fixes');
-        nextSteps.push('Review failed fix attempts');
-        nextSteps.push('Apply manual fixes for remaining issues');
+        recommendations.push("Address remaining blocker issues immediately");
+        recommendations.push("Consider manual intervention for complex fixes");
+        nextSteps.push("Review failed fix attempts");
+        nextSteps.push("Apply manual fixes for remaining issues");
       } else if (validation.issuesRemaining > 0) {
-        severity = 'partial';
+        severity = "partial";
         message = `Partial success: ${validation.autoFixed} issues fixed automatically, ${validation.issuesRemaining} remain`;
-        recommendations.push('Review remaining issues for manual resolution');
-        recommendations.push('Consider updating templates for uncovered issues');
-        nextSteps.push('Manually address remaining findings');
-        nextSteps.push('Test system after manual fixes');
+        recommendations.push("Review remaining issues for manual resolution");
+        recommendations.push(
+          "Consider updating templates for uncovered issues",
+        );
+        nextSteps.push("Manually address remaining findings");
+        nextSteps.push("Test system after manual fixes");
       } else {
-        severity = 'success';
+        severity = "success";
         message = `Complete success: All ${validation.issuesFixed} issues resolved automatically`;
-        recommendations.push('Continue monitoring system health');
-        recommendations.push('Schedule regular self-healing checks');
-        nextSteps.push('Run full system test suite');
-        nextSteps.push('Monitor system performance');
+        recommendations.push("Continue monitoring system health");
+        recommendations.push("Schedule regular self-healing checks");
+        nextSteps.push("Run full system test suite");
+        nextSteps.push("Monitor system performance");
       }
 
       // Add specific recommendations based on findings
-      const securityIssues = findings.filter(f => f.area === 'security');
-      const performanceIssues = findings.filter(f => f.area === 'performance');
-      const protocolIssues = findings.filter(f => f.area === 'protocol');
+      const securityIssues = findings.filter((f) => f.area === "security");
+      const performanceIssues = findings.filter(
+        (f) => f.area === "performance",
+      );
+      const protocolIssues = findings.filter((f) => f.area === "protocol");
 
       if (securityIssues.length > 0) {
-        recommendations.push('Conduct comprehensive security audit');
+        recommendations.push("Conduct comprehensive security audit");
       }
       if (performanceIssues.length > 0) {
-        recommendations.push('Monitor system performance metrics');
+        recommendations.push("Monitor system performance metrics");
       }
       if (protocolIssues.length > 0) {
-        recommendations.push('Test MCP protocol compliance');
+        recommendations.push("Test MCP protocol compliance");
       }
 
       return {
@@ -397,10 +432,10 @@ export class AutoHealer {
       this.ctx.logger?.(`[AutoHealer] Summary generation failed: ${message}`);
       // Return safe defaults on error
       return {
-        severity: 'failed',
-        message: 'Failed to generate healing summary',
-        recommendations: ['Review error logs and retry healing'],
-        nextSteps: ['Check system health manually'],
+        severity: "failed",
+        message: "Failed to generate healing summary",
+        recommendations: ["Review error logs and retry healing"],
+        nextSteps: ["Check system health manually"],
       };
     }
   }
@@ -409,18 +444,20 @@ export class AutoHealer {
    * Check if finding meets severity threshold for auto-fix
    */
   private meetsSeverityThreshold(
-    severity: Finding['severity'],
-    threshold: string
+    severity: Finding["severity"],
+    threshold: string,
   ): boolean {
     try {
       const severityOrder = { blocker: 0, major: 1, minor: 2, info: 3 };
       const findingLevel = severityOrder[severity];
-      const thresholdLevel = severityOrder[threshold as Finding['severity']];
+      const thresholdLevel = severityOrder[threshold as Finding["severity"]];
 
       return findingLevel <= thresholdLevel;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.ctx.logger?.(`[AutoHealer] Severity threshold check failed: ${message}`);
+      this.ctx.logger?.(
+        `[AutoHealer] Severity threshold check failed: ${message}`,
+      );
       return false; // Safe default: don't auto-fix on error
     }
   }
@@ -436,7 +473,9 @@ export class AutoHealer {
   }> {
     try {
       const findings = await this.runDiagnostics();
-      const criticalIssues = findings.filter(f => f.severity === 'blocker').length;
+      const criticalIssues = findings.filter(
+        (f) => f.severity === "blocker",
+      ).length;
       const healthy = criticalIssues === 0;
 
       return {
@@ -444,7 +483,7 @@ export class AutoHealer {
         issues: findings.length,
         criticalIssues,
         message: healthy
-          ? 'System is healthy'
+          ? "System is healthy"
           : `System has ${criticalIssues} critical issues requiring attention`,
       };
     } catch (error) {
@@ -464,25 +503,24 @@ export class AutoHealer {
     findings: Finding[];
     recommendations: string[];
     estimatedTime: string;
-    riskLevel: 'low' | 'medium' | 'high';
+    riskLevel: "low" | "medium" | "high";
   }> {
     try {
       const findings = await this.runDiagnostics();
       const analyzedFindings = await this.analyzeFindings(findings);
       const templates = getTemplateRecommendations(analyzedFindings);
 
-      const recommendations = templates.map((template) =>
-        `Apply ${template.name} (${template.estimatedTime})`,
+      const recommendations = templates.map(
+        (template) => `Apply ${template.name} (${template.estimatedTime})`,
       );
 
       const estimatedTime = this.summarizeEstimatedTime(templates);
 
-      const highRiskFindings = analyzedFindings.filter(f => f.riskLevel === 'high').length;
-      const riskLevel = highRiskFindings > 2
-        ? 'high'
-        : highRiskFindings > 0
-          ? 'medium'
-          : 'low';
+      const highRiskFindings = analyzedFindings.filter(
+        (f) => f.riskLevel === "high",
+      ).length;
+      const riskLevel =
+        highRiskFindings > 2 ? "high" : highRiskFindings > 0 ? "medium" : "low";
 
       return {
         findings: analyzedFindings,
@@ -492,7 +530,9 @@ export class AutoHealer {
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.ctx.logger?.(`[AutoHealer] Failed to get healing recommendations: ${message}`);
+      this.ctx.logger?.(
+        `[AutoHealer] Failed to get healing recommendations: ${message}`,
+      );
       throw new Error(`Failed to get healing recommendations: ${message}`);
     }
   }
@@ -514,9 +554,14 @@ export class AutoHealer {
       if (minutes <= 0) {
         return `${templates.length} tasks`;
       }
-      return minutes >= 60 ? `${Math.round(minutes / 60)} hours` : `${minutes} minutes`;
+      return minutes >= 60
+        ? `${Math.round(minutes / 60)} hours`
+        : `${minutes} minutes`;
     } catch (error) {
-      this.ctx.logger?.('[AutoHealer] Failed to summarize estimated time:', error);
+      this.ctx.logger?.(
+        "[AutoHealer] Failed to summarize estimated time:",
+        error,
+      );
       return `${templates.length} tasks`;
     }
   }
@@ -527,14 +572,16 @@ export class AutoHealer {
       if (!matches || matches.length === 0) {
         return null;
       }
-      const numbers = matches.map((entry) => Number.parseInt(entry, 10)).filter((n) => !Number.isNaN(n));
+      const numbers = matches
+        .map((entry) => Number.parseInt(entry, 10))
+        .filter((n) => !Number.isNaN(n));
       if (numbers.length === 0) {
         return null;
       }
       const average = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
       return Math.round(average);
     } catch (error) {
-      this.ctx.logger?.('[AutoHealer] Failed to estimate minutes:', error);
+      this.ctx.logger?.("[AutoHealer] Failed to estimate minutes:", error);
       return null;
     }
   }
