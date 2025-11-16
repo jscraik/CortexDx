@@ -5,6 +5,16 @@
 
 import type { DiagnosticContext } from "../types.js";
 
+/**
+ * Safely convert metrics objects to Record<string, unknown>
+ * This avoids unsafe type casts while maintaining type information
+ */
+function metricsToRecord<T extends Record<string, unknown>>(metrics: T): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(metrics).map(([key, value]) => [key, value])
+    );
+}
+
 export interface HealthCheckResult {
     status: "healthy" | "degraded" | "unhealthy";
     component: string;
@@ -238,7 +248,7 @@ export const checkMemoryHealth = (): HealthCheckResult => {
         status,
         component: "memory",
         message,
-        details: mem as unknown as Record<string, unknown>,
+        details: metricsToRecord(mem),
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
     };
@@ -274,7 +284,7 @@ export const checkPerformanceHealth = (): HealthCheckResult => {
         status,
         component: "performance",
         message,
-        details: perf as unknown as Record<string, unknown>,
+        details: metricsToRecord(perf),
         timestamp: new Date().toISOString(),
         responseTimeMs: Date.now() - startTime,
     };

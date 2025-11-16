@@ -12,11 +12,31 @@
     "enabled": true,
     "rules": {
       "style": {
-        "useConst": "warn",
-        "noParameterAssign": "error"
+        "useConst": "error",
+        "noVar": "error",
+        "noParameterAssign": "error",
+        "useTemplate": "warn",
+        "useExponentiationOperator": "error"
       },
       "complexity": {
-        "noUselessCatch": "error"
+        "noUselessCatch": "error",
+        "noForEach": "warn",
+        "useFlatMap": "warn"
+      },
+      "performance": {
+        "noAccumulatingSpread": "warn",
+        "noDelete": "warn"
+      },
+      "suspicious": {
+        "noDoubleEquals": "error",
+        "noExplicitAny": "warn",
+        "noDebugger": "error",
+        "noConsoleLog": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUndeclaredVariables": "error",
+        "useExhaustiveDependencies": "warn"
       }
     }
   }

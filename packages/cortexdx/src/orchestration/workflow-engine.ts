@@ -14,6 +14,7 @@ import type {
   StageCondition,
   WorkflowStage,
 } from "./plugin-orchestrator.js";
+import { extractFindingFields } from "../utils/type-helpers.js";
 
 export interface WorkflowExecutionContext {
   workflowId: string;
@@ -215,9 +216,7 @@ export class WorkflowEngine {
       case "custom": {
         if (condition.field) {
           const fieldName = condition.field;
-          const fieldValues = allFindings
-            .map((f) => (f as unknown as Record<string, unknown>)[fieldName])
-            .filter((v) => v !== undefined);
+          const fieldValues = extractFindingFields(allFindings, fieldName);
 
           shouldExecute = fieldValues.some((v) =>
             this.evaluateOperator(v, condition.operator, condition.value),

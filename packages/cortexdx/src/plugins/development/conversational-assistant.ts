@@ -13,6 +13,7 @@ import type {
   DevelopmentContext,
   Finding,
 } from "../../types.js";
+import { getSessionState } from "../../utils/type-helpers.js";
 
 interface DevelopmentAssistantState extends Record<string, unknown> {
   intent: string;
@@ -67,7 +68,7 @@ interface DevelopmentStep {
 
 // Helper functions
 function buildSystemPrompt(session: ConversationSession): string {
-  const state = session.state as unknown as DevelopmentAssistantState;
+  const state = getSessionState<DevelopmentAssistantState>(session);
   const { userExpertiseLevel, projectType, language, intent, phase } = state;
 
   let prompt = "You are an expert MCP (Model Context Protocol) development assistant. ";
@@ -129,7 +130,7 @@ function generateActions(
   conversationPrompt: string;
 }> {
   const actions = [];
-  const state = session.state as unknown as DevelopmentAssistantState;
+  const state = getSessionState<DevelopmentAssistantState>(session);
   const lowerResponse = response.toLowerCase();
 
   // Check if response mentions code generation
@@ -416,7 +417,7 @@ export const DevelopmentAssistantPlugin: ConversationalPlugin = {
       };
     }
 
-    const state = session.state as unknown as DevelopmentAssistantState;
+    const state = getSessionState<DevelopmentAssistantState>(session);
 
     // Check if user is requesting a tutorial
     const lowerInput = userInput.toLowerCase();

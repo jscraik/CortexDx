@@ -3,13 +3,22 @@ import { join } from "node:path";
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/cli.ts", "src/index.ts", "src/server.ts", "src/workers/sandbox.ts", "src/plugins/index.ts", "src/adapters/stdio-wrapper.ts"],
+  entry: {
+    cli: "src/cli.ts",
+    index: "src/index.ts",
+    server: "src/server.ts",
+    "workers/sandbox": "src/workers/sandbox.ts",
+    "plugins/index": "src/plugins/index.ts",
+    "adapters/stdio-wrapper": "src/adapters/stdio-wrapper.ts",
+  },
   format: ["esm"],
-  splitting: false,
+  splitting: true,
+  treeshake: true,
   sourcemap: true,
   dts: true,
   clean: true,
   target: "node20",
+  minify: process.env.NODE_ENV === "production",
   banner: { js: "#!/usr/bin/env node" },
   onSuccess: async () => {
     // Copy web assets to dist

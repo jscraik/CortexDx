@@ -11,6 +11,16 @@ import {
     performHealthCheck
 } from "./health-checks.js";
 
+/**
+ * Safely convert metrics objects to Record<string, unknown>
+ * This avoids unsafe type casts while maintaining type information
+ */
+function metricsToRecord<T extends Record<string, unknown>>(metrics: T): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(metrics).map(([key, value]) => [key, value])
+    );
+}
+
 export interface MonitoringConfig {
     checkIntervalMs: number;
     alertThresholds: AlertThresholds;
@@ -198,7 +208,7 @@ export class MonitoringSystem {
                 component: "memory",
                 message: `Memory usage at ${health.metrics.memory.heapUsagePercent}%`,
                 timestamp: new Date().toISOString(),
-                details: health.metrics.memory as unknown as Record<string, unknown>,
+                details: metricsToRecord(health.metrics.memory),
             });
         }
 
@@ -216,7 +226,7 @@ export class MonitoringSystem {
                 component: "performance",
                 message: `Average response time: ${health.metrics.performance.avgResponseTimeMs}ms`,
                 timestamp: new Date().toISOString(),
-                details: health.metrics.performance as unknown as Record<string, unknown>,
+                details: metricsToRecord(health.metrics.performance),
             });
         }
 
@@ -230,7 +240,7 @@ export class MonitoringSystem {
                 component: "performance",
                 message: `Error rate at ${health.metrics.performance.errorRate}%`,
                 timestamp: new Date().toISOString(),
-                details: health.metrics.performance as unknown as Record<string, unknown>,
+                details: metricsToRecord(health.metrics.performance),
             });
         }
 

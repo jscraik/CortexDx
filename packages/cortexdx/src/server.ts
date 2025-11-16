@@ -1532,6 +1532,20 @@ const tlsEnabled =
   existsSync(TLS_CERT_PATH) &&
   existsSync(TLS_KEY_PATH);
 
+// Initialize server asynchronously to avoid blocking on TLS cert loading
+async function createServerInstance() {
+  if (tlsEnabled) {
+    const [cert, key] = await Promise.all([
+      readFile(TLS_CERT_PATH as string),
+      readFile(TLS_KEY_PATH as string),
+    ]);
+    return createHttpsServer({ cert, key }, requestHandler);
+  }
+  return createHttpServer(requestHandler);
+}
+
+// Create server synchronously for backwards compatibility (fallback)
+// This will be replaced by async initialization in SHOULD_LISTEN block
 const server = tlsEnabled
   ? createHttpsServer(
       {
@@ -1544,6 +1558,30 @@ const server = tlsEnabled
 
 const SHOULD_LISTEN =
   process.env.VITEST !== "true" && process.env.NODE_ENV !== "test";
+
+// Global error handlers for uncaught errors
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  serverLogger.error(
+    { reason, promise: String(promise) },
+    'Unhandled Promise Rejection - this should not happen in production'
+  );
+  // In production, we might want to gracefully shutdown
+  // For now, log and continue to prevent crashes
+});
+
+process.on('uncaughtException', (error: Error) => {
+  serverLogger.fatal({ error, stack: error.stack }, 'Uncaught Exception - fatal error');
+  // Graceful shutdown on uncaught exception
+  monitoring.stop();
+  server.close(() => {
+    process.exit(1);
+  });
+  // Force exit after 10 seconds if graceful shutdown fails
+  setTimeout(() => {
+    serverLogger.error('Forced shutdown after uncaught exception');
+    process.exit(1);
+  }, 10000);
+});
 
 type JsonRpcId = string | number | null;
 type JsonRpcResponsePayload =
@@ -1801,19 +1839,22 @@ const getHeaderValue = (
 };
 
 if (SHOULD_LISTEN) {
-  server.listen(PORT, HOST, () => {
-    const baseUrl = `${tlsEnabled ? "https" : "http"}://${HOST}:${PORT}`;
-    const providers = Object.keys(registry.getAllProviders()).join(", ");
+  // Use async server initialization to avoid blocking on TLS cert loading
+  (async () => {
+    const asyncServer = await createServerInstance();
+    asyncServer.listen(PORT, HOST, () => {
+      const baseUrl = `${tlsEnabled ? "https" : "http"}://${HOST}:${PORT}`;
+      const providers = Object.keys(registry.getAllProviders()).join(", ");
 
-    serverLogger.info(
-      { baseUrl, providers, tlsEnabled },
-      `🚀 CortexDx Server running on ${baseUrl}`,
-    );
-    serverLogger.info(`📚 Academic providers available: ${providers}`);
-    serverLogger.info(`🌐 Web Interface: ${baseUrl}/`);
+      serverLogger.info(
+        { baseUrl, providers, tlsEnabled },
+        `🚀 CortexDx Server running on ${baseUrl}`,
+      );
+      serverLogger.info(`📚 Academic providers available: ${providers}`);
+      serverLogger.info(`🌐 Web Interface: ${baseUrl}/`);
 
-    // Log endpoints in a structured way
-    const endpoints = [
+      // Log endpoints in a structured way
+      const endpoints = [
       { method: "GET", path: "/", description: "Web Interface" },
       {
         method: "GET",
@@ -1939,6 +1980,10 @@ if (SHOULD_LISTEN) {
         `\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`,
       );
     }
+    });
+  })().catch((error) => {
+    serverLogger.error({ error }, "Failed to start server");
+    process.exit(1);
   });
 }
 

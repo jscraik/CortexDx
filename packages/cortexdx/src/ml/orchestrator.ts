@@ -5,6 +5,7 @@
 
 import { safeParseJson } from "../utils/json.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
+import { toRecord } from "../utils/type-helpers.js";
 import {
   type ModelManager,
   createModelManager,
@@ -179,7 +180,7 @@ export class LlmOrchestrator {
           environment: problem.context.environment || "unknown",
           tools: [],
           history: [],
-          metadata: problem.context as unknown as Record<string, unknown>,
+          metadata: toRecord(problem.context),
         },
       );
 

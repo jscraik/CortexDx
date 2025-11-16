@@ -9,6 +9,7 @@ import {
   createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "../../types.js";
+import { LRUCache, createCacheKey } from "../../utils/lru-cache.js";
 import { HttpMcpClient, sanitizeToolArgs } from "./http-mcp-client.js";
 
 export interface OpenAlexWork {
@@ -105,6 +106,7 @@ export class OpenAlexProvider {
   private readonly licenseValidator: LicenseValidatorPlugin;
   private readonly remoteClient?: HttpMcpClient;
   private readonly contactEmail?: string;
+  private readonly cache: LRUCache<OpenAlexWork[] | OpenAlexWork | OpenAlexAuthor | OpenAlexInstitution>;
   private lastRequestAt = 0;
   private readonly throttleMs =
     Number.parseInt(process.env.OPENALEX_THROTTLE_MS ?? "200", 10) || 200;
@@ -115,6 +117,15 @@ export class OpenAlexProvider {
     const headerContact = ctx.headers?.["x-openalex-contact"] as string | undefined;
     const envContact = process.env.OPENALEX_CONTACT_EMAIL;
     this.contactEmail = (headerContact ?? envContact ?? "").trim().toLowerCase() || undefined;
+
+    // Initialize cache with 5-minute TTL and max 1000 items
+    this.cache = new LRUCache({
+      maxSize: 1000,
+      ttl: 5 * 60 * 1000, // 5 minutes
+      onEvict: (key) => {
+        ctx.logger(`OpenAlex cache evicted: ${key}`);
+      },
+    });
 
     // Warn if contact email not configured (impacts rate limits significantly)
     if (!this.contactEmail) {
@@ -308,10 +319,20 @@ export class OpenAlexProvider {
 
   /**
    * Search for works
+   * Results are cached for 5 minutes to reduce API calls
    */
   async searchWorks(
     params: OpenAlexSearchParams,
   ): Promise<{ results: OpenAlexWork[]; meta: unknown }> {
+    const cacheKey = createCacheKey('works', params);
+
+    // Try cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      this.ctx.logger(`OpenAlex searchWorks cache HIT`);
+      return cached as { results: OpenAlexWork[]; meta: unknown };
+    }
+
     const searchParams = new URLSearchParams();
 
     if (params.query) searchParams.append("search", params.query);
@@ -332,6 +353,9 @@ export class OpenAlexProvider {
       type: "url",
       ref: target,
     });
+
+    this.cache.set(cacheKey, response);
+    this.ctx.logger(`OpenAlex searchWorks cache MISS`);
     return response;
   }
 

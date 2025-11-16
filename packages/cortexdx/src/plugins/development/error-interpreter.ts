@@ -14,6 +14,7 @@ import type {
   Finding,
   RankedSolution,
 } from "../../types.js";
+import { getSessionState } from "../../utils/type-helpers.js";
 
 interface ErrorAnalysisState extends Record<string, unknown> {
   error?: ParsedError;
@@ -147,7 +148,7 @@ export const ErrorInterpreterPlugin: ConversationalPlugin = {
       };
     }
 
-    const state = session.state as unknown as ErrorAnalysisState;
+    const state = getSessionState<ErrorAnalysisState>(session);
 
     // Parse error if not already done
     if (!state.error && state.phase === "parsing") {

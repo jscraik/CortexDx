@@ -17,6 +17,7 @@ import type {
   DiagnosticPlugin,
   Finding,
 } from "../types.js";
+import { extractFindingFields } from "../utils/type-helpers.js";
 
 export interface PluginWorkflow {
   id: string;
@@ -590,9 +591,7 @@ export class PluginOrchestrator {
         if (!condition.field) return true;
         const fieldName = condition.field;
         // Custom field evaluation (simplified)
-        const fieldValues = allFindings
-          .map((f) => (f as unknown as Record<string, unknown>)[fieldName])
-          .filter((v) => v !== undefined);
+        const fieldValues = extractFindingFields(allFindings, fieldName);
         return fieldValues.some((v) =>
           this.compareValues(v, condition.operator, condition.value),
         );
