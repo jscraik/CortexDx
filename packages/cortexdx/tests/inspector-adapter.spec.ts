@@ -210,18 +210,22 @@ describe("InspectorAdapter diagnose", () => {
 });
 
 describe("InspectorAdapter probe mapping", () => {
-  it("should map probe names to correct areas", () => {
+  it("should assign correct area values in findings for each probe", async () => {
     const adapter = new InspectorAdapter(baseContext());
 
-    const mapProbeToArea = (adapter as unknown as {
-      mapProbeToArea(probeName: string): string;
-    }).mapProbeToArea;
+    const probeNames = [
+      { probe: "handshake", expectedArea: "protocol" },
+      { probe: "security", expectedArea: "security" },
+      { probe: "performance", expectedArea: "perf" },
+      { probe: "stream_sse", expectedArea: "streaming" },
+      { probe: "cors_preflight", expectedArea: "cors" },
+    ];
 
-    expect(mapProbeToArea.call(adapter, "handshake")).toBe("protocol");
-    expect(mapProbeToArea.call(adapter, "security")).toBe("security");
-    expect(mapProbeToArea.call(adapter, "performance")).toBe("perf");
-    expect(mapProbeToArea.call(adapter, "stream_sse")).toBe("streaming");
-    expect(mapProbeToArea.call(adapter, "cors_preflight")).toBe("cors");
+    for (const { probe, expectedArea } of probeNames) {
+      const report = await adapter.diagnose("http://test.com", [probe]);
+      expect(report.findings.length).toBeGreaterThan(0);
+      expect(report.findings[0].area).toBe(expectedArea);
+    }
   });
 });
 
