@@ -13,7 +13,7 @@
 > RC likely published (v1.22.0 on Nov 13) — validation window **NOW ACTIVE**
 
 > **Deadline:**  
-> Final Spec: **November 25, 2025** (**9 days away**)
+> Final Spec: **November 25, 2025**
 
 > **Action Required:**  
 > Run `./scripts/rc-validation-quickstart.sh` to start validation testing.
