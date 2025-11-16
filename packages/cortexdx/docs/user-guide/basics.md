@@ -349,9 +349,6 @@ Now that you understand the basics, explore these guides:
 
 ### Advanced Topics
 
-- **[CI/CD Integration](ci-cd.md)** - Automate diagnostics in your pipeline
-- **[Integrations](integrations.md)** - Docker, monitoring, and IDE setup
-- **[Best Practices](best-practices.md)** - Production deployment patterns
 
 ### Reference Materials
 
