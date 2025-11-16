@@ -7,7 +7,7 @@
 import { safeParseJson } from "../utils/json.js";
 import { MemorySaver } from "@langchain/langgraph";
 import Database from "better-sqlite3";
-import type { WorkflowState } from "./agent-orchestrator.js";
+import type { WorkflowState } from "./workflow-types.js";
 
 /**
  * State checkpoint for persistence
