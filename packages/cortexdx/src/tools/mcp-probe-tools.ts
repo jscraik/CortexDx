@@ -160,7 +160,7 @@ async function probeServer(
             config.targetUrl,
             result.summary,
             result.metadata,
-            [], // findings will be embedded in summary
+            result.findings,
             result.duration
         );
 

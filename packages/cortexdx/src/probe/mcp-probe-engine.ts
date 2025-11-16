@@ -16,6 +16,7 @@ import { randomUUID } from "node:crypto";
 import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
 import { runPlugins } from "../plugin-host.js";
 import { createDiagnosticContext } from "../context/context-factory.js";
+import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
 import type { Finding, McpToolResult } from "../types.js";
 
 export interface Auth0Config {
@@ -62,6 +63,7 @@ export interface ProbeResult {
     reportUrl: string;
     summary: DiagnosticSummary;
     metadata: ProbeMetadata;
+    findings: Finding[];
     timestamp: string;
     duration: number;
 }
@@ -118,6 +120,7 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
             reportUrl: `/reports/${reportId}`,
             summary,
             metadata,
+            findings,
             timestamp: new Date().toISOString(),
             duration
         };
@@ -129,6 +132,15 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
     } catch (error) {
         const duration = Date.now() - startTime;
         console.error('[MCP Probe] Failed:', error);
+
+        const errorFindings: Finding[] = [{
+            id: 'probe.engine.error',
+            area: 'probe-engine',
+            severity: 'blocker',
+            title: 'Probe failed',
+            description: error instanceof Error ? error.message : String(error),
+            evidence: []
+        }];
 
         return {
             success: false,
@@ -151,6 +163,7 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
                 resources: [],
                 capabilities: {}
             },
+            findings: errorFindings,
             timestamp: new Date().toISOString(),
             duration
         };
@@ -161,7 +174,7 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
  * Enumerate target MCP server capabilities
  */
 async function enumerateCapabilities(
-    client: any,
+    client: HttpMcpClient,
     targetUrl: string
 ): Promise<ProbeMetadata> {
     const metadata: ProbeMetadata = {
@@ -283,7 +296,7 @@ function extractToolsFromResult(result: McpToolResult): Array<{ name: string; de
             if (content.type === 'text' && content.text) {
                 const data = JSON.parse(content.text);
                 if (data.tools && Array.isArray(data.tools)) {
-                    return data.tools.map((t: any) => ({
+                    return data.tools.map((t: { name?: string; description?: string }) => ({
                         name: t.name || 'unknown',
                         description: t.description || ''
                     }));
@@ -306,7 +319,7 @@ function extractResourcesFromResult(result: McpToolResult): Array<{ uri: string;
             if (content.type === 'text' && content.text) {
                 const data = JSON.parse(content.text);
                 if (data.resources && Array.isArray(data.resources)) {
-                    return data.resources.map((r: any) => ({
+                    return data.resources.map((r: { uri?: string; name?: string }) => ({
                         uri: r.uri || '',
                         name: r.name || 'unknown'
                     }));
