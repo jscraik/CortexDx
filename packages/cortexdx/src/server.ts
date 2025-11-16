@@ -786,12 +786,21 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                         return;
                     }
 
-                    // Validate duration (max 24 hours)
-                    if (payload.duration > 86400) {
+                    // Validate duration (min 60 seconds, max 24 hours)
+                    if (payload.duration < 60) {
                         res.writeHead(400);
                         res.end(JSON.stringify({
                             success: false,
-                            error: 'Duration cannot exceed 86400 seconds (24 hours)',
+                            error: 'Duration must be at least 60 seconds',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
+                    if (payload.duration >= 86400) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Duration cannot exceed or equal 86400 seconds (24 hours)',
                             timestamp: new Date().toISOString(),
                         }));
                         return;
