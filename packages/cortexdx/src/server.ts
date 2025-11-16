@@ -804,8 +804,6 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                         }));
                         return;
                     }
-                        return;
-                    }
 
                     // Validate duration (min 60 seconds, max 24 hours)
                     if (payload.duration < 60) {
