@@ -259,7 +259,6 @@ describe('Server Health Endpoints', () => {
       }
 
       const current = process.memoryUsage().heapUsed;
-      const isLeaking = current > threshold;
 
       // This is just an example - real leak detection is more sophisticated
       expect(current).toBeGreaterThan(baseline);
