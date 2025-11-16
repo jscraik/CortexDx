@@ -41,34 +41,6 @@
       }
     ]
   },
-  "scope": {
-    "affected_components": [],
-    "affected_files": [],
-    "affected_services": []
-  },
-  "remediation": {
-    "required": true,
-    "plan": "Complete full reuse attestation before grace period ends on 2025-12-10",
-    "timeline": [
-      {
-        "milestone": "Complete candidate survey",
-        "target_date": "2025-11-25",
-        "status": "in_progress"
-      },
-      {
-        "milestone": "Document reuse decisions and evidence",
-        "target_date": "2025-12-05",
-        "status": "pending"
-      },
-      {
-        "milestone": "Full attestation ready",
-        "target_date": "2025-12-10",
-        "status": "pending"
-      }
-    ],
-    "completion_criteria": "Full reuse attestation present in analysis/reuse-evaluation.md with all required sections completed",
-    "blocking_issues": []
-  },
   "expiration": {
     "expires_on": "2025-12-10",
     "auto_renew": false,
@@ -84,31 +56,5 @@
       "approval_link": ".cortexdx/rules/code-review-checklist.md:12-15",
       "conditions": ["Remediation plan must be completed before 2025-12-11"]
     }
-  ],
-  "monitoring": {
-    "metrics": ["Remediation timeline progress", "Evidence artifact completeness"],
-    "alerts": ["7 days before expiration", "3 days before expiration"],
-    "review_frequency": "weekly"
-  },
-  "audit_trail": [
-    {
-      "date": "2025-11-16",
-      "action": "created",
-      "actor": "@example-user",
-      "details": "Grace period waiver created for reuse-first attestation"
-    },
-    {
-      "date": "2025-11-16",
-      "action": "approved",
-      "actor": "@maintainer",
-      "details": "Approved under grace period policy with remediation plan"
-    }
-  ],
-  "extensions": [],
-  "metadata": {
-    "tags": ["grace-period", "reuse-first", "transition"],
-    "related_waivers": [],
-    "supersedes": null,
-    "superseded_by": null
-  }
+  ]
 }
