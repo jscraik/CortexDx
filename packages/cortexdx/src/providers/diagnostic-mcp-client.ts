@@ -61,20 +61,6 @@ export async function createDiagnosticMcpClient(
         );
         headers['X-Diagnostic-Session-Key'] = session.apiKey;
     }
-    // Method 3: Previously, direct Auth0 authentication (no session) was supported here.
-    // This fallback is now deprecated and removed for clarity.
-
-    const clientOptions: HttpMcpClientOptions = {
-        baseUrl: options.targetServerUrl,
-        headers,
-        timeoutMs: options.timeoutMs,
-        userAgent: options.userAgent || 'CortexDx-Diagnostic-Client/1.0'
-    };
-
-    return new HttpMcpClient(clientOptions);
-}
-
-/**
  * Create a diagnostic session on the target MCP server
  *
  * Workflow:
