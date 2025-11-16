@@ -13,7 +13,7 @@
     "codebasePath": "/tmp/repo",
     "state": "not_indexed",
     "summary": "No DeepContext index artifacts detected; status: index cleared; missing /tmp/repo/.codex-context",
-    "updatedAt": "2025-11-14T20:48:27.812Z",
+    "updatedAt": "2025-11-16T01:54:09.156Z",
     "remoteStatusText": "index cleared",
     "codexContextDir": "/tmp/repo/.codex-context",
     "codexContextExists": false,
@@ -54,5 +54,15 @@
     "indexedCodebasesPath": "/Users/jamiecraik/CortexDx/.codex-context/indexed-codebases.json",
     "indexedCodebasesExists": true,
     "indexedCodebasesSnapshot": "[\n  [\n    \"/Users/jamiecraik/CortexDx\",\n    {\n      \"path\": \"/Users/jamiecraik/CortexDx\",\n      \"namespace\": \"mcp_6be9939989f16e18\",\n      \"totalChunks\": 1367,\n      \"indexedAt\": \"2025-11-12T21:12:11.814Z\"\n    }\n  ]\n]"
+  },
+  "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx",
+    "state": "not_indexed",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2025-11-16T01:54:09.154Z",
+    "remoteStatusText": "status",
+    "codexContextDir": "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextExists": false,
+    "indexedCodebasesExists": false
   }
 }
