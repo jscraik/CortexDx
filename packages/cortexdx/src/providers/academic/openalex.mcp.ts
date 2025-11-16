@@ -115,6 +115,21 @@ export class OpenAlexProvider {
     const headerContact = ctx.headers?.["x-openalex-contact"] as string | undefined;
     const envContact = process.env.OPENALEX_CONTACT_EMAIL;
     this.contactEmail = (headerContact ?? envContact ?? "").trim().toLowerCase() || undefined;
+
+    // Warn if contact email not configured (impacts rate limits significantly)
+    if (!this.contactEmail) {
+      ctx.logger(
+        "[OpenAlex] PERFORMANCE WARNING: OPENALEX_CONTACT_EMAIL not set. " +
+        "You are using the standard rate limit (100 requests/minute). " +
+        "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
+        "(10x higher rate limit: 1000 requests/minute). " +
+        "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com."
+      );
+    } else {
+      ctx.logger(
+        `[OpenAlex] Using polite pool with contact email: ${this.contactEmail} (1000 req/min rate limit)`
+      );
+    }
   }
 
   private buildHeaders(extra?: Record<string, string>): Record<string, string> {

@@ -146,7 +146,7 @@ export class WikidataProvider {
       {
         name: "wikidata_vector_search_items",
         description:
-          "Performs semantic search over Wikidata items using vector embeddings",
+          "Performs semantic search over Wikidata items. NOTE: Currently uses enhanced keyword search with relevance scoring as vector search integration is pending. Results are still useful but may not capture full semantic similarity.",
         inputSchema: {
           type: "object",
           properties: {
@@ -173,7 +173,7 @@ export class WikidataProvider {
       {
         name: "wikidata_vector_search_properties",
         description:
-          "Performs semantic search over Wikidata properties using vector embeddings",
+          "Performs semantic search over Wikidata properties. NOTE: Currently uses enhanced keyword search with relevance scoring as vector search integration is pending. For best results, use specific property-related keywords.",
         inputSchema: {
           type: "object",
           properties: {
@@ -533,19 +533,26 @@ export class WikidataProvider {
 
   /**
    * Vector search for items using semantic embeddings
-   * Note: This requires the Wikidata vector database service
+   *
+   * CURRENT STATUS: Uses enhanced keyword search as fallback
+   * The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
+   * Integration with Wikidata vector database service is planned but not yet implemented
+   *
+   * @param query - Natural language search query
+   * @param limit - Maximum number of results (default: 10)
+   * @param language - Language code (default: 'en')
+   * @returns Search results with relevance scores
    */
   async vectorSearchItems(
     query: string,
     limit = 10,
     language = "en",
   ): Promise<WikidataVectorSearchResult[]> {
-    // Note: The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
-    // This is a placeholder implementation that falls back to keyword search
-    // TODO: Integrate with Wikidata vector database service when available
-
+    // Log fallback behavior for transparency
     this.ctx.logger(
-      "Vector search not yet fully integrated with Wikidata vector database",
+      "[Wikidata] Vector search using enhanced keyword search fallback. " +
+      "For true semantic search, Wikidata vector database integration is required. " +
+      "See: https://wd-mcp.wmcloud.org/mcp/",
     );
 
     // Fallback to enhanced keyword search with scoring
@@ -555,6 +562,7 @@ export class WikidataProvider {
       limit,
     });
 
+    // Apply relevance scoring based on position
     return keywordResults.map((result, index) => ({
       id: result.id,
       label: result.label,
@@ -567,19 +575,26 @@ export class WikidataProvider {
 
   /**
    * Vector search for properties using semantic embeddings
-   * Note: This requires the Wikidata vector database service
+   *
+   * CURRENT STATUS: Uses enhanced keyword search as fallback
+   * The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
+   * Integration with Wikidata vector database service is planned but not yet implemented
+   *
+   * @param query - Natural language search query for properties
+   * @param limit - Maximum number of results (default: 10)
+   * @param language - Language code (default: 'en')
+   * @returns Property search results with relevance scores
    */
   async vectorSearchProperties(
     query: string,
     limit = 10,
     language = "en",
   ): Promise<WikidataVectorSearchResult[]> {
-    // Note: The official WikidataMCP uses https://wd-mcp.wmcloud.org/mcp/ for vector search
-    // This is a placeholder implementation that falls back to keyword search
-    // TODO: Integrate with Wikidata vector database service when available
-
+    // Log fallback behavior for transparency
     this.ctx.logger(
-      "Vector search not yet fully integrated with Wikidata vector database",
+      "[Wikidata] Property vector search using enhanced keyword search fallback. " +
+      "For true semantic search, Wikidata vector database integration is required. " +
+      "See: https://wd-mcp.wmcloud.org/mcp/",
     );
 
     // Fallback to enhanced keyword search for properties
@@ -590,6 +605,7 @@ export class WikidataProvider {
       type: "property",
     });
 
+    // Apply relevance scoring based on position
     return keywordResults.map((result, index) => ({
       id: result.id,
       label: result.label,

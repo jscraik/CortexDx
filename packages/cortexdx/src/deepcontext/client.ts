@@ -60,6 +60,31 @@ export class DeepContextClient {
     this.jinaApiKey = options.jinaApiKey ?? process.env.JINA_API_KEY;
     this.turbopufferApiKey =
       options.turbopufferApiKey ?? process.env.TURBOPUFFER_API_KEY;
+
+    // Early API key validation with helpful error message
+    if (!this.apiKey || this.apiKey.trim().length === 0) {
+      const errorMessage = [
+        "DeepContext API key is required but not configured.",
+        "",
+        "To use DeepContext, set one of these environment variables (in priority order):",
+        "  1. WILDCARD_API_KEY     (recommended)",
+        "  2. DEEPCONTEXT_API_KEY",
+        "  3. DEEPCONTEXT_API_TOKEN",
+        "  4. DEEPCONTEXT_TOKEN",
+        "",
+        "To obtain an API key:",
+        "  1. Visit https://wildcard.ai",
+        "  2. Sign up or log in",
+        "  3. Generate an API key from your dashboard",
+        "  4. Set the environment variable: export WILDCARD_API_KEY=your_key_here",
+        "",
+        "Note: DeepContext tools will not function without a valid API key.",
+      ].join("\n");
+
+      this.logger?.(errorMessage);
+      // Don't throw immediately to allow graceful degradation
+      // Tools will throw when actually called
+    }
   }
 
   public async indexCodebase(
@@ -135,6 +160,25 @@ export class DeepContextClient {
         result.data && typeof result.data === "object" && result.data !== null
           ? (result.data as Record<string, unknown>)
           : undefined,
+    };
+  }
+
+  /**
+   * Health check for DeepContext configuration
+   * Returns true if API key is configured, false otherwise
+   */
+  public healthCheck(): { configured: boolean; message: string } {
+    if (!this.apiKey || this.apiKey.trim().length === 0) {
+      return {
+        configured: false,
+        message:
+          "DeepContext not configured: API key missing. Set WILDCARD_API_KEY environment variable.",
+      };
+    }
+
+    return {
+      configured: true,
+      message: "DeepContext configured with API key",
     };
   }
 
