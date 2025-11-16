@@ -71,7 +71,7 @@
 - [ ] Store tokens securely after user consent
 - [ ] Document user flow in AUTH0_SETUP.md
 
-**Phase 5 Roadmap Reference**: `docs/PHASE5_ROADMAP.md:13`
+**Phase 5 Roadmap Reference**: [`docs/PHASE5_ROADMAP.md#auth0-upgrades`](docs/PHASE5_ROADMAP.md#auth0-upgrades)
 
 ### Identity & Consent
 
