@@ -109,9 +109,8 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
       // Check tier from header
       const tierHeader = req.headers["x-rate-limit-tier"];
       if (tierHeader && typeof tierHeader === "string") {
-        const tier = tierHeader as "community" | "professional" | "enterprise";
-        if (["community", "professional", "enterprise"].includes(tier)) {
-          return tier;
+        if (["community", "professional", "enterprise"].includes(tierHeader)) {
+          return tierHeader as "community" | "professional" | "enterprise";
         }
       }
 
