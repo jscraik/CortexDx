@@ -3,9 +3,7 @@
  * Manages conversation context, session handling, and prompt engineering with <2s response time requirement
  */
 
-import { safeParseJson } from "../utils/json.js";
 import { createOllamaAdapter } from "../adapters/ollama.js";
-import { toRecord } from "../utils/type-helpers.js";
 import {
   type ModelManager,
   createModelManager,
@@ -27,8 +25,9 @@ import type {
   Problem,
   Solution,
 } from "../types.js";
-import { hasOllama } from "./detect.js";
 import { createDeterministicSeed } from "../utils/deterministic.js";
+import { safeParseJson } from "../utils/json.js";
+import { hasOllama } from "./detect.js";
 
 export interface OrchestratorConfig {
   preferredBackend?: "ollama" | "auto";
@@ -105,7 +104,8 @@ export class LlmOrchestrator {
   ): Promise<ConversationId> {
     const adapter = await this.selectBestAdapter();
     const seed = context.deterministic
-      ? context.deterministicSeed ?? createDeterministicSeed(`${context.endpoint}:${sessionType}`)
+      ? (context.deterministicSeed ??
+        createDeterministicSeed(`${context.endpoint}:${sessionType}`))
       : undefined;
 
     const conversationContext: ConversationContext = {
@@ -166,7 +166,7 @@ export class LlmOrchestrator {
       }
 
       // Use prompt template for explanation
-      const prompt = this.buildPromptFromTemplate("error-explanation", {
+      this.buildPromptFromTemplate("error-explanation", {
         error: problem.description,
         severity: problem.severity,
         context: JSON.stringify(problem.context, null, 2),
@@ -180,7 +180,7 @@ export class LlmOrchestrator {
           environment: problem.context.environment || "unknown",
           tools: [],
           history: [],
-          metadata: toRecord(problem.context),
+          metadata: { ...problem.context } as Record<string, unknown>,
         },
       );
 
@@ -355,7 +355,7 @@ export class LlmOrchestrator {
     context: DiagnosticContext,
   ): Promise<CodeAnalysis> {
     const adapter = await this.selectBestAdapter();
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       // Check cache
@@ -433,7 +433,9 @@ export class LlmOrchestrator {
     }
 
     if (this.adapters.size === 0) {
-      throw new Error("Ollama backend unavailable; install and start Ollama to enable local LLM features.");
+      throw new Error(
+        "Ollama backend unavailable; install and start Ollama to enable local LLM features.",
+      );
     }
   }
 
