@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type {
   ChatMessage,
   DevelopmentContext,
@@ -69,7 +70,7 @@ export class AutoHealer {
     dryRun?: boolean;
     severityThreshold?: 'blocker' | 'major' | 'minor' | 'info';
   } = {}): Promise<HealingReport> {
-    const jobId = `heal_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const jobId = `heal_${randomUUID()}`;
     const startedAt = new Date().toISOString();
 
     this.ctx.logger?.(`[AutoHealer] Starting self-healing job ${jobId}`);

@@ -11,6 +11,7 @@
  * - Security and compliance checks for generated fixes
  */
 
+import { randomUUID } from "node:crypto";
 import type {
   CodeSample,
   DevelopmentContext,
@@ -807,7 +808,7 @@ class RollbackManager {
     problemId: string,
     fixStrategy: string,
   ): Promise<string> {
-    const snapshotId = `snapshot-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const snapshotId = `snapshot-${randomUUID()}`;
 
     const fileContents = new Map<string, string>();
     for (const file of files) {

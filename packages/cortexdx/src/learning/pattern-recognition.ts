@@ -4,6 +4,7 @@
  * Requirements: 10.3
  */
 
+import { randomUUID } from "node:crypto";
 import type { CommonIssuePattern, ResolutionPattern } from "../storage/pattern-storage.js";
 import type { Problem, Solution } from "../types.js";
 
@@ -263,7 +264,7 @@ export function createLearningEngine(
             } else {
                 // Create new pattern
                 patterns.push({
-                    id: `pattern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    id: `pattern_${randomUUID()}`,
                     problemType: problem.type,
                     problemSignature: signature,
                     solution,

@@ -4,6 +4,7 @@
  * Requirements: 7.5, 10.5
  */
 
+import { randomUUID } from "node:crypto";
 import type { Finding } from "../types.js";
 import type { UsageMetrics } from "./commercial-licensing.js";
 
@@ -103,7 +104,7 @@ export const recordBillingEvent = (
 ): BillingEvent => {
   const billingEvent: BillingEvent = {
     ...event,
-    id: `evt_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+    id: `evt_${randomUUID()}`,
   };
 
   billingEvents.push(billingEvent);

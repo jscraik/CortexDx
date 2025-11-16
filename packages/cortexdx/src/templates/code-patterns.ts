@@ -213,7 +213,7 @@ export class SSEConnection {
   }
 
   private generateSessionId(): string {
-    return \`sse_\${Date.now()}_\${Math.random().toString(36).slice(2)}\`;
+    return \`sse_\${require('crypto').randomUUID()}\`;
   }
 }
     `,

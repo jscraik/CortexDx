@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { DiagnosticPlugin, Finding } from "../types.js";
 import type { ResearchContent } from "./license-validator.js";
 import { validateAcademicLicense } from "./license-validator.js";
@@ -97,7 +98,7 @@ export function trackAcademicIntegration(
   const validation = validateAcademicLicense(content);
 
   const record: ComplianceRecord = {
-    id: `${provider}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: `${provider}-${randomUUID()}`,
     timestamp: Date.now(),
     provider,
     contentType,

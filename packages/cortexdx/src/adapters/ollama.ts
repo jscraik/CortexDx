@@ -3,6 +3,7 @@
  * Provides local LLM capabilities through Ollama with model management and conversation support
  */
 
+import { randomUUID } from "node:crypto";
 import { safeParseJson } from "../utils/json.js";
 import {
   getDefaultOllamaBaseUrl,
@@ -198,7 +199,7 @@ export class OllamaAdapter implements EnhancedLlmAdapter {
   async startConversation(
     context: ConversationContext,
   ): Promise<ConversationId> {
-    const conversationId = `ollama-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const conversationId = `ollama-${randomUUID()}`;
     const model = this.selectModelForContext(context);
 
     const session: ConversationSession = {

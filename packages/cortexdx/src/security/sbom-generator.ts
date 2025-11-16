@@ -4,6 +4,7 @@
  * Requirement: 21.1
  */
 
+import { randomUUID } from "node:crypto";
 import { safeParseJson } from "../utils/json.js";
 export interface SBOM {
   bomFormat: "CycloneDX" | "SPDX";
@@ -466,9 +467,7 @@ export class SBOMGenerator {
    * Generate serial number for SBOM
    */
   private generateSerialNumber(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 15);
-    return `urn:uuid:${timestamp}-${random}`;
+    return `urn:uuid:${randomUUID()}`;
   }
 
   /**

@@ -4,6 +4,7 @@
  * Requirements: 18.2
  */
 
+import { randomUUID } from "node:crypto";
 import { safeParseJson } from "../utils/json.js";
 import { MemorySaver } from "@langchain/langgraph";
 import Database from "better-sqlite3";
@@ -261,7 +262,7 @@ export class StateManager {
         threadId: string,
         metadata?: Record<string, unknown>
     ): Promise<string> {
-        const sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const sessionId = `session-${randomUUID()}`;
         const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
         const stmt = this.db.prepare(`

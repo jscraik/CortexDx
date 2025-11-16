@@ -4,6 +4,7 @@
  * Requirements: 14.1, 14.2, 14.3
  */
 
+import { randomUUID } from "node:crypto";
 import { safeParseJson } from "../utils/json.js";
 import { httpAdapter } from "./http.js";
 
@@ -490,7 +491,7 @@ export class OAuthAuthenticator {
      * Generate unique session ID
      */
     private generateSessionId(): string {
-        return `oauth-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        return `oauth-${randomUUID()}`;
     }
 
     /**

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
+import { randomUUID } from "node:crypto";
 import { getTimeoutWithOverride } from "../config/timeouts.js";
 import type { DevelopmentContext, Finding } from "../types.js";
 import {
@@ -102,7 +103,7 @@ export class InspectorAdapter {
    * Run diagnostic tests on an MCP endpoint using Inspector
    */
   async diagnose(endpoint: string, probes: string[]): Promise<InspectorReport> {
-    const jobId = `inspector_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const jobId = `inspector_${randomUUID()}`;
     const startedAt = new Date().toISOString();
     const traceId = this.ctx.sessionId ?? jobId;
 
