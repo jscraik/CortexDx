@@ -438,17 +438,24 @@ export class DiagnosticSessionManager {
 
     private isEndpointAllowed(endpoint: string, allowedEndpoints: string[]): boolean {
         return allowedEndpoints.some(allowed => {
-            // Support wildcards
             if (allowed.endsWith('/*')) {
-                const prefix = allowed.slice(0, -2);
-                // Allow if endpoint is exactly the prefix, or starts with prefix + '/'
-                return endpoint === prefix || endpoint.startsWith(prefix + '/');
+                return this.matchesWildcard(endpoint, allowed);
             }
-            // Non-wildcard: allow if endpoint is exactly allowed, or starts with allowed + '/'
-            return endpoint === allowed || endpoint.startsWith(allowed + '/');
+            return this.matchesExact(endpoint, allowed);
         });
     }
 
+    private matchesWildcard(endpoint: string, pattern: string): boolean {
+        // pattern is like '/api/*'
+        const prefix = pattern.slice(0, -2); // Remove '/*'
+        // Allow if endpoint is exactly the prefix, or starts with prefix + '/'
+        return endpoint === prefix || endpoint.startsWith(prefix + '/');
+    }
+
+    private matchesExact(endpoint: string, allowed: string): boolean {
+        // Allow if endpoint is exactly allowed, or starts with allowed + '/'
+        return endpoint === allowed || endpoint.startsWith(allowed + '/');
+    }
     private expireSession(sessionId: string): void {
         const stmt = this.db.prepare(`
             UPDATE diagnostic_sessions
