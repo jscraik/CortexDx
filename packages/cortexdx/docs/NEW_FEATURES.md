@@ -83,6 +83,7 @@ Rate limiting has been integrated into the probe endpoint to prevent abuse and e
 | Professional | 300      | 1 minute|
 | Enterprise   | 1000     | 1 minute|
 
+> **Note:** The rate limiting implementation uses a rolling (sliding) 60-second window. This means that requests are counted over the last 60 seconds, not aligned to the calendar minute. Limits reset dynamically as time passes, so requests are not reset at exactly minute:00. For example, if you make 60 requests in 10 seconds, you must wait until enough requests fall outside the 60-second window before making more.
 #### Environment Variables
 
 ```bash
