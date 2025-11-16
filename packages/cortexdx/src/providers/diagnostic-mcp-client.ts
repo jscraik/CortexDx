@@ -48,27 +48,33 @@ export async function createDiagnosticMcpClient(
         headers['X-Diagnostic-Session-Key'] = options.diagnosticSessionKey;
     }
     // Method 2: Create new diagnostic session using Auth0
-    else if (options.auth0 && options.sessionConfig) {
+    else if (options.auth0) {
+        const sessionConfig: Omit<DiagnosticSessionConfig, 'metadata'> = options.sessionConfig || {
+            requestedBy: 'cortexdx',
+            scope: ['read:tools', 'read:resources'],
+            duration: 3600
+        };
         const session = await createDiagnosticSession(
             options.targetServerUrl,
             options.auth0,
-            options.sessionConfig
+            sessionConfig
         );
         headers['X-Diagnostic-Session-Key'] = session.apiKey;
     }
     // Method 3: Fall back to direct Auth0 authentication (no session)
-    else if (options.auth0) {
-        const auth0Headers = await resolveAuthHeaders({
-            auth0Domain: options.auth0.domain,
-            auth0ClientId: options.auth0.clientId,
-            auth0ClientSecret: options.auth0.clientSecret,
-            auth0Audience: options.auth0.audience,
-            auth0Scope: options.auth0.scope
-        });
-        if (auth0Headers) {
-            Object.assign(headers, auth0Headers);
-        }
-    }
+    // (This block is now unreachable, but kept for clarity)
+    // else if (options.auth0) {
+    //     const auth0Headers = await resolveAuthHeaders({
+    //         auth0Domain: options.auth0.domain,
+    //         auth0ClientId: options.auth0.clientId,
+    //         auth0ClientSecret: options.auth0.clientSecret,
+    //         auth0Audience: options.auth0.audience,
+    //         auth0Scope: options.auth0.scope
+    //     });
+    //     if (auth0Headers) {
+    //         Object.assign(headers, auth0Headers);
+    //     }
+    // }
 
     const clientOptions: HttpMcpClientOptions = {
         baseUrl: options.targetServerUrl,
