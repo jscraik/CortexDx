@@ -300,7 +300,7 @@ CORTEXDX_AUTH0_AUDIENCE=https://target-mcp-server.example.com/api
 
 ### Duration Limits
 
-- Maximum session duration: **24 hours** (86400 seconds)
+- Maximum session duration: **23 hours, 59 minutes, 59 seconds** (86399 seconds)
 - Recommended duration: **1-4 hours** for active diagnostics
 - Sessions auto-expire and are cleaned up after 30 days
 
