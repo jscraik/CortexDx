@@ -415,7 +415,7 @@ Each command emits JSON summaries, redacts secrets, and exits non-zero for MAJOR
 - **❓ "What does this term mean?"** → [Glossary](docs/GLOSSARY.md)
 - **❓ "How do I use authentication?"** → [User Guide: Basics](packages/cortexdx/docs/user-guide/basics.md#authentication)
 - **❓ "My diagnostic is failing, what now?"** → [FAQ: Troubleshooting](packages/cortexdx/docs/user-guide/faq.md#troubleshooting)
-- **❓ "How do I integrate with GitHub Actions?"** → [CI/CD Integration](packages/cortexdx/docs/user-guide/ci-cd.md)
+- **❓ "How do I integrate with GitHub Actions?"** → [CI/CD Integration Guide](docs/CI_CD_INTEGRATION.md)
 - **❓ "How do I create a plugin?"** → [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)
 - **❓ "How do I contribute?"** → [Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md)
 
