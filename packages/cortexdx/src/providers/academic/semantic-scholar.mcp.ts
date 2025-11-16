@@ -11,6 +11,7 @@ import {
   createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "../../types.js";
+import { LRUCache, createCacheKey } from "../../utils/lru-cache.js";
 import { HttpMcpClient, sanitizeToolArgs } from "./http-mcp-client.js";
 
 const SEMANTIC_SCHOLAR_CONTACT = "jscraik@brainwav.io";
@@ -114,6 +115,7 @@ export class SemanticScholarProvider {
   private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
   private readonly licenseValidator: LicenseValidatorPlugin;
   private readonly remoteClient: HttpMcpClient | undefined;
+  private readonly cache: LRUCache<SemanticScholarPaper[] | SemanticScholarPaper>;
 
   // Default fields for different query types
   private readonly defaultPaperFields = [
@@ -151,6 +153,14 @@ export class SemanticScholarProvider {
   constructor(private ctx: DiagnosticContext) {
     this.licenseValidator = createLicenseValidator(ctx);
     this.remoteClient = initializeSemanticScholarClient(ctx);
+    // Initialize cache with 5-minute TTL and max 1000 items
+    this.cache = new LRUCache({
+      maxSize: 1000,
+      ttl: 5 * 60 * 1000, // 5 minutes
+      onEvict: (key) => {
+        ctx.logger(`Semantic Scholar cache evicted: ${key}`);
+      },
+    });
   }
 
   private buildRequestHeaders(
@@ -414,61 +424,78 @@ export class SemanticScholarProvider {
 
   /**
    * Search for papers using Semantic Scholar API
+   * Results are cached for 5 minutes to reduce API calls
    */
   async searchPapers(
     params: SemanticScholarSearchParams,
   ): Promise<SemanticScholarPaper[]> {
-    const searchParams = new URLSearchParams({
-      query: params.query,
-      limit: String(params.limit || 10),
-      offset: String(params.offset || 0),
-      fields: (params.fields || this.defaultPaperFields).join(","),
-    });
+    // Create cache key from search params
+    const cacheKey = createCacheKey('search', params);
 
-    // Add optional filters
-    if (params.year) searchParams.append("year", params.year);
-    // if (params.venue) searchParams.append("venue", params.venue.join(","));
-    // if (params.fieldsOfStudy) searchParams.append("fieldsOfStudy", params.fieldsOfStudy.join(","));
-    if (params.minCitationCount !== undefined)
-      searchParams.append("minCitationCount", String(params.minCitationCount));
-    // if (params.publicationTypes) searchParams.append("publicationTypes", params.publicationTypes.join(","));
-    // if (params.openAccessPdf !== undefined) searchParams.append("openAccessPdf", String(params.openAccessPdf));
-
-    const url = `${this.baseUrl}/paper/search?${searchParams}`;
-
-    try {
-      const response = await this.ctx.request<{
-        data: SemanticScholarPaper[];
-        total: number;
-        offset: number;
-        next?: number;
-      }>(url, {
-        headers: this.buildRequestHeaders(),
+    // Try to get from cache first
+    return this.cache.getOrFetch(cacheKey, async () => {
+      const searchParams = new URLSearchParams({
+        query: params.query,
+        limit: String(params.limit || 10),
+        offset: String(params.offset || 0),
+        fields: (params.fields || this.defaultPaperFields).join(","),
       });
 
-      this.ctx.evidence({
-        type: "url",
-        ref: url,
-      });
+      // Add optional filters
+      if (params.year) searchParams.append("year", params.year);
+      // if (params.venue) searchParams.append("venue", params.venue.join(","));
+      // if (params.fieldsOfStudy) searchParams.append("fieldsOfStudy", params.fieldsOfStudy.join(","));
+      if (params.minCitationCount !== undefined)
+        searchParams.append("minCitationCount", String(params.minCitationCount));
+      // if (params.publicationTypes) searchParams.append("publicationTypes", params.publicationTypes.join(","));
+      // if (params.openAccessPdf !== undefined) searchParams.append("openAccessPdf", String(params.openAccessPdf));
 
-      return response.data || [];
-    } catch (error) {
-      this.ctx.logger("Semantic Scholar search failed:", error);
-      if (error instanceof Error && error.message.includes("429")) {
+      const url = `${this.baseUrl}/paper/search?${searchParams}`;
+
+      try {
+        const response = await this.ctx.request<{
+          data: SemanticScholarPaper[];
+          total: number;
+          offset: number;
+          next?: number;
+        }>(url, {
+          headers: this.buildRequestHeaders(),
+        });
+
+        this.ctx.evidence({
+          type: "url",
+          ref: url,
+        });
+
+        this.ctx.logger(`Semantic Scholar search cache MISS: ${cacheKey}`);
+        return response.data || [];
+      } catch (error) {
+        this.ctx.logger("Semantic Scholar search failed:", error);
+        if (error instanceof Error && error.message.includes("429")) {
+          throw new Error(
+            "Semantic Scholar API rate limit exceeded. Please try again later.",
+          );
+        }
         throw new Error(
-          "Semantic Scholar API rate limit exceeded. Please try again later.",
+          `Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
-      throw new Error(
-        `Semantic Scholar API error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
+    }) as Promise<SemanticScholarPaper[]>;
   }
 
   /**
    * Get detailed information about a specific paper
+   * Results are cached for 5 minutes
    */
   async getPaper(paperId: string): Promise<SemanticScholarPaper | null> {
+    const cacheKey = createCacheKey('paper', paperId);
+
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      this.ctx.logger(`Semantic Scholar getPaper cache HIT: ${paperId}`);
+      return cached as SemanticScholarPaper;
+    }
+
     const fields = this.defaultPaperFields.join(",");
     const url = `${this.baseUrl}/paper/${encodeURIComponent(paperId)}?fields=${fields}`;
 
@@ -482,6 +509,8 @@ export class SemanticScholarProvider {
         ref: url,
       });
 
+      this.cache.set(cacheKey, response);
+      this.ctx.logger(`Semantic Scholar getPaper cache MISS: ${paperId}`);
       return response;
     } catch (error) {
       this.ctx.logger("Semantic Scholar paper details failed:", error);
