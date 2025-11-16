@@ -4,7 +4,6 @@
  */
 
 import { describe, bench } from 'vitest';
-import { performance } from 'node:perf_hooks';
 
 describe('Performance Benchmarks', () => {
   describe('Memory Usage', () => {
