@@ -132,6 +132,15 @@ export function getClientIpInfo(req: IncomingMessage): { forwardedFor?: string, 
 }
 
 /**
+ * Get client IP address as a string (for middleware usage).
+ * Returns forwardedFor, realIp, or socketIp (in order of preference).
+ */
+export function getClientIp(req: IncomingMessage): string | undefined {
+    const { forwardedFor, realIp, socketIp } = getClientIpInfo(req);
+    return forwardedFor || realIp || socketIp;
+}
+
+/**
  * Helper to check if request has valid diagnostic session
  */
 export function hasDiagnosticSession(req: IncomingMessage): boolean {
