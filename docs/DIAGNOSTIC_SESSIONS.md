@@ -279,7 +279,6 @@ AUTH0_AUDIENCE=https://your-server.example.com/api
 REQUIRE_AUTH=true
 
 # Database path for diagnostic sessions (optional)
-CORTEXDX_DIAGNOSTIC_SESSION_DB=/path/to/diagnostic-sessions.db
 ```
 
 **CortexDx Client** (performing diagnostics):
