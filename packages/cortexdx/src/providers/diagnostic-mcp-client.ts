@@ -62,6 +62,7 @@ export async function createDiagnosticMcpClient(
         headers['X-Diagnostic-Session-Key'] = session.apiKey;
     }
 /**
+/**
  * Create a diagnostic session on the target MCP server
  *
  * Workflow:
