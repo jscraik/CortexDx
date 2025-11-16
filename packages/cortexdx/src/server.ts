@@ -804,7 +804,6 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                         }));
                         return;
                     }
-                        }));
                         return;
                     }
 
