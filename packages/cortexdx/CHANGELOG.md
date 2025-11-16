@@ -5,6 +5,45 @@ All notable changes to CortexDx will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### MCP Specification Migration (November 2025)
+
+**Important**: The Model Context Protocol specification is being updated with a new release scheduled for November 25, 2025. CortexDx is actively preparing for this migration.
+
+**Timeline**:
+- **RC (Release Candidate)**: November 14, 2025
+- **Final Specification**: November 25, 2025
+
+**Key Changes in New Spec**:
+- Asynchronous/long-running operations support (status polling, callbacks, webhooks)
+- Enhanced OAuth/identity flows (consent screens, resource scopes, client signing)
+- Improved streaming operation guidance
+
+**CortexDx Status**:
+- ✅ Current SDK: `@modelcontextprotocol/sdk` v1.22.0
+- ✅ Async operations foundation: LangGraph checkpoint/resume already implemented
+- ✅ OAuth support: Auth0 integration with dual authentication
+- ✅ Streaming: SSE and WebSocket testing already in place
+- 🚧 Validation testing planned for RC release (Nov 14)
+- 🚧 Final SDK upgrade planned for spec release (Nov 25)
+
+See [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md) for detailed preparation plan and validation checklist.
+
+### Planned
+
+#### Async Operation Enhancements
+- Status polling endpoints for long-running diagnostics
+- Webhook/callback support for async completion notifications
+- Enhanced checkpoint metadata with operation progress
+- Configurable timeout/TTL for long-running operations
+
+#### OAuth/Identity Improvements
+- Device code flow implementation (Phase 5 roadmap)
+- Consent screen integration documentation
+- OAuth scope validation against new MCP resource model
+- Client certificate support for signed clients
+
 ## [1.0.0] - 2025-11-07
 
 ### Added
