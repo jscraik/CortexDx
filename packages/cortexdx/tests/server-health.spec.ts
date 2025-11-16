@@ -250,7 +250,6 @@ describe('Server Health Endpoints', () => {
 
     it('should detect memory leaks (basic)', () => {
       const baseline = process.memoryUsage().heapUsed;
-      const threshold = baseline * 2; // 2x growth threshold
 
       // Simulate memory growth
       const largeArray: unknown[] = [];
