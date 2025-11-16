@@ -203,7 +203,7 @@ cortexdx orchestrate https://cortex-mcp.brainwav.io/mcp \
   > reports/rc-validation/rc/async-operation.log 2>&1 &
 
 ORCHESTRATE_PID=$!
-THREAD_ID=$(grep -oP 'thread_id=\K[^ ]+' reports/rc-validation/rc/async-operation.log | head -1)
+THREAD_ID=$(awk -F'thread_id=' '{if (NF>1) print $2}' reports/rc-validation/rc/async-operation.log | awk '{print $1}' | head -1)
 
 # Monitor and interrupt after 10 minutes
 sleep 600
