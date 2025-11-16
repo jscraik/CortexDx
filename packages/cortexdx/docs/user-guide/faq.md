@@ -153,7 +153,7 @@ export MCP_AUTH_TOKEN="staging-token"
 cortexdx diagnose $MCP_ENDPOINT --auth bearer:$MCP_AUTH_TOKEN
 ```
 
-See [Configuration: Authentication](configuration.md#authentication-configuration) for advanced setups.
+See [Setup Guide: Authentication](setup.md#authentication) for advanced setups.
 
 ### "Command not found: cortexdx" - How do I fix this?
 
