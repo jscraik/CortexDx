@@ -10,7 +10,7 @@ import {
   PerformancePlugin,
   EnhancedPerformanceProfilerPlugin,
   type PerformanceSummary,
-} from '../src/plugins/performance';
+} from '../src/plugins/performance/index.js';
 import type { DiagnosticContext, TransportTranscript } from '../src/types.js';
 
 describe('Performance Plugin', () => {
