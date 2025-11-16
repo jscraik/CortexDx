@@ -194,7 +194,7 @@ X-Diagnostic-Session-Key: diag_xyz789abc012
 ### TypeScript Example (CortexDx Client)
 
 ```typescript
-import { createDiagnosticMcpClient } from '@cortexdx/diagnostic-mcp-client';
+import { createDiagnosticMcpClient } from '@cortexdx/cortexdx';
 
 // Method 1: Automatic session creation
 const client = await createDiagnosticMcpClient({
