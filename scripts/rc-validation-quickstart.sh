@@ -67,7 +67,7 @@ if [ "$SMOKE_STATUS" -eq 0 ]; then
   echo "✅ Smoke test passed"
 else
   echo "❌ Smoke test failed"
-  echo "   This may indicate breaking changes in v1.22.0"
+  echo "   This may indicate breaking changes in SDK version ${SDK_VERSION:-unknown}"
 fi
 
 echo ""
