@@ -2,7 +2,6 @@
 # MCP RC Validation Quick Start
 # Run this script to begin RC validation testing (Nov 16, 2025)
 
-set -e
 
 echo "🚀 MCP RC Validation Quick Start"
 echo "================================="
