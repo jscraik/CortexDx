@@ -76,26 +76,31 @@ export class OAuthAuthenticator {
         serverEndpoint: string,
         config: OAuth2Config,
     ): Promise<OAuth2Session> {
-        const sessionId = this.generateSessionId();
-        const session: OAuth2Session = {
-            sessionId,
-            serverEndpoint,
-            config,
-            status: "pending",
-            createdAt: new Date(),
-        };
+        try {
+            const sessionId = this.generateSessionId();
+            const session: OAuth2Session = {
+                sessionId,
+                serverEndpoint,
+                config,
+                status: "pending",
+                createdAt: new Date(),
+            };
 
-        this.sessions.set(sessionId, session);
+            this.sessions.set(sessionId, session);
 
-        // Validate response time
-        const elapsed = Date.now() - this.startTime;
-        if (elapsed > 2000) {
-            throw new Error(
-                `OAuth2 flow initiation exceeded 2s threshold: ${elapsed}ms`,
-            );
+            // Validate response time
+            const elapsed = Date.now() - this.startTime;
+            if (elapsed > 2000) {
+                throw new Error(
+                    `OAuth2 flow initiation exceeded 2s threshold: ${elapsed}ms`,
+                );
+            }
+
+            return session;
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Failed to initiate OAuth2 flow for ${serverEndpoint}: ${message}`);
         }
-
-        return session;
     }
 
     /**
@@ -422,44 +427,56 @@ export class OAuthAuthenticator {
         realm?: string;
         scope?: string[];
     } {
-        // Check for 401 Unauthorized or 403 Forbidden
-        if (statusCode !== 401 && statusCode !== 403) {
-            return { required: false };
-        }
+        try {
+            // Check for 401 Unauthorized or 403 Forbidden
+            if (statusCode !== 401 && statusCode !== 403) {
+                return { required: false };
+            }
 
-        const wwwAuthenticate = headers["www-authenticate"] || headers["WWW-Authenticate"];
+            const wwwAuthenticate = headers["www-authenticate"] || headers["WWW-Authenticate"];
 
-        if (!wwwAuthenticate) {
+            if (!wwwAuthenticate) {
+                return { required: true, authType: "bearer" };
+            }
+
+            // Parse WWW-Authenticate header
+            const authTypeLower = wwwAuthenticate.toLowerCase();
+
+            if (authTypeLower.includes("bearer")) {
+                const realmMatch = wwwAuthenticate.match(/realm="([^"]+)"/);
+                const scopeMatch = wwwAuthenticate.match(/scope="([^"]+)"/);
+
+                return {
+                    required: true,
+                    authType: "oauth2",
+                    realm: realmMatch ? realmMatch[1] : undefined,
+                    scope: scopeMatch ? scopeMatch[1]?.split(" ") : undefined,
+                };
+            }
+
+            if (authTypeLower.includes("basic")) {
+                return { required: true, authType: "api-key" };
+            }
+
             return { required: true, authType: "bearer" };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[oauth-authenticator] Failed to detect auth requirement: ${message}`);
+            return { required: true, authType: "bearer" }; // Safe default
         }
-
-        // Parse WWW-Authenticate header
-        const authTypeLower = wwwAuthenticate.toLowerCase();
-
-        if (authTypeLower.includes("bearer")) {
-            const realmMatch = wwwAuthenticate.match(/realm="([^"]+)"/);
-            const scopeMatch = wwwAuthenticate.match(/scope="([^"]+)"/);
-
-            return {
-                required: true,
-                authType: "oauth2",
-                realm: realmMatch ? realmMatch[1] : undefined,
-                scope: scopeMatch ? scopeMatch[1]?.split(" ") : undefined,
-            };
-        }
-
-        if (authTypeLower.includes("basic")) {
-            return { required: true, authType: "api-key" };
-        }
-
-        return { required: true, authType: "bearer" };
     }
 
     /**
      * Get session by ID
      */
     getSession(sessionId: string): OAuth2Session | undefined {
-        return this.sessions.get(sessionId);
+        try {
+            return this.sessions.get(sessionId);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[oauth-authenticator] Failed to get session ${sessionId}: ${message}`);
+            return undefined;
+        }
     }
 
     /**
@@ -470,13 +487,18 @@ export class OAuthAuthenticator {
         status: "pending" | "authenticated" | "failed",
         expiresAt?: Date,
     ): void {
-        const session = this.sessions.get(sessionId);
-        if (session) {
-            session.status = status;
-            if (expiresAt) {
-                session.expiresAt = expiresAt;
+        try {
+            const session = this.sessions.get(sessionId);
+            if (session) {
+                session.status = status;
+                if (expiresAt) {
+                    session.expiresAt = expiresAt;
+                }
+                this.sessions.set(sessionId, session);
             }
-            this.sessions.set(sessionId, session);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[oauth-authenticator] Failed to update session ${sessionId}: ${message}`);
         }
     }
 
@@ -484,7 +506,12 @@ export class OAuthAuthenticator {
      * Clear session
      */
     clearSession(sessionId: string): void {
-        this.sessions.delete(sessionId);
+        try {
+            this.sessions.delete(sessionId);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`[oauth-authenticator] Failed to clear session ${sessionId}: ${message}`);
+        }
     }
 
     /**
