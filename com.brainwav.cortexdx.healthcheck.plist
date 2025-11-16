@@ -18,7 +18,7 @@
         <key>CORTEXDX_HEALTH_LOG_DIR</key>
         <string>__LOG_DIR__</string>
         <key>CORTEXDX_HEALTH_URLS</key>
-        <string>http://127.0.0.1:5001/health https://cortexdx-mcp.brainwav.io/health</string>
+        <string>http://127.0.0.1:5001/health https://cortexdx.brainwav.io/health</string>
     </dict>
 
     <key>WorkingDirectory</key>

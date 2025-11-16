@@ -8,7 +8,7 @@ set -euo pipefail
 LOG_DIR="${CORTEXDX_HEALTH_LOG_DIR:-$HOME/Library/Logs/cortexdx-health}"
 LOG_FILE="$LOG_DIR/healthcheck.log"
 MAX_LOG_BYTES="${CORTEXDX_HEALTH_LOG_BYTES:-5242880}"
-URLS_STRING="${CORTEXDX_HEALTH_URLS:-http://127.0.0.1:5001/health https://cortexdx-mcp.brainwav.io/health}"
+URLS_STRING="${CORTEXDX_HEALTH_URLS:-http://127.0.0.1:5001/health https://cortexdx.brainwav.io/health}"
 ALERT_TAG="CortexDx Health"
 
 mkdir -p "$LOG_DIR"

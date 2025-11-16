@@ -19,6 +19,8 @@
         <string>__CLOUDFLARED_CONFIG__</string>
         <key>CORTEXDX_CLOUDFLARED_TUNNEL</key>
         <string>__CLOUDFLARED_TUNNEL__</string>
+        <key>CORTEXDX_CLOUDFLARED_TOKEN</key>
+        <string>__CLOUDFLARED_TOKEN__</string>
         <key>CORTEXDX_CLOUDFLARED_LOG_DIR</key>
         <string>__LOG_DIR__</string>
         <key>CORTEXDX_DEPENDENCY_URL</key>

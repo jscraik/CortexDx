@@ -13,9 +13,10 @@ HEALTH_INTERVAL="${CORTEXDX_CLOUDFLARED_HEALTH_INTERVAL:-60}"
 CORTEXDX_DEPENDENCY_URL="${CORTEXDX_DEPENDENCY_URL:-http://127.0.0.1:5001/health}"
 CORTEXDX_DEPENDENCY_TIMEOUT="${CORTEXDX_DEPENDENCY_TIMEOUT:-120}"
 CLOUDFLARED_BIN="${CLOUDFLARED_BIN:-$(command -v cloudflared || true)}"
+CLOUDFLARED_TOKEN="${CORTEXDX_CLOUDFLARED_TOKEN:-${CLOUDFLARE_TUNNEL_TOKEN:-}}"
 CONFIG_PATH="${CORTEXDX_CLOUDFLARED_CONFIG:-$HOME/.cloudflared/config.yml}"
 METRICS_PORT="${CORTEXDX_CLOUDFLARED_METRICS:-127.0.0.1:4319}"
-HEALTH_URLS_STRING="${CORTEXDX_CLOUDFLARED_HEALTH_URLS:-https://cortexdx-mcp.brainwav.io/health}"
+HEALTH_URLS_STRING="${CORTEXDX_CLOUDFLARED_HEALTH_URLS:-https://cortexdx.brainwav.io/health}"
 TUNNEL_NAME="${CORTEXDX_CLOUDFLARED_TUNNEL:-}"
 
 if [[ -z "$CLOUDFLARED_BIN" ]]; then
@@ -23,13 +24,20 @@ if [[ -z "$CLOUDFLARED_BIN" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$CONFIG_PATH" ]]; then
-  echo "[cloudflared] config file not found: $CONFIG_PATH" >&2
-  exit 1
-fi
+# Support both token-based and config file-based authentication
+if [[ -n "$CLOUDFLARED_TOKEN" ]]; then
+  echo "[cloudflared] using token-based authentication" >&2
+  USE_TOKEN=true
+else
+  USE_TOKEN=false
+  if [[ ! -f "$CONFIG_PATH" ]]; then
+    echo "[cloudflared] config file not found: $CONFIG_PATH" >&2
+    echo "[cloudflared] set CORTEXDX_CLOUDFLARED_TOKEN or ensure config file exists" >&2
+    exit 1
+  fi
 
-if [[ -z "$TUNNEL_NAME" ]]; then
-  TUNNEL_NAME=$(python3 - <<'PY' "$CONFIG_PATH"
+  if [[ -z "$TUNNEL_NAME" ]]; then
+    TUNNEL_NAME=$(python3 - <<'PY' "$CONFIG_PATH"
 import sys
 from pathlib import Path
 for line in Path(sys.argv[1]).read_text().splitlines():
@@ -38,12 +46,13 @@ for line in Path(sys.argv[1]).read_text().splitlines():
         print(stripped.split(':', 1)[1].strip())
         break
 PY
-  )
-fi
+    )
+  fi
 
-if [[ -z "$TUNNEL_NAME" ]]; then
-  echo "[cloudflared] tunnel name not provided (set CORTEXDX_CLOUDFLARED_TUNNEL)" >&2
-  exit 1
+  if [[ -z "$TUNNEL_NAME" ]]; then
+    echo "[cloudflared] tunnel name not provided (set CORTEXDX_CLOUDFLARED_TUNNEL)" >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$LOG_DIR"
@@ -108,7 +117,13 @@ if ! wait_for_dependency "$CORTEXDX_DEPENDENCY_URL" "$CORTEXDX_DEPENDENCY_TIMEOU
   log_health WARN "Dependency $CORTEXDX_DEPENDENCY_URL unreachable"
   exit 1
 fi
-"$CLOUDFLARED_BIN" tunnel --config "$CONFIG_PATH" --metrics "$METRICS_PORT" run "$TUNNEL_NAME" >> "$LOG_FILE" 2>&1 &
+
+# Run cloudflared with either token or config file
+if [[ "$USE_TOKEN" == "true" ]]; then
+  "$CLOUDFLARED_BIN" tunnel --metrics "$METRICS_PORT" run --token "$CLOUDFLARED_TOKEN" >> "$LOG_FILE" 2>&1 &
+else
+  "$CLOUDFLARED_BIN" tunnel --config "$CONFIG_PATH" --metrics "$METRICS_PORT" run "$TUNNEL_NAME" >> "$LOG_FILE" 2>&1 &
+fi
 CLOUDFLARED_PID=$!
 
 health_loop "$CLOUDFLARED_PID" &
