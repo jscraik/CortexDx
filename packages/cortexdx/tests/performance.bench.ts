@@ -141,7 +141,7 @@ describe('Performance Benchmarks', () => {
     bench('for...in iteration', () => {
       for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          const value = obj[key];
+          // Access value if needed: obj[key];
         }
       }
     });
