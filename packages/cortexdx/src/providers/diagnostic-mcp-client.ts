@@ -60,7 +60,17 @@ export async function createDiagnosticMcpClient(
             sessionConfig
         );
         headers['X-Diagnostic-Session-Key'] = session.apiKey;
+    } else {
+        throw new Error('Either diagnosticSessionKey or auth0 config must be provided');
     }
+
+    return new HttpMcpClient({
+        baseUrl: options.targetServerUrl,
+        headers,
+        timeoutMs: options.timeoutMs,
+        userAgent: options.userAgent
+    });
+}
 /**
 /**
  * Create a diagnostic session on the target MCP server
