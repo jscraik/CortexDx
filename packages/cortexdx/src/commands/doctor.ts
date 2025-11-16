@@ -5,6 +5,9 @@ import {
   ACADEMIC_PROVIDER_ENV_REQUIREMENTS,
   selectConfiguredProviders,
 } from "../research/academic-researcher.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("doctor");
 
 interface DoctorOptions {
   providers?: string;
@@ -63,7 +66,7 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   }
 
   if (opts.json) {
-    console.log(JSON.stringify(report, null, 2));
+    logger.info(JSON.stringify(report, null, 2));
   } else {
     printDoctorReport(report);
   }
@@ -88,9 +91,9 @@ function readPnpmVersion(): string | undefined {
   try {
     return execSync("pnpm -v", { encoding: "utf8" }).trim();
   } catch (error) {
-    console.warn(
-      "[doctor] Unable to read pnpm version:",
-      error instanceof Error ? error.message : error,
+    logger.warn(
+      `Unable to read pnpm version: ${error instanceof Error ? error.message : error}`,
+      { error }
     );
     return undefined;
   }
@@ -131,15 +134,15 @@ async function runDoctorResearch(
     parseCsv(opts.researchProviders),
   );
   if (missing.length) {
-    console.warn(
-      "[Doctor] Skipping providers with missing env vars:",
-      missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
+    logger.warn(
+      `Skipping providers with missing env vars: ${missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", ")}`,
+      { missing }
     );
   }
 
   if (ready.length === 0) {
-    console.warn(
-      "[Doctor] Academic research probe disabled (no configured providers).",
+    logger.warn(
+      "Academic research probe disabled (no configured providers)."
     );
     return null;
   }
@@ -182,45 +185,49 @@ async function runDoctorResearch(
 }
 
 function printDoctorReport(report: DoctorReport): void {
-  console.log("[Doctor] Runtime");
-  console.log(`  Node.js: ${report.runtime.node}`);
+  logger.info("Runtime");
+  logger.info(`  Node.js: ${report.runtime.node}`, { nodeVersion: report.runtime.node });
   if (report.runtime.pnpm) {
-    console.log(`  pnpm: ${report.runtime.pnpm}`);
+    logger.info(`  pnpm: ${report.runtime.pnpm}`, { pnpmVersion: report.runtime.pnpm });
   }
-  console.log(
+  logger.info(
     `  Platform: ${report.runtime.platform} (${report.runtime.arch})`,
+    { platform: report.runtime.platform, arch: report.runtime.arch }
   );
 
   if (report.providers?.length) {
-    console.log("\n[Doctor] Academic Providers");
+    logger.info("\nAcademic Providers");
     for (const provider of report.providers) {
       if (provider.status === "ready") {
-        console.log(`  ✓ ${provider.name} — ready`);
+        logger.info(`  ✓ ${provider.name} — ready`, { provider: provider.name, status: "ready" });
       } else {
-        console.log(
+        logger.warn(
           `  ⚠ ${provider.name} — missing ${provider.missingEnv?.join(", ")}`,
+          { provider: provider.name, status: "missing", missingEnv: provider.missingEnv }
         );
       }
     }
   }
 
   if (report.research) {
-    console.log("\n[Doctor] Research Probe");
+    logger.info("\nResearch Probe");
     if (report.research.error) {
-      console.log(`  ✗ Failed to run research: ${report.research.error}`);
+      logger.error(`  ✗ Failed to run research: ${report.research.error}`, { error: report.research.error });
     } else {
-      console.log(
+      logger.info(
         `  Topic: ${report.research.topic} (${report.research.totalFindings} findings)`,
+        { topic: report.research.topic, totalFindings: report.research.totalFindings }
       );
       for (const [providerId, summary] of Object.entries(
         report.research.providers,
       )) {
-        console.log(
+        logger.info(
           `  • ${providerId}: ${summary.findings} findings${summary.lastTitle ? ` (${summary.lastTitle})` : ""}`,
+          { providerId, findings: summary.findings, lastTitle: summary.lastTitle }
         );
       }
       if (report.research.artifactsDir) {
-        console.log(`  Artifacts: ${report.research.artifactsDir}`);
+        logger.info(`  Artifacts: ${report.research.artifactsDir}`, { artifactsDir: report.research.artifactsDir });
       }
     }
   }

@@ -2,6 +2,7 @@ import { resolveAuthHeaders } from "../auth/auth0-handshake.js";
 import { createDiagnosticContext } from "../context/context-factory.js";
 import { createDevelopmentContext } from "../context/development-context.js";
 import { getEnhancedLlmAdapter } from "../ml/router.js";
+import { createCliLogger } from "../logging/logger.js";
 import type { WorkflowState } from "../orchestration/agent-orchestrator.js";
 import { getAgentOrchestrator } from "../orchestration/agent-orchestrator.js";
 import {
@@ -28,6 +29,9 @@ import type {
 import { createDeterministicSeed } from "../utils/deterministic.js";
 import { runAcademicResearch, selectConfiguredProviders, type AcademicResearchReport } from "../research/academic-researcher.js";
 import { storeConsolidatedReport } from "../report/consolidated-report.js";
+
+const logger = createCliLogger("orchestrate");
+
 type ListEnv = {
   kind: "list";
   pluginOrchestrator: ReturnType<typeof getPluginOrchestrator>;
@@ -389,17 +393,17 @@ function listAvailableWorkflows(
   const combined = [...pluginWorkflows, ...agentWorkflows];
 
   if (asJson) {
-    console.log(JSON.stringify(combined, null, 2));
+    logger.info(JSON.stringify(combined, null, 2));
     return;
   }
 
-  console.log("Agent workflows:");
+  logger.info("Agent workflows:");
   for (const wf of agentWorkflows) {
-    console.log(`  • ${wf.id} — ${wf.name}`);
+    logger.info(`  • ${wf.id} — ${wf.name}`);
   }
-  console.log("Plugin workflows:");
+  logger.info("Plugin workflows:");
   for (const wf of pluginWorkflows) {
-    console.log(`  • ${wf.id} — ${wf.name}`);
+    logger.info(`  • ${wf.id} — ${wf.name}`);
   }
 }
 
@@ -416,13 +420,13 @@ async function maybeRunAcademicResearchProbe(
     parseCsvList(opts.researchProviders),
   );
   if (missing.length) {
-    console.warn(
-      "[Research] Skipping providers missing env vars:",
-      missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
+    logger.warn(
+      `Research: Skipping providers missing env vars: ${missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", ")}`,
+      { missing }
     );
   }
   if (ready.length === 0) {
-    console.warn("[Research] Academic probe disabled (no configured providers).");
+    logger.warn("Research: Academic probe disabled (no configured providers).");
     return null;
   }
   try {
@@ -434,22 +438,24 @@ async function maybeRunAcademicResearchProbe(
       deterministic: Boolean(opts.deterministic),
       outputDir: opts.researchOut,
     });
-    console.log(
-      `[Research] ${report.summary.providersResponded}/${report.summary.providersRequested} providers responded for ${topic} (${report.summary.totalFindings} findings)`,
+    logger.info(
+      `Research: ${report.summary.providersResponded}/${report.summary.providersRequested} providers responded for ${topic} (${report.summary.totalFindings} findings)`,
+      { topic, providersResponded: report.summary.providersResponded, providersRequested: report.summary.providersRequested, totalFindings: report.summary.totalFindings }
     );
     for (const provider of report.providers) {
-      console.log(
+      logger.info(
         `  - ${provider.providerName}: ${provider.findings.length} findings`,
+        { provider: provider.providerName, findings: provider.findings.length }
       );
     }
     if (report.artifacts?.dir) {
-      console.log(`[Research] Artifacts written to ${report.artifacts.dir}`);
+      logger.info(`Research: Artifacts written to ${report.artifacts.dir}`, { artifactsDir: report.artifacts.dir });
     }
     return report;
   } catch (error) {
-    console.warn(
-      "[Research] Unable to run academic research probe:",
-      error instanceof Error ? error.message : String(error),
+    logger.warn(
+      `Research: Unable to run academic research probe: ${error instanceof Error ? error.message : String(error)}`,
+      { error }
     );
     return null;
   }
@@ -486,24 +492,26 @@ function computeExitCode(findings: Finding[]): number {
 
 function printFindings(findings: Finding[], asJson?: boolean): void {
   if (asJson) {
-    console.log(JSON.stringify(findings, null, 2));
+    logger.info(JSON.stringify(findings, null, 2));
     return;
   }
   if (findings.length === 0) {
-    console.log("No findings returned.");
+    logger.info("No findings returned.");
     return;
   }
   for (const finding of findings) {
-    console.log(
+    logger.info(
       `[${finding.severity.toUpperCase()}] ${finding.title} :: ${finding.description}`,
+      { severity: finding.severity, title: finding.title }
     );
   }
-  console.log(`Total findings: ${findings.length}`);
+  logger.info(`Total findings: ${findings.length}`, { count: findings.length });
 }
 
 function logDeviceCodePrompt(userCode: string, verificationUri: string): void {
-  console.log(
-    `[Auth0 Device Code] Visit ${verificationUri} and enter code ${userCode} to continue authentication.`,
+  logger.info(
+    `Auth0 Device Code: Visit ${verificationUri} and enter code ${userCode} to continue authentication.`,
+    { userCode, verificationUri }
   );
 }
 

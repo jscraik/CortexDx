@@ -1,6 +1,9 @@
 import type { AcademicResearchReport } from "../research/academic-researcher.js";
 import { runAcademicResearch } from "../research/academic-researcher.js";
 import type { Finding } from "../types.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("research");
 
 interface ResearchCliOptions {
   question?: string;
@@ -28,7 +31,7 @@ export async function runResearch(topic: string, opts: ResearchCliOptions): Prom
   });
 
   if (opts.json) {
-    console.log(JSON.stringify(report, null, 2));
+    logger.info(JSON.stringify(report, null, 2));
     return computeExitCode(report.findings);
   }
 
@@ -74,30 +77,32 @@ function computeExitCode(findings: Finding[]): number {
 }
 
 function printReport(report: AcademicResearchReport): void {
-  console.log(`[INFO] Academic research for ${report.topic}`);
-  console.log(
+  logger.info(`Academic research for ${report.topic}`, { topic: report.topic });
+  logger.info(
     `Providers: ${report.summary.providersResponded}/${report.summary.providersRequested} • Findings: ${report.summary.totalFindings}`,
+    { providersResponded: report.summary.providersResponded, providersRequested: report.summary.providersRequested, totalFindings: report.summary.totalFindings }
   );
   for (const provider of report.providers) {
-    console.log(`Provider: ${provider.providerName}`);
+    logger.info(`Provider: ${provider.providerName}`, { provider: provider.providerName });
     if (provider.findings.length === 0) {
-      console.log("  No findings returned.");
+      logger.info("  No findings returned.", { provider: provider.providerName });
       continue;
     }
     for (const finding of provider.findings) {
-      console.log(
+      logger.info(
         `[${finding.severity.toUpperCase()}] ${finding.title} — ${truncateDescription(finding.description)}`,
+        { severity: finding.severity, title: finding.title, provider: provider.providerName }
       );
     }
   }
   if (report.summary.errors.length > 0) {
-    console.log("Errors:");
+    logger.error("Errors:");
     for (const error of report.summary.errors) {
-      console.log(`  [${error.providerId}] ${error.message}`);
+      logger.error(`  [${error.providerId}] ${error.message}`, { providerId: error.providerId, error: error.message });
     }
   }
   if (report.artifacts) {
-    console.log(`Artifacts written to ${report.artifacts.dir}`);
+    logger.info(`Artifacts written to ${report.artifacts.dir}`, { artifactsDir: report.artifacts.dir });
   }
 }
 

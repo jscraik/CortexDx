@@ -8,6 +8,9 @@ import {
   DependencyTrackIntegration,
   type DependencyTrackConfig,
 } from "../security/dependency-track-integration.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("sbom");
 
 interface SbomCliOptions {
   manifest?: string;
@@ -50,16 +53,16 @@ export async function runGenerateSbom(opts: SbomCliOptions): Promise<number> {
   try {
     const manifestPath = findManifestPath(opts.manifest);
     if (!manifestPath) {
-      console.error(
-        "[SBOM] No manifest found. Specify --manifest or place a package.json/requirements.txt/pom.xml in the working directory.",
+      logger.error(
+        "No manifest found. Specify --manifest or place a package.json/requirements.txt/pom.xml in the working directory."
       );
       return 1;
     }
 
     const manifestType = detectManifestType(manifestPath, opts.type);
     if (!manifestType) {
-      console.error(
-        "[SBOM] Unsupported manifest type. Use --type to specify one of: npm, pip, maven.",
+      logger.error(
+        "Unsupported manifest type. Use --type to specify one of: npm, pip, maven."
       );
       return 1;
     }
@@ -121,14 +124,15 @@ export async function runGenerateSbom(opts: SbomCliOptions): Promise<number> {
       webhook: opts.dtWebhook,
     });
 
-    console.log(
-      `[SBOM] Generated ${sbom.bomFormat} ${sbom.specVersion} SBOM with ${sbom.components.length} components at ${targetDir}`,
+    logger.info(
+      `Generated ${sbom.bomFormat} ${sbom.specVersion} SBOM with ${sbom.components.length} components at ${targetDir}`,
+      { format: sbom.bomFormat, specVersion: sbom.specVersion, components: sbom.components.length, outputDir: targetDir }
     );
     return 0;
   } catch (error) {
-    console.error(
-      "[SBOM] Generation failed:",
-      error instanceof Error ? error.message : error,
+    logger.error(
+      `Generation failed: ${error instanceof Error ? error.message : error}`,
+      { error }
     );
     return 1;
   }
@@ -210,17 +214,18 @@ async function maybeUploadToDependencyTrack(params: {
       (await integration.getProjectByNameAndVersion(projectName, version)) ??
       (await integration.createProject(projectName, version));
     const upload = await integration.uploadSBOM(project.uuid, params.sbom);
-    console.log(
-      `[SBOM] Uploaded to Dependency Track project ${project.name}@${project.version} (token=${upload.token})`,
+    logger.info(
+      `Uploaded to Dependency Track project ${project.name}@${project.version} (token=${upload.token})`,
+      { project: project.name, version: project.version, token: upload.token }
     );
     if (params.subscribe && params.webhook) {
       await integration.subscribeToAlerts(project.uuid, params.webhook);
-      console.log("[SBOM] Subscribed Dependency Track project to webhook.");
+      logger.info("Subscribed Dependency Track project to webhook.", { webhook: params.webhook });
     }
   } catch (error) {
-    console.warn(
-      "[SBOM] Dependency Track upload failed:",
-      error instanceof Error ? error.message : String(error),
+    logger.warn(
+      `Dependency Track upload failed: ${error instanceof Error ? error.message : String(error)}`,
+      { error }
     );
   }
 }
