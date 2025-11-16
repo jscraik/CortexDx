@@ -188,9 +188,13 @@ export class AssertionEmitter {
 		const duration_ms = Date.now() - this.startTime;
 
 		// Ensure required fields are set
-		if (!this.assertion.id || !this.assertion.title || !this.assertion.status) {
+		const missing: string[] = [];
+		if (!this.assertion.id) missing.push("id");
+		if (!this.assertion.title) missing.push("title");
+		if (!this.assertion.status) missing.push("status");
+		if (missing.length > 0) {
 			throw new Error(
-				"Assertion must have id, title, and status before building",
+				`Assertion must have required fields before building. Missing: ${missing.join(", ")}`
 			);
 		}
 
