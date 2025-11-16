@@ -1,21 +1,117 @@
 # MCP Specification Migration Tracker
 
-**Current Status**: Preparing for MCP Spec November 2025 Release
+**Current Status**: 🚨 **URGENT - RC Validation Window Active** (9 days until final spec)
 **Last Updated**: 2025-11-16
+**Today's Date**: November 16, 2025
 
 ## Timeline
 
 | Milestone | Date | Status | CortexDx Action Required |
 |-----------|------|--------|-------------------------|
-| RC (Release Candidate) | November 14, 2025 | ⏳ Upcoming | Validation testing |
-| Final Specification | November 25, 2025 | ⏳ Upcoming | SDK upgrade & compliance |
+| RC (Release Candidate) | November 14, 2025 | ✅ **LIKELY PUBLISHED** | **START VALIDATION NOW** |
+| Final Specification | November 25, 2025 | ⏰ **9 DAYS AWAY** | Final validation & release |
 
 ## Current State
 
 ### SDK Version
-- **Current**: `@modelcontextprotocol/sdk` v1.22.0
+- **Current**: `@modelcontextprotocol/sdk` v1.22.0 (published Nov 13, 2025)
+- **Status**: ⚠️ **Likely the RC version** (published 1 day before RC date)
 - **Target Protocol**: MCP v2024-11-05
-- **Next Action**: Monitor npm releases for RC-aligned SDK version
+- **Next Action**: **BEGIN RC VALIDATION IMMEDIATELY** using v1.22.0
+
+### ⚠️ URGENT: RC Validation Must Start NOW
+
+**You're already on v1.22.0 (published Nov 13) - this is likely the RC!**
+
+**Critical Timeline**:
+- ✅ **Today (Nov 16)**: Start validation testing
+- 🎯 **Nov 17-20** (Days 3-6): Complete comprehensive testing
+- 🎯 **Nov 21-22** (Days 7-8): Analyze breaking changes
+- 🎯 **Nov 23-24** (Days 9-10): Final validation & documentation
+- 🚀 **Nov 25**: Final spec release - deploy with confidence
+
+## 🚀 IMMEDIATE ACTIONS (Start Today - Nov 16)
+
+### Hour 1-2: Baseline Capture & Quick Smoke Test
+```bash
+# 1. Create validation directory
+mkdir -p reports/rc-validation/{baseline,rc}
+
+# 2. Run quick smoke test (already on v1.22.0)
+pnpm build && pnpm test
+
+# 3. Capture build/test results
+pnpm build 2>&1 | tee reports/rc-validation/rc/build-$(date +%Y%m%d).log
+pnpm test 2>&1 | tee reports/rc-validation/rc/test-$(date +%Y%m%d).log
+
+# 4. Quick diagnostic smoke test
+cortexdx diagnose https://cortex-mcp.brainwav.io/mcp \
+  --suites connectivity \
+  --out reports/rc-validation/rc/smoke-test
+```
+
+**Exit Criteria**: ✅ Build passes, ✅ Tests pass, ✅ Basic connectivity works
+
+### Hour 3-4: Self-Diagnostics Baseline
+```bash
+# Run self-diagnostics to validate v1.22.0
+pnpm self:diagnose
+
+# Results go to: reports/self/
+```
+
+### Hour 5-6: Comprehensive Diagnostic Run
+```bash
+# Full diagnostic suite against production MCP server
+cortexdx diagnose https://cortex-mcp.brainwav.io/mcp \
+  --deterministic --full \
+  --out reports/rc-validation/rc/comprehensive-$(date +%Y%m%d)
+
+# Long-running async operation test
+cortexdx orchestrate https://cortex-mcp.brainwav.io/mcp \
+  --workflow agent.langgraph.baseline \
+  --deterministic \
+  --state-db .cortexdx/rc-validation.db \
+  --report-out reports/rc-validation/rc/orchestration-$(date +%Y%m%d)
+```
+
+### End of Day 1: Status Check
+- [ ] Build & tests passing with v1.22.0?
+- [ ] Any breaking changes detected?
+- [ ] Async operations (checkpoint/resume) working?
+- [ ] OAuth flows validated?
+- [ ] Document findings in `reports/rc-validation/day1-status.md`
+
+## 📋 Validation Checklist (Next 9 Days)
+
+### Days 1-3 (Nov 16-18): Core Validation
+- [ ] ✅ **TODAY**: Run smoke tests (see immediate actions above)
+- [ ] Full test suite passes
+- [ ] Integration tests pass
+- [ ] Self-diagnostics clean
+- [ ] Async operations validated (checkpoint/resume)
+- [ ] OAuth authentication working
+- [ ] Streaming (SSE/WebSocket) functional
+
+### Days 4-6 (Nov 19-21): Deep Testing
+- [ ] All diagnostic suites pass (connectivity, security, governance, streaming, performance)
+- [ ] MCP evals harness passes
+- [ ] Long-running workflow (30+ min) checkpoint/resume validated
+- [ ] Performance benchmarks run (compare to baseline if available)
+- [ ] Security scans clean (semgrep, gitleaks)
+
+### Days 7-8 (Nov 22-23): Analysis & Documentation
+- [ ] Analyze any test failures or warnings
+- [ ] Document breaking changes (if any)
+- [ ] Update CHANGELOG with RC findings
+- [ ] Create migration notes for users (if needed)
+- [ ] Review OAuth scopes against new spec guidance
+
+### Days 9-10 (Nov 24-25): Final Validation & Release Prep
+- [ ] Final comprehensive test run
+- [ ] Update all spec version references in docs
+- [ ] Prepare release notes
+- [ ] **Nov 25**: Monitor for final spec release, upgrade if needed
 
 ### CortexDx Capabilities Already Aligned
 

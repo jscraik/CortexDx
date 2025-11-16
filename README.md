@@ -7,8 +7,11 @@
 
 **Stateless, plugin-based diagnostics for Model Context Protocol (MCP) servers and clients.** CortexDx is the comprehensive diagnostic tool that helps you harden MCP implementations before production deployment.
 
-> **📌 MCP Specification Update (November 2025)**
-> The Model Context Protocol is releasing an updated specification on **November 25, 2025** (RC on November 14). CortexDx is actively preparing for this migration with enhanced support for asynchronous operations, OAuth flows, and streaming. See [MCP Spec Migration](docs/MCP_SPEC_MIGRATION.md) for details.
+> **🚨 URGENT: MCP Specification Update (9 Days to Release)**
+> **Status**: RC likely published (v1.22.0 on Nov 13) - validation window NOW ACTIVE
+> **Final Spec**: November 25, 2025 (9 days away)
+> **Action**: Run `./scripts/rc-validation-quickstart.sh` to start validation testing
+> See [MCP Spec Migration](docs/MCP_SPEC_MIGRATION.md) for details.
 
 ## 🚀 Key Features
 

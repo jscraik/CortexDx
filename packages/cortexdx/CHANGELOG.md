@@ -9,26 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### MCP Specification Migration (November 2025)
 
-**Important**: The Model Context Protocol specification is being updated with a new release scheduled for November 25, 2025. CortexDx is actively preparing for this migration.
+**🚨 URGENT UPDATE (Nov 16, 2025)**: RC validation window is NOW ACTIVE - only 9 days until final spec release!
+
+**Current Status**:
+- SDK v1.22.0 (published Nov 13) is **likely the RC version**
+- RC validation testing must **start immediately**
+- Final specification releases **November 25, 2025** (9 days away)
 
 **Timeline**:
-- **RC (Release Candidate)**: November 14, 2025
-- **Final Specification**: November 25, 2025
+- ✅ **RC (Release Candidate)**: November 14, 2025 - **PUBLISHED** (v1.22.0 on Nov 13)
+- ⏰ **Final Specification**: November 25, 2025 - **9 DAYS AWAY**
+- 🎯 **Validation Deadline**: November 24, 2025
 
 **Key Changes in New Spec**:
 - Asynchronous/long-running operations support (status polling, callbacks, webhooks)
 - Enhanced OAuth/identity flows (consent screens, resource scopes, client signing)
 - Improved streaming operation guidance
 
-**CortexDx Status**:
-- ✅ Current SDK: `@modelcontextprotocol/sdk` v1.22.0
+**CortexDx Readiness**:
+- ✅ Current SDK: `@modelcontextprotocol/sdk` v1.22.0 (published Nov 13, 2025)
 - ✅ Async operations foundation: LangGraph checkpoint/resume already implemented
 - ✅ OAuth support: Auth0 integration with dual authentication
 - ✅ Streaming: SSE and WebSocket testing already in place
-- 🚧 Validation testing planned for RC release (Nov 14)
-- 🚧 Final SDK upgrade planned for spec release (Nov 25)
+- 🚀 **NOW**: RC validation testing in progress
+- 🎯 **Nov 25**: Final validation & release
 
-See [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md) for detailed preparation plan and validation checklist.
+**Immediate Actions Required**:
+1. Run quick-start validation: `./scripts/rc-validation-quickstart.sh`
+2. Complete core validation (Nov 16-18)
+3. Deep testing and analysis (Nov 19-23)
+4. Final validation and release prep (Nov 24-25)
+
+See [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md) for detailed validation plan and [RC Validation Quick Start](../../scripts/rc-validation-quickstart.sh) to begin testing immediately.
 
 ### Planned
 
