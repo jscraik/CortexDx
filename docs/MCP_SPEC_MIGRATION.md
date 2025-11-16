@@ -142,7 +142,7 @@ cortexdx orchestrate https://cortex-mcp.brainwav.io/mcp \
 - **Location**: `docs/AUTH0_SETUP.md`, `src/auth/oauth-auth.ts`
 
 **Gaps to Address**:
-- [ ] Device code flow fallback (planned in Phase 5: `docs/PHASE5_ROADMAP.md:13`)
+- [ ] Device code flow fallback (planned in Phase 5: `docs/PHASE5_ROADMAP.md`)
 - [ ] Consent screen integration for user-facing flows
 - [ ] Review scopes against new MCP resource scope guidance
 - [ ] Implement token refresh strategy for long-running operations
