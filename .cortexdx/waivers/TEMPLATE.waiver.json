@@ -27,7 +27,7 @@
     ]
   },
   "compensating_controls": {
-    "description": "How risk is mitigated without full compliance",
+    "description": "E.g., Multi-factor authentication and network segmentation reduce unauthorized access risk while full encryption is pending.",
     "measures": [
       {
         "control": "Specific compensating control",
