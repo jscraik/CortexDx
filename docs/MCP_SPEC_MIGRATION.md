@@ -162,7 +162,7 @@ cortexdx orchestrate https://cortex-mcp.brainwav.io/mcp \
 - [ ] Add backpressure handling for streaming results
 - [ ] Test SSE reconnection logic with async operation state
 
-## Pre-RC Checklist (Before November 14, 2025)
+## RC Published - Validation In Progress
 
 ### Immediate Actions
 - [ ] Subscribe to `@modelcontextprotocol/sdk` npm releases
