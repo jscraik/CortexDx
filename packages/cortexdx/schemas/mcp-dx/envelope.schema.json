@@ -1,0 +1,207 @@
+{
+  "$id": "https://brainwav.dev/schemas/mcp-dx/envelope.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MCP Diagnostic Envelope",
+  "description": "TAP/JUnit-style test envelope for MCP diagnostics with signed URL evidence support",
+  "type": "object",
+  "required": ["run_id", "tool", "started_at", "cases", "summary", "version"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$",
+      "description": "Schema version following semver"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Unique identifier for this diagnostic run"
+    },
+    "tool": {
+      "type": "string",
+      "description": "Emitter identity, e.g. cortex-dx@1.4.0"
+    },
+    "spec": {
+      "type": "string",
+      "description": "Target spec/version under test, e.g. MCP 2025-06-18"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run started"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the run finished"
+    },
+    "agent_context": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Context for LLM agents (target URL, profile, config)"
+    },
+    "cases": {
+      "type": "array",
+      "description": "Test cases containing assertions",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "assertions"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this test case"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable test case name"
+          },
+          "labels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Labels for categorization (e.g., 'protocol', 'required')"
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Input parameters used for this case"
+          },
+          "assertions": {
+            "type": "array",
+            "description": "Individual test assertions within this case",
+            "items": {
+              "type": "object",
+              "required": ["id", "title", "status"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier for this assertion"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Human-readable assertion title"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["pass", "fail", "skip", "error"],
+                  "description": "Assertion result status"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["info", "low", "medium", "high", "critical"],
+                  "description": "Severity level for failed assertions"
+                },
+                "duration_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Assertion execution time in milliseconds"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Detailed message about the assertion result"
+                },
+                "evidence": {
+                  "type": "array",
+                  "description": "Evidence artifacts with presigned URLs",
+                  "items": {
+                    "type": "object",
+                    "required": ["kind", "url"],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": ["log", "trace", "http", "screenshot", "diff", "artifact"],
+                        "description": "Type of evidence artifact"
+                      },
+                      "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Presigned URL to access the evidence"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$",
+                        "description": "SHA-256 hash of the artifact for integrity verification"
+                      },
+                      "content_type": {
+                        "type": "string",
+                        "description": "MIME type of the artifact"
+                      },
+                      "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp when the presigned URL expires"
+                      }
+                    }
+                  }
+                },
+                "remediation": {
+                  "type": "object",
+                  "description": "Suggested remediation actions",
+                  "properties": {
+                    "summary": {
+                      "type": "string",
+                      "description": "Brief summary of the fix"
+                    },
+                    "patch_unified": {
+                      "type": "string",
+                      "description": "Unified diff patch for code changes"
+                    },
+                    "commands": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Shell commands to apply the fix"
+                    }
+                  }
+                },
+                "tags": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Tags for categorization and filtering"
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Additional structured metadata"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "passed", "failed", "skipped", "errored"],
+      "description": "Aggregated statistics for all assertions",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of assertions"
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of passed assertions"
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of failed assertions"
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of skipped assertions"
+        },
+        "errored": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of errored assertions"
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total run duration in milliseconds"
+        }
+      }
+    }
+  }
+}
