@@ -106,24 +106,29 @@ function getSessionKeyFromHeaders(headers: IncomingMessage['headers']): string |
 }
 
 /**
- * Get client IP address from request
+ * Get client IP address from request.
+ * 
+ * SECURITY NOTE: The X-Forwarded-For and X-Real-IP headers are easily spoofed.
+ * Only use these for audit/logging purposes, never for security decisions.
+ * Always log both the forwarded IP and the direct socket address for comparison.
  */
-function getClientIp(req: IncomingMessage): string | undefined {
-    // Check X-Forwarded-For header (for proxies)
-    const forwardedFor = req.headers['x-forwarded-for'];
-    if (forwardedFor) {
-        const ips = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
-        return ips.split(',')[0].trim();
-    }
+export function getClientIpInfo(req: IncomingMessage): { forwardedFor?: string, realIp?: string, socketIp?: string } {
+    // Extract X-Forwarded-For header (for proxies)
+    const forwardedForHeader = req.headers['x-forwarded-for'];
+    const forwardedFor = forwardedForHeader
+        ? (Array.isArray(forwardedForHeader) ? forwardedForHeader[0] : forwardedForHeader).split(',')[0].trim()
+        : undefined;
 
-    // Check X-Real-IP header
-    const realIp = req.headers['x-real-ip'];
-    if (realIp) {
-        return Array.isArray(realIp) ? realIp[0] : realIp;
-    }
+    // Extract X-Real-IP header
+    const realIpHeader = req.headers['x-real-ip'];
+    const realIp = realIpHeader
+        ? (Array.isArray(realIpHeader) ? realIpHeader[0] : realIpHeader)
+        : undefined;
 
-    // Fall back to socket remote address
-    return req.socket.remoteAddress;
+    // Extract socket remote address
+    const socketIp = req.socket.remoteAddress;
+
+    return { forwardedFor, realIp, socketIp };
 }
 
 /**
