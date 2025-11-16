@@ -39,7 +39,9 @@ import { getMcpDocsResource, listMcpDocsResources } from "./resources/mcp-docs-s
 import { findMcpTool, getAllMcpToolsFlat, executeDeepContextTool } from "./tools/index.js";
 import { executeAcademicIntegrationTool } from "./tools/academic-integration-tools.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
+import { executeMcpProbeTool } from "./tools/mcp-probe-tools.js";
 import { getDiagnosticSessionManager, type DiagnosticSessionConfig } from "./auth/diagnostic-session-manager.js";
+import { getReportStore } from "./probe/report-store.js";
 import type {
     DevelopmentContext,
     DiagnosticContext,
@@ -243,6 +245,8 @@ const executeDevelopmentTool = async (tool: McpTool, args: unknown, ctx: Develop
         case 'cortexdx_mcp_docs_lookup':
         case 'cortexdx_mcp_docs_versions':
             return await executeMcpDocsTool(tool, args, ctx);
+        case 'cortexdx_probe_mcp_server':
+            return await executeMcpProbeTool(tool, args, ctx);
         default:
             throw new Error(`Unknown development tool: ${tool.name}`);
     }
@@ -953,6 +957,117 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                     success: true,
                     sessions,
                     count: sessions.length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        // Diagnostic report endpoints
+        if (route.match(/^\/api\/v1\/reports\/[^\/]+$/) && method === 'GET') {
+            // Get diagnostic report by ID
+            const reportId = route.split('/').pop();
+            if (!reportId) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Report ID required',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+
+            try {
+                const reportStore = getReportStore();
+                const report = reportStore.getReport(reportId);
+
+                if (!report) {
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: `Report ${reportId} not found or expired`,
+                        timestamp: new Date().toISOString(),
+                    }));
+                    return;
+                }
+
+                // Check format query parameter
+                const format = url.searchParams.get('format') || 'json';
+
+                if (format === 'markdown' || format === 'md') {
+                    res.writeHead(200, { 'Content-Type': 'text/markdown' });
+                    res.end(report.markdown);
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(report.json);
+                }
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/reports' && method === 'GET') {
+            // List reports
+            try {
+                const reportStore = getReportStore();
+                const targetUrl = url.searchParams.get('targetUrl');
+                const limit = Number.parseInt(url.searchParams.get('limit') || '20');
+
+                const reports = targetUrl
+                    ? reportStore.listReportsByTarget(targetUrl, limit)
+                    : reportStore.listRecentReports(limit);
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    reports: reports.map(r => ({
+                        id: r.id,
+                        targetUrl: r.targetUrl,
+                        timestamp: r.timestamp,
+                        duration: r.duration,
+                        score: r.score,
+                        compliant: r.compliant,
+                        createdAt: new Date(r.createdAt).toISOString(),
+                        expiresAt: new Date(r.expiresAt).toISOString(),
+                        url: `/api/v1/reports/${r.id}`
+                    })),
+                    count: reports.length,
+                    timestamp: new Date().toISOString(),
+                }));
+            } catch (error) {
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: String(error),
+                    timestamp: new Date().toISOString(),
+                }));
+            }
+            return;
+        }
+
+        if (route === '/api/v1/reports/stats' && method === 'GET') {
+            // Get report statistics
+            try {
+                const reportStore = getReportStore();
+                const stats = reportStore.getStatistics();
+
+                res.writeHead(200);
+                res.end(JSON.stringify({
+                    success: true,
+                    statistics: stats,
                     timestamp: new Date().toISOString(),
                 }));
             } catch (error) {
@@ -1750,6 +1865,11 @@ if (SHOULD_LISTEN) {
         console.log("  POST /api/v1/diagnostic-session/:id/revoke - Revoke diagnostic session");
         console.log("  GET  /api/v1/diagnostic-session/:id - Get session information");
         console.log("  GET  /api/v1/diagnostic-session - List diagnostic sessions");
+        console.log("");
+        console.log("MCP Probe & Reports API:");
+        console.log("  GET  /api/v1/reports/:id - Get diagnostic report (add ?format=markdown for MD)");
+        console.log("  GET  /api/v1/reports - List diagnostic reports");
+        console.log("  GET  /api/v1/reports/stats - Get report statistics");
 
         // Start monitoring if enabled
         if (ENABLE_MONITORING) {
