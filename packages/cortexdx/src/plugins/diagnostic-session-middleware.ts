@@ -66,7 +66,7 @@ export const createDiagnosticSessionMiddleware = () => {
 
         // Track usage
         const method = req.method || 'UNKNOWN';
-        const ipAddress = getClientIp(req);
+        const ipAddress = getClientIpInfo(req);
         const userAgent = req.headers['user-agent'];
 
         sessionManager.trackUsage(
