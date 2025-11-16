@@ -280,7 +280,7 @@ export class ReportStore {
 
     // Private helper methods
 
-    private cleanupTimer?: NodeJS.Timeout;
+    private cleanupTimer?: ReturnType<typeof setInterval>;
 
     private startCleanupTimer(): void {
         // Run cleanup every 24 hours
