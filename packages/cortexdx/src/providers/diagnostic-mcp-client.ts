@@ -72,14 +72,6 @@ export async function createDiagnosticMcpClient(
     });
 }
 
-    return new HttpMcpClient({
-        baseUrl: options.targetServerUrl,
-        headers,
-        timeoutMs: options.timeoutMs,
-        userAgent: options.userAgent
-    });
-}
-/**
 /**
  * Create a diagnostic session on the target MCP server
  *
