@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 3. Deep testing and analysis (Nov 19-23)
 4. Final validation and release prep (Nov 24-25)
 
-See [MCP Spec Migration Tracker](../../docs/MCP_SPEC_MIGRATION.md) for detailed validation plan and [RC Validation Quick Start](../../scripts/rc-validation-quickstart.sh) to begin testing immediately.
+See [MCP Spec Migration Tracker](docs/MCP_SPEC_MIGRATION.md) for detailed validation plan and [RC Validation Quick Start](scripts/rc-validation-quickstart.sh) to begin testing immediately.
 
 ### Planned
 
