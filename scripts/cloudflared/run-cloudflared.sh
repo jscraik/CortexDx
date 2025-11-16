@@ -120,7 +120,11 @@ fi
 
 # Run cloudflared with either token or config file
 if [[ "$USE_TOKEN" == "true" ]]; then
-  "$CLOUDFLARED_BIN" tunnel --metrics "$METRICS_PORT" run --token "$CLOUDFLARED_TOKEN" >> "$LOG_FILE" 2>&1 &
+  TOKEN_FILE=$(mktemp)
+  chmod 600 "$TOKEN_FILE"
+  echo "$CLOUDFLARED_TOKEN" > "$TOKEN_FILE"
+  trap "rm -f $TOKEN_FILE" EXIT
+  "$CLOUDFLARED_BIN" tunnel --metrics "$METRICS_PORT" run --token-file "$TOKEN_FILE" >> "$LOG_FILE" 2>&1 &
 else
   "$CLOUDFLARED_BIN" tunnel --config "$CONFIG_PATH" --metrics "$METRICS_PORT" run "$TUNNEL_NAME" >> "$LOG_FILE" 2>&1 &
 fi
