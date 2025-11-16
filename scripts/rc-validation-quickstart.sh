@@ -3,10 +3,12 @@
 # Run this script to begin RC validation testing (Nov 16, 2025)
 
 
+# Dynamically detect installed SDK version
+SDK_VERSION=$(npm list @modelcontextprotocol/sdk --depth=0 2>/dev/null | grep @modelcontextprotocol/sdk | sed 's/.*@//')
 echo "🚀 MCP RC Validation Quick Start"
 echo "================================="
 echo "Date: $(date)"
-echo "SDK Version: v1.22.0 (published Nov 13, 2025)"
+echo "SDK Version: ${SDK_VERSION:-unknown}"
 echo ""
 
 # Create validation directories
