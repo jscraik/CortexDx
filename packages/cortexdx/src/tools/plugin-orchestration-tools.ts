@@ -302,45 +302,66 @@ export async function executePluginOrchestrationTool(
     args: unknown,
     context: DiagnosticContext | DevelopmentContext,
 ): Promise<McpToolResult> {
-    const orchestrator = getPluginOrchestrator();
-    ensureDefaultPluginWorkflows(orchestrator);
+    try {
+        const orchestrator = getPluginOrchestrator();
+        ensureDefaultPluginWorkflows(orchestrator);
 
-    switch (tool.name) {
-        case "cortexdx_execute_plugin":
-            return await executePlugin(args, context, orchestrator);
+        switch (tool.name) {
+            case "cortexdx_execute_plugin":
+                return await executePlugin(args, context, orchestrator);
 
-        case "cortexdx_execute_parallel":
-            return await executeParallel(args, context, orchestrator);
+            case "cortexdx_execute_parallel":
+                return await executeParallel(args, context, orchestrator);
 
-        case "cortexdx_execute_workflow":
-            return await executeWorkflow(args, context, orchestrator);
+            case "cortexdx_execute_workflow":
+                return await executeWorkflow(args, context, orchestrator);
 
-        case "cortexdx_create_workflow":
-            return await createWorkflow(args, orchestrator);
+            case "cortexdx_create_workflow":
+                return await createWorkflow(args, orchestrator);
 
-        case "cortexdx_list_plugins":
-            return await listPlugins(args, orchestrator);
+            case "cortexdx_list_plugins":
+                return await listPlugins(args, orchestrator);
 
-        case "cortexdx_get_plugin_schema":
-            return await getPluginSchema(args, orchestrator);
+            case "cortexdx_get_plugin_schema":
+                return await getPluginSchema(args, orchestrator);
 
-        case "cortexdx_list_workflows":
-            return await listWorkflows(orchestrator);
+            case "cortexdx_list_workflows":
+                return await listWorkflows(orchestrator);
 
-        case "cortexdx_get_workflow":
-            return await getWorkflow(args, orchestrator);
+            case "cortexdx_get_workflow":
+                return await getWorkflow(args, orchestrator);
 
-        case "cortexdx_delete_workflow":
-            return await deleteWorkflow(args, orchestrator);
+            case "cortexdx_delete_workflow":
+                return await deleteWorkflow(args, orchestrator);
 
-        case "cortexdx_get_workflow_history":
-            return await getWorkflowHistory(args, orchestrator);
+            case "cortexdx_get_workflow_history":
+                return await getWorkflowHistory(args, orchestrator);
 
-        case "cortexdx_validate_workflow":
-            return await validateWorkflow(args, orchestrator);
+            case "cortexdx_validate_workflow":
+                return await validateWorkflow(args, orchestrator);
 
-        default:
-            throw new Error(`Unknown plugin orchestration tool: ${tool.name}`);
+            default:
+                throw new Error(`Unknown plugin orchestration tool: ${tool.name}`);
+        }
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(
+                        {
+                            error: `Plugin orchestration tool ${tool.name} failed: ${message}`,
+                            tool: tool.name,
+                            timestamp: new Date().toISOString(),
+                        },
+                        null,
+                        2,
+                    ),
+                },
+            ],
+            isError: true,
+        };
     }
 }
 
@@ -351,37 +372,43 @@ async function executePlugin(
     context: DiagnosticContext | DevelopmentContext,
     orchestrator: ReturnType<typeof getPluginOrchestrator>,
 ): Promise<McpToolResult> {
-    const { pluginId, endpoint, context: additionalContext } = args as {
-        pluginId: string;
-        endpoint: string;
-        context?: Record<string, unknown>;
-    };
+    try {
+        const { pluginId, endpoint, context: additionalContext } = args as {
+            pluginId: string;
+            endpoint: string;
+            context?: Record<string, unknown>;
+        };
 
-    const executionContext = {
-        ...context,
-        endpoint,
-        ...additionalContext,
-    };
+        const executionContext = {
+            ...context,
+            endpoint,
+            ...additionalContext,
+        };
 
-    const findings = await orchestrator.executePlugin(pluginId, executionContext);
+        const findings = await orchestrator.executePlugin(pluginId, executionContext);
 
-    return {
-        content: [
-            {
-                type: "text",
-                text: JSON.stringify(
-                    {
-                        pluginId,
-                        endpoint,
-                        findings,
-                        count: findings.length,
-                    },
-                    null,
-                    2,
-                ),
-            },
-        ],
-    };
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(
+                        {
+                            pluginId,
+                            endpoint,
+                            findings,
+                            count: findings.length,
+                        },
+                        null,
+                        2,
+                    ),
+                },
+            ],
+        };
+    } catch (error) {
+        const { pluginId, endpoint } = args as { pluginId?: string; endpoint?: string };
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to execute plugin ${pluginId || 'unknown'} on ${endpoint || 'unknown endpoint'}: ${message}`);
+    }
 }
 
 async function executeParallel(
@@ -389,50 +416,56 @@ async function executeParallel(
     context: DiagnosticContext | DevelopmentContext,
     orchestrator: ReturnType<typeof getPluginOrchestrator>,
 ): Promise<McpToolResult> {
-    const { pluginIds, endpoint, context: additionalContext } = args as {
-        pluginIds: string[];
-        endpoint: string;
-        context?: Record<string, unknown>;
-    };
+    try {
+        const { pluginIds, endpoint, context: additionalContext } = args as {
+            pluginIds: string[];
+            endpoint: string;
+            context?: Record<string, unknown>;
+        };
 
-    const executionContext = {
-        ...context,
-        endpoint,
-        ...additionalContext,
-    };
+        const executionContext = {
+            ...context,
+            endpoint,
+            ...additionalContext,
+        };
 
-    const results = await orchestrator.executeParallel(pluginIds, executionContext);
+        const results = await orchestrator.executeParallel(pluginIds, executionContext);
 
-    // Convert Map to object for JSON serialization
-    const resultsObj: Record<string, Finding[]> = {};
-    for (const [key, value] of results.results.entries()) {
-        resultsObj[key] = value;
+        // Convert Map to object for JSON serialization
+        const resultsObj: Record<string, Finding[]> = {};
+        for (const [key, value] of results.results.entries()) {
+            resultsObj[key] = value;
+        }
+
+        const errorsObj: Record<string, string> = {};
+        for (const [key, value] of results.errors.entries()) {
+            errorsObj[key] = value.message;
+        }
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(
+                        {
+                            pluginIds,
+                            endpoint,
+                            results: resultsObj,
+                            errors: errorsObj,
+                            executionTime: results.executionTime,
+                            totalFindings: Object.values(resultsObj).flat().length,
+                        },
+                        null,
+                        2,
+                    ),
+                },
+            ],
+        };
+    } catch (error) {
+        const { pluginIds, endpoint } = args as { pluginIds?: string[]; endpoint?: string };
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to execute plugins in parallel (${pluginIds?.join(', ') || 'unknown'}) on ${endpoint || 'unknown endpoint'}: ${message}`);
     }
-
-    const errorsObj: Record<string, string> = {};
-    for (const [key, value] of results.errors.entries()) {
-        errorsObj[key] = value.message;
-    }
-
-    return {
-        content: [
-            {
-                type: "text",
-                text: JSON.stringify(
-                    {
-                        pluginIds,
-                        endpoint,
-                        results: resultsObj,
-                        errors: errorsObj,
-                        executionTime: results.executionTime,
-                        totalFindings: Object.values(resultsObj).flat().length,
-                    },
-                    null,
-                    2,
-                ),
-            },
-        ],
-    };
 }
 
 async function executeWorkflow(
@@ -440,32 +473,33 @@ async function executeWorkflow(
     context: DiagnosticContext | DevelopmentContext,
     orchestrator: ReturnType<typeof getPluginOrchestrator>,
 ): Promise<McpToolResult> {
-    const { workflowId, endpoint, context: additionalContext } = args as {
-        workflowId: string;
-        endpoint: string;
-        context?: Record<string, unknown>;
-    };
-
-    const workflow = orchestrator.getWorkflow(workflowId);
-    if (!workflow) {
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify({ error: `Workflow not found: ${workflowId}` }),
-                },
-            ],
-            isError: true,
+    try {
+        const { workflowId, endpoint, context: additionalContext } = args as {
+            workflowId: string;
+            endpoint: string;
+            context?: Record<string, unknown>;
         };
-    }
 
-    const executionContext = {
-        ...context,
-        endpoint,
-        ...additionalContext,
-    };
+        const workflow = orchestrator.getWorkflow(workflowId);
+        if (!workflow) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify({ error: `Workflow not found: ${workflowId}` }),
+                    },
+                ],
+                isError: true,
+            };
+        }
 
-    const results = await orchestrator.executeSequential(workflow, executionContext);
+        const executionContext = {
+            ...context,
+            endpoint,
+            ...additionalContext,
+        };
+
+        const results = await orchestrator.executeSequential(workflow, executionContext);
 
     // Convert Maps to objects for JSON serialization
     const stageResultsObj: Record<string, Finding[]> = {};
@@ -504,6 +538,11 @@ async function executeWorkflow(
             },
         ],
     };
+    } catch (error) {
+        const { workflowId, endpoint } = args as { workflowId?: string; endpoint?: string };
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to execute workflow ${workflowId || 'unknown'} on ${endpoint || 'unknown endpoint'}: ${message}`);
+    }
 }
 
 async function createWorkflow(
