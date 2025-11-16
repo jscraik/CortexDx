@@ -19,12 +19,20 @@ CortexDx is a monorepo containing:
 
 ### Essential Reading
 
-Before contributing, please review these **mandatory** documents:
+Before contributing, please review these documents based on priority:
 
-1. **[AGENTS.md](AGENTS.md)** - Operational instructions for all contributors (mandatory)
-2. **[CODESTYLE.md](CODESTYLE.md)** - Coding standards and formatting rules
-3. **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards and behavior expectations
+**🔴 Must Read (Everyone):**
+1. **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards and behavior expectations
+2. **[AGENTS.md](AGENTS.md)** - Operational instructions for all contributors (mandatory)
+
+**🟡 Important (Code Contributors):**
+3. **[CODESTYLE.md](CODESTYLE.md)** - Coding standards and formatting rules
 4. **[Project Vision](.cortexdx/rules/vision.md)** - North star and roadmap alignment
+
+**🟢 Reference (As Needed):**
+- [Package Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md) - Detailed development workflow
+- [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md) - Creating custom plugins
+- [Glossary](docs/GLOSSARY.md) - Technical terms and definitions
 
 ## 🛠️ Getting Started
 

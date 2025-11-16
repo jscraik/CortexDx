@@ -254,6 +254,9 @@ cortexdx diagnose http://localhost:3000
 
 ### Step 5: Explore Advanced Features
 
+<details>
+<summary><strong>🟡 Advanced Features</strong> (Click to expand - optional for beginners)</summary>
+
 Try these commands to explore more features:
 
 ```bash
@@ -269,6 +272,10 @@ cortexdx generate connector weather-api https://api.openweathermap.org/swagger.j
 # Get best practices analysis
 cortexdx best-practices http://localhost:3000
 ```
+
+> 💡 **Tip:** These features require deeper MCP knowledge. Complete the [User Guide: Basics](user-guide/basics.md) first if you're new to MCP.
+
+</details>
 
 ## Common First-Time Issues and Solutions
 

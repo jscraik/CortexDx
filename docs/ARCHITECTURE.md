@@ -5,6 +5,44 @@
 
 This document provides a comprehensive overview of the CortexDx architecture, including component diagrams, data flows, and key design decisions.
 
+> 📖 **Need term definitions?** See the [Glossary](GLOSSARY.md) for explanations of technical terms.
+
+---
+
+## 📍 Reading Guide
+
+**Choose your path based on your goal:**
+
+### 🟢 New to CortexDx? (Start Here)
+**Reading time:** ~15 minutes
+
+1. [Overview](#overview) - Core principles and architecture style (~5 min)
+2. [High-Level Architecture](#high-level-architecture) - Visual system overview (~5 min)
+3. [Diagnostic Workflow](#diagnostic-workflow) - How diagnostics execute (~5 min)
+
+### 🟡 Building Plugins?
+**Reading time:** ~20 minutes
+
+1. [Plugin System](#plugin-system) - Plugin architecture and types (~10 min)
+2. [Extension Points](#extension-points) - How to add new plugins (~5 min)
+3. [Sandbox Security Model](#sandbox-security-model) - Security constraints (~5 min)
+
+### 🔴 Understanding System Design?
+**Reading time:** ~35 minutes
+
+1. [Component Architecture](#component-architecture) - System components (~10 min)
+2. [Storage Architecture](#storage-architecture) - Persistence layer (~8 min)
+3. [Security Architecture](#security-architecture) - Security layers (~8 min)
+4. [Key Design Decisions](#key-design-decisions) - Architectural choices (~10 min)
+
+### 🔧 Contributing to Core?
+**Reading time:** ~40 minutes
+
+1. Read all sections above
+2. [Data Flow Diagrams](#data-flow-diagrams) - How data moves (~8 min)
+3. [Performance Characteristics](#performance-characteristics) - System limits (~5 min)
+4. [Architecture Evolution](#architecture-evolution) - Future plans (~5 min)
+
 ---
 
 ## Table of Contents

@@ -7,6 +7,18 @@
 
 **Stateless, plugin-based diagnostics for Model Context Protocol (MCP) servers and clients.** CortexDx is the comprehensive diagnostic tool that helps you harden MCP implementations before production deployment.
 
+> **📖 New to MCP or CortexDx?** See the [Glossary](docs/GLOSSARY.md) for definitions of technical terms.
+
+## TL;DR
+
+**CortexDx validates MCP server implementations** by testing protocol compliance, security, and performance. Install with `npm install -g @brainwav/cortexdx`, run `cortexdx diagnose <your-server-url>`, and get actionable reports with evidence-based findings.
+
+**Quick Links:**
+- [Installation](#installation) - Get started in 60 seconds
+- [Getting Started Guide](packages/cortexdx/docs/GETTING_STARTED.md) - Step-by-step walkthrough
+- [User Guide](packages/cortexdx/docs/user-guide/README.md) - Complete usage documentation
+- [Glossary](docs/GLOSSARY.md) - Technical terms explained
+
 > **🚨 URGENT: MCP Specification Update**
 
 > **Status:**  
@@ -21,14 +33,14 @@
 
 ## 🚀 Key Features
 
-- **🔍 Comprehensive MCP Analysis**: HTTP/HTTPS, SSE, WebSocket, JSON-RPC, and gRPC protocol testing
-- **🛡️ Security & Governance**: CORS, rate-limiting, authentication, and threat-model validation
-- **📊 Evidence-Based Reports**: Markdown, JSON, ArcTDD plans, and optional file patches
-- **🔧 Plugin Architecture**: Extensible sandbox-based plugin system with configurable budgets
-- **⚡ CI/CD Ready**: GitHub Actions integration with severity-based failure modes
-- **♿ Accessibility**: WCAG 2.2 AA compliant CLI output with screen reader support
-- **🎯 Deterministic**: Reproducible results with `--deterministic` mode for reliable testing
-- **🧠 Internal Self-Improvement** *(Brainwav dev builds only)*: Internal diagnostics plugin highlights handshake, dependency, and health regressions inside CortexDx itself
+- **🔍 Comprehensive Protocol Testing**: Validates HTTP/HTTPS, Server-Sent Events (SSE), WebSocket, JSON-RPC, and gRPC transports
+- **🛡️ Security & Governance**: Tests Cross-Origin Resource Sharing (CORS), rate-limiting, authentication, and threat models
+- **📊 Evidence-Based Reports**: Generates Markdown summaries, JSON data, test-driven implementation plans (ArcTDD), and code patches
+- **🔧 Plugin Architecture**: Extensible system with sandboxed plugins (isolated execution with CPU and memory limits)
+- **⚡ CI/CD Ready**: Integrates with Continuous Integration/Deployment pipelines (GitHub Actions, GitLab CI, Jenkins) using severity-based exit codes
+- **♿ Accessibility**: Web Content Accessibility Guidelines (WCAG) 2.2 AA compliant with screen reader support
+- **🎯 Deterministic Testing**: Produces reproducible results with stable timestamps and random seeds for reliable regression testing
+- **🧠 Internal Self-Improvement** *(Brainwav dev builds only)*: Diagnostic plugin that identifies regressions in CortexDx's own implementation
 
 ## 📦 Quick Start
 
@@ -356,29 +368,56 @@ Each command emits JSON summaries, redacts secrets, and exits non-zero for MAJOR
 
 ## 📚 Documentation
 
-| Document | Description | Audience |
-|----------|-------------|----------|
-| [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md) | Installation and first steps | New Users |
-| [User Guide](packages/cortexdx/docs/USER_GUIDE.md) | Comprehensive usage guide | All Users |
-| [Auth0 Setup](docs/AUTH0_SETUP.md) | Auth0 authentication configuration | Production Setup |
-| [API Reference](packages/cortexdx/docs/API_REFERENCE.md) | CLI and programmatic API | Developers |
-| [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md) | Creating custom plugins | Plugin Authors |
-| [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md) | Common issues and solutions | Support |
-| [Deployment](packages/cortexdx/docs/DEPLOYMENT.md) | Production deployment | DevOps |
-| [IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md) | Editor setup and extensions | Developers |
-| [Orchestration Guide](docs/ORCHESTRATION.md) | LangGraph/CLI orchestration usage and MCP tools | Contributors |
-| [Report Manager](docs/REPORT_MANAGER.md) | Using `--report-out` consolidated artifacts | Contributors |
-| [Phase 5 Roadmap](docs/PHASE5_ROADMAP.md) | Upcoming security/Auth0/SBOM/tutorial objectives | Contributors |
-| [Contributing](packages/cortexdx/docs/CONTRIBUTING.md) | Development and contribution guide | Contributors |
+⏱️ **Quick Navigation:** Choose the right guide for your needs
 
-### Quick Navigation
+### 🟢 Getting Started (New Users)
 
-- **New to CortexDx?** Start with [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md)
-- **Need Auth0 authentication?** See [Auth0 Setup](docs/AUTH0_SETUP.md)
-- **Need help?** Check [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md)
-- **Want to contribute?** Read [Contributing](packages/cortexdx/docs/CONTRIBUTING.md)
-- **Building plugins?** See [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)
-- **Setting up your IDE?** Visit [IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md)
+| Document | Description | Reading Time |
+|----------|-------------|--------------|
+| [Getting Started](packages/cortexdx/docs/GETTING_STARTED.md) | Installation and first steps | ~15 min |
+| [User Guide Hub](packages/cortexdx/docs/user-guide/README.md) | Focused guides organized by topic | ~5 min |
+| [FAQ](packages/cortexdx/docs/user-guide/faq.md) | Common questions and quick answers | ~5 min |
+| [Glossary](docs/GLOSSARY.md) | Technical terms and abbreviations explained | Reference |
+
+### 🟡 Usage & Configuration (All Users)
+
+| Document | Description | Reading Time |
+|----------|-------------|--------------|
+| [User Guide: Basics](packages/cortexdx/docs/user-guide/basics.md) | Installation, quick start, authentication | ~10 min |
+| [User Guide: Commands](packages/cortexdx/docs/user-guide/commands.md) | Complete command reference | ~15 min |
+| [User Guide: Configuration](packages/cortexdx/docs/user-guide/configuration.md) | Config files and environment variables | ~20 min |
+| [Troubleshooting](packages/cortexdx/docs/TROUBLESHOOTING.md) | Common issues and solutions | Reference |
+
+### 🔴 Advanced Topics (Developers & DevOps)
+
+| Document | Description | Reading Time |
+|----------|-------------|--------------|
+| [API Reference](packages/cortexdx/docs/API_REFERENCE.md) | CLI and programmatic API | Reference |
+| [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md) | Creating custom diagnostic plugins | ~30 min |
+| [CI/CD Integration](packages/cortexdx/docs/user-guide/ci-cd.md) | GitHub Actions, GitLab CI, Jenkins | ~25 min |
+| [Deployment](packages/cortexdx/docs/DEPLOYMENT.md) | Production deployment patterns | ~20 min |
+| [IDE Integration](packages/cortexdx/docs/IDE_INTEGRATION.md) | Editor setup (VS Code, IntelliJ, etc.) | ~15 min |
+| [Auth0 Setup](docs/AUTH0_SETUP.md) | OAuth2 authentication configuration | ~20 min |
+
+### 🔧 Project Resources (Contributors)
+
+| Document | Description | Reading Time |
+|----------|-------------|--------------|
+| [Architecture](docs/ARCHITECTURE.md) | System design and components | ~25 min |
+| [Contributing](packages/cortexdx/docs/CONTRIBUTING.md) | Development workflow and standards | ~20 min |
+| [Orchestration Guide](docs/ORCHESTRATION.md) | LangGraph workflows and MCP tools | ~15 min |
+| [Report Manager](docs/REPORT_MANAGER.md) | Consolidated report artifacts | ~10 min |
+| [Phase 5 Roadmap](docs/PHASE5_ROADMAP.md) | Upcoming features and milestones | ~10 min |
+
+### Quick Links by Task
+
+- **❓ "How do I get started?"** → [Getting Started Guide](packages/cortexdx/docs/GETTING_STARTED.md)
+- **❓ "What does this term mean?"** → [Glossary](docs/GLOSSARY.md)
+- **❓ "How do I use authentication?"** → [User Guide: Basics](packages/cortexdx/docs/user-guide/basics.md#authentication)
+- **❓ "My diagnostic is failing, what now?"** → [FAQ: Troubleshooting](packages/cortexdx/docs/user-guide/faq.md#troubleshooting)
+- **❓ "How do I integrate with GitHub Actions?"** → [CI/CD Integration Guide](docs/CI_CD_INTEGRATION.md)
+- **❓ "How do I create a plugin?"** → [Plugin Development](packages/cortexdx/docs/PLUGIN_DEVELOPMENT.md)
+- **❓ "How do I contribute?"** → [Contributing Guide](packages/cortexdx/docs/CONTRIBUTING.md)
 
 ## 🏗️ Architecture
 
