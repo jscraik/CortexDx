@@ -145,7 +145,6 @@ export interface EvidenceBuilder {
 	kind: EvidenceKind;
 	content: string | Buffer;
 	contentType?: string;
-	ttlSeconds?: number;
 }
 
 /**
