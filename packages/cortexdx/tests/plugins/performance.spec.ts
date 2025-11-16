@@ -11,7 +11,7 @@ import {
   EnhancedPerformanceProfilerPlugin,
   type PerformanceSummary,
 } from '../src/plugins/performance';
-import type { DiagnosticContext, TransportTranscript } from '../src/types';
+import type { DiagnosticContext, TransportTranscript } from '../src/types.js';
 
 describe('Performance Plugin', () => {
   let mockContext: DiagnosticContext;
