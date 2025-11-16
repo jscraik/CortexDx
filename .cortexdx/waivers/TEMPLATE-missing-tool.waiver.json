@@ -42,59 +42,11 @@
       }
     ]
   },
-  "scope": {
-    "affected_components": ["model health verification"],
-    "affected_files": [],
-    "affected_services": []
-  },
-  "remediation": {
-    "required": true,
-    "plan": "Implement pnpm models:health and models:smoke tools",
-    "timeline": [
-      {
-        "milestone": "Design tool interface and MCP integration",
-        "target_date": "2025-11-30",
-        "status": "pending"
-      },
-      {
-        "milestone": "Implement health check tool",
-        "target_date": "2025-12-15",
-        "status": "pending"
-      },
-      {
-        "milestone": "Deploy and document tool",
-        "target_date": "2025-12-20",
-        "status": "pending"
-      }
-    ],
-    "completion_criteria": "Tool exists in package.json scripts, documentation updated, CI uses automated tool instead of manual process",
-    "blocking_issues": []
-  },
   "expiration": {
     "expires_on": "2025-12-20",
     "auto_renew": false,
     "renewal_requires": "same_level",
     "expiration_action": "block"
   },
-  "approvals": [],
-  "monitoring": {
-    "metrics": ["Tool implementation progress", "Manual verification consistency"],
-    "alerts": ["14 days before expiration", "7 days before expiration"],
-    "review_frequency": "weekly"
-  },
-  "audit_trail": [
-    {
-      "date": "2025-11-16",
-      "action": "created",
-      "actor": "@example-user",
-      "details": "Waiver created for missing models:health tool"
-    }
-  ],
-  "extensions": [],
-  "metadata": {
-    "tags": ["missing-tool", "models-health", "temporary"],
-    "related_waivers": [],
-    "supersedes": null,
-    "superseded_by": null
-  }
+  "approvals": []
 }
