@@ -19,5 +19,5 @@ module.exports = {
     'prefer-const': 'warn',
     'no-console': 'warn',
   },
-  ignorePatterns: ['dist', 'node_modules', '.nx', '**/*.js'],
+  ignorePatterns: ['dist/**', 'node_modules/**', '.nx/**', '*.config.js'],
 };
