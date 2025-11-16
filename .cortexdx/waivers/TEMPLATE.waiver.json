@@ -18,7 +18,7 @@
     "related_links": []
   },
   "justification": {
-    "reason": "Detailed explanation of why waiver is necessary",
+    "reason": "Provide a thorough, evidence-based explanation of why this waiver is necessary, including specific business, technical, and operational context, the risks of non-compliance, and any relevant background that supports the request. Justify why alternatives are not feasible and why this waiver is the best course of action.",
     "business_impact": "What happens if waiver is not granted",
     "technical_constraints": "Technical reasons compliance is not possible",
     "alternatives_considered": [
