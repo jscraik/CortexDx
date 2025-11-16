@@ -126,13 +126,13 @@ describe('Performance Benchmarks', () => {
     );
 
     bench('Object.keys iteration', () => {
-      Object.keys(obj).forEach(key => {
+      Object.keys(obj).forEach(_key => {
         // Access value if needed: obj[key]
       });
     });
 
     bench('Object.entries iteration', () => {
-      Object.entries(obj).forEach(([key, value]) => {
+      Object.entries(obj).forEach(([_key, _value]) => {
         // Process
       });
     });
