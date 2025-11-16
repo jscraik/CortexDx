@@ -127,7 +127,7 @@ describe('Performance Benchmarks', () => {
 
     bench('Object.keys iteration', () => {
       Object.keys(obj).forEach(key => {
-        const value = obj[key];
+        // Access value if needed: obj[key]
       });
     });
 
