@@ -63,6 +63,14 @@ export async function createDiagnosticMcpClient(
     } else {
         throw new Error('Either diagnosticSessionKey or auth0 config must be provided');
     }
+    // Return configured HttpMcpClient
+    return new HttpMcpClient({
+        baseUrl: options.targetServerUrl,
+        headers,
+        timeoutMs: options.timeoutMs,
+        userAgent: options.userAgent
+    });
+}
 
     return new HttpMcpClient({
         baseUrl: options.targetServerUrl,
