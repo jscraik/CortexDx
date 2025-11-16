@@ -64,8 +64,8 @@ npm list @modelcontextprotocol/sdk > reports/rc-validation/baseline/sdk-version.
 # Create RC validation branch
 git checkout -b rc-validation-nov-2025
 
-# Install RC SDK (replace X.Y.Z with actual RC version)
-pnpm --filter @brainwav/cortexdx add @modelcontextprotocol/sdk@rc
+# Install RC SDK (v1.22.0-rc is the current RC version)
+pnpm --filter @brainwav/cortexdx add @modelcontextprotocol/sdk@1.22.0-rc
 
 # Document installed version
 npm list @modelcontextprotocol/sdk > reports/rc-validation/rc/sdk-version.txt
