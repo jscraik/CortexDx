@@ -14,7 +14,12 @@ import { join } from "node:path";
 export interface DiagnosticSessionConfig {
     requestedBy: string;       // Identity of the requesting diagnostic client (e.g., "cortexdx")
     scope: string[];           // Scoped permissions (e.g., ["read:tools", "read:resources"])
-    duration: number;          // Session TTL in seconds
+    /**
+     * Session TTL in seconds
+     * @minimum 60
+     * @maximum 86400
+     */
+    duration: number;
     allowedEndpoints?: string[]; // Optional: specific endpoints allowed
     metadata?: Record<string, unknown>; // Additional context
 }
