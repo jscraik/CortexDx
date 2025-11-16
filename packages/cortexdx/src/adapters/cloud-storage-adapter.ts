@@ -334,7 +334,7 @@ export class CloudStorageAdapter {
 		if (kindContentTypeMap[kind]) {
 			return kindContentTypeMap[kind];
 		}
-		return "application/octet-stream";
+		// All valid EvidenceKind values are covered above; unreachable.
 	}
 
 	/**
