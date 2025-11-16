@@ -1,6 +1,7 @@
 {
   "__NOTE__": "Fields with pipe-separated values (e.g., 'pending | approved | expired | revoked') are placeholders. Replace the entire string with a single valid value before use.",
   "$schema": "./waiver.schema.json",
+  "waiver_id": "WAIVER-YYYY-MM-DD-###",
   "created": "2025-MM-DD",
   "type": "temporary | permanent | grace_period",
   "status": "pending | approved | expired | revoked",
@@ -36,58 +37,11 @@
       }
     ]
   },
-  "scope": {
-    "affected_components": ["component1", "component2"],
-    "affected_files": ["path/to/file1.ts", "path/to/file2.ts"],
-    "affected_services": []
-  },
-  "remediation": {
-    "required": true,
-    "plan": "Steps to achieve full compliance",
-    "timeline": [
-      {
-        "milestone": "Description",
-        "target_date": "2025-MM-DD",
-        "status": "pending | in_progress | completed"
-      }
-    ],
-    "completion_criteria": "How we know remediation is complete",
-    "blocking_issues": []
-  },
   "expiration": {
     "expires_on": "2025-MM-DD | permanent",
     "auto_renew": false,
     "renewal_requires": "same_level | higher_level",
     "expiration_action": "block | warn | notify"
   },
-  "approvals": [
-    {
-      "approver": "@github-username",
-      "role": "Tech Lead | Maintainer | Architecture",
-      "date": "2025-MM-DD",
-      "approval_method": "GitHub comment | Email | Meeting",
-      "approval_link": "URL to approval evidence",
-      "conditions": []
-    }
-  ],
-  "monitoring": {
-    "metrics": ["Metrics to track waiver impact"],
-    "alerts": ["Alert conditions for waiver violations"],
-    "review_frequency": "weekly | monthly | quarterly"
-  },
-  "audit_trail": [
-    {
-      "date": "2025-MM-DD",
-      "action": "created | approved | extended | expired | revoked",
-      "actor": "@github-username",
-      "details": "Description of action taken"
-    }
-  ],
-  "extensions": [],
-  "metadata": {
-    "tags": ["grace-period", "external-contributor", "missing-tool", "legacy"],
-    "related_waivers": [],
-    "supersedes": null,
-    "superseded_by": null
-  }
+  "approvals": []
 }
