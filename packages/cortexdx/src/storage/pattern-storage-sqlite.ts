@@ -216,11 +216,20 @@ export function createSQLitePatternStorage(
     dbPath: string,
     encryptionKey?: string,
 ): EnhancedPatternStorage {
-    const db = new Database(dbPath);
-    const encryption = new PatternEncryption(encryptionKey);
+    let db: Database.Database;
+    let encryption: PatternEncryption;
+
+    try {
+        db = new Database(dbPath);
+        encryption = new PatternEncryption(encryptionKey);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to initialize pattern storage at ${dbPath}: ${message}`);
+    }
 
     // Create tables
-    db.exec(`
+    try {
+        db.exec(`
         CREATE TABLE IF NOT EXISTS patterns (
             id TEXT PRIMARY KEY,
             problem_type TEXT NOT NULL,
@@ -264,6 +273,11 @@ export function createSQLitePatternStorage(
 
         CREATE INDEX IF NOT EXISTS idx_common_occurrences ON common_issues(occurrences DESC);
     `);
+    } catch (error) {
+        db.close();
+        const message = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to create pattern storage schema: ${message}`);
+    }
 
     // Prepared statements
     const insertPattern = db.prepare(`
@@ -407,44 +421,34 @@ export function createSQLitePatternStorage(
 
     return {
         async savePattern(pattern: ResolutionPattern): Promise<void> {
-            const now = Date.now();
-            const encrypted = serializePattern(pattern);
+            try {
+                const now = Date.now();
+                const encrypted = serializePattern(pattern);
 
-            insertPattern.run(
-                pattern.id,
-                pattern.problemType,
-                PatternAnonymizer.anonymizeProblemSignature(pattern.problemSignature),
-                encrypted,
-                pattern.successCount,
-                pattern.failureCount,
-                pattern.averageResolutionTime,
-                pattern.lastUsed,
-                pattern.confidence,
-                now,
-                now,
-            );
+                insertPattern.run(
+                    pattern.id,
+                    pattern.problemType,
+                    PatternAnonymizer.anonymizeProblemSignature(pattern.problemSignature),
+                    encrypted,
+                    pattern.successCount,
+                    pattern.failureCount,
+                    pattern.averageResolutionTime,
+                    pattern.lastUsed,
+                    pattern.confidence,
+                    now,
+                    now,
+                );
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to save pattern ${pattern.id}: ${message}`);
+            }
         },
 
         async loadPattern(id: string): Promise<ResolutionPattern | null> {
-            const row = selectPattern.get(id) as PatternRow | undefined;
-            if (!row) return null;
+            try {
+                const row = selectPattern.get(id) as PatternRow | undefined;
+                if (!row) return null;
 
-            const pattern = deserializePattern(row);
-            return {
-                ...pattern,
-                id: row.id,
-                problemType: row.problem_type,
-                successCount: row.success_count,
-                failureCount: row.failure_count,
-                averageResolutionTime: row.average_resolution_time,
-                lastUsed: row.last_used,
-                confidence: row.confidence,
-            };
-        },
-
-        async loadAllPatterns(): Promise<ResolutionPattern[]> {
-            const rows = selectAllPatterns.all() as PatternRow[];
-            return rows.map((row) => {
                 const pattern = deserializePattern(row);
                 return {
                     ...pattern,
@@ -456,255 +460,330 @@ export function createSQLitePatternStorage(
                     lastUsed: row.last_used,
                     confidence: row.confidence,
                 };
-            });
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to load pattern ${id}: ${message}`);
+            }
+        },
+
+        async loadAllPatterns(): Promise<ResolutionPattern[]> {
+            try {
+                const rows = selectAllPatterns.all() as PatternRow[];
+                return rows.map((row) => {
+                    const pattern = deserializePattern(row);
+                    return {
+                        ...pattern,
+                        id: row.id,
+                        problemType: row.problem_type,
+                        successCount: row.success_count,
+                        failureCount: row.failure_count,
+                        averageResolutionTime: row.average_resolution_time,
+                        lastUsed: row.last_used,
+                        confidence: row.confidence,
+                    };
+                });
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to load all patterns: ${message}`);
+            }
         },
 
         async updatePatternSuccess(id: string, resolutionTime: number): Promise<void> {
-            const now = Date.now();
-            updatePatternSuccess.run(resolutionTime, now, now, id);
+            try {
+                const now = Date.now();
+                updatePatternSuccess.run(resolutionTime, now, now, id);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to update pattern success for ${id}: ${message}`);
+            }
         },
 
         async updatePatternFailure(id: string): Promise<void> {
-            const now = Date.now();
-            updatePatternFailure.run(now, now, id);
+            try {
+                const now = Date.now();
+                updatePatternFailure.run(now, now, id);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to update pattern failure for ${id}: ${message}`);
+            }
         },
 
         async addFeedback(id: string, feedback: FeedbackEntry): Promise<void> {
-            const userId = feedback.userId
-                ? PatternAnonymizer.hashIdentifier(feedback.userId)
-                : null;
+            try {
+                const userId = feedback.userId
+                    ? PatternAnonymizer.hashIdentifier(feedback.userId)
+                    : null;
 
-            insertFeedback.run(
-                id,
-                feedback.timestamp,
-                userId,
-                feedback.rating,
-                feedback.successful ? 1 : 0,
-                feedback.comments || null,
-                JSON.stringify(feedback.context),
-            );
+                insertFeedback.run(
+                    id,
+                    feedback.timestamp,
+                    userId,
+                    feedback.rating,
+                    feedback.successful ? 1 : 0,
+                    feedback.comments || null,
+                    JSON.stringify(feedback.context),
+                );
 
-            // Update pattern confidence based on feedback
-            const pattern = await this.loadPattern(id);
-            if (pattern) {
-                const feedbackRows = selectFeedback.all(id) as FeedbackRow[];
-                const recentFeedback = feedbackRows
-                    .filter((f) => Date.now() - f.timestamp < 30 * 24 * 60 * 60 * 1000)
-                    .map((f) => f.rating);
+                // Update pattern confidence based on feedback
+                const pattern = await this.loadPattern(id);
+                if (pattern) {
+                    const feedbackRows = selectFeedback.all(id) as FeedbackRow[];
+                    const recentFeedback = feedbackRows
+                        .filter((f) => Date.now() - f.timestamp < 30 * 24 * 60 * 60 * 1000)
+                        .map((f) => f.rating);
 
-                if (recentFeedback.length >= 3) {
-                    const avgRating =
-                        recentFeedback.reduce((a, b) => a + b, 0) / recentFeedback.length;
-                    const feedbackFactor = avgRating / 5.0;
+                    if (recentFeedback.length >= 3) {
+                        const avgRating =
+                            recentFeedback.reduce((a, b) => a + b, 0) / recentFeedback.length;
+                        const feedbackFactor = avgRating / 5.0;
 
-                    const successRate =
-                        pattern.successCount / (pattern.successCount + pattern.failureCount);
-                    const newConfidence = successRate * 0.7 + feedbackFactor * 0.3;
+                        const successRate =
+                            pattern.successCount / (pattern.successCount + pattern.failureCount);
+                        const newConfidence = successRate * 0.7 + feedbackFactor * 0.3;
 
-                    db.prepare("UPDATE patterns SET confidence = ?, updated_at = ? WHERE id = ?").run(
-                        newConfidence,
-                        Date.now(),
-                        id,
-                    );
+                        db.prepare("UPDATE patterns SET confidence = ?, updated_at = ? WHERE id = ?").run(
+                            newConfidence,
+                            Date.now(),
+                            id,
+                        );
+                    }
                 }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to add feedback for pattern ${id}: ${message}`);
             }
         },
 
         async saveCommonIssue(issue: CommonIssuePattern): Promise<void> {
-            insertCommonIssue.run(
-                PatternAnonymizer.anonymizeProblemSignature(issue.signature),
-                issue.occurrences,
-                JSON.stringify(issue.solutions),
-                JSON.stringify(issue.contexts),
-                issue.firstSeen,
-                issue.lastSeen,
-            );
+            try {
+                insertCommonIssue.run(
+                    PatternAnonymizer.anonymizeProblemSignature(issue.signature),
+                    issue.occurrences,
+                    JSON.stringify(issue.solutions),
+                    JSON.stringify(issue.contexts),
+                    issue.firstSeen,
+                    issue.lastSeen,
+                );
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to save common issue ${issue.signature}: ${message}`);
+            }
         },
 
         async loadCommonIssues(): Promise<CommonIssuePattern[]> {
-            const rows = selectCommonIssues.all() as CommonIssueRow[];
-            return rows.map((row) => ({
-                signature: row.signature,
-                occurrences: row.occurrences,
-                solutions: safeParseJson(row.solutions),
-                contexts: safeParseJson(row.contexts),
-                firstSeen: row.first_seen,
-                lastSeen: row.last_seen,
-            }));
+            try {
+                const rows = selectCommonIssues.all() as CommonIssueRow[];
+                return rows.map((row) => ({
+                    signature: row.signature,
+                    occurrences: row.occurrences,
+                    solutions: safeParseJson(row.solutions),
+                    contexts: safeParseJson(row.contexts),
+                    firstSeen: row.first_seen,
+                    lastSeen: row.last_seen,
+                }));
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to load common issues: ${message}`);
+            }
         },
 
         async updateCommonIssue(signature: string, context: string): Promise<void> {
-            const anonymizedSig = PatternAnonymizer.anonymizeProblemSignature(signature);
-            const existing = selectCommonIssue.get(anonymizedSig) as CommonIssueRow | undefined;
+            try {
+                const anonymizedSig = PatternAnonymizer.anonymizeProblemSignature(signature);
+                const existing = selectCommonIssue.get(anonymizedSig) as CommonIssueRow | undefined;
 
-            if (existing) {
-                const contexts = safeParseJson(existing.contexts) as string[];
-                if (!contexts.includes(context)) {
-                    contexts.push(context);
+                if (existing) {
+                    const contexts = safeParseJson(existing.contexts) as string[];
+                    if (!contexts.includes(context)) {
+                        contexts.push(context);
+                    }
+
+                    db.prepare(`
+                        UPDATE common_issues
+                        SET occurrences = occurrences + 1,
+                            contexts = ?,
+                            last_seen = ?
+                        WHERE signature = ?
+                    `).run(JSON.stringify(contexts), Date.now(), anonymizedSig);
+                } else {
+                    insertCommonIssue.run(
+                        anonymizedSig,
+                        1,
+                        JSON.stringify([]),
+                        JSON.stringify([context]),
+                        Date.now(),
+                        Date.now(),
+                    );
                 }
-
-                db.prepare(`
-                    UPDATE common_issues 
-                    SET occurrences = occurrences + 1,
-                        contexts = ?,
-                        last_seen = ?
-                    WHERE signature = ?
-                `).run(JSON.stringify(contexts), Date.now(), anonymizedSig);
-            } else {
-                insertCommonIssue.run(
-                    anonymizedSig,
-                    1,
-                    JSON.stringify([]),
-                    JSON.stringify([context]),
-                    Date.now(),
-                    Date.now(),
-                );
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to update common issue ${signature}: ${message}`);
             }
         },
 
         async retrievePatternsByRank(
             options: PatternRetrievalOptions = {},
         ): Promise<ResolutionPattern[]> {
-            const {
-                minConfidence = 0,
-                minSuccessCount = 0,
-                maxAge,
-                sortBy = "confidence",
-                limit,
-            } = options;
+            try {
+                const {
+                    minConfidence = 0,
+                    minSuccessCount = 0,
+                    maxAge,
+                    sortBy = "confidence",
+                    limit,
+                } = options;
 
-            let query = "SELECT * FROM patterns WHERE confidence >= ? AND success_count >= ?";
-            const params: number[] = [minConfidence, minSuccessCount];
+                let query = "SELECT * FROM patterns WHERE confidence >= ? AND success_count >= ?";
+                const params: number[] = [minConfidence, minSuccessCount];
 
-            if (maxAge) {
-                query += " AND last_used >= ?";
-                params.push(Date.now() - maxAge);
+                if (maxAge) {
+                    query += " AND last_used >= ?";
+                    params.push(Date.now() - maxAge);
+                }
+
+                // Add sorting
+                switch (sortBy) {
+                    case "confidence":
+                        query += " ORDER BY confidence DESC";
+                        break;
+                    case "successRate":
+                        query += " ORDER BY (CAST(success_count AS REAL) / (success_count + failure_count)) DESC";
+                        break;
+                    case "recentUse":
+                        query += " ORDER BY last_used DESC";
+                        break;
+                    case "totalUses":
+                        query += " ORDER BY (success_count + failure_count) DESC";
+                        break;
+                }
+
+                if (limit && limit > 0) {
+                    query += " LIMIT ?";
+                    params.push(limit);
+                }
+
+                const rows = db.prepare(query).all(...params) as PatternRow[];
+                return rows.map((row) => {
+                    const pattern = deserializePattern(row);
+                    return {
+                        ...pattern,
+                        id: row.id,
+                        problemType: row.problem_type,
+                        successCount: row.success_count,
+                        failureCount: row.failure_count,
+                        averageResolutionTime: row.average_resolution_time,
+                        lastUsed: row.last_used,
+                        confidence: row.confidence,
+                    };
+                });
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to retrieve patterns by rank: ${message}`);
             }
-
-            // Add sorting
-            switch (sortBy) {
-                case "confidence":
-                    query += " ORDER BY confidence DESC";
-                    break;
-                case "successRate":
-                    query += " ORDER BY (CAST(success_count AS REAL) / (success_count + failure_count)) DESC";
-                    break;
-                case "recentUse":
-                    query += " ORDER BY last_used DESC";
-                    break;
-                case "totalUses":
-                    query += " ORDER BY (success_count + failure_count) DESC";
-                    break;
-            }
-
-            if (limit && limit > 0) {
-                query += " LIMIT ?";
-                params.push(limit);
-            }
-
-            const rows = db.prepare(query).all(...params) as PatternRow[];
-            return rows.map((row) => {
-                const pattern = deserializePattern(row);
-                return {
-                    ...pattern,
-                    id: row.id,
-                    problemType: row.problem_type,
-                    successCount: row.success_count,
-                    failureCount: row.failure_count,
-                    averageResolutionTime: row.average_resolution_time,
-                    lastUsed: row.last_used,
-                    confidence: row.confidence,
-                };
-            });
         },
 
         async getPatternStatistics(): Promise<PatternStatistics> {
-            const stats = db
-                .prepare(
-                    `
-                SELECT 
-                    COUNT(*) as total,
-                    SUM(success_count) as successes,
-                    SUM(failure_count) as failures,
-                    AVG(confidence) as avg_confidence
-                FROM patterns
-            `,
-                )
-                .get() as PatternStatsRow | undefined;
+            try {
+                const stats = db
+                    .prepare(
+                        `
+                    SELECT
+                        COUNT(*) as total,
+                        SUM(success_count) as successes,
+                        SUM(failure_count) as failures,
+                        AVG(confidence) as avg_confidence
+                    FROM patterns
+                `,
+                    )
+                    .get() as PatternStatsRow | undefined;
 
-            if (!stats || stats.total === 0) {
+                if (!stats || stats.total === 0) {
+                    return {
+                        totalPatterns: 0,
+                        totalSuccesses: 0,
+                        totalFailures: 0,
+                        averageConfidence: 0,
+                        mostSuccessfulPattern: null,
+                        recentlyUsedPatterns: [],
+                        patternsByType: {},
+                    };
+                }
+
+                const mostSuccessful = db
+                    .prepare("SELECT * FROM patterns ORDER BY success_count DESC LIMIT 1")
+                    .get() as PatternRow | undefined;
+
+                const recentRows = db
+                    .prepare("SELECT * FROM patterns ORDER BY last_used DESC LIMIT 10")
+                    .all() as PatternRow[];
+
+                const typeRows = db
+                    .prepare(
+                        "SELECT problem_type, COUNT(*) as count FROM patterns GROUP BY problem_type",
+                    )
+                    .all() as Array<{ problem_type: string; count: number }>;
+
+                const patternsByType: Record<string, number> = {};
+                for (const row of typeRows) {
+                    patternsByType[row.problem_type] = row.count;
+                }
+
                 return {
-                    totalPatterns: 0,
-                    totalSuccesses: 0,
-                    totalFailures: 0,
-                    averageConfidence: 0,
-                    mostSuccessfulPattern: null,
-                    recentlyUsedPatterns: [],
-                    patternsByType: {},
+                    totalPatterns: stats.total,
+                    totalSuccesses: stats.successes ?? 0,
+                    totalFailures: stats.failures ?? 0,
+                    averageConfidence: stats.avg_confidence ?? 0,
+                    mostSuccessfulPattern: mostSuccessful
+                        ? deserializePattern(mostSuccessful)
+                        : null,
+                    recentlyUsedPatterns: recentRows.map((row) =>
+                        deserializePattern(row),
+                    ),
+                    patternsByType,
                 };
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to get pattern statistics: ${message}`);
             }
-
-            const mostSuccessful = db
-                .prepare("SELECT * FROM patterns ORDER BY success_count DESC LIMIT 1")
-                .get() as PatternRow | undefined;
-
-            const recentRows = db
-                .prepare("SELECT * FROM patterns ORDER BY last_used DESC LIMIT 10")
-                .all() as PatternRow[];
-
-            const typeRows = db
-                .prepare(
-                    "SELECT problem_type, COUNT(*) as count FROM patterns GROUP BY problem_type",
-                )
-                .all() as Array<{ problem_type: string; count: number }>;
-
-            const patternsByType: Record<string, number> = {};
-            for (const row of typeRows) {
-                patternsByType[row.problem_type] = row.count;
-            }
-
-            return {
-                totalPatterns: stats.total,
-                totalSuccesses: stats.successes ?? 0,
-                totalFailures: stats.failures ?? 0,
-                averageConfidence: stats.avg_confidence ?? 0,
-                mostSuccessfulPattern: mostSuccessful
-                    ? deserializePattern(mostSuccessful)
-                    : null,
-                recentlyUsedPatterns: recentRows.map((row) =>
-                    deserializePattern(row),
-                ),
-                patternsByType,
-            };
         },
 
         async findSimilarPatterns(
             signature: string,
             threshold = 0.6,
         ): Promise<ResolutionPattern[]> {
-            const anonymizedSig = PatternAnonymizer.anonymizeProblemSignature(signature);
-            const allPatterns = await this.loadAllPatterns();
+            try {
+                const anonymizedSig = PatternAnonymizer.anonymizeProblemSignature(signature);
+                const allPatterns = await this.loadAllPatterns();
 
-            const similar: Array<{ pattern: ResolutionPattern; similarity: number }> = [];
+                const similar: Array<{ pattern: ResolutionPattern; similarity: number }> = [];
 
-            for (const pattern of allPatterns) {
-                const similarity = calculateSimilarity(anonymizedSig, pattern.problemSignature);
-                if (similarity >= threshold) {
-                    similar.push({ pattern, similarity });
+                for (const pattern of allPatterns) {
+                    const similarity = calculateSimilarity(anonymizedSig, pattern.problemSignature);
+                    if (similarity >= threshold) {
+                        similar.push({ pattern, similarity });
+                    }
                 }
-            }
 
-            return similar
-                .sort((a, b) => b.similarity - a.similarity)
-                .map((s) => s.pattern);
+                return similar
+                    .sort((a, b) => b.similarity - a.similarity)
+                    .map((s) => s.pattern);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to find similar patterns for signature: ${message}`);
+            }
         },
 
         async pruneOldPatterns(maxAge: number): Promise<number> {
-            const cutoff = Date.now() - maxAge;
-            const result = db
-                .prepare("DELETE FROM patterns WHERE last_used < ?")
-                .run(cutoff);
-            return result.changes;
+            try {
+                const cutoff = Date.now() - maxAge;
+                const result = db
+                    .prepare("DELETE FROM patterns WHERE last_used < ?")
+                    .run(cutoff);
+                return result.changes;
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Failed to prune old patterns: ${message}`);
+            }
         },
     };
 }
