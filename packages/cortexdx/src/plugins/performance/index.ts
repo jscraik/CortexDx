@@ -147,6 +147,11 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
   },
 };
 
+// Re-export advanced profiler plugins from plugins/ subdirectory
+export { ClinicJsPerformanceProfilerPlugin } from "./plugins/clinic.js";
+export { PySpyPerformanceProfilerPlugin } from "./plugins/pyspy.js";
+export { UnifiedFlameGraphPlugin } from "./plugins/flamegraph.js";
+
 /**
  * Default export for backward compatibility
  */

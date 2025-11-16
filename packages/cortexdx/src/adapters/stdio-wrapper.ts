@@ -1,4 +1,6 @@
 import { safeParseJson } from "../utils/json.js";
+import { createLogger } from "../logging/logger.js";
+
 /**
  * Studio Wrapper - stdio transport bridge for MCP Inspector
  *
@@ -43,6 +45,7 @@ interface StdioWrapperConfig {
 class StudioWrapper {
   private config: StdioWrapperConfig;
   private requestId = 1;
+  private logger = createLogger("stdio-wrapper");
 
   constructor(config: StdioWrapperConfig) {
     this.config = {
@@ -61,7 +64,7 @@ class StudioWrapper {
    */
   async start(): Promise<void> {
     if (this.config.verbose) {
-      console.error(`[StudioWrapper] Starting with endpoint: ${this.config.endpoint}`);
+      this.logger.debug({ endpoint: this.config.endpoint }, "Starting stdio wrapper");
     }
 
     // Set up stdin handling
@@ -89,13 +92,13 @@ class StudioWrapper {
         this.handleMessage(buffer.trim());
       }
       if (this.config.verbose) {
-        console.error('[StudioWrapper] stdin closed, exiting');
+        this.logger.debug("stdin closed, exiting");
       }
     });
 
     process.on('SIGINT', () => {
       if (this.config.verbose) {
-        console.error('[StudioWrapper] Received SIGINT, exiting gracefully');
+        this.logger.debug("Received SIGINT, exiting gracefully");
       }
       process.exit(0);
     });
@@ -108,7 +111,7 @@ class StudioWrapper {
     try {
       if (!line || (line[0] !== '{' && line[0] !== '[')) {
         if (this.config.verbose) {
-          console.error(`[StudioWrapper] Ignoring non-JSON line: ${line}`);
+          this.logger.debug({ line }, "Ignoring non-JSON line");
         }
         return;
       }
@@ -119,13 +122,13 @@ class StudioWrapper {
       );
 
       if (this.config.verbose) {
-        console.error(`[StudioWrapper] Received request: ${JSON.stringify(request)}`);
+        this.logger.debug({ request }, "Received request");
       }
 
       const response = await this.processRequest(request);
 
       if (this.config.verbose) {
-        console.error(`[StudioWrapper] Sending response: ${JSON.stringify(response)}`);
+        this.logger.debug({ response }, "Sending response");
       }
 
       // Write response to stdout
@@ -143,7 +146,7 @@ class StudioWrapper {
       };
 
       if (this.config.verbose) {
-        console.error(`[StudioWrapper] Parse error: ${error}`);
+        this.logger.error({ error }, "Parse error");
       }
 
       process.stdout.write(`${JSON.stringify(errorResponse)}\n`);
@@ -165,7 +168,7 @@ class StudioWrapper {
       const url = this.buildUrl(request.method);
 
       if (this.config.verbose) {
-        console.error(`[StudioWrapper] HTTP ${httpMethod} ${url}`);
+        this.logger.debug({ method: httpMethod, url }, "Making HTTP request");
       }
 
       // Make HTTP request with timeout
@@ -238,7 +241,7 @@ class StudioWrapper {
       };
 
       if (this.config.verbose) {
-        console.error(`[StudioWrapper] Request failed: ${errorMessage}`);
+        this.logger.error({ error: errorMessage, errorCode }, "Request failed");
       }
     }
 
@@ -344,7 +347,8 @@ function parseArgs(): StdioWrapperConfig {
           if (!Number.isNaN(timeoutSec) && timeoutSec > 0) {
             config.timeout = timeoutSec * 1000;
           } else {
-            console.warn(`Invalid timeout value: "${timeoutArg}". Timeout must be a positive integer.`);
+            const logger = createLogger("stdio-wrapper");
+            logger.warn({ value: timeoutArg }, "Invalid timeout value - must be a positive integer");
           }
         }
         break;
@@ -396,7 +400,8 @@ specified MCP server, and writes responses to stdout in JSON-RPC 2.0 format.
         if (arg && (arg.startsWith('http://') || arg.startsWith('https://'))) {
           config.endpoint = arg;
         } else {
-          console.error(`Unknown argument: ${arg}`);
+          const logger = createLogger("stdio-wrapper");
+          logger.error({ argument: arg }, "Unknown argument");
           process.exit(1);
         }
     }
@@ -414,14 +419,19 @@ async function main(): Promise<void> {
     const wrapper = new StudioWrapper(config);
     await wrapper.start();
   } catch (error) {
-    console.error('Studio wrapper failed:', error);
+    const logger = createLogger("stdio-wrapper");
+    logger.error({ error }, "Studio wrapper failed");
     process.exit(1);
   }
 }
 
 // Run if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
+  main().catch((error) => {
+    const logger = createLogger("stdio-wrapper");
+    logger.error({ error }, "Fatal error in stdio wrapper");
+    process.exit(1);
+  });
 }
 
 export { StudioWrapper, type StdioWrapperConfig };

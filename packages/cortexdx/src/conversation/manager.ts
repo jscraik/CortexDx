@@ -12,6 +12,9 @@ import type {
 } from "../types.js";
 import { ConversationStorage } from "../storage/conversation-storage.js";
 import type { ConversationExport } from "../storage/conversation-storage.js";
+import { createLogger } from "../logging/logger.js";
+
+const logger = createLogger("conversation-manager");
 
 export class ConversationManager {
     private sessions = new Map<string, ConversationSession>();
@@ -32,10 +35,10 @@ export class ConversationManager {
                 for (const session of sessions) {
                     this.sessions.set(session.id, session);
                 }
-                console.log(`Restored ${restored} conversation sessions from disk`);
+                logger.info({ restoredCount: restored }, `Restored ${restored} conversation sessions from disk`);
             }
         } catch (error) {
-            console.error("Failed to restore sessions:", error);
+            logger.error({ error }, "Failed to restore sessions");
         }
     }
 

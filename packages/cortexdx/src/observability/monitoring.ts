@@ -3,6 +3,7 @@
  * Provides real-time monitoring and performance degradation detection
  */
 
+import { createLogger } from "../logging/logger.js";
 import type { DiagnosticContext } from "../types.js";
 import {
     type SystemHealthReport,
@@ -66,6 +67,8 @@ const DEFAULT_THRESHOLDS: AlertThresholds = {
     unhealthyProvidersPercent: 20,
 };
 
+const logger = createLogger("monitoring");
+
 /**
  * Monitoring system class
  */
@@ -108,13 +111,13 @@ export class MonitoringSystem {
 
         this.intervalId = setInterval(() => {
             this.performCheck().catch((error) => {
-                console.error("Monitoring check failed:", error);
+                logger.error({ error }, "Monitoring check failed");
             });
         }, this.config.checkIntervalMs);
 
         // Perform initial check
         this.performCheck().catch((error) => {
-            console.error("Initial monitoring check failed:", error);
+            logger.error({ error }, "Initial monitoring check failed");
         });
     }
 
@@ -268,7 +271,7 @@ export class MonitoringSystem {
         // Send webhook if configured
         if (newAlerts.length > 0 && this.config.webhookUrl) {
             this.sendWebhookAlert(newAlerts).catch((error) => {
-                console.error("Failed to send webhook alert:", error);
+                logger.error({ error }, "Failed to send webhook alert");
             });
         }
     }
@@ -282,11 +285,11 @@ export class MonitoringSystem {
                 const result = callback(alert);
                 if (result instanceof Promise) {
                     result.catch((error) => {
-                        console.error("Alert callback error:", error);
+                        logger.error({ error }, "Alert callback error");
                     });
                 }
             } catch (error) {
-                console.error("Alert callback error:", error);
+                logger.error({ error }, "Alert callback error");
             }
         }
     }
@@ -312,7 +315,7 @@ export class MonitoringSystem {
                 }),
             });
         } catch (error) {
-            console.error("Webhook alert failed:", error);
+            logger.error({ error }, "Webhook alert failed");
         }
     }
 

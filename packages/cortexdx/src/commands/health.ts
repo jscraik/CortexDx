@@ -2,6 +2,9 @@ import { safeParseJson } from "../utils/json.js";
 import { loadProjectContext } from "../context/project-context.js";
 import { AutoHealer } from "../healing/auto-healer.js";
 import type { DevelopmentContext } from "../types.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("health");
 
 /**
  * Create development context for health check
@@ -25,7 +28,7 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
   const projectContext = await loadProjectContext().catch(() => undefined);
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (...args) => console.log("[Health]", ...args),
+    logger: (...args) => logger.info("[Health]", ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
       if (!response.ok) {
@@ -80,7 +83,7 @@ export async function runHealthCheck(options: {
         message: healthResult.message,
       };
 
-      console.log(JSON.stringify(jsonOutput, null, 2));
+      logger.info(JSON.stringify(jsonOutput, null, 2));
     } else {
       // Human-readable output
       displayHealthResult(healthResult, endpoint);
@@ -109,7 +112,7 @@ export async function runHealthCheck(options: {
     };
 
     if (isJson) {
-      console.log(
+      logger.info(
         JSON.stringify(
           {
             timestamp: new Date().toISOString(),
@@ -121,7 +124,7 @@ export async function runHealthCheck(options: {
         ),
       );
     } else {
-      console.error(`[Health] ${errorResult.message}`);
+      logger.error(`[Health] ${errorResult.message}`);
     }
 
     return 1;
@@ -140,57 +143,57 @@ function displayHealthResult(
   },
   endpoint: string,
 ): void {
-  console.log("=".repeat(50));
-  console.log("CORTEXDX HEALTH CHECK");
-  console.log("=".repeat(50));
+  logger.info("=".repeat(50));
+  logger.info("CORTEXDX HEALTH CHECK");
+  logger.info("=".repeat(50));
 
-  console.log(`Endpoint: ${endpoint}`);
-  console.log(`Timestamp: ${new Date().toISOString()}`);
+  logger.info(`Endpoint: ${endpoint}`);
+  logger.info(`Timestamp: ${new Date().toISOString()}`);
 
   const status = healthResult.healthy ? "✅ HEALTHY" : "❌ UNHEALTHY";
   const statusColor = healthResult.healthy ? "\x1b[32m" : "\x1b[31m"; // Green or Red
   const reset = "\x1b[0m";
 
-  console.log(`\nStatus: ${statusColor}${status}${reset}`);
-  console.log(`Message: ${healthResult.message}`);
+  logger.info(`\nStatus: ${statusColor}${status}${reset}`);
+  logger.info(`Message: ${healthResult.message}`);
 
   if (healthResult.issues >= 0) {
-    console.log(`\nIssues Found: ${healthResult.issues}`);
+    logger.info(`\nIssues Found: ${healthResult.issues}`);
     if (healthResult.criticalIssues > 0) {
-      console.log(`Critical Issues: ${healthResult.criticalIssues}`);
+      logger.info(`Critical Issues: ${healthResult.criticalIssues}`);
     }
   }
 
   // Provide recommendations based on health status
   if (!healthResult.healthy) {
-    console.log("\nRECOMMENDATIONS:");
+    logger.info("\nRECOMMENDATIONS:");
     if (healthResult.criticalIssues > 0) {
-      console.log("  1. Run comprehensive self-diagnosis:");
-      console.log("     cortexdx self-diagnose --auto-fix");
-      console.log("  2. Check system logs for detailed error information");
-      console.log("  3. Verify all dependencies are properly installed");
+      logger.info("  1. Run comprehensive self-diagnosis:");
+      logger.info("     cortexdx self-diagnose --auto-fix");
+      logger.info("  2. Check system logs for detailed error information");
+      logger.info("  3. Verify all dependencies are properly installed");
     } else {
-      console.log("  1. Run detailed diagnostics:");
-      console.log("     cortexdx self-diagnose --dry-run");
-      console.log("  2. Review findings and apply fixes if needed");
+      logger.info("  1. Run detailed diagnostics:");
+      logger.info("     cortexdx self-diagnose --dry-run");
+      logger.info("  2. Review findings and apply fixes if needed");
     }
 
-    console.log("  4. Start background monitoring:");
-    console.log("     cortexdx monitor --start --auto-heal");
+    logger.info("  4. Start background monitoring:");
+    logger.info("     cortexdx monitor --start --auto-heal");
   } else {
-    console.log("\n✅ All systems operational");
-    console.log("\nMAINTENANCE RECOMMENDATIONS:");
-    console.log("  1. Enable background monitoring:");
-    console.log("     cortexdx monitor --start");
-    console.log("  2. Schedule regular health checks");
-    console.log("  3. Monitor system performance and logs");
+    logger.info("\n✅ All systems operational");
+    logger.info("\nMAINTENANCE RECOMMENDATIONS:");
+    logger.info("  1. Enable background monitoring:");
+    logger.info("     cortexdx monitor --start");
+    logger.info("  2. Schedule regular health checks");
+    logger.info("  3. Monitor system performance and logs");
   }
 
-  console.log("\nFor more detailed analysis, run:");
-  console.log("  cortexdx self-diagnose --dry-run");
-  console.log("  cortexdx templates list");
+  logger.info("\nFor more detailed analysis, run:");
+  logger.info("  cortexdx self-diagnose --dry-run");
+  logger.info("  cortexdx templates list");
 
-  console.log("=".repeat(50));
+  logger.info("=".repeat(50));
 }
 
 /**
@@ -214,8 +217,8 @@ async function sendWebhook(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    console.log(`[Health] Health status sent to ${webhookUrl}`);
+    logger.info(`[Health] Health status sent to ${webhookUrl}`);
   } catch (error) {
-    console.error("[Health] Webhook failed:", error);
+    logger.error("[Health] Webhook failed", { error });
   }
 }

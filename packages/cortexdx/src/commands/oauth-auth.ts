@@ -6,6 +6,9 @@
 
 import type { OAuth2Config } from "../adapters/oauth-authenticator.js";
 import { oauthIntegration } from "../adapters/oauth-integration.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const defaultLogger = createCliLogger("oauth-auth");
 
 export interface OAuthAuthOptions {
     endpoint: string;
@@ -23,9 +26,9 @@ export interface OAuthAuthOptions {
  */
 export async function authenticateWithOAuth(
     options: OAuthAuthOptions,
-    logger: (...args: unknown[]) => void = console.log,
+    logger = defaultLogger,
 ): Promise<void> {
-    logger(`[OAuth] Authenticating with ${options.endpoint}...`);
+    logger.info(`Authenticating with ${options.endpoint}...`, { endpoint: options.endpoint });
 
     // Determine flow type
     let flowType: "device-code" | "client-credentials" = "device-code";
@@ -37,7 +40,7 @@ export async function authenticateWithOAuth(
         flowType = options.flowType;
     }
 
-    logger(`[OAuth] Using ${flowType} flow`);
+    logger.info(`Using ${flowType} flow`, { flowType });
 
     // Build OAuth config
     const config: OAuth2Config = {
@@ -58,21 +61,21 @@ export async function authenticateWithOAuth(
                 config,
                 "device-code",
                 (userCode, verificationUri) => {
-                    logger(`\n${"=".repeat(60)}`);
-                    logger("  AUTHENTICATION REQUIRED");
-                    logger("=".repeat(60));
-                    logger("");
-                    logger(`  Please visit: ${verificationUri}`);
-                    logger("");
-                    logger(`  And enter code: ${userCode}`);
-                    logger("");
-                    logger("=".repeat(60));
-                    logger("\nWaiting for authentication...");
+                    logger.info(`\n${"=".repeat(60)}`);
+                    logger.info("  AUTHENTICATION REQUIRED");
+                    logger.info("=".repeat(60));
+                    logger.info("");
+                    logger.info(`  Please visit: ${verificationUri}`, { verificationUri });
+                    logger.info("");
+                    logger.info(`  And enter code: ${userCode}`, { userCode });
+                    logger.info("");
+                    logger.info("=".repeat(60));
+                    logger.info("\nWaiting for authentication...");
                 },
             );
 
-            logger("\n✓ Authentication successful!");
-            logger(`Credentials stored for ${options.endpoint}`);
+            logger.info("\n✓ Authentication successful!");
+            logger.info(`Credentials stored for ${options.endpoint}`, { endpoint: options.endpoint });
         } else {
             // Client credentials flow (automated)
             await oauthIntegration.authenticateServer(
@@ -81,12 +84,12 @@ export async function authenticateWithOAuth(
                 "client-credentials",
             );
 
-            logger("✓ Authentication successful!");
-            logger(`Credentials stored for ${options.endpoint}`);
+            logger.info("✓ Authentication successful!");
+            logger.info(`Credentials stored for ${options.endpoint}`, { endpoint: options.endpoint });
         }
     } catch (error) {
-        logger("\n✗ Authentication failed:");
-        logger(error instanceof Error ? error.message : String(error));
+        logger.error("\n✗ Authentication failed:");
+        logger.error(error instanceof Error ? error.message : String(error), { error });
         throw error;
     }
 }
@@ -96,16 +99,16 @@ export async function authenticateWithOAuth(
  */
 export async function checkAuthStatus(
     endpoint: string,
-    logger: (...args: unknown[]) => void = console.log,
+    logger = defaultLogger,
 ): Promise<boolean> {
     const hasCredentials = await oauthIntegration.hasStoredCredentials(endpoint);
 
     if (hasCredentials) {
-        logger(`✓ Authenticated with ${endpoint}`);
+        logger.info(`✓ Authenticated with ${endpoint}`, { endpoint, authenticated: true });
         return true;
     }
 
-    logger(`✗ Not authenticated with ${endpoint}`);
+    logger.warn(`✗ Not authenticated with ${endpoint}`, { endpoint, authenticated: false });
     return false;
 }
 
@@ -114,10 +117,10 @@ export async function checkAuthStatus(
  */
 export async function clearAuthCredentials(
     endpoint: string,
-    logger: (...args: unknown[]) => void = console.log,
+    logger = defaultLogger,
 ): Promise<void> {
     await oauthIntegration.clearCredentials(endpoint);
-    logger(`✓ Cleared credentials for ${endpoint}`);
+    logger.info(`✓ Cleared credentials for ${endpoint}`, { endpoint });
 }
 
 /**
@@ -125,43 +128,43 @@ export async function clearAuthCredentials(
  */
 export async function detectAuthRequirements(
     endpoint: string,
-    logger: (...args: unknown[]) => void = console.log,
+    logger = defaultLogger,
 ): Promise<void> {
-    logger(`[OAuth] Detecting authentication requirements for ${endpoint}...`);
+    logger.info(`Detecting authentication requirements for ${endpoint}...`, { endpoint });
 
     const detection = await oauthIntegration.detectAuthRequirement(endpoint);
 
     if (!detection.required) {
-        logger("✓ No authentication required");
+        logger.info("✓ No authentication required", { endpoint, required: false });
         return;
     }
 
-    logger(`\n${"=".repeat(60)}`);
-    logger("  AUTHENTICATION REQUIRED");
-    logger("=".repeat(60));
-    logger("");
-    logger(`  Auth Type: ${detection.authType || "unknown"}`);
+    logger.info(`\n${"=".repeat(60)}`);
+    logger.info("  AUTHENTICATION REQUIRED");
+    logger.info("=".repeat(60));
+    logger.info("");
+    logger.info(`  Auth Type: ${detection.authType || "unknown"}`, { authType: detection.authType });
 
     if (detection.realm) {
-        logger(`  Realm: ${detection.realm}`);
+        logger.info(`  Realm: ${detection.realm}`, { realm: detection.realm });
     }
 
     if (detection.scope && detection.scope.length > 0) {
-        logger(`  Scopes: ${detection.scope.join(", ")}`);
+        logger.info(`  Scopes: ${detection.scope.join(", ")}`, { scope: detection.scope });
     }
 
     if (detection.tokenEndpoint) {
-        logger(`  Token Endpoint: ${detection.tokenEndpoint}`);
+        logger.info(`  Token Endpoint: ${detection.tokenEndpoint}`, { tokenEndpoint: detection.tokenEndpoint });
     }
 
     if (detection.authorizationEndpoint) {
-        logger(`  Authorization Endpoint: ${detection.authorizationEndpoint}`);
+        logger.info(`  Authorization Endpoint: ${detection.authorizationEndpoint}`, { authorizationEndpoint: detection.authorizationEndpoint });
     }
 
-    logger("");
-    logger("=".repeat(60));
-    logger("");
-    logger("To authenticate, run:");
-    logger(`  cortexdx auth --endpoint ${endpoint} --client-id <CLIENT_ID> --token-endpoint <TOKEN_ENDPOINT>`);
-    logger("");
+    logger.info("");
+    logger.info("=".repeat(60));
+    logger.info("");
+    logger.info("To authenticate, run:");
+    logger.info(`  cortexdx auth --endpoint ${endpoint} --client-id <CLIENT_ID> --token-endpoint <TOKEN_ENDPOINT>`);
+    logger.info("");
 }

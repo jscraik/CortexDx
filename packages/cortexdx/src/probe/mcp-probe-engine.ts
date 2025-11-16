@@ -13,6 +13,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { createLogger } from "../logging/logger.js";
 import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
 import { runPlugins } from "../plugin-host.js";
 import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
@@ -67,6 +68,8 @@ export interface ProbeResult {
     duration: number;
 }
 
+const logger = createLogger("mcp-probe-engine");
+
 /**
  * Main probe function - orchestrates the complete diagnostic cycle
  */
@@ -75,10 +78,10 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
     const reportId = generateReportId();
 
     try {
-        console.log(`[MCP Probe] Starting probe of ${config.targetUrl}`);
+        logger.info({ targetUrl: config.targetUrl }, "Starting probe");
 
         // STEP 1 & 2: Discover & Connect
-        console.log('[MCP Probe] Step 1-2: Establishing diagnostic session...');
+        logger.info({}, "Establishing diagnostic session");
         const client = await createDiagnosticMcpClient({
             targetServerUrl: config.targetUrl,
             auth0: config.auth,
@@ -97,11 +100,11 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
         });
 
         // STEP 3: Enumerate capabilities
-        console.log('[MCP Probe] Step 3: Enumerating server capabilities...');
+        logger.info({}, "Enumerating server capabilities");
         const metadata = await enumerateCapabilities(client, config.targetUrl);
 
         // STEP 4, 5, 6: Probe, Extract, Evaluate
-        console.log('[MCP Probe] Step 4-6: Running diagnostic plugins...');
+        logger.info({}, "Running diagnostic plugins");
         const findings = await runDiagnosticPlugins(
             config.targetUrl,
             config.suites || [],
@@ -109,7 +112,7 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
         );
 
         // STEP 7: Generate Report
-        console.log('[MCP Probe] Step 7: Generating diagnostic report...');
+        logger.info({}, "Generating diagnostic report");
         const summary = generateSummary(findings);
         const duration = Date.now() - startTime;
 
@@ -124,13 +127,13 @@ export async function probeMcpServer(config: ProbeConfig): Promise<ProbeResult> 
             duration
         };
 
-        console.log(`[MCP Probe] Completed in ${duration}ms - Score: ${summary.score}/100`);
+        logger.info({ duration, score: summary.score }, "Probe completed");
 
         return result;
 
     } catch (error) {
         const duration = Date.now() - startTime;
-        console.error('[MCP Probe] Failed:', error);
+        logger.error({ error }, "Probe failed");
 
         const errorFindings: Finding[] = [{
             id: 'probe.engine.error',
@@ -214,7 +217,7 @@ async function enumerateCapabilities(
         }
 
     } catch (error) {
-        console.warn('[MCP Probe] Failed to enumerate some capabilities:', error);
+        logger.warn({ error }, "Failed to enumerate some capabilities");
     }
 
     return metadata;
@@ -242,7 +245,7 @@ async function runDiagnosticPlugins(
 
         return result.findings;
     } catch (error) {
-        console.error('[MCP Probe] Plugin execution failed:', error);
+        logger.error({ error }, "Plugin execution failed");
         return [{
             id: 'probe.plugin.error',
             area: 'probe-engine',
@@ -303,7 +306,7 @@ function extractToolsFromResult(result: McpToolResult): Array<{ name: string; de
             }
         }
     } catch (error) {
-        console.warn('[MCP Probe] Failed to extract tools:', error);
+        logger.warn({ error }, "Failed to extract tools");
     }
     return [];
 }
@@ -326,7 +329,7 @@ function extractResourcesFromResult(result: McpToolResult): Array<{ uri: string;
             }
         }
     } catch (error) {
-        console.warn('[MCP Probe] Failed to extract resources:', error);
+        logger.warn({ error }, "Failed to extract resources");
     }
     return [];
 }

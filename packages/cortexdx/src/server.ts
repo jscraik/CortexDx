@@ -1,11 +1,11 @@
-import { createLogger } from "./logging/logger.js";
-import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
-import { safeParseJson } from "./utils/json.js";
 /**
  * CortexDx Server
  * HTTP server that exposes the academic research providers as MCP endpoints
  */
 
+import { createLogger } from "./logging/logger.js";
+import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
+import { safeParseJson } from "./utils/json.js";
 import { existsSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import {
@@ -73,6 +73,36 @@ import type {
   McpToolResult,
   ProjectContext,
 } from "./types.js";
+
+// Server configuration and types
+import {
+  PORT,
+  HOST,
+  TLS_CERT_PATH,
+  TLS_KEY_PATH,
+  ADMIN_TOOL_TOKEN,
+  RESTRICTED_TOOLS,
+  AUTH0_DOMAIN,
+  AUTH0_CLIENT_ID,
+  AUTH0_AUDIENCE,
+  REQUIRE_AUTH,
+  REQUIRE_LICENSE,
+  DEFAULT_TIER,
+  MIME_TYPES,
+  __dirname,
+} from "./server/config.js";
+import type {
+  SelfDiagnoseOptions,
+  TemplateApplyOptions,
+  MonitoringControlOptions,
+  MonitoringActionPayload,
+  ProviderExecutePayload,
+  JsonRpcId,
+  JsonRpcResponsePayload,
+  JsonRpcRequestPayload,
+  JsonRpcTool,
+} from "./server/types.js";
+
 const { getTemplate, getTemplatesByArea, getTemplatesBySeverity } =
   FixTemplateModule;
 
@@ -86,57 +116,7 @@ const listAllTemplates = (): FixTemplate[] => {
   return [];
 };
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = join(__filename, "..");
-
-const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 5001;
-const HOST = process.env.HOST || "127.0.0.1";
-const TLS_CERT_PATH = process.env.CORTEXDX_TLS_CERT_PATH;
-const TLS_KEY_PATH = process.env.CORTEXDX_TLS_KEY_PATH;
-const ADMIN_TOOL_TOKEN = process.env.CORTEXDX_ADMIN_TOKEN?.trim();
-const RESTRICTED_TOOLS = new Set([
-  "wikidata_sparql",
-  "cortexdx_delete_workflow",
-]);
-
-type SelfDiagnoseOptions = {
-  autoFix?: boolean;
-  dryRun?: boolean;
-  severity?: "minor" | "major" | "blocker";
-};
-
-type TemplateApplyOptions = {
-  dryRun?: boolean;
-  backup?: boolean;
-  validate?: boolean;
-};
-
-type MonitoringControlOptions = {
-  action?: "start" | "stop" | "status";
-  intervalSeconds?: number;
-  configs?: MonitoringConfig[];
-};
-
-type MonitoringActionPayload = {
-  action?: "start" | "stop";
-};
-
-type ProviderExecutePayload = {
-  tool: string;
-  params?: Record<string, unknown>;
-};
-
-// Auth0 configuration from environment
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN || "";
-const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID || "";
-const AUTH0_AUDIENCE = process.env.AUTH0_AUDIENCE || "";
-const REQUIRE_AUTH = process.env.REQUIRE_AUTH === "true";
-
-// License configuration from environment
-const REQUIRE_LICENSE = process.env.REQUIRE_LICENSE === "true";
-const DEFAULT_TIER =
-  (process.env.DEFAULT_TIER as "community" | "professional" | "enterprise") ||
-  "community";
+// Configuration and types are now imported from ./server/ modules
 
 // License database (in production, this would be backed by a database)
 const licenseDatabase = new Map<string, LicenseKey>();
@@ -177,17 +157,6 @@ if (process.env.NODE_ENV !== "production") {
 
 // SSE clients for real-time updates
 const sseClients = new Set<ServerResponse>();
-
-// MIME types for static files
-const MIME_TYPES: Record<string, string> = {
-  ".html": "text/html",
-  ".css": "text/css",
-  ".js": "application/javascript",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".svg": "image/svg+xml",
-};
 
 // Create server logger instance
 const serverLogger = createLogger({ component: "server" });
@@ -521,12 +490,6 @@ const broadcastEvent = (event: string, data: unknown): void => {
 // Get the academic registry and initialize all MCP tools
 const registry = getAcademicRegistry();
 const allMcpTools = getAllMcpToolsFlat();
-
-type JsonRpcTool = {
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-};
 
 const getJsonRpcToolList = (): JsonRpcTool[] => {
   const providerCapabilities = Object.values(registry.getAllCapabilities());
@@ -987,7 +950,7 @@ export async function handleSelfHealingAPI(
       }),
     );
   } catch (error) {
-    console.error("Self-healing API error:", error);
+    serverLogger.error({ error }, "Self-healing API error");
     res.writeHead(500);
     res.end(
       JSON.stringify({
@@ -1490,7 +1453,7 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify(singleResponse));
         } catch (error) {
-          console.error("JSON-RPC parse error:", error);
+          serverLogger.error({ error }, "JSON-RPC parse error");
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(
             JSON.stringify({
@@ -1514,7 +1477,7 @@ const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Not found" }));
   } catch (error) {
-    console.error("Server error:", error);
+    serverLogger.error({ error }, "Server error");
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
@@ -1582,18 +1545,6 @@ process.on('uncaughtException', (error: Error) => {
     process.exit(1);
   }, 10000);
 });
-
-type JsonRpcId = string | number | null;
-type JsonRpcResponsePayload =
-  | { jsonrpc: "2.0"; id: JsonRpcId; result: unknown }
-  | { jsonrpc: "2.0"; id: JsonRpcId; error: { code: number; message: string } };
-
-type JsonRpcRequestPayload = {
-  jsonrpc?: string;
-  id?: JsonRpcId;
-  method?: string;
-  params?: Record<string, unknown>;
-};
 
 const createSuccessResponse = (
   id: JsonRpcId,
@@ -1976,8 +1927,9 @@ if (SHOULD_LISTEN) {
 
       monitoring.setContext(ctx);
       monitoring.start();
-      console.log(
-        `\n📊 Monitoring enabled (interval: ${MONITORING_INTERVAL_MS}ms)`,
+      monitoringLogger.info(
+        { intervalMs: MONITORING_INTERVAL_MS },
+        "Monitoring enabled",
       );
     }
     });
@@ -1989,19 +1941,19 @@ if (SHOULD_LISTEN) {
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("Received SIGTERM, shutting down gracefully");
+  serverLogger.info({}, "Received SIGTERM, shutting down gracefully");
   monitoring.stop();
   server.close(() => {
-    console.log("Server closed");
+    serverLogger.info({}, "Server closed");
     process.exit(0);
   });
 });
 
 process.on("SIGINT", () => {
-  console.log("Received SIGINT, shutting down gracefully");
+  serverLogger.info({}, "Received SIGINT, shutting down gracefully");
   monitoring.stop();
   server.close(() => {
-    console.log("Server closed");
+    serverLogger.info({}, "Server closed");
     process.exit(0);
   });
 });

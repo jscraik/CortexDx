@@ -7,6 +7,9 @@ import {
 import type { FixTemplate } from "../templates/fix-templates.js";
 import { getAllTemplates, getTemplate } from "../templates/fix-templates.js";
 import type { DevelopmentContext } from "../types.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("templates");
 
 /**
  * Create development context for template operations
@@ -20,7 +23,7 @@ const jsonRpcStub = async <T>(method: string, params?: unknown): Promise<T> => {
 function createDevelopmentContext(): DevelopmentContext {
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (...args) => console.log("[Templates]", ...args),
+    logger: (...args) => logger.info("[Templates]", ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
       if (!response.ok) {
@@ -48,7 +51,7 @@ export async function runTemplatesList(options: {
   area?: string;
   severity?: string;
 }): Promise<number> {
-  console.log("[Templates] Available fix templates:\n");
+  logger.info("[Templates] Available fix templates:\n");
 
   try {
     let templates = getAllTemplates();
@@ -63,7 +66,7 @@ export async function runTemplatesList(options: {
     }
 
     if (templates.length === 0) {
-      console.log("No templates found matching the specified criteria.");
+      logger.info("No templates found matching the specified criteria.");
       return 0;
     }
 
@@ -82,24 +85,24 @@ export async function runTemplatesList(options: {
 
     // Display templates
     for (const [area, areaTemplates] of Object.entries(byArea)) {
-      console.log(`${area.toUpperCase()} TEMPLATES:`);
+      logger.info(`${area.toUpperCase()} TEMPLATES:`);
       for (const template of areaTemplates) {
-        console.log(`  ${template.id}`);
-        console.log(`    Name: ${template.name}`);
-        console.log(`    Description: ${template.description}`);
-        console.log(`    Severity: ${template.severity.toUpperCase()}`);
-        console.log(`    Risk Level: ${template.riskLevel.toUpperCase()}`);
-        console.log(`    Estimated Time: ${template.estimatedTime}`);
-        console.log(`    Files Affected: ${template.filesAffected.join(", ")}`);
-        console.log(`    Checklist Items: ${template.checklist.length}`);
-        console.log("");
+        logger.info(`  ${template.id}`);
+        logger.info(`    Name: ${template.name}`);
+        logger.info(`    Description: ${template.description}`);
+        logger.info(`    Severity: ${template.severity.toUpperCase()}`);
+        logger.info(`    Risk Level: ${template.riskLevel.toUpperCase()}`);
+        logger.info(`    Estimated Time: ${template.estimatedTime}`);
+        logger.info(`    Files Affected: ${template.filesAffected.join(", ")}`);
+        logger.info(`    Checklist Items: ${template.checklist.length}`);
+        logger.info("");
       }
     }
 
-    console.log(`Total: ${templates.length} template(s) found`);
+    logger.info(`Total: ${templates.length} template(s) found`);
     return 0;
   } catch (error) {
-    console.error("[Templates] Failed to list templates:", error);
+    logger.error("[Templates] Failed to list templates", { error });
     return 1;
   }
 }
@@ -115,30 +118,30 @@ export async function runTemplateApply(
     validate?: boolean;
   },
 ): Promise<number> {
-  console.log(`[Templates] Applying template: ${templateId}\n`);
+  logger.info(`[Templates] Applying template: ${templateId}\n`);
 
   try {
     const template = getTemplate(templateId);
     if (!template) {
-      console.error(`[Templates] Template '${templateId}' not found`);
-      console.log(
+      logger.error(`[Templates] Template '${templateId}' not found`);
+      logger.info(
         '[Templates] Use "cortexdx templates list" to see available templates',
       );
       return 1;
     }
 
     // Display template info
-    console.log(`Template: ${template.name}`);
-    console.log(`Description: ${template.description}`);
-    console.log(`Area: ${template.area}`);
-    console.log(`Severity: ${template.severity.toUpperCase()}`);
-    console.log(`Risk Level: ${template.riskLevel.toUpperCase()}`);
-    console.log(`Estimated Time: ${template.estimatedTime}`);
-    console.log(`Files to be modified: ${template.filesAffected.join(", ")}`);
-    console.log("");
+    logger.info(`Template: ${template.name}`);
+    logger.info(`Description: ${template.description}`);
+    logger.info(`Area: ${template.area}`);
+    logger.info(`Severity: ${template.severity.toUpperCase()}`);
+    logger.info(`Risk Level: ${template.riskLevel.toUpperCase()}`);
+    logger.info(`Estimated Time: ${template.estimatedTime}`);
+    logger.info(`Files to be modified: ${template.filesAffected.join(", ")}`);
+    logger.info("");
 
     if (options.dryRun) {
-      console.log("[Templates] DRY RUN MODE - No changes will be applied");
+      logger.info("[Templates] DRY RUN MODE - No changes will be applied");
     }
 
     // Create a mock finding for the template
@@ -170,25 +173,25 @@ export async function runTemplateApply(
     );
 
     // Display results
-    console.log(templateEngine.formatFixResult(result));
+    logger.info(templateEngine.formatFixResult(result));
 
     if (!result.success && result.error) {
-      console.error(`[Templates] Template application failed: ${result.error}`);
+      logger.error(`[Templates] Template application failed: ${result.error}`);
       return 1;
     }
 
     if (options.dryRun) {
-      console.log("\n[Templates] DRY RUN completed - No changes were made");
-      console.log("[Templates] Run without --dry-run to apply the changes");
+      logger.info("\n[Templates] DRY RUN completed - No changes were made");
+      logger.info("[Templates] Run without --dry-run to apply the changes");
     } else if (result.success) {
-      console.log(
+      logger.info(
         `\n[Templates] Template '${templateId}' applied successfully`,
       );
     }
 
     return result.success ? 0 : 1;
   } catch (error) {
-    console.error("[Templates] Template application failed:", error);
+    logger.error("[Templates] Template application failed", { error });
     return 1;
   }
 }
@@ -197,69 +200,69 @@ export async function runTemplateApply(
  * Show template details
  */
 export async function runTemplateShow(templateId: string): Promise<number> {
-  console.log(`[Templates] Template details: ${templateId}\n`);
+  logger.info(`[Templates] Template details: ${templateId}\n`);
 
   try {
     const template = getTemplate(templateId);
     if (!template) {
-      console.error(`[Templates] Template '${templateId}' not found`);
-      console.log(
+      logger.error(`[Templates] Template '${templateId}' not found`);
+      logger.info(
         '[Templates] Use "cortexdx templates list" to see available templates',
       );
       return 1;
     }
 
     // Display detailed template information
-    console.log("=".repeat(60));
-    console.log(`TEMPLATE: ${template.name}`);
-    console.log("=".repeat(60));
+    logger.info("=".repeat(60));
+    logger.info(`TEMPLATE: ${template.name}`);
+    logger.info("=".repeat(60));
 
-    console.log(`ID: ${template.id}`);
-    console.log(`Area: ${template.area}`);
-    console.log(`Severity: ${template.severity.toUpperCase()}`);
-    console.log(`Risk Level: ${template.riskLevel.toUpperCase()}`);
-    console.log(`Estimated Time: ${template.estimatedTime}`);
-    console.log(`Description: ${template.description}`);
-    console.log(`Files Affected: ${template.filesAffected.join(", ")}`);
+    logger.info(`ID: ${template.id}`);
+    logger.info(`Area: ${template.area}`);
+    logger.info(`Severity: ${template.severity.toUpperCase()}`);
+    logger.info(`Risk Level: ${template.riskLevel.toUpperCase()}`);
+    logger.info(`Estimated Time: ${template.estimatedTime}`);
+    logger.info(`Description: ${template.description}`);
+    logger.info(`Files Affected: ${template.filesAffected.join(", ")}`);
 
-    console.log("\nCHECKLIST:");
+    logger.info("\nCHECKLIST:");
     template.checklist.forEach((item, index) => {
-      console.log(`  ${index + 1}. ${item}`);
+      logger.info(`  ${index + 1}. ${item}`);
     });
 
     if (template.validationPlugins && template.validationPlugins.length > 0) {
-      console.log(
+      logger.info(
         `\nVALIDATION PLUGINS: ${template.validationPlugins.join(", ")}`,
       );
     }
 
     if (template.codeTemplate) {
-      console.log("\nCODE TEMPLATE:");
-      console.log("```typescript");
-      console.log(template.codeTemplate.trim());
-      console.log("```");
+      logger.info("\nCODE TEMPLATE:");
+      logger.info("```typescript");
+      logger.info(template.codeTemplate.trim());
+      logger.info("```");
     }
 
     // Show related code patterns if available
     const codePattern = getAllCodePatterns().find((cp) => cp.id === templateId);
     if (codePattern) {
-      console.log("\nCODE PATTERN:");
-      console.log("```typescript");
-      console.log(renderCodePattern(templateId).trim());
-      console.log("```");
+      logger.info("\nCODE PATTERN:");
+      logger.info("```typescript");
+      logger.info(renderCodePattern(templateId).trim());
+      logger.info("```");
     }
 
-    console.log("\nUSAGE:");
-    console.log(
+    logger.info("\nUSAGE:");
+    logger.info(
       `  Apply this template: cortexdx templates apply ${templateId}`,
     );
-    console.log(
+    logger.info(
       `  Dry run first:     cortexdx templates apply ${templateId} --dry-run`,
     );
 
     return 0;
   } catch (error) {
-    console.error("[Templates] Failed to show template details:", error);
+    logger.error("[Templates] Failed to show template details", { error });
     return 1;
   }
 }

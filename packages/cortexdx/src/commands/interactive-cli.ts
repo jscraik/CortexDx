@@ -16,6 +16,7 @@ import {
   DeepContextClient,
   resolveDeepContextApiKey,
 } from "../deepcontext/client.js";
+import { createCliLogger } from "../logging/logger.js";
 
 interface InteractiveModeOptions {
   expertise: string;
@@ -79,14 +80,16 @@ interface TutorialOptions {
   researchLimit?: string;
 }
 
+const logger = createCliLogger("interactive-cli");
+
 /**
  * Run interactive mode with conversational assistance
  */
 export const runInteractiveMode = async (
   opts: InteractiveModeOptions,
 ): Promise<number> => {
-  console.log(formatOutput("[brAInwav] Interactive Mode", "info", opts.color));
-  console.log(
+  logger.info(formatOutput("[brAInwav] Interactive Mode", "info", opts.color));
+  logger.info(
     formatOutput(
       "Type 'help' for available commands, 'exit' to quit\n",
       "info",
@@ -112,7 +115,7 @@ export const runInteractiveMode = async (
       }
 
       if (input === "exit" || input === "quit") {
-        console.log(formatOutput("\nGoodbye!", "success", opts.color));
+        logger.info(formatOutput("\nGoodbye!", "success", opts.color));
         rl.close();
         resolve(0);
         return;
@@ -157,7 +160,7 @@ You can also ask questions in natural language, such as:
   "What's wrong with this error: [paste error]"
   "Show me best practices for authentication"
   `;
-  console.log(formatOutput(help, "info", useColor));
+  logger.info(formatOutput(help, "info", useColor));
 };
 
 /**
@@ -181,14 +184,14 @@ const processConversationalInput = async (
       input.toLowerCase().includes("server")
     ) {
       progress.stop();
-      console.log(
+      logger.info(
         formatOutput(
           "\nTo create an MCP server, use: generate template <name> [options]",
           "info",
           opts.color,
         ),
       );
-      console.log(
+      logger.info(
         formatOutput(
           "Example: generate template my-server --lang typescript --features tools,resources",
           "info",
@@ -200,7 +203,7 @@ const processConversationalInput = async (
       input.toLowerCase().includes("wrong")
     ) {
       progress.stop();
-      console.log(
+      logger.info(
         formatOutput(
           "\nTo debug an error, use: debug '<problem description>' or explain error '<error message>'",
           "info",
@@ -209,7 +212,7 @@ const processConversationalInput = async (
       );
     } else if (input.toLowerCase().includes("best practice")) {
       progress.stop();
-      console.log(
+      logger.info(
         formatOutput(
           "\nTo get best practices, use: best-practices [endpoint] [options]",
           "info",
@@ -218,7 +221,7 @@ const processConversationalInput = async (
       );
     } else {
       progress.stop();
-      console.log(
+      logger.info(
         formatOutput(
           "\nI'm not sure how to help with that. Type 'help' to see available commands.",
           "warning",
@@ -228,7 +231,7 @@ const processConversationalInput = async (
     }
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error processing request: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -245,7 +248,7 @@ export const runGenerateTemplate = async (
   name: string,
   opts: GenerateTemplateOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput(
       `[brAInwav] Generating MCP server template: ${name}`,
       "info",
@@ -282,21 +285,21 @@ export const runGenerateTemplate = async (
 
     progress.stop();
 
-    console.log(
+    logger.info(
       formatOutput("\n✓ Template generated successfully!", "success", true),
     );
-    console.log(formatOutput(`  Name: ${name}`, "info", true));
-    console.log(formatOutput(`  Language: ${opts.lang}`, "info", true));
-    console.log(
+    logger.info(formatOutput(`  Name: ${name}`, "info", true));
+    logger.info(formatOutput(`  Language: ${opts.lang}`, "info", true));
+    logger.info(
       formatOutput(`  Features: ${features.join(", ")}`, "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput(`  Transports: ${transports.join(", ")}`, "info", true),
     );
-    console.log(formatOutput(`  Output: ${opts.out}/${name}`, "info", true));
+    logger.info(formatOutput(`  Output: ${opts.out}/${name}`, "info", true));
 
     // TODO: Implement actual template generation logic
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Template generation is not yet fully implemented. This is a preview.",
         "warning",
@@ -307,7 +310,7 @@ export const runGenerateTemplate = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error generating template: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -326,7 +329,7 @@ export const runGenerateConnector = async (
   spec: string,
   opts: GenerateConnectorOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput(`[brAInwav] Generating MCP connector: ${name}`, "info", true),
   );
 
@@ -350,16 +353,16 @@ export const runGenerateConnector = async (
 
     progress.stop();
 
-    console.log(
+    logger.info(
       formatOutput("\n✓ Connector generated successfully!", "success", true),
     );
-    console.log(formatOutput(`  Name: ${name}`, "info", true));
-    console.log(formatOutput(`  Specification: ${spec}`, "info", true));
-    console.log(formatOutput(`  Authentication: ${opts.auth}`, "info", true));
-    console.log(formatOutput(`  Language: ${opts.lang}`, "info", true));
-    console.log(formatOutput(`  Output: ${opts.out}/${name}`, "info", true));
+    logger.info(formatOutput(`  Name: ${name}`, "info", true));
+    logger.info(formatOutput(`  Specification: ${spec}`, "info", true));
+    logger.info(formatOutput(`  Authentication: ${opts.auth}`, "info", true));
+    logger.info(formatOutput(`  Language: ${opts.lang}`, "info", true));
+    logger.info(formatOutput(`  Output: ${opts.out}/${name}`, "info", true));
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Connector generation is not yet fully implemented. This is a preview.",
         "warning",
@@ -370,7 +373,7 @@ export const runGenerateConnector = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error generating connector: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -388,7 +391,7 @@ export const runStartDebugging = async (
   problem: string,
   opts: DebuggingOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput("[brAInwav] Starting debugging session", "info", true),
   );
 
@@ -413,29 +416,29 @@ export const runStartDebugging = async (
 
     progress.stop();
 
-    console.log(
+    logger.info(
       formatOutput("\n✓ Debugging session initialized", "success", true),
     );
-    console.log(formatOutput(`\nProblem: ${problem}`, "info", true));
+    logger.info(formatOutput(`\nProblem: ${problem}`, "info", true));
 
     if (errorLogs.length > 0) {
-      console.log(
+      logger.info(
         formatOutput(`Analyzed ${errorLogs.length} error log(s)`, "info", true),
       );
     }
 
-    console.log(formatOutput("\nDiagnostic Questions:", "info", true));
-    console.log(
+    logger.info(formatOutput("\nDiagnostic Questions:", "info", true));
+    logger.info(
       formatOutput("1. When did this problem first occur?", "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput(
         "2. Does it happen consistently or intermittently?",
         "info",
         true,
       ),
     );
-    console.log(
+    logger.info(
       formatOutput(
         "3. Have there been any recent changes to the configuration?",
         "info",
@@ -443,7 +446,7 @@ export const runStartDebugging = async (
       ),
     );
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Interactive debugging is not yet fully implemented. This is a preview.",
         "warning",
@@ -454,7 +457,7 @@ export const runStartDebugging = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error starting debugging: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -472,7 +475,7 @@ export const runInterpretError = async (
   error: string,
   opts: InterpretErrorOptions,
 ): Promise<number> => {
-  console.log(formatOutput("[brAInwav] Interpreting error", "info", true));
+  logger.info(formatOutput("[brAInwav] Interpreting error", "info", true));
 
   const progress = createProgressIndicator("Analyzing error message", true);
   progress.start();
@@ -486,10 +489,10 @@ export const runInterpretError = async (
 
     progress.stop();
 
-    console.log(formatOutput("\n✓ Error analysis complete", "success", true));
-    console.log(formatOutput(`\nError: ${error}`, "error", true));
-    console.log(formatOutput("\nExplanation:", "info", true));
-    console.log(
+    logger.info(formatOutput("\n✓ Error analysis complete", "success", true));
+    logger.info(formatOutput(`\nError: ${error}`, "error", true));
+    logger.info(formatOutput("\nExplanation:", "info", true));
+    logger.info(
       formatOutput(
         "This error typically occurs when there is a problem with the MCP protocol implementation.",
         "info",
@@ -497,18 +500,18 @@ export const runInterpretError = async (
       ),
     );
 
-    console.log(formatOutput("\nTroubleshooting Steps:", "info", true));
-    console.log(
+    logger.info(formatOutput("\nTroubleshooting Steps:", "info", true));
+    logger.info(
       formatOutput("1. Check your MCP server configuration", "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput("2. Verify protocol version compatibility", "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput("3. Review authentication settings", "info", true),
     );
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Error interpretation is not yet fully implemented. This is a preview.",
         "warning",
@@ -519,7 +522,7 @@ export const runInterpretError = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error interpreting error: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -538,7 +541,7 @@ export const runGenerateDocumentation = async (
   source: string,
   opts: GenerateDocumentationOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput(`[brAInwav] Generating ${target} documentation`, "info", true),
   );
 
@@ -559,22 +562,22 @@ export const runGenerateDocumentation = async (
 
     progress.stop();
 
-    console.log(
+    logger.info(
       formatOutput(
         "\n✓ Documentation generated successfully!",
         "success",
         true,
       ),
     );
-    console.log(formatOutput(`  Target: ${target}`, "info", true));
-    console.log(formatOutput(`  Source: ${source}`, "info", true));
-    console.log(formatOutput(`  Format: ${opts.format}`, "info", true));
+    logger.info(formatOutput(`  Target: ${target}`, "info", true));
+    logger.info(formatOutput(`  Source: ${source}`, "info", true));
+    logger.info(formatOutput(`  Format: ${opts.format}`, "info", true));
 
     if (opts.out) {
-      console.log(formatOutput(`  Output: ${opts.out}`, "info", true));
+      logger.info(formatOutput(`  Output: ${opts.out}`, "info", true));
     }
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Documentation generation is not yet fully implemented. This is a preview.",
         "warning",
@@ -585,7 +588,7 @@ export const runGenerateDocumentation = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error generating documentation: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -603,7 +606,7 @@ export const runBestPractices = async (
   endpoint: string | undefined,
   opts: BestPracticesOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput("[brAInwav] Analyzing best practices", "info", true),
   );
 
@@ -622,28 +625,28 @@ export const runBestPractices = async (
 
     progress.stop();
 
-    console.log(formatOutput("\n✓ Analysis complete", "success", true));
-    console.log(
+    logger.info(formatOutput("\n✓ Analysis complete", "success", true));
+    logger.info(
       formatOutput("\nBest Practices Recommendations:", "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput(
         "• Use proper error handling for all tool implementations",
         "info",
         true,
       ),
     );
-    console.log(
+    logger.info(
       formatOutput(
         "• Implement authentication for production deployments",
         "info",
         true,
       ),
     );
-    console.log(
+    logger.info(
       formatOutput("• Add comprehensive logging for debugging", "info", true),
     );
-    console.log(
+    logger.info(
       formatOutput(
         "• Follow MCP protocol version 2024-11-05 specifications",
         "info",
@@ -651,7 +654,7 @@ export const runBestPractices = async (
       ),
     );
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Best practices analysis is not yet fully implemented. This is a preview.",
         "warning",
@@ -662,7 +665,7 @@ export const runBestPractices = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error analyzing best practices: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -680,7 +683,7 @@ export const runCreateTutorial = async (
   topic: string,
   opts: TutorialOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput(`[brAInwav] Creating tutorial: ${topic}`, "info", true),
   );
 
@@ -696,7 +699,7 @@ export const runCreateTutorial = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error creating tutorial: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -727,10 +730,10 @@ function printTutorialSummary(
   opts: TutorialOptions,
   research: TutorialResearch | null,
 ): void {
-  console.log(formatOutput("\n✓ Tutorial created successfully!", "success", true));
-  console.log(formatOutput(`\nTopic: ${topic}`, "info", true));
-  console.log(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
-  console.log(formatOutput(`Language: ${opts.lang}`, "info", true));
+  logger.info(formatOutput("\n✓ Tutorial created successfully!", "success", true));
+  logger.info(formatOutput(`\nTopic: ${topic}`, "info", true));
+  logger.info(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
+  logger.info(formatOutput(`Language: ${opts.lang}`, "info", true));
 
   printListSection("\nOutline:", buildTutorialOutline(topic, opts.expertise, research));
   printCodeSection(opts.lang, topic);
@@ -741,7 +744,7 @@ function printTutorialSummary(
 
   printResearchSection(research);
 
-  console.log(
+  logger.info(
     formatOutput(
       "\nNote: Tutorial creation is not yet fully implemented. This is a preview.",
       "warning",
@@ -757,7 +760,7 @@ export const runExplainConcept = async (
   concept: string,
   opts: ExplainConceptOptions,
 ): Promise<number> => {
-  console.log(
+  logger.info(
     formatOutput(`[brAInwav] Explaining concept: ${concept}`, "info", true),
   );
 
@@ -775,9 +778,9 @@ export const runExplainConcept = async (
 
     progress.stop();
 
-    console.log(formatOutput("\n✓ Explanation ready", "success", true));
-    console.log(formatOutput(`\nConcept: ${concept}`, "info", true));
-    console.log(
+    logger.info(formatOutput("\n✓ Explanation ready", "success", true));
+    logger.info(formatOutput(`\nConcept: ${concept}`, "info", true));
+    logger.info(
       formatOutput(
         "\nThis MCP concept is an important part of the protocol specification.",
         "info",
@@ -786,13 +789,13 @@ export const runExplainConcept = async (
     );
 
     if (opts.examples) {
-      console.log(formatOutput("\nExample:", "info", true));
-      console.log(
+      logger.info(formatOutput("\nExample:", "info", true));
+      logger.info(
         formatOutput("// Code example would appear here", "info", true),
       );
     }
 
-    console.log(
+    logger.info(
       formatOutput(
         "\nNote: Concept explanation is not yet fully implemented. This is a preview.",
         "warning",
@@ -803,7 +806,7 @@ export const runExplainConcept = async (
     return 0;
   } catch (error) {
     progress.stop();
-    console.error(
+    logger.error(
       formatOutput(
         `Error explaining concept: ${error instanceof Error ? error.message : String(error)}`,
         "error",
@@ -833,13 +836,13 @@ async function gatherTutorialResearch(
       : undefined;
     const { ready, missing } = selectConfiguredProviders(requested);
     if (missing.length) {
-      console.warn(
+      logger.warn(
         "[Tutorial] Skipping providers with missing env vars:",
         missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
       );
     }
     if (ready.length === 0) {
-      console.warn(
+      logger.warn(
         "[Tutorial] Academic research probe disabled (no configured providers).",
       );
       return null;
@@ -869,7 +872,7 @@ async function gatherTutorialResearch(
       artifactsDir: report.artifacts?.dir,
     };
   } catch (error) {
-    console.warn(
+    logger.warn(
       "[Tutorial] Skipping academic research probe:",
       error instanceof Error ? error.message : String(error),
     );
@@ -903,7 +906,7 @@ async function gatherDeepContextSnippets(topic: string): Promise<string[]> {
       return `${match.file_path}:${match.start_line}-${match.end_line} — ${snippet.slice(0, 120)}`;
     });
   } catch (error) {
-    console.warn(
+    logger.warn(
       "[Tutorial] DeepContext search failed:",
       error instanceof Error ? error.message : String(error),
     );
@@ -950,16 +953,16 @@ function buildTutorialExercises(
 
 function printListSection(title: string, entries: string[]): void {
   if (!entries.length) return;
-  console.log(formatOutput(title, "info", true));
+  logger.info(formatOutput(title, "info", true));
   for (const entry of entries) {
-    console.log(formatOutput(`• ${entry}`, "info", true));
+    logger.info(formatOutput(`• ${entry}`, "info", true));
   }
 }
 
 function printCodeSection(language: string | undefined, topic: string): void {
   const snippet = createTutorialSnippet(language ?? "typescript", topic);
-  console.log(formatOutput("\nKey Snippet:", "info", true));
-  console.log(snippet);
+  logger.info(formatOutput("\nKey Snippet:", "info", true));
+  logger.info(snippet);
 }
 
 function createTutorialSnippet(lang: string, topic: string): string {
@@ -990,7 +993,7 @@ function printResearchSection(research: TutorialResearch | null): void {
   if (!research) return;
   printListSection("\nResearch Highlights:", research.highlights);
   if (research.artifactsDir) {
-    console.log(formatOutput(`Artifacts: ${research.artifactsDir}`, "info", true));
+    logger.info(formatOutput(`Artifacts: ${research.artifactsDir}`, "info", true));
   }
   printListSection("\nDeepContext References:", research.deepContextSnippets);
 }
