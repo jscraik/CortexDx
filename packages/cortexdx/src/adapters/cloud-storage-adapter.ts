@@ -261,7 +261,7 @@ export class CloudStorageAdapter {
 		kind: EvidenceKind,
 		contentType?: string,
 	): Promise<Evidence> {
-		const key = `${this.config.prefix}runs/${runId}/${caseId}/${assertionId}/${artifactName}`;
+		const key = `${this.config.prefix}${runId}/${caseId}/${assertionId}/${artifactName}`;
 
 		// Compute SHA-256 hash
 		const sha256 = createHash("sha256")
