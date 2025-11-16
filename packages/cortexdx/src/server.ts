@@ -985,7 +985,8 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
         if (route === '/api/v1/diagnostic-session' && method === 'GET') {
             // List diagnostic sessions endpoint
             try {
-                const url = new URL(req.url || '', `http://${req.headers.host}`);
+                // Use a static, trusted base URL to avoid Host header injection
+                const url = new URL(req.url || '', process.env.CORTEXDX_BASE_URL || 'http://localhost');
                 const requestedBy = url.searchParams.get('requestedBy');
                 const status = url.searchParams.get('status') as "active" | "revoked" | "expired" | null;
 
