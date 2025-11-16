@@ -1,95 +1,105 @@
 {
   "version": "v2025-06-18",
-  "createdAt": "2025-11-15T17:44:33.592Z",
+  "createdAt": "2025-11-16T17:03:46.536Z",
   "commit": "local-dev",
   "pages": [
     {
-      "id": "mcp-intro",
-      "title": "Introduction to MCP",
-      "path": "/docs/mcp-intro",
-      "url": "/docs/mcp-intro",
-      "sha256": "a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef",
-      "anchors": ["overview", "history"]
+      "id": "intro",
+      "url": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "title": "What is the Model Context Protocol (MCP)? - Model Context Protocol",
+      "sha256": "6cd231d9af4f22d3aefbcd983e6d025dbcdeb807801165de5308788ae53bf7f2",
+      "anchors": []
     },
     {
-      "id": "mcp-installation",
-      "title": "MCP Installation Guide",
-      "path": "/docs/mcp-installation",
-      "url": "/docs/mcp-installation",
-      "sha256": "b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1",
-      "anchors": ["requirements", "steps", "troubleshooting"]
+      "id": "spec-2025-06-18",
+      "url": "https://spec.modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle/",
+      "title": "Versioning - Model Context Protocol",
+      "sha256": "02a707a54fd578cfe7c502e4516bbc7bc7a3f65f2a4106d1dd6c0f89bc6c70cf",
+      "anchors": []
     },
     {
-      "id": "mcp-configuration",
-      "title": "MCP Configuration",
-      "path": "/docs/mcp-configuration",
-      "url": "/docs/mcp-configuration",
-      "sha256": "c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2",
-      "anchors": ["basic", "advanced", "examples"]
+      "id": "about",
+      "url": "https://modelcontextprotocol.io/about",
+      "title": "Model Context Protocol - Model Context Protocol",
+      "sha256": "a7998d0e36d9d7cc0929b1edba52139c60c989476befd594595ed18d13f3f2a2",
+      "anchors": []
     },
     {
-      "id": "mcp-usage",
-      "title": "Using MCP",
-      "path": "/docs/mcp-usage",
-      "url": "/docs/mcp-usage",
-      "sha256": "d4e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3",
-      "anchors": ["cli", "api", "best-practices"]
+      "id": "concepts-capabilities",
+      "url": "https://modelcontextprotocol.io/docs/concepts/capabilities",
+      "title": "Page Not Found",
+      "sha256": "9d14c64af578d647051463890b30705b43eb23471d665247abb9e3f2335cf6c6",
+      "anchors": []
     },
     {
-      "id": "mcp-api-reference",
-      "title": "MCP API Reference",
-      "path": "/docs/mcp-api-reference",
-      "url": "/docs/mcp-api-reference",
-      "sha256": "e5f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4",
-      "anchors": ["endpoints", "authentication", "examples"]
+      "id": "concepts-tools",
+      "url": "https://modelcontextprotocol.io/docs/concepts/tools",
+      "title": "Tools - Model Context Protocol",
+      "sha256": "7491848af16217e7f4b487e889323c7d67eff3abc3d1499ab7b08bc2753b1118",
+      "anchors": []
     },
     {
-      "id": "mcp-security",
-      "title": "MCP Security",
-      "path": "/docs/mcp-security",
-      "url": "/docs/mcp-security",
-      "sha256": "f678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5",
-      "anchors": ["overview", "configuration", "audit"]
+      "id": "concepts-resources",
+      "url": "https://modelcontextprotocol.io/docs/concepts/resources",
+      "title": "Resources - Model Context Protocol",
+      "sha256": "1d10949c34bdd9071719776162d982d42ab28acf8ca669625e8ec11f7fca11a8",
+      "anchors": []
     },
     {
-      "id": "mcp-troubleshooting",
-      "title": "MCP Troubleshooting",
-      "path": "/docs/mcp-troubleshooting",
-      "url": "/docs/mcp-troubleshooting",
-      "sha256": "678901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f",
-      "anchors": ["common-issues", "logs", "support"]
+      "id": "concepts-prompts",
+      "url": "https://modelcontextprotocol.io/docs/concepts/prompts",
+      "title": "Prompts - Model Context Protocol",
+      "sha256": "d6d8de928f4e870119f6259ba47e1a87ea1a1d4035e7bf53d4f249e28239a801",
+      "anchors": []
     },
     {
-      "id": "mcp-upgrade",
-      "title": "Upgrading MCP",
-      "path": "/docs/mcp-upgrade",
-      "url": "/docs/mcp-upgrade",
-      "sha256": "78901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f6",
-      "anchors": ["steps", "rollback", "compatibility"]
+      "id": "concepts-server-info",
+      "url": "https://modelcontextprotocol.io/docs/concepts/server",
+      "title": "Page Not Found",
+      "sha256": "d17efeebb406fea46a2da5360dd020ad82b2264f5ccc4405f277319d101deb22",
+      "anchors": []
     },
     {
-      "id": "mcp-faq",
-      "title": "MCP FAQ",
-      "path": "/docs/mcp-faq",
-      "url": "/docs/mcp-faq",
-      "sha256": "8901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f67",
-      "anchors": ["general", "technical", "licensing"]
+      "id": "concepts-lifecycle",
+      "url": "https://modelcontextprotocol.io/docs/concepts/lifecycle",
+      "title": "Page Not Found",
+      "sha256": "e6e2833c9fda574c0616b2ab2bfe1f4f44133f838dd3882f6b27ad82887b838b",
+      "anchors": []
     },
     {
-      "id": "mcp-release-notes",
-      "title": "MCP Release Notes",
-      "path": "/docs/mcp-release-notes",
-      "url": "/docs/mcp-release-notes",
-      "sha256": "901234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f678",
-      "anchors": ["v2025-06-18", "changes", "deprecated"]
+      "id": "concepts-authentication",
+      "url": "https://modelcontextprotocol.io/docs/concepts/authentication",
+      "title": "Page Not Found",
+      "sha256": "95f56b81cbad99cdd7b35eecc73789eb9d1f771f1a098a80cb9bb65b8723c1eb",
+      "anchors": []
     },
     {
-      "id": "mcp-contributing",
-      "title": "Contributing to MCP",
-      "path": "/docs/mcp-contributing",
-      "url": "/docs/mcp-contributing",
-      "sha256": "01234567890abcdef1234567890abcdef1234567890abcdefa1b2c3d4e5f6789",
-      "anchors": ["guidelines", "code-of-conduct", "process"]
+      "id": "fastmcp-punkpeye-readme",
+      "url": "https://github.com/punkpeye/fastmcp/blob/main/README.md",
+      "title": "fastmcp - README",
+      "sha256": "389a6b6a7e9fcceb9fedde16ac88d7b63e115ad9cd11f864f50506b40a556c6f",
+      "anchors": []
+    },
+    {
+      "id": "fastmcp-jlowin-readme",
+      "url": "https://github.com/jlowin/fastmcp/blob/main/README.md",
+      "title": "fastmcp - README",
+      "sha256": "f28507d15d515c02fe14ad82b985572363d14419811a7e8ff7bd97caf5539b14",
+      "anchors": []
+    },
+    {
+      "id": "mcp-specification-readme",
+      "url": "https://github.com/modelcontextprotocol/specification/blob/main/README.md",
+      "title": "specification - README",
+      "sha256": "90937b195ea09796ab76fb54855eb6dbe74dcd947cc2e614e9870515e6b53dc1",
+      "anchors": []
+    },
+    {
+      "id": "ollama-readme",
+      "url": "https://github.com/ollama/ollama/blob/main/README.md",
+      "title": "ollama - README",
+      "sha256": "b2f811c07fa215dfda379788281d6cf5285392757ad0f25678b2d3b01a7e2007",
+      "anchors": []
     }
   ]
 }
