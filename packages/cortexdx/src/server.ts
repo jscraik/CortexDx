@@ -922,7 +922,24 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
 
         if (route.match(/^\/api\/v1\/diagnostic-session\/[^\/]+$/) && method === 'GET') {
             // Get diagnostic session info endpoint
-            const sessionId = route.split('/').pop();
+            // Robustly extract session ID from route
+            const segments = route.split('/').filter(Boolean); // Remove empty segments
+            // Expected: ['api', 'v1', 'diagnostic-session', '<sessionId>']
+            if (
+                segments.length !== 4 ||
+                segments[0] !== 'api' ||
+                segments[1] !== 'v1' ||
+                segments[2] !== 'diagnostic-session'
+            ) {
+                res.writeHead(400);
+                res.end(JSON.stringify({
+                    success: false,
+                    error: 'Malformed route. Expected /api/v1/diagnostic-session/:sessionId',
+                    timestamp: new Date().toISOString(),
+                }));
+                return;
+            }
+            const sessionId = segments[3];
             if (!sessionId) {
                 res.writeHead(400);
                 res.end(JSON.stringify({
