@@ -71,7 +71,7 @@ This document tracks tools referenced in governance documents that are not yet i
 
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
-| `pnpm telemetry:arc-tdd` | ❌ | agentic-coding-workflow.md:512 | LOW | Emit telemetry for arc completion |
+| `pnpm telemetry:arc-tdd` | ❌ | agentic-coding-workflow.md:115 | LOW | Emit telemetry for arc completion |
 
 ## Existing Tools (For Reference)
 
