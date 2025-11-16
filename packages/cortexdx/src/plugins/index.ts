@@ -12,7 +12,7 @@ import {
   PerformancePlugin,
   PySpyPerformanceProfilerPlugin,
   UnifiedFlameGraphPlugin,
-} from "./performance.js";
+} from "./performance/index.js";
 import { PermissioningPlugin } from "./permissioning.js";
 import { ProtocolPlugin } from "./protocol.js";
 import { RateLimitPlugin } from "./ratelimit.js";
