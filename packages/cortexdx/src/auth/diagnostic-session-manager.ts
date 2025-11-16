@@ -409,10 +409,10 @@ export class DiagnosticSessionManager {
         this.db.close();
     }
 
-    // Private helper methods
-
+    // Private helper properties
     private cleanupTimer?: NodeJS.Timeout;
 
+    // Private helper methods
     private startCleanupTimer(): void {
         // Run cleanup every hour
         this.cleanupTimer = setInterval(() => {
