@@ -6,7 +6,7 @@
 
 **Purpose**: Validate CortexDx compatibility with the MCP specification Release Candidate and identify any breaking changes before the final spec release.
 
-## Pre-RC Preparation (Before November 14)
+## RC Validation Baseline (Historical Context)
 
 ### Environment Setup
 
