@@ -1074,7 +1074,9 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
 
         if (route === '/api/v1/reports' && method === 'GET') {
             // List reports
-            try {
+                const reportStore = getReportStore();
+                // Use a fixed base URL to avoid Host header injection
+                const url = new URL(req.url || '', 'http://localhost');
                 const reportStore = getReportStore();
                 const targetUrl = url.searchParams.get('targetUrl');
                 const limit = Number.parseInt(url.searchParams.get('limit') || '20');
