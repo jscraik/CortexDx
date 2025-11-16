@@ -342,6 +342,6 @@ CortexDx will be considered "MCP Spec November 2025 Compliant" when:
 
 ---
 
-**Next Review**: November 14, 2025 (RC release date)
+**Last Reviewed**: November 16, 2025
 **Owner**: CortexDx Development Team
 **Status Page**: This document
