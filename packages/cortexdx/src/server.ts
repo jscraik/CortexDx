@@ -785,6 +785,9 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                         res.end(JSON.stringify({
                             success: false,
                             error: 'Missing required fields: requestedBy, scope (array), duration (seconds)',
+                            timestamp: new Date().toISOString(),
+                        }));
+                        return;
 
                     // Validate scope array contents
                     const allowedScopePattern = /^(read|write|execute):\*$/;
