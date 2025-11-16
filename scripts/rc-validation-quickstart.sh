@@ -25,26 +25,26 @@ echo "========================================"
 # Build
 echo ""
 echo "Building project..."
-pnpm build 2>&1 | tee reports/rc-validation/rc/build-$(date +%Y%m%d).log
+pnpm build 2>&1 | tee reports/rc-validation/rc/build-$(date -u +%Y%m%d).log
 BUILD_STATUS=$?
 
 if [ $BUILD_STATUS -eq 0 ]; then
   echo "✅ Build successful"
 else
-  echo "❌ Build failed - see reports/rc-validation/rc/build-$(date +%Y%m%d).log"
+  echo "❌ Build failed - see reports/rc-validation/rc/build-$(date -u +%Y%m%d).log"
   exit 1
 fi
 
 # Run tests
 echo ""
 echo "Running test suite..."
-pnpm test 2>&1 | tee reports/rc-validation/rc/test-$(date +%Y%m%d).log
+pnpm test 2>&1 | tee reports/rc-validation/rc/test-$(date -u +%Y%m%d).log
 TEST_STATUS=$?
 
 if [ $TEST_STATUS -eq 0 ]; then
   echo "✅ Tests passed"
 else
-  echo "⚠️  Tests failed - see reports/rc-validation/rc/test-$(date +%Y%m%d).log"
+  echo "⚠️  Tests failed - see reports/rc-validation/rc/test-$(date -u +%Y%m%d).log"
   echo "   (Non-critical - continuing with diagnostics)"
 fi
 
