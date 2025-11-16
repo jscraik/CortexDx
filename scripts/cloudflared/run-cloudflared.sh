@@ -32,7 +32,7 @@ else
   USE_TOKEN=false
   if [[ ! -f "$CONFIG_PATH" ]]; then
     echo "[cloudflared] config file not found: $CONFIG_PATH" >&2
-    echo "[cloudflared] set CORTEXDX_CLOUDFLARED_TOKEN or ensure config file exists" >&2
+    echo "[cloudflared] set CLOUDFLARE_TUNNEL_TOKEN or CORTEXDX_CLOUDFLARED_TOKEN or ensure config file exists" >&2
     exit 1
   fi
 
