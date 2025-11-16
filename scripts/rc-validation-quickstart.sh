@@ -91,8 +91,8 @@ if [ $BUILD_STATUS -eq 0 ] && [ $SMOKE_STATUS -eq 0 ]; then
   echo "See docs/MCP_SPEC_MIGRATION.md for detailed validation plan"
 else
   echo "⚠️  Phase 1 Issues Detected"
-  echo ""
-  echo "Action Required:"
+  echo "1. Review build logs: reports/rc-validation/rc/build-$(date -u +%Y%m%d).log"
+  echo "2. Review test logs: reports/rc-validation/rc/test-$(date -u +%Y%m%d).log"
   echo "1. Review build logs: reports/rc-validation/rc/build-$(date +%Y%m%d).log"
   echo "2. Review test logs: reports/rc-validation/rc/test-$(date +%Y%m%d).log"
   echo "3. Review smoke test: reports/rc-validation/rc/smoke-test/"
