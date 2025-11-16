@@ -146,6 +146,18 @@ export class Context7Provider {
   constructor(private ctx: DiagnosticContext) {
     this.licenseValidator = createLicenseValidator(ctx);
     this.remoteClient = initializeContext7Client(ctx);
+
+    // Log configuration status for transparency
+    if (this.remoteClient) {
+      ctx.logger(
+        "[Context7] Remote MCP server configured. Will attempt remote analysis with local fallback."
+      );
+    } else {
+      ctx.logger(
+        "[Context7] Using local contextual analysis implementation. " +
+        "For remote server integration, set CONTEXT7_API_BASE_URL and CONTEXT7_API_KEY."
+      );
+    }
   }
 
   /**
@@ -890,15 +902,27 @@ export class Context7Provider {
     name: string,
     args: Record<string, unknown>,
   ): Promise<T | null> {
-    if (!this.remoteClient) return null;
+    if (!this.remoteClient) {
+      // No remote client configured, use local implementation
+      return null;
+    }
+
     try {
-      return await this.remoteClient.callToolJson<T>(
+      this.ctx.logger?.(
+        `[Context7] Attempting remote analysis via MCP server for tool: ${name}`
+      );
+      const result = await this.remoteClient.callToolJson<T>(
         name,
         sanitizeToolArgs(args),
       );
+      this.ctx.logger?.(
+        `[Context7] Remote analysis successful for tool: ${name}`
+      );
+      return result;
     } catch (error) {
       this.ctx.logger?.(
-        `[Context7] Remote tool ${name} failed: ${String(error)}`,
+        `[Context7] Remote tool ${name} failed: ${String(error)}. ` +
+        `Falling back to local contextual analysis implementation.`
       );
       return null;
     }
