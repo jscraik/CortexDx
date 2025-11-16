@@ -381,7 +381,7 @@ Respond in JSON format.`;
       } catch {
         // Fallback solution
         return {
-          id: `solution-${Date.now()}`,
+          id: `solution-${randomUUID()}`,
           type: "manual",
           confidence: 0.5,
           description: "Manual investigation required",
