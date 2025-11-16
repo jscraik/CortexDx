@@ -38,7 +38,10 @@ export const createDiagnosticSessionMiddleware = () => {
         // Validate the session key
         const sessionManager = getDiagnosticSessionManager();
         // Use a fixed base URL to avoid Host header injection
-        const endpoint = new URL(req.url || '/', 'http://localhost').pathname;
+        // Defensive extraction of endpoint path to avoid Host header injection
+        const endpoint = req.url?.startsWith('/')
+            ? req.url.split('?')[0]
+            : new URL(req.url || '/', 'http://localhost').pathname;
         const validation = sessionManager.validateSession(sessionKey, endpoint);
 
         if (!validation.valid) {
