@@ -1,27 +1,36 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
+  type RateLimitState,
   checkRateLimit,
   createRateLimitState,
   getRateLimitConfig,
   recordApiRequest,
-  type RateLimitState,
 } from "../plugins/ratelimit.js";
 
 // Rate limit store (in-memory for now, can be replaced with Redis)
 const rateLimitStore = new Map<string, RateLimitState>();
 
 // Periodic cleanup to prevent memory leak: remove expired rate limit states
+// Run cleanup every 60 seconds to remove entries older than the rate limit window
+const CLEANUP_INTERVAL_MS = 60 * 1000;
+const MAX_WINDOW_MS = 60 * 1000; // Maximum window size (1 minute for all tiers)
+
 setInterval(() => {
   const now = Date.now();
   for (const [key, state] of rateLimitStore.entries()) {
-    // Assume RateLimitState has windowStart (ms) and windowMs (duration in ms)
-    if (typeof state.windowStart === "number" && typeof state.windowMs === "number") {
-      if (now - state.windowStart > state.windowMs) {
+    // Remove state if the window has passed and no requests in the window
+    if (state.windowStart && now - state.windowStart > MAX_WINDOW_MS) {
+      // Also check if there are no recent requests
+      const recentRequests = state.requests.filter(
+        (timestamp) => now - timestamp <= MAX_WINDOW_MS,
+      );
+      if (recentRequests.length === 0) {
         rateLimitStore.delete(key);
       }
     }
   }
-}, 60 * 1000); // Run every 60 seconds
+}, CLEANUP_INTERVAL_MS);
+
 export interface RateLimitOptions {
   /**
    * Default tier for unauthenticated requests
@@ -46,7 +55,9 @@ export interface RateLimitOptions {
   /**
    * Custom tier resolver function
    */
-  tierResolver?: (req: IncomingMessage) => "community" | "professional" | "enterprise";
+  tierResolver?: (
+    req: IncomingMessage,
+  ) => "community" | "professional" | "enterprise";
 }
 
 /**
@@ -56,7 +67,8 @@ function getClientIp(req: IncomingMessage): string {
   // Check X-Forwarded-For header (proxy/load balancer)
   const forwarded = req.headers["x-forwarded-for"];
   if (forwarded) {
-    const ips = typeof forwarded === "string" ? forwarded.split(",") : forwarded;
+    const ips =
+      typeof forwarded === "string" ? forwarded.split(",") : forwarded;
     return ips[0].trim();
   }
 
@@ -110,17 +122,20 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
 
       // Check user-specific limits first
       if (userId && perUserLimits.has(userId)) {
-        return perUserLimits.get(userId)!;
+        const tier = perUserLimits.get(userId);
+        if (tier) return tier;
       }
 
       // Check IP-specific limits
       if (perIpLimits.has(ip)) {
-        return perIpLimits.get(ip)!;
+        const tier = perIpLimits.get(ip);
+        if (tier) return tier;
       }
 
       // Check tier from header
       const tierHeader = req.headers["x-rate-limit-tier"];
       if (tierHeader && typeof tierHeader === "string") {
+        // Validate before type assertion
         if (["community", "professional", "enterprise"].includes(tierHeader)) {
           return tierHeader as "community" | "professional" | "enterprise";
         }
@@ -189,19 +204,65 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
 
 /**
  * Environment variable based configuration
+ *
+ * @remarks
+ * **IPv6 Limitation**: Environment variable configuration only supports IPv4 addresses.
+ * IPv6 addresses contain colons which cannot be represented in environment variable names.
+ * For IPv6 support, use programmatic configuration with the `createRateLimiter()` function
+ * and pass IP addresses directly via the `perIpLimits` Map.
+ *
+ * @example
+ * ```typescript
+ * // For IPv6 support, use programmatic configuration:
+ * const perIpLimits = new Map();
+ * perIpLimits.set('2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'enterprise');
+ * const limiter = createRateLimiter({ perIpLimits });
+ * ```
  */
-export function createRateLimiterFromEnv(): ReturnType<typeof createRateLimiter> {
+export function createRateLimiterFromEnv(): ReturnType<
+  typeof createRateLimiter
+> {
   const defaultTier = (process.env.CORTEXDX_DEFAULT_RATE_LIMIT_TIER ||
     "community") as "community" | "professional" | "enterprise";
 
-  const perIpLimits = new Map<string, "community" | "professional" | "enterprise">();
-  const perUserLimits = new Map<string, "community" | "professional" | "enterprise">();
+  const perIpLimits = new Map<
+    string,
+    "community" | "professional" | "enterprise"
+  >();
+  const perUserLimits = new Map<
+    string,
+    "community" | "professional" | "enterprise"
+  >();
 
   // Parse IP-specific limits from env
   // Format: CORTEXDX_RATE_LIMIT_IP_192_168_1_1=professional
   for (const [key, value] of Object.entries(process.env)) {
     if (key.startsWith("CORTEXDX_RATE_LIMIT_IP_")) {
       const ip = key.replace("CORTEXDX_RATE_LIMIT_IP_", "").replace(/_/g, ".");
+
+      // Validate IP address format (IPv4 only: x.x.x.x where x is 0-255)
+      const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (!ipv4Regex.test(ip)) {
+        console.warn(
+          `Invalid IP address format in environment variable ${key}: ${ip}`,
+        );
+        continue;
+      }
+
+      // Validate each octet is in range 0-255
+      const octets = ip.split(".");
+      if (
+        !octets.every((octet) => {
+          const num = Number.parseInt(octet, 10);
+          return num >= 0 && num <= 255;
+        })
+      ) {
+        console.warn(
+          `Invalid IP address octets in environment variable ${key}: ${ip}`,
+        );
+        continue;
+      }
+
       const tier = value as "community" | "professional" | "enterprise";
       if (["community", "professional", "enterprise"].includes(tier)) {
         perIpLimits.set(ip, tier);
