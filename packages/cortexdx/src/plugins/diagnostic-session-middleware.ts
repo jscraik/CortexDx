@@ -30,7 +30,7 @@ export const createDiagnosticSessionMiddleware = () => {
         const sessionKey = getSessionKeyFromHeaders(req.headers);
 
         if (!sessionKey) {
-            // No diagnostic session key provided, continue to next middleware
+            // No diagnostic session key provided, pass through to allow other auth methods
             next();
             return;
         }
