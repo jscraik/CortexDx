@@ -61,20 +61,8 @@ export async function createDiagnosticMcpClient(
         );
         headers['X-Diagnostic-Session-Key'] = session.apiKey;
     }
-    // Method 3: Fall back to direct Auth0 authentication (no session)
-    // (This block is now unreachable, but kept for clarity)
-    // else if (options.auth0) {
-    //     const auth0Headers = await resolveAuthHeaders({
-    //         auth0Domain: options.auth0.domain,
-    //         auth0ClientId: options.auth0.clientId,
-    //         auth0ClientSecret: options.auth0.clientSecret,
-    //         auth0Audience: options.auth0.audience,
-    //         auth0Scope: options.auth0.scope
-    //     });
-    //     if (auth0Headers) {
-    //         Object.assign(headers, auth0Headers);
-    //     }
-    // }
+    // Method 3: Previously, direct Auth0 authentication (no session) was supported here.
+    // This fallback is now deprecated and removed for clarity.
 
     const clientOptions: HttpMcpClientOptions = {
         baseUrl: options.targetServerUrl,
