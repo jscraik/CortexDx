@@ -171,38 +171,3 @@ export async function revokeDiagnosticSession(
     return result.success;
 }
 
-/**
- * Example usage function showing the complete diagnostic workflow
- */
-export async function exampleDiagnosticWorkflow(
-    targetServerUrl: string,
-    auth0Config: {
-        domain: string;
-        clientId: string;
-        clientSecret: string;
-        audience: string;
-    }
-): Promise<void> {
-    // Step 1: Create diagnostic MCP client with automatic session creation
-    const client = await createDiagnosticMcpClient({
-        targetServerUrl,
-        auth0: auth0Config,
-        sessionConfig: {
-            requestedBy: 'cortexdx',
-            scope: ['read:tools', 'read:resources', 'execute:diagnostics'],
-            duration: 3600, // 1 hour
-            allowedEndpoints: ['/mcp', '/health', '/capabilities']
-        },
-        timeoutMs: 30000
-    });
-
-    // Step 2: Run diagnostics
-    const toolsListResult = await client.callTool('tools/list', {});
-    console.log('Available tools:', toolsListResult);
-
-    const healthResult = await client.callTool('health_check', {});
-    console.log('Health check:', healthResult);
-
-    // Step 3: Session will auto-expire after 1 hour, or can be manually revoked
-    // (In practice, store sessionId and apiKey to revoke later if needed)
-}
