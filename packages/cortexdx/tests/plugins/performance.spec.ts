@@ -168,9 +168,6 @@ describe('Performance Plugin', () => {
       };
 
       const findings = buildPerformanceFindings(metrics, 'http://localhost:3000');
-      const slowFinding = findings.find(
-        f => f.severity === 'major' || f.title.toLowerCase().includes('slow')
-      );
 
       // Should flag as concerning
       expect(findings.some(f => f.severity !== 'info')).toBe(true);
