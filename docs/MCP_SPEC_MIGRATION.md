@@ -9,7 +9,7 @@
 | Milestone | Date | Status | CortexDx Action Required |
 |-----------|------|--------|-------------------------|
 | RC (Release Candidate) | November 14, 2025 | ✅ **LIKELY PUBLISHED** | **START VALIDATION NOW** |
-| Final Specification | November 25, 2025 | ⏰ **9 DAYS AWAY** | Final validation & release |
+| Final Specification | November 25, 2025 | ⏳ **PENDING** | Final validation & release |
 
 ## Current State
 
