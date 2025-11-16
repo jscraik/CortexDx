@@ -230,7 +230,7 @@ export class RunCollector {
 
 			return result.url;
 		} catch (err) {
-			console.error('Failed to upload envelope:', err);
+			console.error("Failed to upload envelope:", err);
 			return null;
 		}
 	}
