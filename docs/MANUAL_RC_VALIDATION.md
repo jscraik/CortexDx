@@ -26,7 +26,7 @@ This checklist allows you to:
 - [ ] ✅ **Confirm SDK installed**: v1.22.0
   ```bash
   find node_modules -name "@modelcontextprotocol" -type d | head -1
-  # Check package.json in that directory
+  # Open package.json in that directory and verify the "version" field matches v1.22.0
 ### Phase 2: Code Inspection (30-60 minutes)
 
 #### 2.1 MCP SDK Import Analysis
