@@ -273,5 +273,5 @@ Track OAuth token usage to validate scope necessity:
 
 ---
 
-**Next Review**: November 14, 2025 (MCP Spec RC Release)
+**Next Review**: November 16, 2026 (Annual MCP Spec Compliance Review)
 **Owner**: CortexDx Security Team
