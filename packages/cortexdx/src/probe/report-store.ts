@@ -285,9 +285,13 @@ export class ReportStore {
     private startCleanupTimer(): void {
         // Run cleanup every 24 hours
         this.cleanupTimer = setInterval(() => {
-            const cleaned = this.cleanupExpiredReports();
-            if (cleaned > 0) {
-                console.log(`[ReportStore] Cleaned up ${cleaned} expired reports`);
+            try {
+                const cleaned = this.cleanupExpiredReports();
+                if (cleaned > 0) {
+                    console.log(`[ReportStore] Cleaned up ${cleaned} expired reports`);
+                }
+            } catch (err) {
+                console.error(`[ReportStore] Error during cleanup:`, err);
             }
         }, 24 * 60 * 60 * 1000);
     }
