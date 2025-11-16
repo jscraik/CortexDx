@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { LRUCache, createCacheKey } from '../src/utils/lru-cache.js';
+import { LRUCache, createCacheKey } from '../../src/utils/lru-cache.js';
 
 describe('LRUCache', () => {
   let cache: LRUCache<string>;
