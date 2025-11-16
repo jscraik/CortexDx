@@ -30,7 +30,7 @@ This document tracks tools referenced in governance documents that are not yet i
 | Tool | Status | Referenced In | Priority | Notes |
 |------|--------|---------------|----------|-------|
 | `pnpm evidence:triplet:verify` | ❌ | agentic-coding-workflow.md:592 | HIGH | Validates Evidence Triplet completeness |
-| `pnpm evidence:collect` | ❌ | Analysis recommendation | MEDIUM | Automated evidence aggregation |
+| `pnpm evidence:collect` | ✅ | Analysis recommendation | MEDIUM | Automated evidence aggregation - **IMPLEMENTED** |
 | `pnpm perf:verify` | ❌ | code-review-checklist.md:146 | MEDIUM | Generates performance verification reports |
 
 ### Governance Tools
@@ -39,7 +39,7 @@ This document tracks tools referenced in governance documents that are not yet i
 |------|--------|---------------|----------|-------|
 | `pnpm governance:lint-checklist` | ❌ | code-review-checklist.md:46 | MEDIUM | Verifies checklist link format and tags |
 | `pnpm governance:helpers` | ❌ | code-review-checklist.md:138 | MEDIUM | Validates helper introduction artifacts |
-| `pnpm governance:validate` | ❌ | Analysis recommendation | LOW | Checks governance file integrity |
+| `pnpm governance:validate` | ✅ | Analysis recommendation | LOW | Checks governance file integrity - **IMPLEMENTED** |
 
 ### Model & Research Tools
 
