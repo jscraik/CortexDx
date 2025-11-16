@@ -35,9 +35,9 @@
 ### Pre-RC Validation (Before November 14, 2025)
 
 #### Scope Hygiene
-- [ ] **Remove unused scopes**: Audit `docs.write` and `code.write` - remove if not actively used
-- [ ] **Minimal privilege**: Verify each scope is necessary for diagnostic operations
-- [ ] **Document usage**: Map each scope to specific CortexDx features/operations
+- [ ] [TODO] **Remove unused scopes**: Audit `docs.write` and `code.write` - remove if not actively used
+- [ ] [TODO] **Minimal privilege**: Verify each scope is necessary for diagnostic operations
+- [ ] [TODO] **Document usage**: Map each scope to specific CortexDx features/operations
 
 #### Resource Scoping
 - [ ] **Resource granularity**: Review if scopes should be more resource-specific (e.g., `memory:checkpoints.read` vs. `memory.read`)
