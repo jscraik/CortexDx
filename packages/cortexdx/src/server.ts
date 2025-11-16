@@ -785,7 +785,22 @@ export async function handleSelfHealingAPI(req: IncomingMessage, res: ServerResp
                         res.end(JSON.stringify({
                             success: false,
                             error: 'Missing required fields: requestedBy, scope (array), duration (seconds)',
+
+                    // Validate scope array contents
+                    const allowedScopePattern = /^(read|write|execute):\*$/;
+                    if (
+                        !payload.scope.every(
+                            (s) => typeof s === "string" && allowedScopePattern.test(s)
+                        )
+                    ) {
+                        res.writeHead(400);
+                        res.end(JSON.stringify({
+                            success: false,
+                            error: 'Invalid scope value(s). Allowed patterns: read:*, write:*, execute:*',
                             timestamp: new Date().toISOString(),
+                        }));
+                        return;
+                    }
                         }));
                         return;
                     }
