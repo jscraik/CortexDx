@@ -1172,7 +1172,7 @@ export const researchQualityCapabilities = {
   name: "Research Quality Research Quality Provider",
   version: "1.0.0",
   description: "Research quality assessment and academic integrity validation",
-  tools: VibeCheckProvider.getToolDefinitions(),
+  tools: ResearchQualityProvider.getToolDefinitions(),
   resources: [],
   prompts: [
     {
