@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { LRUCache, createCacheKey } from '../src/utils/lru-cache.js';
+import { LRUCache, createCacheKey } from '../../src/utils/lru-cache.js';
 import type { DiagnosticContext } from '../../src/types.js';
 
 describe('Cache Integration Tests', () => {
