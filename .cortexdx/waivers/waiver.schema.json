@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://cortex-os.dev/schemas/waiver.schema.json",
+  "$id": "waiver.schema.json",
   "title": "Governance Waiver",
   "description": "Schema for governance policy waiver documents",
   "type": "object",
