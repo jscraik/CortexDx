@@ -68,7 +68,6 @@ export async function createDiagnosticMcpClient(
  * Workflow:
  * 1. Get Auth0 access token using client credentials
  * 2. Call target server's /api/v1/diagnostic-session/create endpoint
- * 3. Return session with temporary API key
  */
 async function createDiagnosticSession(
     targetServerUrl: string,
