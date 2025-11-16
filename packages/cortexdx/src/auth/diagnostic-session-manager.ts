@@ -440,8 +440,10 @@ export class DiagnosticSessionManager {
         return allowedEndpoints.some(allowed => {
             // Support wildcards
             if (allowed.endsWith('/*')) {
-                const prefix = allowed.slice(0, -2);
-                return endpoint.startsWith(prefix);
+                // Allow if endpoint is exactly the prefix, or starts with prefix + '/'
+                return endpoint === prefix || endpoint.startsWith(prefix + '/');
+            }
+            // Non-wildcard: allow if endpoint is exactly allowed, or starts with allowed + '/'
             }
             return endpoint === allowed || endpoint.startsWith(allowed + '/');
         });
