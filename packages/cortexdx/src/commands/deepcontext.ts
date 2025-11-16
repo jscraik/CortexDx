@@ -7,6 +7,9 @@ import {
   persistDeepContextStatus,
   readAllDeepContextStatuses,
 } from "../deepcontext/status-store.js";
+import { createCliLogger } from "../logging/logger.js";
+
+const logger = createCliLogger("deepcontext");
 
 interface IndexOptions {
   force?: boolean;
@@ -17,7 +20,7 @@ interface SearchOptions {
 }
 
 export async function runDeepContextIndex(codebase: string, options: IndexOptions): Promise<number> {
-  const client = new DeepContextClient({ logger: (msg) => console.log(msg) });
+  const client = new DeepContextClient({ logger: (msg) => logger.info(msg) });
   const resolved = path.resolve(codebase);
   const text = await client.indexCodebase(resolved, Boolean(options.force));
   const remoteStatus = await safeStatusFetch(client, resolved);
@@ -27,8 +30,8 @@ export async function runDeepContextIndex(codebase: string, options: IndexOption
     remoteStatusText: remoteStatus,
   });
   await persistDeepContextStatus(record);
-  console.log(text || `Index requested for ${resolved}`);
-  console.log(formatStatusLine(record));
+  logger.info(text || `Index requested for ${resolved}`);
+  logger.info(formatStatusLine(record));
   return 0;
 }
 
@@ -37,21 +40,21 @@ export async function runDeepContextSearch(
   query: string,
   options: SearchOptions,
 ): Promise<number> {
-  const client = new DeepContextClient({ logger: (msg) => console.log(msg) });
+  const client = new DeepContextClient({ logger: (msg) => logger.info(msg) });
   const resolved = path.resolve(codebase);
   const maxResults = options.maxResults ? Number.parseInt(options.maxResults, 10) : 5;
   const result = await client.searchCodebase(resolved, query, Number.isNaN(maxResults) ? 5 : maxResults);
   if (result.matches.length === 0) {
-    console.log("No matches returned by DeepContext.");
-    console.log(result.text);
+    logger.info("No matches returned by DeepContext.");
+    logger.info(result.text);
     return 0;
   }
 
-  console.log(`Found ${result.matches.length} matches (showing up to ${maxResults}):`);
+  logger.info(`Found ${result.matches.length} matches (showing up to ${maxResults}):`);
   for (const match of result.matches) {
-    console.log(`\n${match.file_path}:${match.start_line}-${match.end_line} (score=${match.score ?? "n/a"})`);
+    logger.info(`\n${match.file_path}:${match.start_line}-${match.end_line} (score=${match.score ?? "n/a"})`);
     if (match.content) {
-      console.log(match.content.slice(0, 500));
+      logger.info(match.content.slice(0, 500));
     }
   }
 
@@ -62,20 +65,20 @@ export async function runDeepContextSearch(
     indexOutput: result.text,
   });
   await persistDeepContextStatus(record);
-  console.log(formatStatusLine(record));
+  logger.info(formatStatusLine(record));
   return 0;
 }
 
 export async function runDeepContextStatus(codebase?: string): Promise<number> {
-  const client = new DeepContextClient({ logger: (msg) => console.log(msg) });
+  const client = new DeepContextClient({ logger: (msg) => logger.info(msg) });
   if (!codebase) {
     const cached = await readAllDeepContextStatuses();
     if (cached.length === 0) {
-      console.log("No cached DeepContext status. Pass a codebase path to query the MCP server.");
+      logger.info("No cached DeepContext status. Pass a codebase path to query the MCP server.");
       return 0;
     }
     for (const record of cached) {
-      console.log(formatStatusLine(record));
+      logger.info(formatStatusLine(record));
     }
     return 0;
   }
@@ -84,16 +87,16 @@ export async function runDeepContextStatus(codebase?: string): Promise<number> {
   const text = await client.getIndexingStatus(resolved);
   const record = await buildStatusRecord({ codebasePath: resolved, remoteStatusText: text });
   await persistDeepContextStatus(record);
-  console.log(text);
-  console.log(formatStatusLine(record));
+  logger.info(text);
+  logger.info(formatStatusLine(record));
   return 0;
 }
 
 export async function runDeepContextClear(codebase?: string): Promise<number> {
-  const client = new DeepContextClient({ logger: (msg) => console.log(msg) });
+  const client = new DeepContextClient({ logger: (msg) => logger.info(msg) });
   const resolved = codebase ? path.resolve(codebase) : undefined;
   const text = await client.clearIndex(resolved);
-  console.log(text);
+  logger.info(text);
   if (resolved) {
     const record = await buildStatusRecord({
       codebasePath: resolved,
@@ -101,7 +104,7 @@ export async function runDeepContextClear(codebase?: string): Promise<number> {
       inferredState: "not_indexed",
     });
     await persistDeepContextStatus(record);
-    console.log(formatStatusLine(record));
+    logger.info(formatStatusLine(record));
   }
   return 0;
 }

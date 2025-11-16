@@ -10,8 +10,11 @@ import {
 } from "../healing/scheduler.js";
 import type { DevelopmentContext, Finding } from "../types.js";
 import { fileSystem as fs } from "../utils/file-system.js";
+import { createCliLogger } from "../logging/logger.js";
 
 type SeverityThreshold = "blocker" | "major" | "minor" | "info";
+
+const logger = createCliLogger("self-healing");
 
 const jsonRpcStub = async <T>(method: string, params?: unknown): Promise<T> => {
   // Stubbed response used for CLI utilities
@@ -37,12 +40,12 @@ const parseSeverityThreshold = (value?: string): SeverityThreshold => {
  */
 async function createDevelopmentContext(): Promise<DevelopmentContext> {
   const projectContext = await loadProjectContext().catch((error) => {
-    console.warn("[Self-Healing] Unable to load project context:", error);
+    logger.warn("[Self-Healing] Unable to load project context:", error);
     return undefined;
   });
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (...args) => console.log("[Self-Healing]", ...args),
+    logger: (...args) => logger.info("[Self-Healing]", ...args),
     request: async (input, init) => {
       const response = await fetch(input, init);
       if (!response.ok) {
@@ -75,7 +78,7 @@ export async function runSelfDiagnose(options: {
   validate?: boolean;
   out?: string;
 }): Promise<number> {
-  console.log("[Self-Healing] Starting comprehensive self-diagnosis...");
+  logger.info("[Self-Healing] Starting comprehensive self-diagnosis...");
 
   try {
     const ctx = await createDevelopmentContext();
@@ -93,13 +96,13 @@ export async function runSelfDiagnose(options: {
     // Save report if requested
     if (options.out) {
       await fs.writeFile(options.out, JSON.stringify(report, null, 2), "utf-8");
-      console.log(`\n[Self-Healing] Report saved to ${options.out}`);
+      logger.info(`\n[Self-Healing] Report saved to ${options.out}`);
     }
 
     // Return exit code based on severity
     return report.summary.severity === "failed" ? 1 : 0;
   } catch (error) {
-    console.error("[Self-Healing] Self-diagnosis failed:", error);
+    logger.error("[Self-Healing] Self-diagnosis failed", { error });
     return 1;
   }
 }
@@ -118,7 +121,7 @@ export async function runHealEndpoint(
     out?: string;
   },
 ): Promise<number> {
-  console.log(`[Self-Healing] Diagnosing endpoint: ${endpoint}`);
+  logger.info(`[Self-Healing] Diagnosing endpoint: ${endpoint}`);
 
   try {
     const ctx = await createDevelopmentContext();
@@ -134,20 +137,20 @@ export async function runHealEndpoint(
     const report = await inspector.diagnose(endpoint, probes);
     const findings = inspector.convertFindings(report.findings);
 
-    console.log(`[Self-Healing] Found ${findings.length} issues:`);
+    logger.info(`[Self-Healing] Found ${findings.length} issues:`);
     findings.forEach((finding, index) => {
-      console.log(
+      logger.info(
         `  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title}`,
       );
-      console.log(`     ${finding.description}`);
+      logger.info(`     ${finding.description}`);
     });
 
     // Apply fixes if requested and possible
     const fixes: FixAttempt[] = [];
     if (options.autoFix && findings.length > 0) {
-      console.log("\n[Self-Healing] Attempting automated fixes...");
+      logger.info("\n[Self-Healing] Attempting automated fixes...");
       // Note: For external endpoints, we'd typically not auto-fix
-      console.log("[Self-Healing] Auto-fix disabled for external endpoints");
+      logger.info("[Self-Healing] Auto-fix disabled for external endpoints");
     }
 
     // Send webhook if configured
@@ -173,14 +176,14 @@ export async function runHealEndpoint(
         JSON.stringify(fullReport, null, 2),
         "utf-8",
       );
-      console.log(`\n[Self-Healing] Report saved to ${options.out}`);
+      logger.info(`\n[Self-Healing] Report saved to ${options.out}`);
     }
 
     // Return exit code based on findings severity
     const hasBlockers = findings.some((f) => f.severity === "blocker");
     return hasBlockers ? 1 : 0;
   } catch (error) {
-    console.error("[Self-Healing] Endpoint diagnosis failed:", error);
+    logger.error("[Self-Healing] Endpoint diagnosis failed", { error });
     return 1;
   }
 }
@@ -209,7 +212,7 @@ export async function runMonitoring(options: {
 
   try {
     if (options.start) {
-      console.log("[Monitoring] Starting background monitoring...");
+      logger.info("[Monitoring] Starting background monitoring...");
 
       const configs = await loadMonitoringConfigs(ctx, options);
 
@@ -219,12 +222,12 @@ export async function runMonitoring(options: {
         configs,
       });
 
-      console.log("[Monitoring] Background monitoring started");
-      console.log("[Monitoring] Press Ctrl+C to stop");
+      logger.info("[Monitoring] Background monitoring started");
+      logger.info("[Monitoring] Press Ctrl+C to stop");
 
       // Keep process running
       process.on("SIGINT", () => {
-        console.log("\n[Monitoring] Stopping...");
+        logger.info("\n[Monitoring] Stopping...");
         scheduler.stop();
         process.exit(0);
       });
@@ -235,7 +238,7 @@ export async function runMonitoring(options: {
 
     if (options.stop) {
       scheduler.stop();
-      console.log("[Monitoring] Background monitoring stopped");
+      logger.info("[Monitoring] Background monitoring stopped");
       return 0;
     }
 
@@ -243,21 +246,21 @@ export async function runMonitoring(options: {
       const status = scheduler.getStatus();
       const jobs = scheduler.getJobs();
 
-      console.log("[Monitoring] Status:");
-      console.log(`  Running: ${status.running ? "Yes" : "No"}`);
-      console.log(`  Active Jobs: ${status.activeJobs}`);
-      console.log(`  Last Check: ${status.lastCheck}`);
-      console.log(`  Next Check: ${status.nextCheck}`);
+      logger.info("[Monitoring] Status:");
+      logger.info(`  Running: ${status.running ? "Yes" : "No"}`);
+      logger.info(`  Active Jobs: ${status.activeJobs}`);
+      logger.info(`  Last Check: ${status.lastCheck}`);
+      logger.info(`  Next Check: ${status.nextCheck}`);
 
       if (jobs.length > 0) {
-        console.log("\n[Monitoring] Jobs:");
+        logger.info("\n[Monitoring] Jobs:");
         for (const job of jobs) {
-          console.log(`  ${job.id}:`);
-          console.log(`    Endpoint: ${job.config.endpoint}`);
-          console.log(`    Enabled: ${job.enabled ? "Yes" : "No"}`);
-          console.log(`    Auto-Heal: ${job.config.autoHeal ? "Yes" : "No"}`);
-          console.log(`    Last Run: ${job.lastRun || "Never"}`);
-          console.log(`    Consecutive Failures: ${job.consecutiveFailures}`);
+          logger.info(`  ${job.id}:`);
+          logger.info(`    Endpoint: ${job.config.endpoint}`);
+          logger.info(`    Enabled: ${job.enabled ? "Yes" : "No"}`);
+          logger.info(`    Auto-Heal: ${job.config.autoHeal ? "Yes" : "No"}`);
+          logger.info(`    Last Run: ${job.lastRun || "Never"}`);
+          logger.info(`    Consecutive Failures: ${job.consecutiveFailures}`);
         }
       }
 
@@ -271,17 +274,17 @@ export async function runMonitoring(options: {
         JSON.stringify(config, null, 2),
         "utf-8",
       );
-      console.log(`[Monitoring] Configuration exported to ${options.export}`);
+      logger.info(`[Monitoring] Configuration exported to ${options.export}`);
       return 0;
     }
 
     // Show help if no action specified
-    console.log(
+    logger.info(
       "[Monitoring] Please specify an action: --start, --stop, --status, or --export",
     );
     return 1;
   } catch (error) {
-    console.error("[Monitoring] Operation failed:", error);
+    logger.error("[Monitoring] Operation failed", { error });
     return 1;
   }
 }
@@ -331,77 +334,77 @@ async function loadMonitoringConfigs(
  * Display healing report in terminal
  */
 function displayHealingReport(report: HealingReport, dryRun?: boolean): void {
-  console.log(`\n${"=".repeat(60)}`);
-  console.log("SELF-HEALING REPORT");
-  console.log("=".repeat(60));
+  logger.info(`\n${"=".repeat(60)}`);
+  logger.info("SELF-HEALING REPORT");
+  logger.info("=".repeat(60));
 
   const mode = dryRun ? " (DRY RUN)" : "";
-  console.log(`Job ID: ${report.jobId}${mode}`);
-  console.log(`Started: ${report.startedAt}`);
-  console.log(`Finished: ${report.finishedAt}`);
+  logger.info(`Job ID: ${report.jobId}${mode}`);
+  logger.info(`Started: ${report.startedAt}`);
+  logger.info(`Finished: ${report.finishedAt}`);
 
-  console.log("\nSUMMARY:");
-  console.log(`  Status: ${report.summary.severity.toUpperCase()}`);
-  console.log(`  ${report.summary.message}`);
+  logger.info("\nSUMMARY:");
+  logger.info(`  Status: ${report.summary.severity.toUpperCase()}`);
+  logger.info(`  ${report.summary.message}`);
 
-  console.log("\nFINDINGS:");
+  logger.info("\nFINDINGS:");
   if (report.findings.length === 0) {
-    console.log("  ✅ No issues detected - system is healthy!");
+    logger.info("  ✅ No issues detected - system is healthy!");
   } else {
     report.findings.forEach((finding: Finding, index: number) => {
       const status = finding.autoFixed ? "✅ FIXED" : "⚠️  OPEN";
-      console.log(
+      logger.info(
         `  ${index + 1}. [${finding.severity.toUpperCase()}] ${finding.title} - ${status}`,
       );
       if (finding.description) {
-        console.log(`     ${finding.description}`);
+        logger.info(`     ${finding.description}`);
       }
       if (finding.autoFixed) {
-        console.log(`     → Auto-fixed using template: ${finding.templateId}`);
+        logger.info(`     → Auto-fixed using template: ${finding.templateId}`);
       }
     });
   }
 
   if (report.fixes.length > 0) {
-    console.log("\nFIXES ATTEMPTED:");
+    logger.info("\nFIXES ATTEMPTED:");
     report.fixes.forEach((fix: FixAttempt, index: number) => {
       const status = fix.success ? "✅ SUCCESS" : "❌ FAILED";
-      console.log(`  ${index + 1}. ${fix.templateId} - ${status}`);
-      console.log(`     Finding: ${fix.findingId}`);
-      console.log(`     Applied: ${fix.applied ? "Yes" : "No"}`);
-      console.log(`     Validated: ${fix.validated ? "Yes" : "No"}`);
-      console.log(`     Time: ${fix.timeTaken}ms`);
+      logger.info(`  ${index + 1}. ${fix.templateId} - ${status}`);
+      logger.info(`     Finding: ${fix.findingId}`);
+      logger.info(`     Applied: ${fix.applied ? "Yes" : "No"}`);
+      logger.info(`     Validated: ${fix.validated ? "Yes" : "No"}`);
+      logger.info(`     Time: ${fix.timeTaken}ms`);
       if (fix.error) {
-        console.log(`     Error: ${fix.error}`);
+        logger.info(`     Error: ${fix.error}`);
       }
     });
   }
 
-  console.log("\nVALIDATION SUMMARY:");
-  console.log(`  Total Findings: ${report.validation.totalFindings}`);
-  console.log(`  Issues Fixed: ${report.validation.issuesFixed}`);
-  console.log(`  Issues Remaining: ${report.validation.issuesRemaining}`);
-  console.log(`  Auto-Fixed: ${report.validation.autoFixed}`);
-  console.log(
+  logger.info("\nVALIDATION SUMMARY:");
+  logger.info(`  Total Findings: ${report.validation.totalFindings}`);
+  logger.info(`  Issues Fixed: ${report.validation.issuesFixed}`);
+  logger.info(`  Issues Remaining: ${report.validation.issuesRemaining}`);
+  logger.info(`  Auto-Fixed: ${report.validation.autoFixed}`);
+  logger.info(
     `  Manual Review Required: ${report.validation.manualReviewRequired}`,
   );
-  console.log(`  Blockers Remaining: ${report.validation.blockersRemaining}`);
+  logger.info(`  Blockers Remaining: ${report.validation.blockersRemaining}`);
 
   if (report.summary.recommendations.length > 0) {
-    console.log("\nRECOMMENDATIONS:");
+    logger.info("\nRECOMMENDATIONS:");
     report.summary.recommendations.forEach((rec: string, index: number) => {
-      console.log(`  ${index + 1}. ${rec}`);
+      logger.info(`  ${index + 1}. ${rec}`);
     });
   }
 
   if (report.summary.nextSteps.length > 0) {
-    console.log("\nNEXT STEPS:");
+    logger.info("\nNEXT STEPS:");
     report.summary.nextSteps.forEach((step: string, index: number) => {
-      console.log(`  ${index + 1}. ${step}`);
+      logger.info(`  ${index + 1}. ${step}`);
     });
   }
 
-  console.log("=".repeat(60));
+  logger.info("=".repeat(60));
 }
 
 /**
@@ -425,8 +428,8 @@ async function sendWebhook(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    console.log(`[Self-Healing] Webhook sent to ${webhookUrl}`);
+    logger.info(`[Self-Healing] Webhook sent to ${webhookUrl}`);
   } catch (error) {
-    console.error("[Self-Healing] Webhook failed:", error);
+    logger.error("[Self-Healing] Webhook failed", { error });
   }
 }
