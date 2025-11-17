@@ -617,14 +617,18 @@ EXIT_CODE=$?
 
 # Parse results
 FINDINGS_FILE="$OUTPUT_DIR/cortexdx-findings.json"
-# Parse results with error checking
-if ! BLOCKER_COUNT=$(jq '[.findings[] | select(.severity == "blocker")] | length' "$FINDINGS_FILE" 2>/dev/null); then
-  echo "Error: Failed to parse blocker count from $FINDINGS_FILE" >&2
-  BLOCKER_COUNT=0
+# Parse results with robust error checking
+if [ ! -f "$FINDINGS_FILE" ]; then
+  echo "Error: Findings file not found at $FINDINGS_FILE" >&2
+  exit 1
 fi
-if ! MAJOR_COUNT=$(jq '[.findings[] | select(.severity == "major")] | length' "$FINDINGS_FILE" 2>/dev/null); then
-  echo "Error: Failed to parse major count from $FINDINGS_FILE" >&2
-  MAJOR_COUNT=0
+if ! BLOCKER_COUNT=$(jq -e '[.findings[] | select(.severity == "blocker")] | length' "$FINDINGS_FILE" 2>&1); then
+  echo "Error: Failed to parse blocker count from $FINDINGS_FILE: $BLOCKER_COUNT" >&2
+  exit 1
+fi
+if ! MAJOR_COUNT=$(jq -e '[.findings[] | select(.severity == "major")] | length' "$FINDINGS_FILE" 2>&1); then
+  echo "Error: Failed to parse major count from $FINDINGS_FILE: $MAJOR_COUNT" >&2
+  exit 1
 fi
 # Determine alert level
 if [ "$EXIT_CODE" -eq 1 ]; then
