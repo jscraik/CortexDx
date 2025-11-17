@@ -174,8 +174,8 @@ cat > "$OUTPUT_DIR/summary-$TIMESTAMP.md" << 'SUMMARY_TEMPLATE'
 SUMMARY_TEMPLATE
 
 # Replace placeholders
-sed -i "s|FASTMCP_ENDPOINT_PLACEHOLDER|$FASTMCP_ENDPOINT|g" "$OUTPUT_DIR/summary-$TIMESTAMP.md"
-sed -i "s|TIMESTAMP_PLACEHOLDER|$TIMESTAMP|g" "$OUTPUT_DIR/summary-$TIMESTAMP.md"
+sed "s|FASTMCP_ENDPOINT_PLACEHOLDER|$FASTMCP_ENDPOINT|g" "$OUTPUT_DIR/summary-$TIMESTAMP.md" > "$OUTPUT_DIR/summary-$TIMESTAMP.md.tmp" && mv "$OUTPUT_DIR/summary-$TIMESTAMP.md.tmp" "$OUTPUT_DIR/summary-$TIMESTAMP.md"
+sed "s|TIMESTAMP_PLACEHOLDER|$TIMESTAMP|g" "$OUTPUT_DIR/summary-$TIMESTAMP.md" > "$OUTPUT_DIR/summary-$TIMESTAMP.md.tmp" && mv "$OUTPUT_DIR/summary-$TIMESTAMP.md.tmp" "$OUTPUT_DIR/summary-$TIMESTAMP.md"
 
 echo -e "${GREEN}=== Validation Complete ===${NC}"
 echo ""
