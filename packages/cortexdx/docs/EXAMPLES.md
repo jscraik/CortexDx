@@ -814,7 +814,13 @@ grep "Exit code: [12]" /var/log/cortexdx/monitor.log | \
 
 # Generate weekly summary
 for day in {0..6}; do
-  DATE=$(date -d "$day days ago" +%Y-%m-%d)
+  if date -v-1d > /dev/null 2>&1; then
+    # macOS/BSD
+    DATE=$(date -v-${day}d +%Y-%m-%d)
+  else
+    # Linux/GNU
+    DATE=$(date -d "$day days ago" +%Y-%m-%d)
+  fi
   COUNT=$(grep "Exit code: 0" /var/log/cortexdx/monitor.log | grep "$DATE" | wc -l)
   TOTAL=$(grep "Exit code:" /var/log/cortexdx/monitor.log | grep "$DATE" | wc -l)
   echo "$DATE: $COUNT/$TOTAL checks passed"
