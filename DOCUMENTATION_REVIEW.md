@@ -604,9 +604,9 @@ diagnostics and self-improvement analysis.
 ### 4.1 Create Missing Documents
 
 **Glossary (HIGH PRIORITY)**
-- **File:** `packages/cortexdx/docs/GLOSSARY.md`
+- **File:** `docs/GLOSSARY.md` (already exists)
+- **Action:** Ensure the glossary is linked from all major documentation files
 - **Purpose:** Define all abbreviations and domain terms
-- **Link from:** All main documentation files
 
 **Examples (MEDIUM PRIORITY)**
 - **File:** `packages/cortexdx/docs/EXAMPLES.md`
