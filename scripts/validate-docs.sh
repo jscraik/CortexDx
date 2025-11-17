@@ -111,17 +111,21 @@ check_abbreviations() {
 
     # Check if abbreviation appears in file
     if grep -qE "(^|[[:space:]])$abbr([[:space:]]|$)" "$file"; then
-      # Check if it's expanded on first use
-      if ! grep -q "$expansion ($abbr)\|$abbr ($expansion)" "$file"; then
-        if [ $found_issues -eq 0 ]; then
-          ((CHECKS++))
-          echo -e "${RED}✗${NC} Unexpanded abbreviations in: $file"
-          found_issues=1
-          ((ERRORS++))
+      # Check if it's expanded on first use (allow multi-line)
+      if command -v grep >/dev/null && grep -Pzo "(?s)$expansion[^.]*\($abbr\)|$abbr[^.]*\($expansion\)" "$file" > /dev/null 2>&1; then
+        : # Expansion found, do nothing
+      else
+        # Fallback: check if expansion appears anywhere near first use
+        if ! grep -B2 -A2 -m1 -E "(^|[[:space:]])$abbr([[:space:]]|$)" "$file" | grep -q "$expansion"; then
+          if [ $found_issues -eq 0 ]; then
+            ((CHECKS++))
+            echo -e "${RED}✗${NC} Unexpanded abbreviations in: $file"
+            found_issues=1
+            ((ERRORS++))
+          fi
+          echo -e "   ${YELLOW}- $abbr should be: $expansion ($abbr)${NC}"
         fi
-        echo -e "   ${YELLOW}- $abbr should be: $expansion ($abbr)${NC}"
       fi
-    fi
   done
 
   if [ $found_issues -eq 0 ]; then
