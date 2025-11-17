@@ -45,7 +45,7 @@ npx @brainwav/cortexdx diagnose https://your-mcp-server.com
 
 CortexDx v1.0.0 is now available with major enhancements:
 
-- 🤖 **Local LLM Integration**: Conversational development with Ollama (Large Language Model runtime)
+- 🤖 **Local LLM Integration**: Conversational development with Ollama (Local LLM runtime that runs language models on your own machine)
 - 🎓 **Academic Research Validation**: 7 integrated academic providers with license compliance
 - 💼 **Commercial Licensing**: Three tiers (Community, Professional, Enterprise)
 - 🧠 **Learning System**: Pattern recognition and RAG (Retrieval-Augmented Generation) knowledge accumulation
