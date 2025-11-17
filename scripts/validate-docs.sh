@@ -63,7 +63,7 @@ check_glossary_link() {
   local file="$1"
   ((CHECKS++))
 
-  if grep -q "View Glossary\|GLOSSARY.md" "$file"; then
+  if grep -q "\*\*\[View Glossary\](GLOSSARY\.md)\*\*" "$file"; then
     echo -e "${GREEN}✓${NC} Glossary link found: $file"
     return 0
   else
