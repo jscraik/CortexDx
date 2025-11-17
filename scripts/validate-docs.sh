@@ -112,7 +112,7 @@ check_abbreviations() {
     # Check if abbreviation appears in file
     if grep -q "\b$abbr\b" "$file"; then
       # Check if it's expanded on first use
-      if ! grep -q "$expansion ($abbr)" "$file"; then
+      if ! grep -q "$expansion ($abbr)\|$abbr ($expansion)" "$file"; then
         if [ $found_issues -eq 0 ]; then
           ((CHECKS++))
           echo -e "${RED}✗${NC} Unexpanded abbreviations in: $file"
