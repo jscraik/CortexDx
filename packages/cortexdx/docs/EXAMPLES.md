@@ -593,9 +593,10 @@ Create `monitor-mcp.sh`:
 set -e
 
 # Configuration
-MCP_ENDPOINT="https://api.yourapp.com"
-REPORT_DIR="/var/log/cortexdx"
-SLACK_WEBHOOK="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+# SECURITY: In production, load secrets (API keys, webhook URLs) from environment variables or a secure secrets manager.
+MCP_ENDPOINT="${MCP_ENDPOINT:-https://api.yourapp.com}"
+REPORT_DIR="${REPORT_DIR:-/var/log/cortexdx}"
+SLACK_WEBHOOK="${SLACK_WEBHOOK}" # Must be set via environment variable
 
 # Create report directory
 mkdir -p "$REPORT_DIR"
