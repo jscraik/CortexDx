@@ -110,7 +110,7 @@ check_abbreviations() {
     IFS=':' read -r abbr expansion <<< "$abbr_pair"
 
     # Check if abbreviation appears in file
-    if grep -q "\b$abbr\b" "$file"; then
+    if grep -qE "(^|[[:space:]])$abbr([[:space:]]|$)" "$file"; then
       # Check if it's expanded on first use
       if ! grep -q "$expansion ($abbr)\|$abbr ($expansion)" "$file"; then
         if [ $found_issues -eq 0 ]; then
