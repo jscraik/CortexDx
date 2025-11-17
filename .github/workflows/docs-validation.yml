@@ -100,11 +100,7 @@ jobs:
                     exit 1
                   fi
                   chmod +x scripts/validate-docs.sh
-                  ./scripts/validate-docs.sh || {
-                    echo "ERROR: Documentation validation failed. See output above for details."
-                    exit 1
-                  }
-
+                  ./scripts/validate-docs.sh
             - name: Check documentation cross-references
               run: |
                   echo "Checking documentation cross-references..."
