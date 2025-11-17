@@ -2,9 +2,23 @@
 
 This guide helps you migrate from pre-1.0 versions of CortexDx to the stable v1.0.0 release.
 
+📖 **[View Glossary](docs/GLOSSARY.md)** for definitions of abbreviations and technical terms (LLM, MCP, CI/CD, API, etc.).
+
+---
+
+## Table of Contents
+
+- [Overview](#overview) - What's changing in v1.0.0
+- [Breaking Changes](#breaking-changes) - Required updates
+- [New Features](#new-features) - Optional enhancements
+- [Migration Steps](#migration-steps) - Step-by-step guide
+- [Troubleshooting](#troubleshooting) - Common migration issues
+
+---
+
 ## Overview
 
-CortexDx v1.0.0 introduces significant enhancements including local LLM integration, academic research validation, commercial licensing tiers, and improved diagnostic capabilities. This guide covers breaking changes, new features, and step-by-step migration instructions.
+CortexDx v1.0.0 introduces significant enhancements including local LLM (Large Language Model) integration, academic research validation, commercial licensing tiers, and improved diagnostic capabilities. This guide covers breaking changes, new features, and step-by-step migration instructions.
 
 ## Breaking Changes
 
