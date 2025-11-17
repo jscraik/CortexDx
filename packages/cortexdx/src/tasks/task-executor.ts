@@ -146,6 +146,7 @@ export class TaskExecutor {
 
   /**
    * Execute diagnostic tool
+   * Fixed: Pass headers for authentication (High #7)
    */
   private async executeDiagnoseTool(
     args: unknown,
@@ -162,6 +163,7 @@ export class TaskExecutor {
 
     const results = await runPlugins({
       endpoint,
+      headers: ctx.headers || {}, // Pass auth headers
       suites,
       full,
       deterministic: ctx.deterministic || false,

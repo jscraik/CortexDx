@@ -20,6 +20,11 @@ export class TaskStore {
 
   constructor(dbPath: string) {
     this.db = new Database(dbPath);
+
+    // Enable WAL mode for better concurrent access (Critical #6)
+    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('synchronous = NORMAL');
+
     this.initSchema();
     logger.info({ dbPath }, 'Task store initialized');
   }
@@ -27,7 +32,8 @@ export class TaskStore {
   private initSchema() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS tasks (
-        taskId TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        taskId TEXT UNIQUE NOT NULL,
         method TEXT NOT NULL,
         params TEXT NOT NULL,
         status TEXT NOT NULL,
@@ -42,10 +48,11 @@ export class TaskStore {
         CHECK (status IN ('working', 'input_required', 'completed', 'failed', 'cancelled'))
       );
 
+      CREATE INDEX IF NOT EXISTS idx_tasks_taskid ON tasks(taskId);
       CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
       CREATE INDEX IF NOT EXISTS idx_tasks_expires ON tasks(expiresAt);
       CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(userId);
-      CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(createdAt);
+      CREATE INDEX IF NOT EXISTS idx_tasks_created ON tasks(createdAt DESC);
     `);
   }
 
@@ -143,6 +150,7 @@ export class TaskStore {
 
   /**
    * List tasks with cursor-based pagination
+   * Fixed: Use createdAt for cursor (Critical #1)
    */
   listTasks(
     limit = 50,
@@ -152,7 +160,7 @@ export class TaskStore {
     const rows = this.db.prepare(`
       SELECT taskId, status, statusMessage, createdAt, ttl, pollInterval
       FROM tasks
-      WHERE (? IS NULL OR taskId > ?)
+      WHERE (? IS NULL OR createdAt < ?)
       AND (? IS NULL OR userId = ?)
       AND expiresAt > ?
       ORDER BY createdAt DESC
@@ -168,7 +176,7 @@ export class TaskStore {
       pollInterval: row.pollInterval
     }));
 
-    const nextCursor = tasks.length === limit ? tasks[tasks.length - 1].taskId : undefined;
+    const nextCursor = tasks.length === limit ? tasks[tasks.length - 1].createdAt : undefined;
     return { tasks, nextCursor };
   }
 
@@ -252,19 +260,45 @@ export class TaskStore {
 
   /**
    * Helper to deserialize task from database row
+   * Fixed: Added JSON.parse error handling (Critical #2)
    */
   private deserializeTask(row: any): TaskRecord {
+    let params: unknown;
+    let result: unknown;
+    let error: { code: number; message: string; data?: unknown } | undefined;
+
+    try {
+      params = JSON.parse(row.params);
+    } catch (parseError) {
+      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task params');
+      params = {}; // Fallback to empty object
+    }
+
+    try {
+      result = row.result ? JSON.parse(row.result) : undefined;
+    } catch (parseError) {
+      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task result');
+      result = undefined;
+    }
+
+    try {
+      error = row.error ? JSON.parse(row.error) : undefined;
+    } catch (parseError) {
+      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task error');
+      error = { code: -32603, message: 'Corrupted error data' };
+    }
+
     return {
       taskId: row.taskId,
       method: row.method,
-      params: JSON.parse(row.params),
+      params,
       status: row.status as TaskStatus,
       statusMessage: row.statusMessage || undefined,
       createdAt: row.createdAt,
       ttl: row.ttl,
       pollInterval: row.pollInterval,
-      result: row.result ? JSON.parse(row.result) : undefined,
-      error: row.error ? JSON.parse(row.error) : undefined,
+      result,
+      error,
       userId: row.userId || undefined,
       expiresAt: row.expiresAt
     };

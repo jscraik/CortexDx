@@ -117,7 +117,7 @@ export async function executeDiagnoseAsync(options: {
 
   console.log(`✓ Task created: ${taskId}`);
   console.log(`  Status: ${formatTaskStatus(status, noColor)}`);
-  console.log(`  Server suggests polling every ${formatDuration(serverPollInterval)}ms`);
+  console.log(`  Server suggests polling every ${formatDuration(serverPollInterval)}`);
   console.log('');
 
   // Use server's suggested poll interval
@@ -129,8 +129,18 @@ export async function executeDiagnoseAsync(options: {
 
   console.log('⏳ Waiting for task completion...');
 
-  // Poll for completion
-  while (true) {
+  // Calculate maximum polling attempts (Critical #3)
+  // Allow up to 2x TTL to account for processing time
+  const maxPolls = Math.ceil((taskTtl * 2) / actualPollInterval);
+  const absoluteTimeout = startTime + (taskTtl * 2);
+
+  // Poll for completion with timeout
+  for (let i = 0; i < maxPolls; i++) {
+    // Check absolute timeout (Critical #3)
+    if (Date.now() > absoluteTimeout) {
+      throw new Error(`Task timed out after ${formatDuration(Date.now() - startTime)} (exceeded ${formatDuration(taskTtl * 2)})`);
+    }
+
     await sleep(actualPollInterval);
     pollCount++;
 
@@ -175,8 +185,8 @@ export async function executeDiagnoseAsync(options: {
       } else if (currentStatus === 'failed') {
         console.error(`✗ Task failed after ${formatDuration(Date.now() - startTime)}`);
 
+        // Always throw after failed status (High #8)
         try {
-          // Try to get error details
           await callMcpMethod(endpoint, 'tasks/result', { taskId }, headers);
         } catch (error) {
           if (error instanceof Error) {
@@ -184,6 +194,8 @@ export async function executeDiagnoseAsync(options: {
           }
           throw error;
         }
+        // If callMcpMethod succeeds without error, still throw
+        throw new Error('Task failed');
 
       } else if (currentStatus === 'cancelled') {
         throw new Error(`Task was cancelled after ${formatDuration(Date.now() - startTime)}`);
@@ -199,6 +211,9 @@ export async function executeDiagnoseAsync(options: {
       throw new Error('Task requires user input - not supported in CLI');
     }
   }
+
+  // If we exhausted maxPolls, throw timeout error
+  throw new Error(`Task timed out after ${formatDuration(Date.now() - startTime)} (max ${maxPolls} polls)`);
 }
 
 /**
