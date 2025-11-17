@@ -24,7 +24,7 @@ CortexDx Reality: BLOCKER SEVERITY - Automatic Compliance Failure
 
 #### CortexDx's Actual Validation:
 - **Test:** `auth.ts:35-54` - Unauthenticated tool discovery
-- **Finding ID:** `unauthenticated-tool-discovery`
+- **Finding ID:** `auth.zero`
 - **Severity:** **BLOCKER**
 - **Score Impact:** `-30 points` (per finding)
 - **Compliance Status:** **FAILED** (requires 0 blockers)
