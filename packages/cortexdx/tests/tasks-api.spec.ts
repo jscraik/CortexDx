@@ -295,7 +295,7 @@ describe('Tasks API - TaskStore', () => {
         params: { name: 'tool_2' },
       });
 
-      const task3 = taskStore.createTask({
+      taskStore.createTask({
         method: 'tools/call',
         params: { name: 'tool_3' },
       });
