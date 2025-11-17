@@ -166,11 +166,11 @@ cat > "$OUTPUT_DIR/summary-$TIMESTAMP.md" << 'SUMMARY_TEMPLATE'
 
 ## CortexDx Validation Files Reference
 
-- Auth validation: `/packages/cortexdx/src/plugins/auth.ts:35-54`
-- Security scoring: `/packages/cortexdx/src/plugins/security-scanner.ts`
-- Score calculation: `/packages/cortexdx/src/probe/mcp-probe-engine.ts:283-289`
-- Protocol validation: `/packages/cortexdx/src/plugins/protocol.ts:147-192`
-- SSE validation: `/packages/cortexdx/src/plugins/streaming-sse.ts`
+- Auth validation: `packages/cortexdx/src/plugins/auth.ts:35-54`
+- Security scoring: `packages/cortexdx/src/plugins/security-scanner.ts`
+- Score calculation: `packages/cortexdx/src/probe/mcp-probe-engine.ts:283-289`
+- Protocol validation: `packages/cortexdx/src/plugins/protocol.ts:147-192`
+- SSE validation: `packages/cortexdx/src/plugins/streaming-sse.ts`
 SUMMARY_TEMPLATE
 
 # Replace placeholders
