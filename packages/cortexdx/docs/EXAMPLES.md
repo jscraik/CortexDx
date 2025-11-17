@@ -118,7 +118,7 @@ vim reports/cortexdx-report.md   # Vim
 cat reports/cortexdx-findings.json | jq '.'
 
 # Count major issues
-cat reports/cortexdx-findings.json | jq '.findings[] | select(.severity == "major") | length'
+cat reports/cortexdx-findings.json | jq '[.findings[] | select(.severity == "major")] | length'
 
 # List all blocker issues
 cat reports/cortexdx-findings.json | jq '.findings[] | select(.severity == "blocker")'
