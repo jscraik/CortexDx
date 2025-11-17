@@ -1643,6 +1643,15 @@ async function handleJsonRpcCall(
       const ctx = createDevelopmentContext(req);
       taskExecutor.executeTask(taskId, ctx).catch(err => {
         serverLogger.error({ taskId, error: err }, 'Background task execution failed');
+        // Ensure task is marked as failed
+        try {
+          taskStore.setTaskError(taskId, {
+            code: -32603,
+            message: err instanceof Error ? err.message : 'Unknown error'
+          });
+        } catch (updateErr) {
+          serverLogger.error({ taskId, error: updateErr }, 'Failed to update task error state');
+        }
       });
 
       // Return task metadata immediately
