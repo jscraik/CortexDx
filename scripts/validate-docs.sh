@@ -43,7 +43,7 @@ ABBREVIATIONS=(
   "MCP:Model Context Protocol"
   "SSE:Server-Sent Events"
   "CORS:Cross-Origin Resource Sharing"
-  "JSON-RPC:Remote Procedure Call"
+  "JSON-RPC:JSON Remote Procedure Call"
   "CI/CD:Continuous Integration/Continuous Deployment"
   "HAR:HTTP Archive"
   "LLM:Large Language Model"
