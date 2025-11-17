@@ -1617,36 +1617,45 @@ async function handleJsonRpcCall(
     : undefined;
 
   if (taskParams && (method === 'tools/call' || method === 'resources/read')) {
-    // Create task instead of executing immediately
-    const ttl = taskParams.ttl || 300000; // Default 5 minutes
-    const taskId = taskStore.createTask({
-      method,
-      params,
-      ttl,
-      pollInterval: 5000, // Poll every 5 seconds
-    });
+    try {
+      // Create task instead of executing immediately
+      const ttl = taskParams.ttl || 300000; // Default 5 minutes
+      const taskId = taskStore.createTask({
+        method,
+        params,
+        ttl,
+        pollInterval: 5000, // Poll every 5 seconds
+      });
 
-    // Execute asynchronously in background
-    const ctx = createDevelopmentContext(req);
-    taskExecutor.executeTask(taskId, ctx).catch(err => {
-      serverLogger.error({ taskId, error: err }, 'Background task execution failed');
-    });
+      // Execute asynchronously in background
+      const ctx = createDevelopmentContext(req);
+      taskExecutor.executeTask(taskId, ctx).catch(err => {
+        serverLogger.error({ taskId, error: err }, 'Background task execution failed');
+      });
 
-    // Return task metadata immediately
-    const task = taskStore.getTask(taskId);
-    if (!task) {
-      return createErrorResponse(responseId, -32603, 'Failed to create task');
-    }
-
-    return createSuccessResponse(responseId, {
-      task: {
-        taskId: task.taskId,
-        status: task.status,
-        createdAt: task.createdAt,
-        ttl: task.ttl,
-        pollInterval: task.pollInterval
+      // Return task metadata immediately
+      const task = taskStore.getTask(taskId);
+      if (!task) {
+        return createErrorResponse(responseId, -32603, 'Failed to create task');
       }
-    });
+
+      return createSuccessResponse(responseId, {
+        task: {
+          taskId: task.taskId,
+          status: task.status,
+          createdAt: task.createdAt,
+          ttl: task.ttl,
+          pollInterval: task.pollInterval
+        }
+      });
+    } catch (error) {
+      serverLogger.error({ error }, 'Failed to create task');
+      return createErrorResponse(
+        responseId,
+        -32603,
+        error instanceof Error ? error.message : 'Failed to create task'
+      );
+    }
   }
 
   switch (method) {
