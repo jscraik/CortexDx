@@ -335,15 +335,17 @@ Tool version manager for consistent development environments.
 **File:** `.mise.toml`
 
 **Install:** `curl https://mise.run | sh`
-### PNPM
-Fast, disk-efficient package manager commonly stylized as "pnpm" (lowercase).
+### pnpm
+Fast, disk-efficient package manager for JavaScript.
 
-**Note:** "pnpm" is the official name. While sometimes backronymed as "Performant NPM" in the community, this is not an official acronym.
+**Official name:** pnpm (always lowercase; not an acronym)  
+**Not an acronym:** pnpm is not officially an abbreviation or expansion.  
+**Informal backronym:** Sometimes called "Performant NPM" in the community, but this is unofficial and not used by the project.
+
 **Advantages:**
 - Faster than npm/yarn
 - Saves disk space with content-addressable storage
 - Strict dependency resolution
-
 ### Prometheus
 Open-source monitoring and alerting toolkit.
 
