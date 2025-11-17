@@ -14,7 +14,7 @@ Validate the FastMCP review claims against actual CortexDx diagnostic results.
 npx cortexdx probe <fastmcp-endpoint> --suites=auth,security
 
 # Expected findings if issue exists:
-# - ID: unauthenticated-tool-discovery
+# - ID: auth.zero
 # - Severity: BLOCKER
 # - Score impact: -30 points
 ```
