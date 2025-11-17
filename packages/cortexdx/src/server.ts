@@ -1734,7 +1734,12 @@ async function handleJsonRpcCall(
 
     // Tasks API endpoints (MCP draft spec)
     case "tasks/get": {
-      const taskId = typeof params?.taskId === 'string' ? params.taskId : undefined;
+      if (!params || typeof params !== 'object') {
+        return createErrorResponse(responseId, -32602, 'params object is required');
+      }
+      const taskId = 'taskId' in params && typeof params.taskId === 'string'
+        ? params.taskId
+        : undefined;
       if (!taskId) {
         return createErrorResponse(responseId, -32602, 'taskId is required');
       }
