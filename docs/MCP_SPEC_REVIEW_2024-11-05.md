@@ -381,20 +381,20 @@ interface ToolExecutionContext {
 
 ## 6. Specification Gaps & Deviations
 
-### 6.1 Capability Advertising Mismatch ⚠️ HIGH PRIORITY
+### 6.1 Capability Advertising Mismatch ⚠️ HIGH PRIORITY (NOW FIXED)
 
-**Issue:** Server advertises `prompts: {}` capability but doesn't implement prompt endpoints.
+**Issue (Resolved):** Server previously advertised `prompts: {}` capability but did not implement prompt endpoints. This PR removes the incorrect advertising, resolving the compliance issue.
 
-**Fix Required:**
+**Fix Applied:**
 ```typescript
-// Current (INCORRECT):
+// Previous (INCORRECT):
 capabilities: {
   tools: {},
   resources: { list: true, read: true },
   prompts: {},  // ❌ Not implemented
 }
 
-// Corrected:
+// Now (Corrected):
 capabilities: {
   tools: {},
   resources: { list: true, read: true },
