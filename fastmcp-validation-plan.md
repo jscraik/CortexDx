@@ -137,7 +137,7 @@ score -= (minorFindings * 2);
 npx cortexdx probe <fastmcp-endpoint> --suites=protocol,auth
 
 # 2. Comprehensive validation (30-60 minutes)
-npx cortexdx probe <fastmcp-endpoint> --suites=protocol,auth,security,mcp-compatibility,streaming-sse --full
+npx cortexdx probe <fastmcp-endpoint> --suites=protocol,auth,security,mcp-compatibility-checker,streaming-sse --full
 
 # 3. Generate detailed report
 npx cortexdx probe <fastmcp-endpoint> --suites=all --full --output=fastmcp-report.json
