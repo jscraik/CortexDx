@@ -267,7 +267,7 @@ npx cortexdx probe <fastmcp-endpoint> \
 
 After addressing blockers and major issues, re-run CortexDx validation:
 ```bash
-npx cortexdx probe <fastmcp-endpoint> --suites=all --full
+npx cortexdx diagnose <fastmcp-endpoint> --suites=all --full
 ```
 
 Target outcome:
