@@ -336,7 +336,8 @@ Tool version manager for consistent development environments.
 **Install:** `curl https://mise.run | sh`
 
 ### PNPM (Performant NPM)
-Fast, disk-efficient package manager.
+Fast, disk-efficient package manager.  
+**Note:** "pnpm" is the official name; "Performant NPM" is an informal backronym commonly used in the community.
 
 **Advantages:**
 - Faster than npm/yarn
