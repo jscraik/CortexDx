@@ -65,7 +65,6 @@ case "initialize":
     capabilities: {
       tools: {},
       resources: { list: true, read: true },
-      prompts: {},
     },
     serverInfo: {
       name: "CortexDx Server",
