@@ -174,12 +174,23 @@ const taskExecutor = new TaskExecutor(taskStore);
 
 // Prune expired tasks every 5 minutes
 const TASK_PRUNE_INTERVAL = 5 * 60 * 1000;
-setInterval(() => {
+const taskPruneInterval = setInterval(() => {
   const pruned = taskStore.pruneExpired();
   if (pruned > 0) {
     serverLogger.info({ count: pruned }, "Pruned expired tasks");
   }
 }, TASK_PRUNE_INTERVAL);
+
+// Cleanup on shutdown (High #10: prevent memory leak)
+const cleanup = () => {
+  serverLogger.info("Shutting down server...");
+  clearInterval(taskPruneInterval);
+  taskStore.close();
+  process.exit(0);
+};
+
+process.on("SIGTERM", cleanup);
+process.on("SIGINT", cleanup);
 
 // Create diagnostic context for providers
 const createDiagnosticContext = (req: IncomingMessage): DiagnosticContext => {

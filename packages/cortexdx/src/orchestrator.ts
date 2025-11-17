@@ -91,10 +91,22 @@ export async function runDiagnose({
       noColor: opts.noColor
     });
 
-    // Extract findings from async result
-    const resultText = resultResponse.content?.[0]?.text;
+    // Extract findings from async result (High #9: handle multiple content formats)
+    let resultText: string | undefined;
+
+    // Try to extract text from various content formats
+    if (resultResponse.content && Array.isArray(resultResponse.content)) {
+      for (const content of resultResponse.content) {
+        if (content.type === 'text' && content.text) {
+          resultText = content.text;
+          break;
+        }
+      }
+    }
+
     if (!resultText) {
-      console.error('❌ No result content received from async task');
+      console.error('❌ No text content received from async task');
+      console.error('   Received:', JSON.stringify(resultResponse, null, 2));
       return 1;
     }
 
@@ -103,6 +115,13 @@ export async function runDiagnose({
       asyncResult = JSON.parse(resultText);
     } catch (err) {
       console.error('❌ Failed to parse async task result:', err);
+      console.error('   Raw result:', resultText.substring(0, 200));
+      return 1;
+    }
+
+    // Validate result structure
+    if (!asyncResult || typeof asyncResult !== 'object') {
+      console.error('❌ Invalid result structure (expected object)');
       return 1;
     }
 

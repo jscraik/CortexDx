@@ -14,6 +14,9 @@ const ajv = new Ajv({
 
 addFormats(ajv);
 
+// Schema cache to avoid recompiling (Critical #4)
+const schemaCache = new Map<string, ValidateFunction>();
+
 /**
  * Validation result with detailed error information
  */
@@ -33,27 +36,34 @@ export interface ValidationResult {
  *
  * Per SEP-1303: Input validation errors should be returned as Tool Execution Errors
  * rather than Protocol Errors to enable model self-correction.
+ *
+ * Fixed: Cache compiled schemas to avoid recompilation (Critical #4)
  */
 export function validateToolInput(
   schema: Record<string, unknown>,
   input: unknown
 ): ValidationResult {
-  let validate: ValidateFunction;
+  // Use schema as cache key (Critical #4: avoid recompiling same schema)
+  const schemaKey = JSON.stringify(schema);
+  let validate = schemaCache.get(schemaKey);
 
-  try {
-    validate = ajv.compile(schema);
-  } catch (compileError) {
-    // Schema compilation error - this is a server issue
-    return {
-      valid: false,
-      errors: ['Invalid tool schema configuration'],
-      details: [
-        {
-          path: 'schema',
-          message: compileError instanceof Error ? compileError.message : 'Schema compilation failed',
-        },
-      ],
-    };
+  if (!validate) {
+    try {
+      validate = ajv.compile(schema);
+      schemaCache.set(schemaKey, validate);
+    } catch (compileError) {
+      // Schema compilation error - this is a server issue
+      return {
+        valid: false,
+        errors: ['Invalid tool schema configuration'],
+        details: [
+          {
+            path: 'schema',
+            message: compileError instanceof Error ? compileError.message : 'Schema compilation failed',
+          },
+        ],
+      };
+    }
   }
 
   const valid = validate(input);
