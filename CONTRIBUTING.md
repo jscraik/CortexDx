@@ -4,7 +4,22 @@
 [![Community](https://img.shields.io/badge/community-inclusive-brightgreen.svg)](#community-guidelines)
 [![Development](https://img.shields.io/badge/development-welcome-blue.svg)](#getting-started)
 
-Welcome to the CortexDx project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol servers. This repository-wide guide will help you understand how to contribute effectively to the entire project.
+Welcome to the CortexDx project! We're excited to have you contribute to our diagnostic meta-inspector for Model Context Protocol (MCP) servers. This repository-wide guide will help you understand how to contribute effectively to the entire project.
+
+📖 **[View Glossary](docs/GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, ArcTDD, JSON-RPC, GPG/SSH, etc.).
+
+---
+
+## Table of Contents
+
+- [Quick Start for Contributors](#-quick-start-for-contributors)
+- [Getting Started](#️-getting-started) - Setup and development workflow
+- [Contribution Types](#-contribution-types) - Code, docs, plugins, issues
+- [Quality Standards](#-quality-standards) - Testing and code review
+- [Community Guidelines](#-community-guidelines) - Behavior and communication
+- [License](#-license)
+
+---
 
 ## 🚀 Quick Start for Contributors
 
@@ -40,8 +55,8 @@ Before contributing, please review these documents based on priority:
 
 - **Node.js**: 20.11.1 (managed by Mise)
 - **pnpm**: 9.12.2 (managed by Mise)
-- **Git**: With commit signing enabled (GPG/SSH)
-- **Understanding of**: TypeScript, MCP protocol, JSON-RPC
+- **Git**: With commit signing enabled (GPG/SSH - GNU Privacy Guard or Secure Shell)
+- **Understanding of**: TypeScript, MCP (Model Context Protocol), JSON-RPC (Remote Procedure Call)
 
 ### Repository Setup
 
