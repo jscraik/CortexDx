@@ -1,6 +1,6 @@
 /**
  * Tasks API Types
- * Based on MCP draft specification (releasing Nov 25, 2025)
+ * Based on MCP specification released Nov 25, 2025
  */
 
 /**
