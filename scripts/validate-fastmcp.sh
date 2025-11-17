@@ -63,7 +63,7 @@ npx cortexdx probe "$FASTMCP_ENDPOINT" \
 echo -e "${YELLOW}[5/5] Running Comprehensive Security Scan${NC}"
 export CORTEXDX_ENFORCE_SECURITY=1
 npx cortexdx probe "$FASTMCP_ENDPOINT" \
-  --suites=security \
+  --suites=security-scanner \
   --full \
   --output="$OUTPUT_DIR/05-security-scan-$TIMESTAMP.json" \
   || echo -e "${RED}⚠️  Security scan failed or found blockers${NC}"
