@@ -48,7 +48,7 @@ npx cortexdx probe "$FASTMCP_ENDPOINT" \
 # Test 3: SSE Streaming (if endpoint supports it)
 echo -e "${YELLOW}[3/5] Testing SSE Streaming${NC}"
 npx cortexdx probe "$FASTMCP_ENDPOINT" \
-  --suites=streaming-sse \
+  --suites=streaming \
   --output="$OUTPUT_DIR/03-sse-test-$TIMESTAMP.json" \
   || echo -e "${YELLOW}⚠️  SSE test failed (may not be supported)${NC}"
 
