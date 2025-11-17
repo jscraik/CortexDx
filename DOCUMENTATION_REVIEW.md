@@ -770,7 +770,7 @@ diagnostics and self-improvement analysis.
 
 **Success Criteria:**
 - ✅ Zero unexpanded abbreviations in first 3 pages of any document
-- ✅ Glossary linked from all major docs
+- ✅ All major docs link to existing glossary (`docs/GLOSSARY.md`)
 - ✅ Average paragraph length < 4 lines
 - ✅ All code examples runnable without prerequisites section
 - ✅ Each section has clear "when to use this" statement
