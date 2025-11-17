@@ -146,8 +146,9 @@ check_paragraph_length() {
     /^$/ { count=0; next }
     # Exclude markdown list items, numbered lists, and headings
     /^[[:space:]]*([-*+]|[0-9]+\.)[[:space:]]/ { count=0; next }
-    /^[[:space:]]*#/ { count=0; next }
-    /^[A-Za-z]/ { count++; if(count>5) print NR": Long paragraph" }
+    /^$/ { if(count>5) print NR-1": Long paragraph"; count=0; next }
+    /^[^ \t]/ { count++; }
+    END { if(count>5) print NR": Long paragraph" }
   ' "$file" | wc -l)
 
   if [ "$long_paragraphs" -gt 0 ]; then
