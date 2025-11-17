@@ -449,11 +449,11 @@ case "notifications/initialized":
 
 ### 🔴 HIGH PRIORITY (Compliance Issues)
 
-1. **Remove `prompts: {}` from capabilities** (or implement prompts)
+1. ✅ **Removed `prompts: {}` from capabilities** (DONE)
    - File: `packages/cortexdx/src/server.ts:1590`
    - Impact: Prevents client confusion and errors
    - Effort: 5 minutes (removal) or 4 hours (implementation)
-
+   - Status: Completed in this PR
 2. **Implement cancellation support**
    - Add `notifications/cancelled` handler
    - Add cancellation token to long-running diagnostics
