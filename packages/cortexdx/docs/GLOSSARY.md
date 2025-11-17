@@ -404,8 +404,7 @@ Free and open catalog of scholarly works.
 Email required (`OPENALEX_CONTACT_EMAIL`)
 
 ### Semantic Scholar
-AI-powered research tool  
-from Allen Institute.
+AI-powered research tool from Allen Institute.
 
 **Status:**  
 Preview integration (not production-ready)
