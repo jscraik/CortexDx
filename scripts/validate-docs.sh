@@ -126,6 +126,7 @@ check_abbreviations() {
           echo -e "   ${YELLOW}- $abbr should be: $expansion ($abbr)${NC}"
         fi
       fi
+    fi
   done
 
   if [ $found_issues -eq 0 ]; then
