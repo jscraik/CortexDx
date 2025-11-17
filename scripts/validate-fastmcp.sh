@@ -55,7 +55,7 @@ npx cortexdx probe "$FASTMCP_ENDPOINT" \
 # Test 4: MCP Compatibility
 echo -e "${YELLOW}[4/5] Testing MCP Compatibility (120s timeout)${NC}"
 npx cortexdx probe "$FASTMCP_ENDPOINT" \
-  --suites=mcp-compatibility \
+  --suites=mcp-compatibility-checker \
   --output="$OUTPUT_DIR/04-compatibility-test-$TIMESTAMP.json" \
   || echo -e "${RED}⚠️  Compatibility test failed${NC}"
 
