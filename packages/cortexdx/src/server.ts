@@ -67,6 +67,11 @@ import {
 } from "./tools/index.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
 import { TaskStore, TaskExecutor } from "./tasks/index.js";
+import {
+  validateToolInput,
+  createValidationErrorResult,
+  createExecutionErrorResult,
+} from "./utils/validation.js";
 import type {
   DevelopmentContext,
   DiagnosticContext,
@@ -1858,13 +1863,28 @@ async function handleToolsCall(
   if (mcpTool) {
     try {
       const ctx = createDevelopmentContext(req);
+
+      // Validate input schema (SEP-1303: return as tool error, not protocol error)
+      if (mcpTool.inputSchema) {
+        const validation = validateToolInput(
+          mcpTool.inputSchema as Record<string, unknown>,
+          args
+        );
+
+        if (!validation.valid) {
+          // Return validation errors as tool execution errors
+          // This enables model self-correction
+          return createSuccessResponse(id, createValidationErrorResult(validation));
+        }
+      }
+
       const result = await executeDevelopmentTool(mcpTool, args, ctx);
       return createSuccessResponse(id, result);
     } catch (error) {
-      return createErrorResponse(
+      // Execution errors also returned as tool results (SEP-1303)
+      return createSuccessResponse(
         id,
-        -32603,
-        error instanceof Error ? error.message : "Tool execution failed",
+        createExecutionErrorResult(error)
       );
     }
   }
