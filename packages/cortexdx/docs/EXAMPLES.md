@@ -661,8 +661,8 @@ if [ "$EXIT_CODE" -ne 0 ] || [ "$SEND_ALL_ALERTS" = "true" ]; then
     }"
 fi
 
-# Keep only last 7 days of reports
-find "$REPORT_DIR" -type d -mtime +7 -exec rm -rf {} +
+# Keep only last 7 days of reports (safer approach)
+find "$REPORT_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +7 -print0 | xargs -0 -r rm -rf
 
 echo "Monitoring check complete. Exit code: $EXIT_CODE"
 exit $EXIT_CODE
