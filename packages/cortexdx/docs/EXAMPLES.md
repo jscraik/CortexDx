@@ -616,8 +616,8 @@ EXIT_CODE=$?
 
 # Parse results
 FINDINGS_FILE="$OUTPUT_DIR/cortexdx-findings.json"
-BLOCKER_COUNT=$(jq '.findings[] | select(.severity == "blocker") | length' "$FINDINGS_FILE")
-MAJOR_COUNT=$(jq '.findings[] | select(.severity == "major") | length' "$FINDINGS_FILE")
+BLOCKER_COUNT=$(jq '[.findings[] | select(.severity == "blocker")] | length' "$FINDINGS_FILE")
+MAJOR_COUNT=$(jq '[.findings[] | select(.severity == "major")] | length' "$FINDINGS_FILE")
 
 # Determine alert level
 if [ "$EXIT_CODE" -eq 1 ]; then
