@@ -30,7 +30,7 @@ CortexDx Reality: BLOCKER SEVERITY - Automatic Compliance Failure
 - **Compliance Status:** **FAILED** (requires 0 blockers)
 
 ```typescript
-// From mcp-probe-engine.ts:222
+// From mcp-probe-engine.ts:286 (score calculation block starts at line 283)
 score -= criticalFindings * 30;  // BLOCKER severity
 compliant = criticalFindings === 0 && majorFindings <= 2;
 ```
