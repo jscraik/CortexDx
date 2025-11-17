@@ -12,8 +12,8 @@ CortexDX documentation demonstrates **strong technical depth and comprehensive c
 
 **Overall Assessment:**
 - ✅ **Strengths:** Comprehensive coverage, good code examples, clear structure
-- ⚠️ **Areas for Improvement:** Abbreviation overuse, paragraph length, accessibility for beginners
-- 🔴 **Critical Issues:** Unexplained abbreviations, lack of glossary, dense technical sections
+- ⚠️ **Areas for Improvement:** Abbreviation overuse, paragraph length, accessibility for beginners, better signposting to glossary
+- 🔴 **Critical Issues:** Unexplained abbreviations, dense technical sections
 
 ---
 
