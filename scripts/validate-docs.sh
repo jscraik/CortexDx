@@ -116,7 +116,7 @@ check_abbreviations() {
         : # Expansion found, do nothing
       else
         # Fallback: check if expansion appears anywhere near first use
-        if ! grep -B2 -A2 -m1 -E "(^|[[:space:]])$abbr([[:space:]]|$)" "$file" | grep -q "$expansion"; then
+        if ! grep -B2 -A2 -m1 -E "(^|[[:space:]])$abbr([[:space:]]|$)" "$file" | grep -qi "$expansion"; then
           if [ $found_issues -eq 0 ]; then
             ((CHECKS++))
             echo -e "${RED}✗${NC} Unexpanded abbreviations in: $file"
