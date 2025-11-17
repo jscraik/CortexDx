@@ -685,10 +685,11 @@ diagnostics and self-improvement analysis.
 
 ### 🔴 High Priority (Do First)
 
-1. **Create GLOSSARY.md**
-   - Define all abbreviations (SSE, HAR, OTEL, SBOM, etc.)
-   - Link from all documentation
-   - ~2 hours effort
+1. **Audit and link existing glossary (`docs/GLOSSARY.md`)**
+   - Ensure all abbreviations (SSE, HAR, OTEL, SBOM, etc.) are defined
+   - Link glossary from all documentation files
+   - Update glossary as needed for completeness and clarity
+   - ~1 hour effort
 
 2. **Expand abbreviations on first use**
    - Search all docs for unexpanded abbreviations
