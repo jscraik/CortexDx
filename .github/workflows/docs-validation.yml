@@ -95,7 +95,15 @@ jobs:
             - name: Validate documentation style guide compliance
               run: |
                   echo "Running style guide validation..."
-                  ./scripts/validate-docs.sh
+                  if [ ! -f scripts/validate-docs.sh ]; then
+                    echo "ERROR: Validation script not found at scripts/validate-docs.sh"
+                    exit 1
+                  fi
+                  chmod +x scripts/validate-docs.sh
+                  ./scripts/validate-docs.sh || {
+                    echo "ERROR: Documentation validation failed. See output above for details."
+                    exit 1
+                  }
 
             - name: Check documentation cross-references
               run: |
