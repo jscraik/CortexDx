@@ -157,7 +157,7 @@ Implement resource subscriptions if you want clients to receive real-time update
 capabilities: {
   tools: {},
   resources: { list: true, read: true },
-  prompts: {},  // ⚠️ Advertised but not implemented
+  prompts: {},  // ❌ Not implemented (now removed in this PR)
 }
 ```
 
