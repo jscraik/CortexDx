@@ -721,8 +721,8 @@ jobs:
       - name: Parse Results
         id: parse
         run: |
-          BLOCKER_COUNT=$(jq '.findings[] | select(.severity == "blocker") | length' reports/cortexdx-findings.json)
-          MAJOR_COUNT=$(jq '.findings[] | select(.severity == "major") | length' reports/cortexdx-findings.json)
+          BLOCKER_COUNT=$(jq '[.findings[] | select(.severity == "blocker")] | length' reports/cortexdx-findings.json)
+          MAJOR_COUNT=$(jq '[.findings[] | select(.severity == "major")] | length' reports/cortexdx-findings.json)
           echo "blockers=$BLOCKER_COUNT" >> $GITHUB_OUTPUT
           echo "majors=$MAJOR_COUNT" >> $GITHUB_OUTPUT
 
