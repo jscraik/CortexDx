@@ -95,7 +95,6 @@ jobs:
             - name: Validate documentation style guide compliance
               run: |
                   echo "Running style guide validation..."
-                  chmod +x scripts/validate-docs.sh
                   ./scripts/validate-docs.sh
 
             - name: Check documentation cross-references
