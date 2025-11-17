@@ -1661,7 +1661,7 @@ async function handleJsonRpcCall(
   switch (method) {
     case "initialize":
       return createSuccessResponse(responseId, {
-        protocolVersion: "draft",
+        protocolVersion: "2024-11-05-draft",
         capabilities: {
           tools: {
             taskRequests: true,
