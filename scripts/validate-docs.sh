@@ -144,6 +144,9 @@ check_paragraph_length() {
   # Count paragraphs with more than 5 consecutive non-empty lines
   long_paragraphs=$(awk '
     /^$/ { count=0; next }
+    # Exclude markdown list items, numbered lists, and headings
+    /^[[:space:]]*([-*+]|[0-9]+\.)[[:space:]]/ { count=0; next }
+    /^[[:space:]]*#/ { count=0; next }
     /^[A-Za-z]/ { count++; if(count>5) print NR": Long paragraph" }
   ' "$file" | wc -l)
 
