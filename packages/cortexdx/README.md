@@ -252,7 +252,7 @@ All three commands emit JSON summaries and exit non-zero when high/critical issu
 
 **What is DeepContext?**
 
-DeepContext provides semantic code search that understands meaning, not just keywords. CortexDx includes Wildcard's DeepContext for intelligent code analysis during diagnostics.
+DeepContext provides semantic code search that understands meaning, not just keywords. CortexDx includes DeepContext from Wildcard (the provider) for intelligent code analysis during diagnostics.
 
 **Quick Start:**
 
