@@ -316,7 +316,7 @@ For understanding the exact validation logic:
 
 1. **Authentication:** `/packages/cortexdx/src/plugins/auth.ts:35-54`
 2. **Security Scoring:** `/packages/cortexdx/src/plugins/security-scanner.ts`
-3. **Score Calculation:** `/packages/cortexdx/src/probe/mcp-probe-engine.ts:218-228`
+3. **Score Calculation:** `/packages/cortexdx/src/probe/mcp-probe-engine.ts:283-289`
 4. **Protocol Validation:** `/packages/cortexdx/src/plugins/protocol.ts:147-192`
 5. **SSE Validation:** `/packages/cortexdx/src/plugins/streaming-sse.ts`
 6. **Compatibility:** `/packages/cortexdx/src/plugins/mcp-compatibility.ts`
