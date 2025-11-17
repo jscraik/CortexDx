@@ -150,7 +150,7 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 ✅ [INFO] MCP server responding (200 OK)
 ⚠️  [MAJOR] SSE (Server-Sent Events) endpoint not streaming (HTTP 502)
 ℹ️  [MINOR] No 'rpc.ping' response - method may differ
-ℹ️  [MINOR] Could not enumerate tools via JSON-RPC (Remote Procedure Call)
+ℹ️  [MINOR] Could not enumerate tools via JSON-RPC (JSON Remote Procedure Call)
 
 📊 Reports generated:
   • reports/cortexdx-report.md (human-readable)
