@@ -18,7 +18,7 @@ The CortexDx server demonstrates **strong foundational compliance** with the MCP
 - ✅ **Core Protocol**: Fully compliant (JSON-RPC 2.0, initialization, error handling)
 - ✅ **Tools**: Fully implemented and extensive
 - ✅ **Resources**: Basic support complete (list, read)
-- ⚠️ **Prompts**: Advertised but not implemented
+- ❌ **Prompts**: Not implemented
 - ❌ **Client Features**: Not implemented (sampling, roots)
 - ❌ **Advanced Features**: Missing (subscriptions, notifications, pagination, autocomplete)
 
