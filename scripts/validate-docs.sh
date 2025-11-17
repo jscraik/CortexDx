@@ -193,7 +193,7 @@ check_code_blocks() {
   ((CHECKS++))
 
   # Count code blocks without language tags
-  untagged_blocks=$(grep -c "^\`\`\`$" "$file" || true)
+  untagged_blocks=$(grep -c '^```$' "$file" || true)
 
   if [ "$untagged_blocks" -gt 0 ]; then
     echo -e "${YELLOW}⚠${NC} Found $untagged_blocks untagged code blocks: $file"
