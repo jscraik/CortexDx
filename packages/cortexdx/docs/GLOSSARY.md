@@ -275,9 +275,9 @@ Platform for developing, shipping, and running applications in containers.
 ### Kubernetes (K8s)
 Container orchestration platform for automating deployment, scaling, and management.
 
-**Note:** "K8s" is a numeronym where '8' represents the 8 letters between 'K' and 's' in "Kubernetes".
-**Helm Chart:** CortexDx includes Helm charts for Kubernetes deployment.
+**Abbreviation note:** "K8s" is a numeronym where '8' represents the 8 letters between 'K' and 's' in "Kubernetes".
 
+**CortexDx integration:** Includes Helm charts for Kubernetes deployment.
 ### Redis
 In-memory data store used for caching and rate limiting.
 
