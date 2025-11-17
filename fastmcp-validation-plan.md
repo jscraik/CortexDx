@@ -140,7 +140,7 @@ npx cortexdx probe <fastmcp-endpoint> --suites=protocol,auth
 npx cortexdx probe <fastmcp-endpoint> --suites=protocol,auth,security,mcp-compatibility-checker,streaming-sse --full
 
 # 3. Generate detailed report
-npx cortexdx probe <fastmcp-endpoint> --suites=all --full --output=fastmcp-report.json
+npx cortexdx probe <fastmcp-endpoint> --suites=all --full --out=fastmcp-report.json
 
 # 4. Security-enforced mode (strictest)
 export CORTEXDX_ENFORCE_SECURITY=1
