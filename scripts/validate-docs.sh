@@ -171,7 +171,7 @@ check_bold_usage() {
 
   ((CHECKS++))
 
-  bold_count=$(grep -o "\*\*[^*]\+\*\*" "$file" | wc -l)
+  bold_count=$(grep -o "\*\*[^*][^*]*\*\*" "$file" | wc -l)
 
   if [ "$bold_count" -lt 5 ]; then
     echo -e "${YELLOW}⚠${NC} Limited bold text usage ($bold_count instances): $file"
