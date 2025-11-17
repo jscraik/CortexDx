@@ -89,7 +89,7 @@ export async function runDiagnose({
       pollInterval,
       headers,
       noColor: opts.noColor
-    });
+    }) as { content?: Array<{ type: string; text?: string }> };
 
     // Extract findings from async result (High #9: handle multiple content formats)
     let resultText: string | undefined;

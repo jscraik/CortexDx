@@ -15,6 +15,45 @@ import { createLogger } from '../logging/logger.js';
 
 const logger = createLogger({ component: 'task-store' });
 
+/**
+ * Database row type for tasks table
+ */
+interface TaskRow {
+  id: number;
+  taskId: string;
+  method: string;
+  params: string;
+  status: string;
+  statusMessage: string | null;
+  createdAt: string;
+  ttl: number;
+  pollInterval: number;
+  result: string | null;
+  error: string | null;
+  userId: string | null;
+  expiresAt: number;
+}
+
+/**
+ * Database row type for task list query
+ */
+interface TaskListRow {
+  taskId: string;
+  status: string;
+  statusMessage: string | null;
+  createdAt: string;
+  ttl: number;
+  pollInterval: number;
+}
+
+/**
+ * Database row type for task stats query
+ */
+interface TaskStatsRow {
+  status: TaskStatus;
+  count: number;
+}
+
 export class TaskStore {
   private db: Database.Database;
 
@@ -97,7 +136,7 @@ export class TaskStore {
       WHERE taskId = ?
       AND (userId IS NULL OR userId = ?)
       AND expiresAt > ?
-    `).get(taskId, userId || null, Date.now()) as any;
+    `).get(taskId, userId || null, Date.now()) as TaskRow | undefined;
 
     if (!row) {
       return null;
@@ -161,7 +200,8 @@ export class TaskStore {
     const params: unknown[] = [Date.now()];
 
     if (cursor) {
-      whereClauses.push('taskId > ?');
+      // Use createdAt for cursor (must match ORDER BY)
+      whereClauses.push('createdAt < ?');
       params.push(cursor);
     }
     if (userId) {
@@ -178,7 +218,7 @@ export class TaskStore {
     `;
     params.push(limit);
 
-    const rows = this.db.prepare(query).all(...params) as any[];
+    const rows = this.db.prepare(query).all(...params) as TaskListRow[];
     const tasks = rows.map(row => ({
       taskId: row.taskId,
       status: row.status as TaskStatus,
@@ -188,7 +228,7 @@ export class TaskStore {
       pollInterval: row.pollInterval
     }));
 
-    const nextCursor = tasks.length === limit ? tasks[tasks.length - 1].createdAt : undefined;
+    const nextCursor = tasks.length === limit && tasks[tasks.length - 1] ? tasks[tasks.length - 1].createdAt : undefined;
     return { tasks, nextCursor };
   }
 
@@ -243,9 +283,9 @@ export class TaskStore {
       FROM tasks
       WHERE expiresAt > ?
       GROUP BY status
-    `).all(Date.now()) as { status: TaskStatus; count: number }[];
+    `).all(Date.now()) as TaskStatsRow[];
 
-    const stats: any = {
+    const stats: Record<TaskStatus, number> & { total: number } = {
       working: 0,
       input_required: 0,
       completed: 0,
@@ -274,7 +314,7 @@ export class TaskStore {
    * Helper to deserialize task from database row
    * Fixed: Added JSON.parse error handling (Critical #2)
    */
-  private deserializeTask(row: any): TaskRecord {
+  private deserializeTask(row: TaskRow): TaskRecord {
     let params: unknown;
     let result: unknown;
     let error: { code: number; message: string; data?: unknown } | undefined;
