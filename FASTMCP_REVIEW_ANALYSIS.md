@@ -240,7 +240,7 @@ Production Ready: YES
 **Comprehensive Test (30-60 minutes):**
 ```bash
 npx cortexdx probe <fastmcp-endpoint> \
-  --suites=protocol,auth,security,mcp-compatibility,streaming-sse \
+  --suites=protocol,auth,security,mcp-compatibility,streaming \
   --full \
   --output=fastmcp-results.json
 ```
