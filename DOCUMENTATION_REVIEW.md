@@ -616,15 +616,18 @@ diagnostics and self-improvement analysis.
   - Debugging connection failures (troubleshooting scenario)
   - Setting up continuous monitoring (production scenario)
 
-**Quick Reference Card (MEDIUM PRIORITY)**
-- **File:** `packages/cortexdx/docs/QUICK_REFERENCE.md`
-- **Purpose:** One-page cheat sheet for common commands
-- **Format:** Table-based, printable, no scrolling needed
+<!-- Quick Reference Card recommendation removed: file already exists at `packages/cortexdx/QUICK_REFERENCE.md` -->
+
+
 
 ---
 
 ### 4.2 Improve Existing Documents
 
+**QUICK_REFERENCE.md:**
+1. Review and update `packages/cortexdx/QUICK_REFERENCE.md` to ensure it is table-based, printable, and serves as a one-page cheat sheet for common commands.
+2. Ensure no scrolling is needed; condense content where possible.
+3. Link prominently from README.md and GETTING_STARTED.md.
 **README.md:**
 1. Add table of contents at top
 2. Break up long paragraphs (especially DeepContext, MCP Session sections)
