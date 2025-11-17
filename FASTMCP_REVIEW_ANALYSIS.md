@@ -242,7 +242,7 @@ Production Ready: YES
 npx cortexdx probe <fastmcp-endpoint> \
   --suites=protocol,auth,security,mcp-compatibility,streaming \
   --full \
-  --output=fastmcp-results.json
+  --out=fastmcp-results.json
 ```
 
 ### 2. Prioritize Fixes by Severity
