@@ -135,7 +135,7 @@ cat > "$OUTPUT_DIR/summary-$TIMESTAMP.md" << 'SUMMARY_TEMPLATE'
 ## Review Claims Validation
 
 ### Claim: "Sessions created when authentication fails"
-- **CortexDx Finding:** Check `01-auth-test` for finding ID `unauthenticated-tool-discovery`
+- **CortexDx Finding:** Check `01-auth-test` for finding ID `auth.zero`
 - **Severity if found:** BLOCKER (-30 points)
 - **Review Accurate?** [PENDING - Review JSON report]
 
