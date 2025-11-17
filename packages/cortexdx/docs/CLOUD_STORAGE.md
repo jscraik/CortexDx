@@ -2,6 +2,11 @@
 
 CortexDx supports cloud storage for diagnostic reports with presigned URL access, provenance tracking, and zero-egress-cost deployment via Cloudflare R2.
 
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms.
+
+---
+
+
 ## Features
 
 - ✅ **Multi-cloud support**: Cloudflare R2, AWS S3, Google Cloud Storage

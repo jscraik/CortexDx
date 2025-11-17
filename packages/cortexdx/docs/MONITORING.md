@@ -2,6 +2,11 @@
 
 This guide provides comprehensive instructions for monitoring CortexDx in production environments.
 
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms.
+
+---
+
+
 ## Table of Contents
 
 - [Overview](#overview)

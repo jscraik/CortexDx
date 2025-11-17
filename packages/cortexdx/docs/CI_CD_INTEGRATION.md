@@ -1,6 +1,10 @@
 # CI/CD Integration Guide
 
-This guide provides comprehensive instructions for integrating CortexDx into various CI/CD platforms.
+This guide provides comprehensive instructions for integrating CortexDx into various CI/CD (Continuous Integration/Continuous Deployment) platforms.
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms (CI/CD, MCP, API, SSE, etc.).
+
+---
 
 ## Table of Contents
 

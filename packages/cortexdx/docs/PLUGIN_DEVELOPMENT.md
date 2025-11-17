@@ -1,6 +1,23 @@
 # Plugin Development Guide
 
-Learn how to create custom plugins for CortexDx to extend its diagnostic and development assistance capabilities. This guide provides comprehensive examples, API documentation, and best practices for building robust, testable plugins.
+Learn how to create custom plugins for CortexDx to extend its diagnostic and development assistance capabilities for Model Context Protocol (MCP) servers. This guide provides comprehensive examples, API (Application Programming Interface) documentation, and best practices for building robust, testable plugins.
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, API, CI/CD, TDD, etc.).
+
+---
+
+## Table of Contents
+
+- [Plugin Architecture](#plugin-architecture) - System overview
+- [Plugin Types](#plugin-types) - Diagnostic, development, security
+- [Quick Start](#quick-start) - Build your first plugin in 10 minutes
+- [API Reference](#api-reference) - Complete interface documentation
+- [Testing](#testing) - Test-driven development approach
+- [Best Practices](#best-practices) - Production-ready guidelines
+- [Examples](#examples) - Complete plugin implementations
+- [Publishing](#publishing) - Share your plugin
+
+---
 
 ## Plugin Architecture
 

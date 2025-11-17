@@ -2,6 +2,23 @@
 
 Complete guide for deploying CortexDx in production environments across all licensing tiers. This guide covers Docker, Docker Compose, and Kubernetes deployments with production-ready configurations, security best practices, monitoring, and operational procedures.
 
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, LLM, CI/CD, K8s, etc.).
+
+---
+
+## Table of Contents
+
+- [Licensing Tiers](#licensing-tiers) - Community, Professional, Enterprise
+- [Quick Start](#quick-start) - Deploy in 5 minutes
+- [Docker Deployment](#docker-deployment) - Container-based deployment
+- [Docker Compose](#docker-compose) - Multi-container orchestration
+- [Kubernetes](#kubernetes) - Production-grade orchestration
+- [Security](#security) - Hardening and best practices
+- [Monitoring](#monitoring) - Observability and alerting
+- [Troubleshooting](#troubleshooting) - Common deployment issues
+
+---
+
 ## Licensing Tiers
 
 ### Community Edition (Free)
