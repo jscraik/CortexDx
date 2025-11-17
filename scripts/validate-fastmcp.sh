@@ -95,7 +95,7 @@ cat > "$OUTPUT_DIR/summary-$TIMESTAMP.md" << 'SUMMARY_TEMPLATE'
   - Capabilities declaration
 
 ### 3. SSE Streaming
-- **Test Suite:** `streaming-sse`
+- **Test Suite:** `streaming`
 - **Report:** [03-sse-test-TIMESTAMP_PLACEHOLDER.json](./03-sse-test-TIMESTAMP_PLACEHOLDER.json)
 - **Critical Checks:**
   - Endpoint connectivity
