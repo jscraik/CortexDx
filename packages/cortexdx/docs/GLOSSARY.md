@@ -39,7 +39,7 @@ Lightweight data interchange format that is easy for humans to read and machines
 ### NPM (Node Package Manager)
 Package manager for JavaScript that manages project dependencies.
 
-### OTEL / OpenTelemetry
+### OTel (OpenTelemetry)
 Observability framework for collecting traces, metrics, and logs from applications.
 
 **Use in CortexDx:** Send diagnostic telemetry to monitoring systems with `--otel-exporter` flag.
