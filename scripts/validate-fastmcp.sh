@@ -103,7 +103,7 @@ cat > "$OUTPUT_DIR/summary-$TIMESTAMP.md" << 'SUMMARY_TEMPLATE'
   - Stream health
 
 ### 4. MCP Compatibility
-- **Test Suite:** `mcp-compatibility`
+- **Test Suite:** `mcp-compatibility-checker`
 - **Report:** [04-compatibility-test-TIMESTAMP_PLACEHOLDER.json](./04-compatibility-test-TIMESTAMP_PLACEHOLDER.json)
 - **Critical Checks:**
   - Multiple protocol version support
