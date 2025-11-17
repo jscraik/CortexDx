@@ -395,16 +395,21 @@ Semantic web search engine that understands concepts.
 ### OpenAlex
 Free and open catalog of scholarly works.
 
-**Coverage:** 250M+ papers, books, and datasets
+**Coverage:**  
+250M+ papers, books, and datasets
 
-**Authentication:** Email required (`OPENALEX_CONTACT_EMAIL`)
+**Authentication:**  
+Email required (`OPENALEX_CONTACT_EMAIL`)
 
 ### Semantic Scholar
-AI-powered research tool from Allen Institute.
+AI-powered research tool  
+from Allen Institute.
 
-**Status:** Preview integration (not production-ready)
+**Status:**  
+Preview integration (not production-ready)
 
-**Authentication:** Requires API key (`SEMANTIC_SCHOLAR_API_KEY`)
+**Authentication:**  
+Requires API key (`SEMANTIC_SCHOLAR_API_KEY`)
 
 ### Vibe Check
 Research validation provider for MCP patterns.
