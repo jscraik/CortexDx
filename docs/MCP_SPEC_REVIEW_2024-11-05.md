@@ -592,7 +592,7 @@ pnpm test:mcp-evals
 | Tools (list/call) | REQUIRED | ✅ Complete | - | - |
 | Resources (list/read) | OPTIONAL | ✅ Complete | - | - |
 | Resources (subscribe) | OPTIONAL | ❌ Missing | Medium | 2-3 days |
-| Prompts (list/get) | OPTIONAL | ⚠️ Broken | HIGH | 5 min fix |
+| Prompts (list/get) | OPTIONAL | ❌ Not Advertised | Low | - |
 | **Client Features** | | | | |
 | Sampling | OPTIONAL | ❌ Missing | Low | 2-3 days |
 | Roots | OPTIONAL | ❌ Missing | Low | 1 day |
