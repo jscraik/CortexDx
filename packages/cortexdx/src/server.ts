@@ -182,15 +182,27 @@ const taskPruneInterval = setInterval(() => {
 }, TASK_PRUNE_INTERVAL);
 
 // Cleanup on shutdown (High #10: prevent memory leak)
-const cleanup = () => {
+const cleanup = async () => {
   serverLogger.info("Shutting down server...");
   clearInterval(taskPruneInterval);
+
+  // Give in-flight tasks a grace period to complete
+  const gracePeriodMs = 5000;
+  const startTime = Date.now();
+
+  // Wait for active tasks or timeout
+  while (Date.now() - startTime < gracePeriodMs) {
+    const stats = taskStore.getTaskStats();
+    if (stats.working === 0) break;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
   taskStore.close();
   process.exit(0);
 };
 
-process.on("SIGTERM", cleanup);
-process.on("SIGINT", cleanup);
+process.on("SIGTERM", () => { cleanup().catch(err => { serverLogger.error({ err }, "Cleanup failed"); process.exit(1); }); });
+process.on("SIGINT", () => { cleanup().catch(err => { serverLogger.error({ err }, "Cleanup failed"); process.exit(1); }); });
 
 // Create diagnostic context for providers
 const createDiagnosticContext = (req: IncomingMessage): DiagnosticContext => {
