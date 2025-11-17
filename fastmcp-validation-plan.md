@@ -59,7 +59,7 @@ npx cortexdx probe <fastmcp-endpoint> --suites=protocol
 **CortexDx Test:**
 ```bash
 # Test each transport
-npx cortexdx probe <fastmcp-http-endpoint> --suites=streaming-sse
+npx cortexdx probe <fastmcp-http-endpoint> --suites=streaming
 npx cortexdx probe <fastmcp-ws-endpoint> --suites=mcp-compatibility-checker
 ```
 
