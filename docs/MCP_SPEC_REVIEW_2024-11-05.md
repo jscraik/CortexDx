@@ -625,9 +625,9 @@ Your CortexDx MCP server has a **solid foundation** and implements all core requ
 3. Logging control (valuable for debugging)
 
 **Next Steps:**
-1. Apply the high-priority fix (remove prompts capability)
+1. ✅ Applied the high-priority fix (removed prompts capability)
 2. Commit and push changes to your branch
-3. Run the MCP evals test suite
+3. Run the MCP evals test suite to verify compliance
 4. Plan implementation of progress notifications and cancellation
 
 **Overall Assessment:** Your server is **production-ready** for core MCP functionality. The recommended enhancements would elevate it to **best-in-class** compliance with full support for advanced features.
