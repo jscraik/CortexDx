@@ -335,9 +335,10 @@ Tool version manager for consistent development environments.
 **File:** `.mise.toml`
 
 **Install:** `curl https://mise.run | sh`
-
-### PNPM (Performant NPM)
-Fast, disk-efficient package manager.  
+### PNPM
+Fast, disk-efficient package manager.
+**Official name:** pnpm (lowercase, not an acronym)  
+**Community backronym:** "Performant NPM" (informal)
 **Note:** "pnpm" is the official name; "Performant NPM" is an informal backronym commonly used in the community.
 
 **Advantages:**
