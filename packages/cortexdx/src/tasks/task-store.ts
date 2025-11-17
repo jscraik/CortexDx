@@ -157,16 +157,28 @@ export class TaskStore {
     cursor?: string,
     userId?: string
   ): { tasks: TaskMetadata[]; nextCursor?: string } {
-    const rows = this.db.prepare(`
+    const whereClauses = ['expiresAt > ?'];
+    const params: unknown[] = [Date.now()];
+
+    if (cursor) {
+      whereClauses.push('taskId > ?');
+      params.push(cursor);
+    }
+    if (userId) {
+      whereClauses.push('userId = ?');
+      params.push(userId);
+    }
+
+    const query = `
       SELECT taskId, status, statusMessage, createdAt, ttl, pollInterval
       FROM tasks
-      WHERE (? IS NULL OR createdAt < ?)
-      AND (? IS NULL OR userId = ?)
-      AND expiresAt > ?
+      WHERE ${whereClauses.join(' AND ')}
       ORDER BY createdAt DESC
       LIMIT ?
-    `).all(cursor || null, cursor || null, userId || null, userId || null, Date.now(), limit) as any[];
+    `;
+    params.push(limit);
 
+    const rows = this.db.prepare(query).all(...params) as any[];
     const tasks = rows.map(row => ({
       taskId: row.taskId,
       status: row.status as TaskStatus,
