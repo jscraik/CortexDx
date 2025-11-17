@@ -16,7 +16,7 @@
 **How it works:**
 CortexDx runs stateless diagnostic plugins against your MCP server. Each finding includes evidence and specific fix recommendations. All AI assistance runs locally on your machine.
 
-**Quick start:**
+**Quick Start:**
 ```bash
 npx @brainwav/cortexdx diagnose https://your-mcp-server.com
 ```
