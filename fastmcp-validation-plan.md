@@ -149,11 +149,11 @@ npx cortexdx probe <fastmcp-endpoint> --suites=security --full
 
 ## Files to Review for Validation Logic
 
-- `/home/user/CortexDx/packages/cortexdx/src/plugins/auth.ts:35-54` - Unauthenticated access test
-- `/home/user/CortexDx/packages/cortexdx/src/plugins/security-scanner.ts` - Security scoring
-- `/home/user/CortexDx/packages/cortexdx/src/probe/mcp-probe-engine.ts:283-289` - Score calculation
-- `/home/user/CortexDx/packages/cortexdx/src/plugins/protocol.ts:147-192` - JSON-RPC validation
-- `/home/user/CortexDx/packages/cortexdx/src/plugins/streaming-sse.ts` - SSE transport validation
+- `packages/cortexdx/src/plugins/auth.ts:35-54` - Unauthenticated access test
+- `packages/cortexdx/src/plugins/security-scanner.ts` - Security scoring
+- `packages/cortexdx/src/probe/mcp-probe-engine.ts:218-228` - Score calculation
+- `packages/cortexdx/src/plugins/protocol.ts:147-192` - JSON-RPC validation
+- `packages/cortexdx/src/plugins/streaming-sse.ts` - SSE transport validation
 
 ## Next Steps
 
