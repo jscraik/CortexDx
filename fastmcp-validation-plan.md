@@ -60,7 +60,7 @@ npx cortexdx probe <fastmcp-endpoint> --suites=protocol
 ```bash
 # Test each transport
 npx cortexdx probe <fastmcp-http-endpoint> --suites=streaming-sse
-npx cortexdx probe <fastmcp-ws-endpoint> --suites=mcp-compatibility
+npx cortexdx probe <fastmcp-ws-endpoint> --suites=mcp-compatibility-checker
 ```
 
 **Validation Criteria:**
