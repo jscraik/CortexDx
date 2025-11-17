@@ -619,6 +619,13 @@ FINDINGS_FILE="$OUTPUT_DIR/cortexdx-findings.json"
 BLOCKER_COUNT=$(jq '[.findings[] | select(.severity == "blocker")] | length' "$FINDINGS_FILE")
 MAJOR_COUNT=$(jq '[.findings[] | select(.severity == "major")] | length' "$FINDINGS_FILE")
 
+# Validate outputs are numeric
+if ! [[ "$BLOCKER_COUNT" =~ ^[0-9]+$ ]]; then
+  BLOCKER_COUNT=0
+fi
+if ! [[ "$MAJOR_COUNT" =~ ^[0-9]+$ ]]; then
+  MAJOR_COUNT=0
+fi
 # Determine alert level
 if [ "$EXIT_CODE" -eq 1 ]; then
   ALERT_LEVEL="🚨 CRITICAL"
