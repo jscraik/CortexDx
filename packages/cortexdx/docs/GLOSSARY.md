@@ -336,11 +336,9 @@ Tool version manager for consistent development environments.
 
 **Install:** `curl https://mise.run | sh`
 ### PNPM
-Fast, disk-efficient package manager.
-**Official name:** pnpm (lowercase, not an acronym)  
-**Community backronym:** "Performant NPM" (informal)
-**Note:** "pnpm" is the official name; "Performant NPM" is an informal backronym commonly used in the community.
+Fast, disk-efficient package manager commonly stylized as "pnpm" (lowercase).
 
+**Note:** "pnpm" is the official name. While sometimes backronymed as "Performant NPM" in the community, this is not an official acronym.
 **Advantages:**
 - Faster than npm/yarn
 - Saves disk space with content-addressable storage
