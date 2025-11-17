@@ -6,7 +6,6 @@ This guide provides comprehensive instructions for monitoring CortexDx in produc
 
 ---
 
-
 ## Table of Contents
 
 - [Overview](#overview)
