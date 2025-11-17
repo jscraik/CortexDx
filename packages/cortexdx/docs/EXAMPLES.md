@@ -596,7 +596,12 @@ set -e
 # SECURITY: In production, load secrets (API keys, webhook URLs) from environment variables or a secure secrets manager.
 MCP_ENDPOINT="${MCP_ENDPOINT:-https://api.yourapp.com}"
 REPORT_DIR="${REPORT_DIR:-/var/log/cortexdx}"
-SLACK_WEBHOOK="${SLACK_WEBHOOK}" # Must be set via environment variable
+# SECURITY: Never hardcode webhook URLs. Load from environment:
+SLACK_WEBHOOK="${SLACK_WEBHOOK}"
+if [ -z "$SLACK_WEBHOOK" ]; then
+  echo "ERROR: SLACK_WEBHOOK environment variable not set" >&2
+  exit 1
+fi
 
 # Create report directory
 mkdir -p "$REPORT_DIR"
