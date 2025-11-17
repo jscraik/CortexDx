@@ -33,28 +33,28 @@ mkdir -p "$OUTPUT_DIR"
 
 # Test 1: Critical Security - Unauthenticated Access
 echo -e "${YELLOW}[1/5] Testing Unauthenticated Access (BLOCKER Priority)${NC}"
-npx cortexdx probe "$FASTMCP_ENDPOINT" \
+npx cortexdx diagnose "$FASTMCP_ENDPOINT" \
   --suites=auth \
   --output="$OUTPUT_DIR/01-auth-test-$TIMESTAMP.json" \
   || echo -e "${RED}⚠️  Auth test failed or found blockers${NC}"
 
 # Test 2: Protocol Compliance
 echo -e "${YELLOW}[2/5] Testing Protocol Compliance${NC}"
-npx cortexdx probe "$FASTMCP_ENDPOINT" \
+npx cortexdx diagnose "$FASTMCP_ENDPOINT" \
   --suites=protocol \
   --output="$OUTPUT_DIR/02-protocol-test-$TIMESTAMP.json" \
   || echo -e "${RED}⚠️  Protocol test failed${NC}"
 
 # Test 3: SSE Streaming (if endpoint supports it)
 echo -e "${YELLOW}[3/5] Testing SSE Streaming${NC}"
-npx cortexdx probe "$FASTMCP_ENDPOINT" \
+npx cortexdx diagnose "$FASTMCP_ENDPOINT" \
   --suites=streaming \
   --output="$OUTPUT_DIR/03-sse-test-$TIMESTAMP.json" \
   || echo -e "${YELLOW}⚠️  SSE test failed (may not be supported)${NC}"
 
 # Test 4: MCP Compatibility
 echo -e "${YELLOW}[4/5] Testing MCP Compatibility (120s timeout)${NC}"
-npx cortexdx probe "$FASTMCP_ENDPOINT" \
+npx cortexdx diagnose "$FASTMCP_ENDPOINT" \
   --suites=mcp-compatibility-checker \
   --output="$OUTPUT_DIR/04-compatibility-test-$TIMESTAMP.json" \
   || echo -e "${RED}⚠️  Compatibility test failed${NC}"
