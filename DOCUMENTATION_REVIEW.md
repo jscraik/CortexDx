@@ -724,8 +724,8 @@ diagnostics and self-improvement analysis.
 
 ### 🟢 Low Priority (Nice to Have)
 
-9. **Create QUICK_REFERENCE.md**
-   - One-page cheat sheet
+9. **Review and improve QUICK_REFERENCE.md**
+   - Ensure it is a concise, one-page cheat sheet
    - ~3 hours effort
 
 10. **Simplify complex sentences**
