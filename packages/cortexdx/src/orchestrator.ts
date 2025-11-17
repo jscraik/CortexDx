@@ -28,6 +28,11 @@ interface DiagnoseOptions {
   mcpApiKey?: string;
   auth0DeviceCode?: boolean;
   auth0DeviceCodeEndpoint?: string;
+  // Async task options (MCP draft spec)
+  async?: boolean;
+  taskTtl?: string | number;
+  pollInterval?: string | number;
+  noColor?: boolean;
 }
 
 export async function runDiagnose({
@@ -63,6 +68,82 @@ export async function runDiagnose({
     onDeviceCodePrompt: logDeviceCodePrompt,
   });
 
+  // Check if async mode is requested (MCP draft spec)
+  if (opts.async) {
+    const { executeDiagnoseAsync } = await import('./commands/async-task-utils.js');
+
+    const taskTtl = coerceNumber(opts.taskTtl) || 300000; // Default 5 minutes
+    const pollInterval = coerceNumber(opts.pollInterval) || 5000; // Default 5 seconds
+
+    console.log('🔄 Running diagnostic in async mode...\n');
+
+    // Execute as async task
+    const resultResponse = await executeDiagnoseAsync({
+      endpoint,
+      diagnosticArgs: {
+        endpoint,
+        suites,
+        full: opts.full
+      },
+      taskTtl,
+      pollInterval,
+      headers,
+      noColor: opts.noColor
+    });
+
+    // Extract findings from async result
+    const resultText = resultResponse.content?.[0]?.text;
+    if (!resultText) {
+      console.error('❌ No result content received from async task');
+      return 1;
+    }
+
+    let asyncResult;
+    try {
+      asyncResult = JSON.parse(resultText);
+    } catch (err) {
+      console.error('❌ Failed to parse async task result:', err);
+      return 1;
+    }
+
+    const findings: Finding[] = asyncResult.findings || [];
+
+    const stamp = {
+      endpoint,
+      inspectedAt: new Date().toISOString(),
+      durationMs: Date.now() - t0,
+      node: process.version,
+      sessionId,
+      asyncMode: true,
+    };
+
+    writeArtifacts(outDir, stamp, findings);
+
+    await storeConsolidatedReport(opts.reportOut, {
+      sessionId,
+      diagnosticType: "diagnose",
+      endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings,
+      tags: suites,
+      metadata: {
+        budgets,
+        deterministic: Boolean(opts.deterministic),
+        asyncMode: true,
+      },
+    });
+
+    const hasBlocker = findings.some((f) => f.severity === "blocker");
+    const hasMajor = findings.some((f) => f.severity === "major");
+
+    console.log('\n✅ Async diagnostic complete');
+    console.log(`   Reports written to: ${outDir}`);
+
+    return hasBlocker ? 1 : hasMajor ? 2 : 0;
+  }
+
+  // Synchronous execution (default)
   const { findings } = await runPlugins({
     endpoint,
     headers,
