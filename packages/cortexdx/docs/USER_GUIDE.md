@@ -1,6 +1,10 @@
 # CortexDx User Guide
 
-**Complete guide to using CortexDx for Model Context Protocol diagnostics, development, and debugging.**
+**Complete guide to using CortexDx for Model Context Protocol (MCP) diagnostics, development, and debugging.**
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, SSE, JSON-RPC, HAR, CI/CD, etc.).
+
+---
 
 ## Table of Contents
 
@@ -27,8 +31,8 @@ CortexDx is a comprehensive diagnostic meta-inspector for Model Context Protocol
 
 ### Key Features
 
-- Protocol compliance validation (JSON-RPC 2.0, SSE, WebSocket)
-- Security vulnerability assessment (CORS, authentication, rate limiting)
+- Protocol compliance validation (JSON-RPC 2.0, SSE (Server-Sent Events), WebSocket)
+- Security vulnerability assessment (CORS (Cross-Origin Resource Sharing), authentication, rate limiting)
 - Performance profiling and optimization recommendations
 - Interactive debugging and development assistance
 - Code generation for MCP servers and connectors

@@ -1,6 +1,10 @@
 # API Reference
 
-Complete API documentation for CortexDx - the diagnostic meta-inspector for Model Context Protocol servers.
+Complete API documentation for CortexDx - the diagnostic meta-inspector for Model Context Protocol (MCP) servers.
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, SSE, HAR, LLM, TDD, etc.).
+
+---
 
 ## Table of Contents
 

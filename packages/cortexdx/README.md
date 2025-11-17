@@ -5,18 +5,52 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Docker](https://img.shields.io/docker/v/brainwav/cortexdx?label=docker)](https://hub.docker.com/r/brainwav/cortexdx)
 
-**Comprehensive diagnostic meta-inspector and AI-powered development assistant for Model Context Protocol (MCP) servers and clients.** Provides stateless, plugin-based analysis with evidence-backed findings, local LLM integration, academic research validation, and actionable remediation guidance.
+**CortexDx diagnoses Model Context Protocol (MCP) servers and helps you build better MCP integrations.**
+
+**What it does:**
+- ✅ Validates MCP protocol compliance
+- ✅ Finds security vulnerabilities
+- ✅ Generates implementation fixes
+- ✅ Provides AI-powered development assistance
+
+**How it works:**
+CortexDx runs stateless diagnostic plugins against your MCP server. Each finding includes evidence and specific fix recommendations. All AI assistance runs locally on your machine.
+
+**Quick Start:**
+```bash
+npx @brainwav/cortexdx diagnose https://your-mcp-server.com
+```
+
+📖 **[View Glossary](docs/GLOSSARY.md)** for definitions of abbreviations and technical terms.
+
+---
+
+## Table of Contents
+
+- [What's New in v1.0.0](#-v100-released)
+- [Installation](#-installation) - NPM, Docker, and development setup
+- [Quick Start](#-quick-start) - Run your first diagnostic in 2 minutes
+- [CLI Commands](#️-cli-commands-reference) - Complete command reference
+- [Diagnostic Suites](#-diagnostic-suites) - Protocol, security, and performance checks
+- [Local LLM Backend](#-local-llm-backend-ollama) - AI assistance with Ollama
+- [Output Formats](#-output-formats) - Reports, findings, and implementation plans
+- [Development](#️-development-commands) - Building and testing
+- [Configuration](#-configuration) - Environment variables and settings
+- [Troubleshooting](#-troubleshooting) - Common issues and solutions
+- [Documentation](#-documentation) - Detailed guides and references
+
+---
 
 ## 🎉 v1.0.0 Released
 
 CortexDx v1.0.0 is now available with major enhancements:
 
-- 🤖 **Local LLM Integration**: Conversational development with Ollama
+- 🤖 **Local LLM Integration**: Conversational development with Ollama (Local LLM runtime that runs language models on your own machine)
 - 🎓 **Academic Research Validation**: 7 integrated academic providers with license compliance
 - 💼 **Commercial Licensing**: Three tiers (Community, Professional, Enterprise)
-- 🧠 **Learning System**: Pattern recognition and RAG-based knowledge accumulation
+- 🧠 **Learning System**: Pattern recognition and RAG (Retrieval-Augmented Generation) knowledge accumulation
 - 📊 **Enhanced Diagnostics**: Real-time monitoring and performance profiling
-- ☁️ **Cloud Storage**: Cloudflare R2/AWS S3 integration with presigned URLs and zero-egress deployment
+- ☁️ **Cloud Storage**: Cloudflare R2/AWS S3 (Amazon Web Services Simple Storage Service) integration with presigned URLs
 
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for complete details and [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for upgrade instructions.
 
@@ -114,9 +148,9 @@ $ cortexdx diagnose https://cortex-mcp.brainwav.io/mcp --full
 ⚡ Duration: 2.2s
 
 ✅ [INFO] MCP server responding (200 OK)
-⚠️  [MAJOR] SSE endpoint not streaming (HTTP 502)
+⚠️  [MAJOR] SSE (Server-Sent Events) endpoint not streaming (HTTP 502)
 ℹ️  [MINOR] No 'rpc.ping' response - method may differ
-ℹ️  [MINOR] Could not enumerate tools via JSON-RPC
+ℹ️  [MINOR] Could not enumerate tools via JSON-RPC (JSON Remote Procedure Call)
 
 📊 Reports generated:
   • reports/cortexdx-report.md (human-readable)
@@ -216,26 +250,71 @@ All three commands emit JSON summaries and exit non-zero when high/critical issu
 
 ### DeepContext Semantic Search
 
-Wildcard's DeepContext MCP server is bundled as a first-class tool for semantic code intelligence. Supply secrets exclusively through the 1Password-managed `.env` and run commands via `op run`:
+**What is DeepContext?**
+
+DeepContext provides semantic code search that understands meaning, not just keywords. CortexDx includes DeepContext from Wildcard (the provider) for intelligent code analysis during diagnostics.
+
+**Quick Start:**
+
+Run commands with 1Password-managed secrets:
 
 ```bash
+# Index your codebase (run once)
 op run --env-file=.env -- cortexdx deepcontext index packages/cortexdx
+
+# Search by concept
 op run --env-file=.env -- cortexdx deepcontext search packages/cortexdx "handshake initialize failures"
+
+# Check status
 op run --env-file=.env -- cortexdx deepcontext status
-op run --env-file=.env -- cortexdx deepcontext clear packages/cortexdx
 ```
 
-- `WILDCARD_API_KEY` (or `DEEPCONTEXT_API_KEY`), `JINA_API_KEY`, and `TURBOPUFFER_API_KEY` are read from `.env`; do **not** duplicate them in GitHub secrets.
-- The self-improvement plugin automatically indexes and queries DeepContext whenever `CORTEXDX_PROJECT_ROOT` (or `projectContext.rootPath`) and the API keys are available, so `cortexdx self-diagnose` and AutoHealer runs inherit semantic evidence automatically.
-- DeepContext stores its semantic index under `${CODEX_CONTEXT_DIR}` (defaults to `<project>/.codex-context`) and mirrors each run into `.cortexdx/deepcontext-status.json`; `cortexdx deepcontext status <codebase>` fetches the live MCP status, while running it without arguments prints the cached status snapshots.
-- To scope DeepContext to another workspace, set `CORTEXDX_PROJECT_ROOT=/abs/path/to/project` before invoking CLI commands or diagnostic suites.
-- CI runs `pnpm deepcontext:status`, so make sure you’ve run `cortexdx deepcontext index <repo>` locally (and committed `.cortexdx/deepcontext-status.json` to your branch) before pushing; otherwise the workflow will fail and upload an empty cache artifact.
+**Required API Keys** (store in `.env`, not GitHub secrets):
+- `WILDCARD_API_KEY` (or `DEEPCONTEXT_API_KEY`)
+- `JINA_API_KEY`
+- `TURBOPUFFER_API_KEY`
 
-Reviewers should follow [`docs/DEEPCONTEXT_ARTIFACT.md`](../../docs/DEEPCONTEXT_ARTIFACT.md) when interpreting the uploaded artifact and include the checklist item in every PR description.
+**Automatic Integration:**
 
-### Academic Research CLI
+The self-improvement plugin automatically uses DeepContext when:
+1. `CORTEXDX_PROJECT_ROOT` is set
+2. Required API keys are available
 
-Run real-time research sweeps against the live providers with the secrets sourced from the 1Password-managed `.env` (no GitHub secrets required):
+This means `cortexdx self-diagnose` and AutoHealer get semantic code intelligence without additional configuration.
+
+**Storage Locations:**
+- **Index files:** `${CODEX_CONTEXT_DIR}` (defaults to `<project>/.codex-context`)
+- **Status cache:** `.cortexdx/deepcontext-status.json`
+
+**For Different Workspaces:**
+
+Set the project root before running commands:
+```bash
+CORTEXDX_PROJECT_ROOT=/abs/path/to/project cortexdx diagnose https://api.example.com
+```
+
+**CI/CD Integration:**
+
+Index your codebase locally before pushing:
+```bash
+cortexdx deepcontext index <repo>
+git add .cortexdx/deepcontext-status.json
+git commit -m "Update DeepContext index"
+```
+
+CI runs `pnpm deepcontext:status` to verify the index. Without it, the workflow fails and uploads an empty cache artifact.
+
+**For PR Reviewers:**
+
+Follow [`docs/DEEPCONTEXT_ARTIFACT.md`](../../docs/DEEPCONTEXT_ARTIFACT.md) for artifact interpretation guidelines.
+
+### Academic Research CLI: Validate MCP Patterns Against Published Research
+
+**What it does:**
+
+Searches academic databases to validate your MCP implementation against published research and best practices.
+
+**Quick Example:**
 
 ```bash
 op run --env-file=.env -- cortexdx research "MCP streaming stability" \
@@ -244,18 +323,53 @@ op run --env-file=.env -- cortexdx research "MCP streaming stability" \
   --limit 5 --out reports/research
 ```
 
-Environment / header mapping (all loaded automatically when present):
+**Supported Providers:**
 
-- `SEMANTIC_SCHOLAR_API_KEY` → `x-api-key` header for the preview-only Semantic Scholar provider (excluded from defaults)
-- `OPENALEX_CONTACT_EMAIL` → appended to every OpenAlex request as the required `mailto` parameter
-- `EXA_API_KEY` → `x-exa-api-key` header (required)
-- `CONTEXT7_API_KEY` → `Authorization: Bearer …` header (required)
-- `CONTEXT7_API_BASE_URL`, `CONTEXT7_PROFILE` → forwarded as `context7-base-url` / `x-context7-profile` headers so the provider knows which MCP endpoint/profile to hit
-- `VIBE_CHECK_API_KEY`, `VIBE_CHECK_HTTP_URL`, `VIBE_CHECK_PROFILE`, `VIBE_CHECK_STRICT` → forwarded as `x-vibe-api-key`, `vibe-check-url`, `x-vibe-profile`, `x-vibe-strict`
+| Provider | Description | API Key Required | Free Tier |
+|----------|-------------|------------------|-----------|
+| **OpenAlex** | 250M+ scholarly works | No (email only) | ✅ Yes |
+| **arXiv** | Physics, math, CS preprints | No | ✅ Yes |
+| **Wikidata** | Structured knowledge base | No | ✅ Yes |
+| **Context7** | Curated MCP research | Yes | Limited |
+| **Vibe Check** | Research validation | Optional | ✅ Yes |
+| **Exa** | Semantic web search | Yes | Limited |
+| **Semantic Scholar** | AI-powered research | Yes | ⚠️ Preview only |
 
-The `resolveCredentialHeaders` helper also accepts CLI overrides (`--credential context7:token`, `--header context7-base-url:https://…`) so CI can point at staging endpoints without mutating the `.env`. All documentation assumes commands are wrapped with `op run --env-file=.env -- …` to keep credentials in 1Password only.
+**Environment Variables** (loaded automatically from `.env`):
 
-Supported providers: **Context7**, **Vibe Check**, **OpenAlex**, **Exa**, **Wikidata**, **arXiv**, plus the preview-only **Semantic Scholar** integration. Provider ids are normalized case-insensitively and deduplicated before execution—`--providers context7,Context7,EXA` still runs Context7 + Exa exactly once. Skip the flag altogether to run the production set above, or use the `research:smoke` test (`op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke`) to validate your secret bundle against the live endpoints.
+**Required for some providers:**
+- `OPENALEX_CONTACT_EMAIL` - Your email (required for OpenAlex)
+- `EXA_API_KEY` - Exa API key (required for Exa)
+- `CONTEXT7_API_KEY` - Context7 API key (required for Context7)
+
+**Optional:**
+- `SEMANTIC_SCHOLAR_API_KEY` - Semantic Scholar (preview only)
+- `VIBE_CHECK_API_KEY`, `VIBE_CHECK_HTTP_URL` - Vibe Check configuration
+- `CONTEXT7_API_BASE_URL`, `CONTEXT7_PROFILE` - Context7 customization
+
+**CLI Overrides for CI/CD:**
+
+Point to staging endpoints without modifying `.env`:
+
+```bash
+cortexdx research "topic" \
+  --credential context7:staging-token \
+  --header context7-base-url:https://staging.context7.com
+```
+
+**Provider Behavior:**
+
+- Provider IDs are case-insensitive and deduplicated
+- `--providers context7,Context7,EXA` runs Context7 + Exa once each
+- Omit `--providers` to use production defaults (all except Semantic Scholar)
+
+**Testing Your Configuration:**
+
+Validate API keys against live endpoints:
+
+```bash
+op run --env-file=.env -- CORTEXDX_RUN_INTEGRATION=1 CORTEXDX_RESEARCH_SMOKE=1 pnpm research:smoke
+```
 
 ### MCP Session & SSE Checklist
 

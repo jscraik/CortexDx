@@ -1,8 +1,26 @@
 # Getting Started with CortexDx
 
-Welcome to CortexDx, an intelligent diagnostic and development assistant for the Model Context Protocol ecosystem.
+**⏱️ Total time:** 15-20 minutes to complete all steps
+
+Welcome to CortexDx, an intelligent diagnostic and development assistant for the Model Context Protocol (MCP) ecosystem.
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of abbreviations and technical terms used in this guide.
+
+---
+
+## Table of Contents
+
+- [What is CortexDx?](#what-is-cortexdx) - 2 minutes
+- [Prerequisites](#prerequisites-and-system-requirements) - 3 minutes
+- [Installation](#installation) - 5 minutes
+- [Your First Diagnostic](#your-first-diagnostic) - 5 minutes
+- [Next Steps](#next-steps)
+
+---
 
 ## What is CortexDx?
+
+**⏱️ 2 minutes** | 🟢 Beginner
 
 CortexDx is an agentic MCP server that helps you:
 
@@ -14,6 +32,8 @@ CortexDx is an agentic MCP server that helps you:
 - **Validate licenses** for academic research integration
 
 ## Prerequisites and System Requirements
+
+**⏱️ 3 minutes** | 🟢 Beginner
 
 Before installing CortexDx, ensure your system meets these requirements:
 
@@ -52,7 +72,13 @@ df -h .
 
 ## Installation
 
+**⏱️ 5 minutes** | 🟢 Beginner
+
+Choose one of the following installation methods:
+
 ### Method 1: Global Installation (Recommended)
+
+**⏱️ 2 minutes** | 🟢 Beginner
 
 ```bash
 # Install globally via npm

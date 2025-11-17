@@ -1,6 +1,22 @@
 # Troubleshooting Guide
 
-This comprehensive guide helps you diagnose and resolve common issues when using CortexDx. The guide is organized by problem category with platform-specific solutions and debugging techniques.
+This comprehensive guide helps you diagnose and resolve common issues when using CortexDx for Model Context Protocol (MCP) server diagnostics. The guide is organized by problem category with platform-specific solutions and debugging techniques.
+
+📖 **[View Glossary](GLOSSARY.md)** for definitions of technical terms (MCP, SSE, CORS, JSON-RPC, etc.).
+
+---
+
+## Table of Contents
+
+- [Quick Diagnostic Commands](#quick-diagnostic-commands)
+- [Connection Issues](#connection-issues)
+- [Protocol Issues](#protocol-issues)
+- [Authentication Issues](#authentication-issues)
+- [Performance Issues](#performance-issues)
+- [Platform-Specific Issues](#platform-specific-issues)
+- [Getting Help](#getting-help)
+
+---
 
 ## Quick Diagnostic Commands
 

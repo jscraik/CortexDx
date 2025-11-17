@@ -2,13 +2,28 @@
 
 **Release Date:** November 7, 2025
 
-We're excited to announce the first stable release of CortexDx, a comprehensive diagnostic meta-inspector and development assistant for the Model Context Protocol ecosystem.
+We're excited to announce the first stable release of CortexDx, a comprehensive diagnostic meta-inspector and development assistant for the Model Context Protocol (MCP) ecosystem.
+
+📖 **[View Glossary](docs/GLOSSARY.md)** for definitions of abbreviations and technical terms (MCP, LLM, SSE, CI/CD, etc.).
+
+---
+
+## Table of Contents
+
+- [What's New in v1.0.0](#-whats-new-in-v100) - Core features and capabilities
+- [Breaking Changes](#-breaking-changes) - Important migration notes
+- [Installation](#-installation) - Getting started
+- [Upgrade Guide](#-upgrade-guide) - From beta versions
+- [Known Issues](#-known-issues) - Current limitations
+- [Future Roadmap](#-future-roadmap) - Planned features
+
+---
 
 ## 🎉 What's New in v1.0.0
 
 ### Core Features
 
-#### 1. Enhanced LLM Integration System
+#### 1. Enhanced LLM (Large Language Model) Integration System
 
 - **Local-First AI**: Ollama-powered local LLM support with deterministic seeding
 - **Conversational Development**: Natural language interface for MCP development
