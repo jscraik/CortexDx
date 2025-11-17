@@ -361,7 +361,7 @@ Create a style guide section ensuring:
 |--------------|-------------------|-----------|--------|
 | SSE | README line 117 | ❌ No | High - core feature |
 | HAR | README line 172 | ❌ No | Medium - optional feature |
-| OTEL | README line 171 | ❌ No | Medium - observability |
+| OTel | README line 171 | ❌ No | Medium - observability |
 | SBOM | README line 212 | ❌ No | Medium - security |
 | CI/CD | README line 215 | ❌ No | High - common use case |
 | MCP | README line 8 | ⚠️ Partial | Critical - core concept |
