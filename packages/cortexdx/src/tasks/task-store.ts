@@ -163,11 +163,23 @@ export class TaskStore {
    * Set task result (marks as completed)
    */
   setTaskResult(taskId: string, result: unknown): boolean {
+    let serialized: string;
+    try {
+      serialized = JSON.stringify(result);
+    } catch (serializeError) {
+      logger.error({ taskId, error: serializeError }, 'Failed to serialize task result');
+      // Store error instead
+      this.setTaskError(taskId, {
+        code: -32603,
+        message: 'Result serialization failed'
+      });
+      return false;
+    }
     const dbResult = this.db.prepare(`
       UPDATE tasks
       SET status = 'completed', result = ?
       WHERE taskId = ?
-    `).run(JSON.stringify(result), taskId);
+    `).run(serialized, taskId);
 
     logger.info({ taskId }, 'Task completed with result');
     return dbResult.changes > 0;
