@@ -6,7 +6,7 @@
 import { createLogger } from "./logging/logger.js";
 import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
 import { safeParseJson } from "./utils/json.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import {
   type IncomingMessage,
@@ -66,6 +66,12 @@ import {
   getAllMcpToolsFlat,
 } from "./tools/index.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
+import { TaskStore, TaskExecutor } from "./tasks/index.js";
+import {
+  validateToolInput,
+  createValidationErrorResult,
+  createExecutionErrorResult,
+} from "./utils/validation.js";
 import type {
   DevelopmentContext,
   DiagnosticContext,
@@ -161,6 +167,60 @@ const sseClients = new Set<ServerResponse>();
 // Create server logger instance
 const serverLogger = createLogger({ component: "server" });
 
+// Initialize Tasks API (MCP draft spec)
+const taskDbPath = process.env.CORTEXDX_TASKS_DB || join(process.cwd(), ".cortexdx", "tasks.db");
+// Ensure database directory exists
+mkdirSync(join(process.cwd(), ".cortexdx"), { recursive: true });
+const taskStore = new TaskStore(taskDbPath);
+const taskExecutor = new TaskExecutor(taskStore);
+
+// Prune expired tasks every 5 minutes (High #10: prevent memory leak)
+const TASK_PRUNE_INTERVAL = 5 * 60 * 1000;
+const taskPruneInterval = setInterval(() => {
+  const pruned = taskStore.pruneExpired();
+  if (pruned > 0) {
+    serverLogger.info({ count: pruned }, "Pruned expired tasks");
+  }
+}, TASK_PRUNE_INTERVAL);
+
+// Cleanup on shutdown (High #10: prevent memory leak)
+const cleanup = async () => {
+  serverLogger.info("Shutting down server...");
+  clearInterval(taskPruneInterval);
+
+  // Give in-flight tasks a grace period to complete
+  const gracePeriodMs = 5000;
+  const startTime = Date.now();
+
+  // Wait for active tasks or timeout
+  while (Date.now() - startTime < gracePeriodMs) {
+    const stats = taskStore.getTaskStats();
+    if (stats.working === 0) break;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  taskStore.close();
+};
+
+
+process.on("SIGTERM", async () => {
+  try {
+    await cleanup();
+    process.exit(0);
+  } catch (err) {
+    serverLogger.error({ err }, "Cleanup failed");
+    process.exit(1);
+  }
+});
+process.on("SIGINT", async () => {
+  try {
+    await cleanup();
+    process.exit(0);
+  } catch (err) {
+    serverLogger.error({ err }, "Cleanup failed");
+    process.exit(1);
+  }
+});
 // Create diagnostic context for providers
 const createDiagnosticContext = (req: IncomingMessage): DiagnosticContext => {
   const diagnosticLogger = createLogger({
@@ -1580,14 +1640,90 @@ async function handleJsonRpcCall(
     return createErrorResponse(responseId, -32600, "Invalid Request");
   }
 
+  // Check for task augmentation (MCP draft spec)
+  const taskParams = params && typeof params === 'object' && 'task' in params
+    ? (params as { task?: { ttl?: number } }).task
+    : undefined;
+
+  if (taskParams && (method === 'tools/call' || method === 'resources/read')) {
+    try {
+      // Create task instead of executing immediately
+      const ttl = taskParams.ttl || 300000; // Default 5 minutes
+      const taskId = taskStore.createTask({
+        method,
+        params,
+        ttl,
+        pollInterval: 5000, // Poll every 5 seconds
+      });
+
+      // Execute asynchronously in background
+      const ctx = createDevelopmentContext(req);
+      taskExecutor.executeTask(taskId, ctx).catch(err => {
+        serverLogger.error({ taskId, error: err }, 'Background task execution failed');
+        // Ensure task is marked as failed
+        try {
+          taskStore.setTaskError(taskId, {
+            code: -32603,
+            message: err instanceof Error ? err.message : 'Unknown error'
+          });
+        } catch (updateErr) {
+          serverLogger.error({ taskId, error: updateErr }, 'Failed to update task error state');
+          // Fallback: forcibly mark task as failed with minimal info
+          try {
+            if (typeof taskStore.forceFailTask === "function") {
+              taskStore.forceFailTask(taskId, "Task failed and error state could not be updated");
+            } else if (taskStore.tasks && taskStore.tasks[taskId]) {
+              // Directly update status if possible (for in-memory stores)
+              taskStore.tasks[taskId].status = "failed";
+              taskStore.tasks[taskId].error = {
+                code: -32603,
+                message: "Task failed and error state could not be updated"
+              };
+            }
+          } catch (forceErr) {
+            serverLogger.error({ taskId, error: forceErr }, 'Critical: Unable to forcibly fail zombie task');
+          }
+        }
+      });
+
+      // Return task metadata immediately
+      const task = taskStore.getTask(taskId);
+      if (!task) {
+        return createErrorResponse(responseId, -32603, 'Failed to create task');
+      }
+
+      return createSuccessResponse(responseId, {
+        task: {
+          taskId: task.taskId,
+          status: task.status,
+          createdAt: task.createdAt,
+          ttl: task.ttl,
+          pollInterval: task.pollInterval
+        }
+      });
+    } catch (error) {
+      serverLogger.error({ error }, 'Failed to create task');
+      return createErrorResponse(
+        responseId,
+        -32603,
+        error instanceof Error ? error.message : 'Failed to create task'
+      );
+    }
+  }
+
   switch (method) {
     case "initialize":
       return createSuccessResponse(responseId, {
-        protocolVersion: "2024-11-05",
+        protocolVersion: "draft",
         capabilities: {
-          tools: {},
-          resources: { list: true, read: true },
-          prompts: {},
+          tools: {
+            taskRequests: true,
+          },
+          resources: {
+            list: true,
+            read: true,
+            taskRequests: true,
+          },
         },
         serverInfo: {
           name: "CortexDx Server",
@@ -1648,6 +1784,92 @@ async function handleJsonRpcCall(
     }
     case "tools/call":
       return await handleToolsCall(req, params, responseId);
+
+    // Tasks API endpoints (MCP draft spec)
+    case "tasks/get": {
+      if (!params || typeof params !== 'object' || !('taskId' in params)) {
+        return createErrorResponse(responseId, -32602, 'params object with taskId is required');
+      }
+      const taskId = typeof params.taskId === 'string' ? params.taskId : undefined;
+      if (!taskId) {
+        return createErrorResponse(responseId, -32602, 'taskId must be a string');
+      }
+
+      const task = taskStore.getTask(taskId);
+      if (!task) {
+        return createErrorResponse(responseId, -32602, 'Task not found or expired');
+      }
+
+      return createSuccessResponse(responseId, {
+        task: {
+          taskId: task.taskId,
+          status: task.status,
+          statusMessage: task.statusMessage,
+          createdAt: task.createdAt,
+          ttl: task.ttl,
+          pollInterval: task.pollInterval
+        }
+      });
+    }
+
+    case "tasks/result": {
+      const taskId = typeof params?.taskId === 'string' ? params.taskId : undefined;
+      if (!taskId) {
+        return createErrorResponse(responseId, -32602, 'taskId is required');
+      }
+
+      const task = taskStore.getTask(taskId);
+      if (!task) {
+        return createErrorResponse(responseId, -32602, 'Task not found or expired');
+      }
+
+      if (task.status === 'completed') {
+        return createSuccessResponse(responseId, task.result);
+      } else if (task.status === 'failed') {
+        return createErrorResponse(
+          responseId,
+          task.error?.code || -32603,
+          task.error?.message || 'Task execution failed'
+        );
+      } else {
+        return createErrorResponse(
+          responseId,
+          -32602,
+          `Task is not in terminal state (current: ${task.status})`
+        );
+      }
+    }
+
+    case "tasks/list": {
+      const limit = typeof params?.limit === 'number' ? params.limit : 50;
+      const cursor = typeof params?.cursor === 'string' ? params.cursor : undefined;
+
+      const { tasks, nextCursor } = taskStore.listTasks(limit, cursor);
+
+      return createSuccessResponse(responseId, {
+        tasks,
+        nextCursor
+      });
+    }
+
+    case "tasks/cancel": {
+      const taskId = typeof params?.taskId === 'string' ? params.taskId : undefined;
+      if (!taskId) {
+        return createErrorResponse(responseId, -32602, 'taskId is required');
+      }
+
+      const cancelled = taskStore.cancelTask(taskId);
+      if (!cancelled) {
+        return createErrorResponse(
+          responseId,
+          -32602,
+          'Task not found, expired, or already in terminal state'
+        );
+      }
+
+      return createSuccessResponse(responseId, {});
+    }
+
     default:
       return createErrorResponse(
         responseId,
@@ -1717,13 +1939,28 @@ async function handleToolsCall(
   if (mcpTool) {
     try {
       const ctx = createDevelopmentContext(req);
+
+      // Validate input schema (SEP-1303: return as tool error, not protocol error)
+      if (mcpTool.inputSchema) {
+        const validation = validateToolInput(
+          mcpTool.inputSchema as Record<string, unknown>,
+          args
+        );
+
+        if (!validation.valid) {
+          // Return validation errors as tool execution errors
+          // This enables model self-correction
+          return createSuccessResponse(id, createValidationErrorResult(validation));
+        }
+      }
+
       const result = await executeDevelopmentTool(mcpTool, args, ctx);
       return createSuccessResponse(id, result);
     } catch (error) {
-      return createErrorResponse(
+      // Execution errors also returned as tool results (SEP-1303)
+      return createSuccessResponse(
         id,
-        -32603,
-        error instanceof Error ? error.message : "Tool execution failed",
+        createExecutionErrorResult(error)
       );
     }
   }
@@ -1942,6 +2179,11 @@ if (SHOULD_LISTEN) {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   serverLogger.info({}, "Received SIGTERM, shutting down gracefully");
+
+  // Clean up task store (High #10: prevent memory leak)
+  clearInterval(taskPruneInterval);
+  taskStore.close();
+
   monitoring.stop();
   server.close(() => {
     serverLogger.info({}, "Server closed");
@@ -1951,6 +2193,11 @@ process.on("SIGTERM", () => {
 
 process.on("SIGINT", () => {
   serverLogger.info({}, "Received SIGINT, shutting down gracefully");
+
+  // Clean up task store (High #10: prevent memory leak)
+  clearInterval(taskPruneInterval);
+  taskStore.close();
+
   monitoring.stop();
   server.close(() => {
     serverLogger.info({}, "Server closed");
