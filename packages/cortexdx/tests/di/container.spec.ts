@@ -3,8 +3,12 @@
  * Comprehensive test suite for dependency injection container
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { DIContainer, getContainer, resetContainer } from "../../src/di/container.js";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  DIContainer,
+  getContainer,
+  resetContainer,
+} from "../../src/di/container.js";
 
 describe("DIContainer", () => {
   let container: DIContainer;
@@ -154,12 +158,30 @@ describe("DIContainer", () => {
       expect(first).toBe(second);
       expect(first).toBe(obj);
     });
+
+    it("should deduplicate concurrent async singleton requests", async () => {
+      let invocations = 0;
+      container.registerAsyncSingleton("expensive", async () => {
+        invocations++;
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return invocations;
+      });
+
+      const [first, second] = await Promise.all([
+        container.getAsync<number>("expensive"),
+        container.getAsync<number>("expensive"),
+      ]);
+
+      expect(first).toBe(1);
+      expect(second).toBe(1);
+      expect(invocations).toBe(1);
+    });
   });
 
   describe("Error Handling", () => {
     it("should throw error for unregistered dependency", () => {
       expect(() => container.get("not-registered")).toThrow(
-        'Dependency "not-registered" not registered'
+        'Dependency "not-registered" not registered',
       );
     });
 
@@ -167,13 +189,13 @@ describe("DIContainer", () => {
       container.registerAsyncSingleton("async", async () => "value");
 
       expect(() => container.get("async")).toThrow(
-        'Dependency "async" is async. Use getAsync() instead.'
+        'Dependency "async" is async. Use getAsync() instead.',
       );
     });
 
     it("should throw error for unregistered async dependency", async () => {
       await expect(container.getAsync("not-registered")).rejects.toThrow(
-        'Dependency "not-registered" not registered'
+        'Dependency "not-registered" not registered',
       );
     });
   });
