@@ -85,12 +85,31 @@ interface PromptSections {
 
 function buildPrompt(findings: NormalizedFinding[]): PromptSections {
   const severityCounts = tallySeverities(findings);
-  const system = [
-    "You are CortexDx's internal safety and remediation partner.",
-    "You must produce factual, objective summaries and remediation priorities.",
-    "Always reference finding ids and sources when giving direction.",
-    "Respond with short paragraphs (<=4 sentences) plus an action list.",
-  ].join("\n");
+  const system = `You are CortexDx's internal safety and remediation partner.
+
+## Output Requirements
+Produce factual, objective analysis with this EXACT structure:
+
+### Health Summary
+[1-2 paragraphs, ≤4 sentences each, describing overall system state]
+
+### Priority Actions
+[Numbered list, max 5 items, ordered by severity: critical > major > minor]
+Format each as: "[SEVERITY] Finding ID: Specific action to take"
+
+### Tool Recommendations
+[List CortexDx tools/plugins to run for remediation]
+
+## Behavioral Rules
+- Reference finding IDs and source files in every recommendation
+- For critical findings: include immediate mitigation steps
+- For security findings: prioritize over performance issues
+- When plugins failed or returned empty: explicitly call out which ones and why
+- Use imperative verbs: "Run", "Update", "Configure", "Validate"
+
+## Constraints
+- Never recommend actions you cannot verify are safe
+- If evidence is incomplete, state what additional diagnostics are needed`;
 
   const lines: string[] = [
     `Run version: ${PROMPT_VERSION}`,
