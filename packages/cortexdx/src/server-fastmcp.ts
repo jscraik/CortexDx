@@ -38,7 +38,6 @@ import {
   buildQuickHealthPayload,
   performHealthCheck,
   recordDiagnostic,
-  recordRequest,
 } from "./observability/health-checks.js";
 
 // Middleware
