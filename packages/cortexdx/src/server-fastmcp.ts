@@ -435,10 +435,26 @@ export function createFastMCPServer() {
       const resources = listMcpDocsResources();
       return {
         text: JSON.stringify(resources.map(r => {
-          const payload = r.payload as { query?: string; chunk?: { title?: string; url: string } };
-          const name = r.type === "search"
-            ? `MCP Docs Search — ${payload.query ?? "query"}`
-            : `MCP Docs Chunk — ${payload.chunk?.title ?? payload.chunk?.url ?? r.id}`;
+          const payload = r.payload as { query?: string; chunk?: { title?: string; url?: string } };
+          let name: string;
+          if (r.type === "search") {
+            if (!payload.query || typeof payload.query !== "string" || payload.query.trim() === "") {
+              name = "MCP Docs Search — MISSING QUERY";
+            } else {
+              name = `MCP Docs Search — ${payload.query}`;
+            }
+          } else {
+            const chunk = payload.chunk;
+            if (!chunk || (!chunk.title && !chunk.url)) {
+              name = "MCP Docs Chunk — MISSING TITLE/URL";
+            } else if (chunk.title) {
+              name = `MCP Docs Chunk — ${chunk.title}`;
+            } else if (chunk.url) {
+              name = `MCP Docs Chunk — ${chunk.url}`;
+            } else {
+              name = `MCP Docs Chunk — ${r.id}`;
+            }
+          }
           return {
             uri: `cortexdx://mcp-docs/${r.id}`,
             name,
