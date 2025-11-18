@@ -546,9 +546,17 @@ function createZodSchemaFromJsonSchema(jsonSchema: Record<string, unknown>): z.Z
  * Create custom HTTP server for non-MCP endpoints
  */
 function createCustomEndpointsServer(port: number) {
+  // Read allowed origins from environment variable (comma-separated)
+  const allowedOrigins = (process.env.CORTEXDX_ALLOWED_ORIGINS
+    ? process.env.CORTEXDX_ALLOWED_ORIGINS.split(",").map(o => o.trim()).filter(Boolean)
+    : ["http://localhost", "http://127.0.0.1"]).map(origin => origin.toLowerCase());
+
   const customServer = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     // CORS
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    const requestOrigin = req.headers.origin?.toLowerCase();
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+      res.setHeader("Access-Control-Allow-Origin", requestOrigin);
+    }
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
