@@ -106,9 +106,12 @@ export interface LlmAdapter {
   complete: (prompt: string, maxTokens?: number) => Promise<string>;
 }
 
+// Supported LLM backends
+export type LLMBackend = 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'zai' | 'openrouter';
+
 // Enhanced LLM adapter interface with multi-backend support
 export interface EnhancedLlmAdapter extends LlmAdapter {
-  backend: 'ollama';
+  backend: LLMBackend;
   loadModel: (modelId: string) => Promise<void>;
   unloadModel: (modelId: string) => Promise<void>;
   getSupportedModels: () => Promise<string[]>;
