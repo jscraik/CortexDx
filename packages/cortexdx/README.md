@@ -527,6 +527,33 @@ Unified diff patches for direct code remediation:
 
 ## 🏗️ Development Commands
 
+### Running the Server
+
+CortexDx uses FastMCP for a simplified MCP server architecture with native HTTP transport:
+
+```bash
+# Start FastMCP server (recommended)
+pnpm server              # Development mode with tsx
+pnpm server:prod         # Production mode (requires build)
+
+# Legacy server (if needed)
+pnpm server:legacy       # Original HTTP server implementation
+pnpm server:prod:legacy  # Production legacy server
+```
+
+**Server Ports:**
+
+| Port | Endpoint | Description |
+|------|----------|-------------|
+| `MCP_HTTP_PORT` (default 2001) | `/sse`, `/message` | FastMCP MCP protocol endpoints |
+| `MCP_HTTP_PORT + 1` (default 2002) | `/health`, `/providers`, `/monitoring/*`, `/api/v1/*` | Custom REST endpoints |
+
+The FastMCP architecture provides:
+- **Native CORS (Cross-Origin Resource Sharing)** handling
+- **Built-in SSE (Server-Sent Events)** support
+- **Standardized MCP protocol** compliance
+- **~80% code reduction** (450 vs 2200 lines)
+
 ### Building and Testing
 
 ```bash

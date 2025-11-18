@@ -93,6 +93,11 @@ Reference to proof supporting a diagnostic finding, such as URLs, log entries, o
 - `file` - Local file path
 - `log` - Log entry or error message
 
+### FastMCP
+High-level TypeScript framework for building MCP servers with simplified tool registration, resource handling, and native HTTP transport support.
+
+**Use in CortexDx:** The CortexDx server uses FastMCP for MCP protocol endpoints with automatic CORS, SSE streaming, and standardized JSON-RPC handling.
+
 ### Finding
 Issue or observation discovered during diagnostics, with severity level, description, and remediation guidance.
 
