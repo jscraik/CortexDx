@@ -1,0 +1,618 @@
+/**
+ * CortexDx Server - FastMCP Implementation
+ * Simplified HTTP server using FastMCP's native HTTP transport
+ */
+
+import { FastMCP } from "fastmcp";
+import { z } from "zod";
+import { createLogger } from "./logging/logger.js";
+import { mkdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { createServer as createHttpServer } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
+
+// Tools and resources
+import {
+  getAllMcpToolsFlat,
+  findMcpTool,
+  executeAcademicIntegrationTool,
+  executeDeepContextTool,
+  executeMcpDocsTool,
+} from "./tools/index.js";
+import {
+  getResearchResource,
+  listResearchResources,
+} from "./resources/research-store.js";
+import {
+  getMcpDocsResource,
+  listMcpDocsResources,
+} from "./resources/mcp-docs-store.js";
+
+// Registry and providers
+import { getAcademicRegistry } from "./registry/index.js";
+
+// Healing and monitoring
+import { AutoHealer } from "./healing/auto-healer.js";
+import { getGlobalMonitoring } from "./observability/monitoring.js";
+import {
+  buildQuickHealthPayload,
+  performHealthCheck,
+  recordDiagnostic,
+  recordRequest,
+} from "./observability/health-checks.js";
+
+// Middleware
+import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
+import { safeParseJson } from "./utils/json.js";
+
+// Plugin system
+import { runPlugins } from "./plugin-host.js";
+import { ConversationManager } from "./conversation/manager.js";
+
+// Tasks
+import { TaskStore, TaskExecutor } from "./tasks/index.js";
+
+// Types
+import type {
+  DevelopmentContext,
+  DiagnosticContext,
+  McpTool,
+  McpToolResult,
+} from "./types.js";
+
+// Server config
+import {
+  PORT,
+  HOST,
+  __dirname,
+} from "./server/config.js";
+
+// Logger
+const serverLogger = createLogger({ component: "server-fastmcp" });
+
+// Initialize registry
+const registry = getAcademicRegistry();
+
+// Initialize conversation manager
+const conversationManager = new ConversationManager();
+
+// Initialize Tasks API
+const taskDbPath = process.env.CORTEXDX_TASKS_DB || join(process.cwd(), ".cortexdx", "tasks.db");
+mkdirSync(join(process.cwd(), ".cortexdx"), { recursive: true });
+const taskStore = new TaskStore(taskDbPath);
+const taskExecutor = new TaskExecutor(taskStore);
+
+// Prune expired tasks every 5 minutes
+const TASK_PRUNE_INTERVAL = 5 * 60 * 1000;
+const taskPruneInterval = setInterval(() => {
+  const pruned = taskStore.pruneExpired();
+  if (pruned > 0) {
+    serverLogger.info({ count: pruned }, "Pruned expired tasks");
+  }
+}, TASK_PRUNE_INTERVAL);
+
+// Initialize monitoring
+const monitoring = getGlobalMonitoring();
+const ENABLE_MONITORING = process.env.ENABLE_MONITORING !== "false";
+
+/**
+ * Create diagnostic context for tool execution
+ */
+const createDiagnosticContext = (sessionId?: string): DiagnosticContext => {
+  const diagnosticLogger = createLogger({ component: "diagnostic" });
+
+  return {
+    endpoint: `http://${HOST}:${PORT}`,
+    headers: {},
+    logger: (...args: unknown[]) => {
+      diagnosticLogger.info({ data: args }, "Diagnostic log");
+    },
+    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+      const response = await fetch(input, init);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json() as T;
+    },
+    jsonrpc: async <T>(): Promise<T> => ({}) as T,
+    sseProbe: async () => ({ ok: true }),
+    evidence: () => undefined,
+    deterministic: false,
+  };
+};
+
+/**
+ * Create development context for tool execution
+ */
+const createDevelopmentContext = (sessionId?: string): DevelopmentContext => {
+  const baseCtx = createDiagnosticContext(sessionId);
+  return {
+    ...baseCtx,
+    sessionId: sessionId || `session-${Date.now()}`,
+    userExpertiseLevel: "intermediate",
+    conversationHistory: [],
+  };
+};
+
+/**
+ * Execute a development tool
+ */
+const executeDevelopmentTool = async (
+  tool: McpTool,
+  args: unknown,
+  ctx: DevelopmentContext,
+): Promise<McpToolResult> => {
+  switch (tool.name) {
+    case "diagnose_mcp_server": {
+      const { endpoint, suites = [], full = false } = args as {
+        endpoint: string;
+        suites?: string[];
+        full?: boolean;
+      };
+      recordDiagnostic();
+      const results = await runPlugins({
+        endpoint,
+        suites,
+        full,
+        deterministic: ctx.deterministic || false,
+        budgets: { timeMs: 30000, memMb: 256 },
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+      };
+    }
+
+    case "start_conversation": {
+      const { intent, context } = args as { intent: string; context?: string };
+      const session = await conversationManager.startConversation(ctx, intent, context);
+      return {
+        content: [{ type: "text", text: JSON.stringify(session, null, 2) }],
+      };
+    }
+
+    case "continue_conversation": {
+      const { sessionId, userInput } = args as { sessionId: string; userInput: string };
+      const response = await conversationManager.continueConversation(sessionId, userInput);
+      return {
+        content: [{ type: "text", text: JSON.stringify(response, null, 2) }],
+      };
+    }
+
+    case "cortexdx_academic_research":
+      return await executeAcademicIntegrationTool(tool, args);
+
+    case "cortexdx_deepcontext_index":
+    case "cortexdx_deepcontext_search":
+    case "cortexdx_deepcontext_status":
+    case "cortexdx_deepcontext_clear":
+      return await executeDeepContextTool(tool, args, ctx);
+
+    case "cortexdx_mcp_docs_search":
+    case "cortexdx_mcp_docs_lookup":
+    case "cortexdx_mcp_docs_versions":
+      return await executeMcpDocsTool(tool, args, ctx);
+
+    default:
+      throw new Error(`Unknown development tool: ${tool.name}`);
+  }
+};
+
+/**
+ * Create and configure the FastMCP server
+ */
+export function createFastMCPServer() {
+  const mcp = new FastMCP({
+    name: "CortexDx Server",
+    version: "1.0.0",
+  });
+
+  // Register all tools
+  const allTools = getAllMcpToolsFlat();
+
+  for (const tool of allTools) {
+    // Convert tool's inputSchema to Zod schema for FastMCP
+    const zodSchema = tool.inputSchema
+      ? createZodSchemaFromJsonSchema(tool.inputSchema as Record<string, unknown>)
+      : z.object({});
+
+    mcp.addTool({
+      name: tool.name,
+      description: tool.description || "",
+      parameters: zodSchema,
+      execute: async (args) => {
+        const ctx = createDevelopmentContext();
+
+        try {
+          // Try development tools first
+          const mcpTool = findMcpTool(tool.name);
+          if (mcpTool) {
+            const result = await executeDevelopmentTool(mcpTool, args, ctx);
+            return result.content[0]?.text || JSON.stringify(result);
+          }
+
+          // Try academic providers
+          const providers = registry.getAllProviders();
+          for (const [providerId, providerReg] of Object.entries(providers)) {
+            const tools = providerReg.capabilities.tools as Array<{ name?: string }>;
+            const hasTool = tools.some((t) => t.name === tool.name);
+            if (hasTool) {
+              const diagCtx = createDiagnosticContext();
+              const providerInstance = registry.createProviderInstance(providerId, diagCtx);
+              const result = await providerInstance.executeTool(tool.name, args as Record<string, unknown>);
+              return JSON.stringify(result, null, 2);
+            }
+          }
+
+          throw new Error(`Tool not found: ${tool.name}`);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          return JSON.stringify({ error: errorMessage, isError: true });
+        }
+      },
+    });
+  }
+
+  // Register academic provider tools
+  const providers = registry.getAllProviders();
+  for (const [providerId, providerReg] of Object.entries(providers)) {
+    const tools = providerReg.capabilities.tools as Array<{
+      name?: string;
+      description?: string;
+      inputSchema?: Record<string, unknown>;
+    }>;
+
+    for (const providerTool of tools) {
+      if (!providerTool.name) continue;
+
+      // Skip if already registered
+      if (allTools.some(t => t.name === providerTool.name)) continue;
+
+      const zodSchema = providerTool.inputSchema
+        ? createZodSchemaFromJsonSchema(providerTool.inputSchema)
+        : z.object({});
+
+      mcp.addTool({
+        name: providerTool.name,
+        description: providerTool.description || "",
+        parameters: zodSchema,
+        execute: async (args) => {
+          const ctx = createDiagnosticContext();
+          const providerInstance = registry.createProviderInstance(providerId, ctx);
+          const result = await providerInstance.executeTool(
+            providerTool.name!,
+            args as Record<string, unknown>
+          );
+          return JSON.stringify(result, null, 2);
+        },
+      });
+    }
+  }
+
+  // Register resources
+  // Research resources
+  mcp.addResource({
+    uri: "cortexdx://research",
+    name: "Academic Research Resources",
+    description: "Academic research results stored by CortexDx",
+    mimeType: "application/json",
+    async load() {
+      const resources = listResearchResources();
+      return {
+        text: JSON.stringify(resources.map(r => ({
+          uri: `cortexdx://research/${r.id}`,
+          name: `Academic Research — ${r.report.topic}`,
+          description: `Captured ${new Date(r.createdAt).toISOString()}`,
+        })), null, 2),
+      };
+    },
+  });
+
+  // Dynamic research resource template
+  mcp.addResourceTemplate({
+    uriTemplate: "cortexdx://research/{id}",
+    name: "Research Resource",
+    description: "Individual academic research result",
+    mimeType: "application/json",
+    async load({ id }) {
+      const resource = getResearchResource(id);
+      if (!resource) {
+        throw new Error(`Resource not found: ${id}`);
+      }
+      return {
+        text: JSON.stringify(resource.report, null, 2),
+      };
+    },
+  });
+
+  // MCP docs resources
+  mcp.addResource({
+    uri: "cortexdx://mcp-docs",
+    name: "MCP Documentation Resources",
+    description: "MCP documentation chunks stored by CortexDx",
+    mimeType: "application/json",
+    async load() {
+      const resources = listMcpDocsResources();
+      return {
+        text: JSON.stringify(resources.map(r => {
+          const payload = r.payload as { query?: string; chunk?: { title?: string; url: string } };
+          const name = r.type === "search"
+            ? `MCP Docs Search — ${payload.query ?? "query"}`
+            : `MCP Docs Chunk — ${payload.chunk?.title ?? payload.chunk?.url ?? r.id}`;
+          return {
+            uri: `cortexdx://mcp-docs/${r.id}`,
+            name,
+            description: `Captured ${new Date(r.createdAt).toISOString()}`,
+          };
+        }), null, 2),
+      };
+    },
+  });
+
+  // Dynamic MCP docs resource template
+  mcp.addResourceTemplate({
+    uriTemplate: "cortexdx://mcp-docs/{id}",
+    name: "MCP Docs Resource",
+    description: "Individual MCP documentation chunk",
+    mimeType: "application/json",
+    async load({ id }) {
+      const resource = getMcpDocsResource(id);
+      if (!resource) {
+        throw new Error(`Resource not found: ${id}`);
+      }
+      return {
+        text: JSON.stringify(resource.payload, null, 2),
+      };
+    },
+  });
+
+  return mcp;
+}
+
+/**
+ * Convert JSON Schema to Zod schema (simplified version)
+ */
+function createZodSchemaFromJsonSchema(jsonSchema: Record<string, unknown>): z.ZodType {
+  const properties = jsonSchema.properties as Record<string, unknown> | undefined;
+  const required = (jsonSchema.required as string[]) || [];
+
+  if (!properties) {
+    return z.object({}).passthrough();
+  }
+
+  const shape: Record<string, z.ZodType> = {};
+
+  for (const [key, prop] of Object.entries(properties)) {
+    const propSchema = prop as Record<string, unknown>;
+    let zodType: z.ZodType;
+
+    switch (propSchema.type) {
+      case "string":
+        zodType = z.string();
+        if (propSchema.enum) {
+          zodType = z.enum(propSchema.enum as [string, ...string[]]);
+        }
+        break;
+      case "number":
+      case "integer":
+        zodType = z.number();
+        break;
+      case "boolean":
+        zodType = z.boolean();
+        break;
+      case "array":
+        zodType = z.array(z.unknown());
+        break;
+      case "object":
+        zodType = z.object({}).passthrough();
+        break;
+      default:
+        zodType = z.unknown();
+    }
+
+    // Make optional if not required
+    if (!required.includes(key)) {
+      zodType = zodType.optional();
+    }
+
+    // Add description
+    if (propSchema.description) {
+      zodType = zodType.describe(propSchema.description as string);
+    }
+
+    shape[key] = zodType;
+  }
+
+  return z.object(shape).passthrough();
+}
+
+/**
+ * Create custom HTTP server for non-MCP endpoints
+ */
+function createCustomEndpointsServer(port: number) {
+  const customServer = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
+    // CORS
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    if (req.method === "OPTIONS") {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+
+    const url = new URL(req.url || "/", `http://${HOST}:${port}`);
+    const path = url.pathname;
+
+    try {
+      // Health check
+      if (path === "/health") {
+        const detailed = url.searchParams.get("detailed") === "true";
+
+        if (detailed) {
+          const ctx = createDiagnosticContext();
+          const health = await performHealthCheck(ctx, {
+            enableDetailedChecks: true,
+            includeMetrics: true,
+            timeout: 5000,
+          });
+          res.writeHead(health.status === "healthy" ? 200 : 503, {
+            "Content-Type": "application/json",
+          });
+          res.end(JSON.stringify(health));
+        } else {
+          const providers = Object.keys(registry.getAllProviders());
+          const stateDbPath = join(process.cwd(), ".cortexdx", "workflow-state.db");
+          const quickPayload = buildQuickHealthPayload({
+            providers,
+            responseTimeMs: 0,
+            stateDbPath,
+            stateDbExists: existsSync(stateDbPath),
+          });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(quickPayload));
+        }
+        return;
+      }
+
+      // Providers list
+      if (path === "/providers") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          providers: registry.getAllProviders(),
+          categories: registry.getCategories(),
+        }));
+        return;
+      }
+
+      // Monitoring status
+      if (path === "/monitoring/status") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          monitoring: monitoring.getStatus(),
+          alerts: monitoring.getAlerts(),
+          timestamp: new Date().toISOString(),
+        }));
+        return;
+      }
+
+      // Self-diagnosis API
+      if (path === "/api/v1/self-diagnose" && req.method === "POST") {
+        const rateLimiter = createRateLimiterFromEnv();
+        const allowed = await rateLimiter(req, res, "/api/v1/self-diagnose");
+        if (!allowed) return;
+
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            const options = body ? safeParseJson(body, "self-diagnose options") : {};
+            const ctx = createDevelopmentContext();
+            const healer = new AutoHealer(ctx);
+            const report = await healer.healSelf({
+              autoFix: (options as { autoFix?: boolean }).autoFix || false,
+              dryRun: (options as { dryRun?: boolean }).dryRun || false,
+              severityThreshold: (options as { severity?: "blocker" | "major" | "minor" | "info" }).severity || "major",
+            });
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: true, report, timestamp: new Date().toISOString() }));
+          } catch (error) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: false, error: String(error), timestamp: new Date().toISOString() }));
+          }
+        });
+        return;
+      }
+
+      // Quick health check API
+      if (path === "/api/v1/health" && req.method === "GET") {
+        const ctx = createDevelopmentContext();
+        const healer = new AutoHealer(ctx);
+        const health = await healer.quickHealthCheck();
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, health, timestamp: new Date().toISOString() }));
+        return;
+      }
+
+      // 404
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Not found" }));
+    } catch (error) {
+      serverLogger.error({ error }, "Custom endpoint error");
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Internal server error" }));
+    }
+  });
+
+  return customServer;
+}
+
+/**
+ * Start the CortexDx server
+ */
+export async function startServer() {
+  const mcp = createFastMCPServer();
+
+  // Start FastMCP with HTTP transport
+  const mcpPort = PORT;
+  const customPort = PORT + 1; // Custom endpoints on adjacent port
+
+  // Start FastMCP server
+  await mcp.start({
+    transportType: "httpStream",
+    httpStream: {
+      port: mcpPort,
+      cors: {
+        allowOrigin: "*",
+      },
+    },
+  });
+
+  serverLogger.info(`MCP Server running on http://${HOST}:${mcpPort}`);
+
+  // Start custom endpoints server
+  const customServer = createCustomEndpointsServer(customPort);
+  customServer.listen(customPort, HOST, () => {
+    serverLogger.info(`Custom endpoints running on http://${HOST}:${customPort}`);
+    serverLogger.info(`  - Health: http://${HOST}:${customPort}/health`);
+    serverLogger.info(`  - Providers: http://${HOST}:${customPort}/providers`);
+    serverLogger.info(`  - Monitoring: http://${HOST}:${customPort}/monitoring/status`);
+    serverLogger.info(`  - Self-diagnose: http://${HOST}:${customPort}/api/v1/self-diagnose`);
+  });
+
+  // Start monitoring if enabled
+  if (ENABLE_MONITORING) {
+    const ctx = createDiagnosticContext();
+    monitoring.setContext(ctx);
+    monitoring.start();
+    serverLogger.info("Monitoring enabled");
+  }
+
+  // Graceful shutdown
+  const shutdown = async () => {
+    serverLogger.info("Shutting down...");
+    clearInterval(taskPruneInterval);
+    taskStore.close();
+    monitoring.stop();
+    await mcp.stop();
+    customServer.close();
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+
+  return { mcp, customServer };
+}
+
+// Auto-start if running directly
+const SHOULD_LISTEN = process.env.VITEST !== "true" && process.env.NODE_ENV !== "test";
+
+if (SHOULD_LISTEN) {
+  startServer().catch((error) => {
+    serverLogger.error({ error }, "Failed to start server");
+    process.exit(1);
+  });
+}
+
+export { createDiagnosticContext, createDevelopmentContext };
