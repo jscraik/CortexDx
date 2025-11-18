@@ -219,6 +219,22 @@ The Self-Improvement Plugin serves as CortexDx's internal diagnostic system, ena
 3. Requests structured JSON analysis from LLM
 4. Enhances finding with LLM insights
 
+**LLM System Prompt Features**:
+
+The Meta-Mentor prompt includes enhanced sections for improved determinism and tool awareness:
+
+- **Tool Awareness**: References specific CortexDx capabilities:
+  - Diagnostics: `protocol`, `security-scanner`, `mcp-compatibility`, `discovery`
+  - Development: `code-generation`, `problem-resolver`, `template-generator`
+  - Analysis: `performance-analysis`, `compliance-check`, `threat-model`
+  - Research: academic providers (Context7, Exa, OpenAlex)
+
+- **Determinism Rules**:
+  - Same finding input produces same analysis structure
+  - Tone varies by context but JSON schema remains consistent
+  - `suggested_next_moves` ordered by impact (no randomness)
+  - Repeated patterns receive consistent categorization
+
 **LLM Analysis Output**:
 
 ```typescript
