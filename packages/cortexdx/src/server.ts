@@ -6,7 +6,7 @@
 import { createLogger } from "./logging/logger.js";
 import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
 import { safeParseJson } from "./utils/json.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import {
   type IncomingMessage,
@@ -169,10 +169,12 @@ const serverLogger = createLogger({ component: "server" });
 
 // Initialize Tasks API (MCP draft spec)
 const taskDbPath = process.env.CORTEXDX_TASKS_DB || join(process.cwd(), ".cortexdx", "tasks.db");
+// Ensure database directory exists
+mkdirSync(join(process.cwd(), ".cortexdx"), { recursive: true });
 const taskStore = new TaskStore(taskDbPath);
 const taskExecutor = new TaskExecutor(taskStore);
 
-// Prune expired tasks every 5 minutes
+// Prune expired tasks every 5 minutes (High #10: prevent memory leak)
 const TASK_PRUNE_INTERVAL = 5 * 60 * 1000;
 const taskPruneInterval = setInterval(() => {
   const pruned = taskStore.pruneExpired();
@@ -2147,6 +2149,11 @@ if (SHOULD_LISTEN) {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   serverLogger.info({}, "Received SIGTERM, shutting down gracefully");
+
+  // Clean up task store (High #10: prevent memory leak)
+  clearInterval(taskPruneInterval);
+  taskStore.close();
+
   monitoring.stop();
   server.close(() => {
     serverLogger.info({}, "Server closed");
@@ -2156,6 +2163,11 @@ process.on("SIGTERM", () => {
 
 process.on("SIGINT", () => {
   serverLogger.info({}, "Received SIGINT, shutting down gracefully");
+
+  // Clean up task store (High #10: prevent memory leak)
+  clearInterval(taskPruneInterval);
+  taskStore.close();
+
   monitoring.stop();
   server.close(() => {
     serverLogger.info({}, "Server closed");
