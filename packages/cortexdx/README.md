@@ -545,8 +545,8 @@ pnpm server:prod:legacy  # Production legacy server
 
 | Port | Endpoint | Description |
 |------|----------|-------------|
-| `MCP_HTTP_PORT` (default 2001) | `/sse`, `/message` | FastMCP MCP protocol endpoints |
-| `MCP_HTTP_PORT + 1` (default 2002) | `/health`, `/providers`, `/monitoring/*`, `/api/v1/*` | Custom REST endpoints |
+| `PORT` (default 5001) | `/sse`, `/message` | FastMCP MCP protocol endpoints |
+| `PORT + 1` (default 5002) | `/health`, `/providers`, `/monitoring/*`, `/api/v1/*` | Custom REST endpoints |
 
 The FastMCP architecture provides:
 - **Native CORS (Cross-Origin Resource Sharing)** handling
