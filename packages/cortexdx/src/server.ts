@@ -1653,6 +1653,21 @@ async function handleJsonRpcCall(
           });
         } catch (updateErr) {
           serverLogger.error({ taskId, error: updateErr }, 'Failed to update task error state');
+          // Fallback: forcibly mark task as failed with minimal info
+          try {
+            if (typeof taskStore.forceFailTask === "function") {
+              taskStore.forceFailTask(taskId, "Task failed and error state could not be updated");
+            } else if (taskStore.tasks && taskStore.tasks[taskId]) {
+              // Directly update status if possible (for in-memory stores)
+              taskStore.tasks[taskId].status = "failed";
+              taskStore.tasks[taskId].error = {
+                code: -32603,
+                message: "Task failed and error state could not be updated"
+              };
+            }
+          } catch (forceErr) {
+            serverLogger.error({ taskId, error: forceErr }, 'Critical: Unable to forcibly fail zombie task');
+          }
         }
       });
 
