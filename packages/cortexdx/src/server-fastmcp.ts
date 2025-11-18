@@ -65,10 +65,97 @@ import {
   PORT,
   HOST,
   __dirname,
+  ADMIN_TOOL_TOKEN,
+  RESTRICTED_TOOLS,
+  AUTH0_DOMAIN,
+  AUTH0_CLIENT_ID,
+  AUTH0_AUDIENCE,
+  REQUIRE_AUTH,
+  REQUIRE_LICENSE,
+  DEFAULT_TIER,
 } from "./server/config.js";
+
+// Auth and license middleware
+import {
+  type AuthMiddlewareConfig,
+  type AuthenticatedRequest,
+  checkToolAccess,
+  createAuthMiddleware,
+} from "./plugins/auth-middleware.js";
+import type { LicenseKey } from "./plugins/commercial-licensing.js";
+import {
+  type LicenseEnforcementConfig,
+  createFeatureAccessMiddleware,
+  createLicenseEnforcementMiddleware,
+} from "./plugins/license-enforcement.js";
 
 // Logger
 const serverLogger = createLogger({ component: "server-fastmcp" });
+
+// License database (in production, this would be backed by a database)
+const licenseDatabase = new Map<string, LicenseKey>();
+
+// Initialize demo licenses
+if (process.env.NODE_ENV !== "production") {
+  licenseDatabase.set("community-demo-key", {
+    key: "community-demo-key",
+    tier: "community",
+    features: ["basic-diagnostics", "protocol-validation", "core-mcp-tools"],
+  });
+
+  licenseDatabase.set("professional-demo-key", {
+    key: "professional-demo-key",
+    tier: "professional",
+    features: [
+      "basic-diagnostics",
+      "protocol-validation",
+      "core-mcp-tools",
+      "advanced-diagnostics",
+      "llm-backends",
+      "academic-validation",
+      "performance-profiling",
+      "security-scanning",
+    ],
+    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+  });
+
+  licenseDatabase.set("enterprise-demo-key", {
+    key: "enterprise-demo-key",
+    tier: "enterprise",
+    features: ["*"],
+    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+    organizationId: "demo-org",
+    maxUsers: 100,
+  });
+}
+
+// Initialize Auth0 middleware
+const authMiddlewareConfig: AuthMiddlewareConfig = {
+  auth0: {
+    domain: AUTH0_DOMAIN,
+    clientId: AUTH0_CLIENT_ID,
+    audience: AUTH0_AUDIENCE,
+  },
+  requireAuth: REQUIRE_AUTH,
+  publicEndpoints: [
+    "/health",
+    "/providers",
+  ],
+};
+
+const authMiddleware = createAuthMiddleware(authMiddlewareConfig);
+
+// Initialize license enforcement middleware
+const licenseEnforcementConfig: LicenseEnforcementConfig = {
+  licenseDatabase,
+  requireLicense: REQUIRE_LICENSE,
+  defaultTier: DEFAULT_TIER,
+};
+
+const licenseEnforcementMiddleware = createLicenseEnforcementMiddleware(
+  licenseEnforcementConfig,
+);
+const featureAccessMiddleware = createFeatureAccessMiddleware();
 
 // Initialize registry
 const registry = getAcademicRegistry();
@@ -223,6 +310,25 @@ export function createFastMCPServer() {
         const ctx = createDevelopmentContext();
 
         try {
+          // Check if tool is restricted (requires admin token)
+          // Note: FastMCP doesn't expose request headers in tool execution,
+          // so restricted tools must be accessed via the legacy server or
+          // through custom endpoints that can verify X-CORTEXDX-ADMIN-TOKEN
+          if (RESTRICTED_TOOLS.has(tool.name)) {
+            if (!ADMIN_TOOL_TOKEN) {
+              return JSON.stringify({
+                error: `Tool ${tool.name} is disabled until CORTEXDX_ADMIN_TOKEN is configured.`,
+                isError: true,
+              });
+            }
+            // In FastMCP, we cannot access request headers to verify the token
+            // This is a known limitation - use the legacy server for restricted tools
+            return JSON.stringify({
+              error: `Tool ${tool.name} requires X-CORTEXDX-ADMIN-TOKEN header. Use legacy server or /admin endpoints.`,
+              isError: true,
+            });
+          }
+
           // Try development tools first
           const mcpTool = findMcpTool(tool.name);
           if (mcpTool) {
@@ -441,6 +547,26 @@ function createCustomEndpointsServer(port: number) {
       return;
     }
 
+    // Apply authentication middleware
+    let authPassed = false;
+    await authMiddleware(req, res, () => {
+      authPassed = true;
+    });
+
+    if (!authPassed) {
+      return; // Auth middleware already sent response
+    }
+
+    // Apply license enforcement middleware
+    let licensePassed = false;
+    await licenseEnforcementMiddleware(req, res, () => {
+      licensePassed = true;
+    });
+
+    if (!licensePassed) {
+      return; // License middleware already sent response
+    }
+
     const url = new URL(req.url || "/", `http://${HOST}:${port}`);
     const path = url.pathname;
 
@@ -531,6 +657,56 @@ function createCustomEndpointsServer(port: number) {
         const health = await healer.quickHealthCheck();
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: true, health, timestamp: new Date().toISOString() }));
+        return;
+      }
+
+      // Admin dashboard endpoint (requires admin role)
+      if (path === "/admin/dashboard") {
+        const authReq = req as AuthenticatedRequest;
+        const hasAdminRole = authReq.auth?.roles.includes("admin") ?? false;
+
+        if (!hasAdminRole && REQUIRE_AUTH) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            error: "Forbidden",
+            message: "Admin role required for dashboard access",
+          }));
+          return;
+        }
+
+        const { getAdminDashboardImpl } = await import("./tools/commercial-feature-impl.js");
+        const result = await getAdminDashboardImpl();
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(result.content[0]?.text || "{}");
+        return;
+      }
+
+      // License management endpoint
+      if (path === "/admin/licenses") {
+        const authReq = req as AuthenticatedRequest;
+        const hasAdminRole = authReq.auth?.roles.includes("admin") ?? false;
+
+        if (!hasAdminRole && REQUIRE_AUTH) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            error: "Forbidden",
+            message: "Admin role required for license management",
+          }));
+          return;
+        }
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          licenses: Array.from(licenseDatabase.entries()).map(([key, license]) => ({
+            key,
+            tier: license.tier,
+            features: license.features,
+            expiresAt: license.expiresAt,
+            organizationId: license.organizationId,
+            maxUsers: license.maxUsers,
+          })),
+        }));
         return;
       }
 
