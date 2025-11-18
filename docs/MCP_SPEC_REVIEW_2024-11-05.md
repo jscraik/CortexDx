@@ -1,6 +1,6 @@
 # MCP Specification Compliance Review - Protocol v2024-11-05
 
-**Review Date:** November 17, 2025
+**Review Date:** November 5, 2024
 **Server:** CortexDx MCP Server v1.0.0
 **SDK Version:** @modelcontextprotocol/sdk v1.22.0
 **Protocol Version:** 2024-11-05
