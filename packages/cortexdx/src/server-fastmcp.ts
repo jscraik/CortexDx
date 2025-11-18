@@ -65,7 +65,6 @@ import {
   PORT,
   HOST,
   __dirname,
-  ADMIN_TOOL_TOKEN,
   RESTRICTED_TOOLS,
   AUTH0_DOMAIN,
   AUTH0_CLIENT_ID,
@@ -310,22 +309,18 @@ export function createFastMCPServer() {
         const ctx = createDevelopmentContext();
 
         try {
-          // Check if tool is restricted (requires admin token)
-          // Note: FastMCP doesn't expose request headers in tool execution,
-          // so restricted tools must be accessed via the legacy server or
-          // through custom endpoints that can verify X-CORTEXDX-ADMIN-TOKEN
+          // Check if tool is restricted (requires admin role via OAuth2)
+          // Restricted tools must be accessed via admin endpoints with proper authentication
           if (RESTRICTED_TOOLS.has(tool.name)) {
-            if (!ADMIN_TOOL_TOKEN) {
-              return JSON.stringify({
-                error: `Tool ${tool.name} is disabled until CORTEXDX_ADMIN_TOKEN is configured.`,
-                isError: true,
-              });
-            }
-            // In FastMCP, we cannot access request headers to verify the token
-            // This is a known limitation - use the legacy server for restricted tools
+            const endpointMap: Record<string, string> = {
+              "wikidata_sparql": "/admin/tools/wikidata-sparql",
+              "cortexdx_delete_workflow": "/admin/tools/delete-workflow",
+            };
+            const endpoint = endpointMap[tool.name] || "/admin/tools";
             return JSON.stringify({
-              error: `Tool ${tool.name} requires X-CORTEXDX-ADMIN-TOKEN header. Use legacy server or /admin endpoints.`,
+              error: `Tool ${tool.name} requires admin role. Use POST ${endpoint} on port ${PORT + 1} with OAuth2 authentication.`,
               isError: true,
+              hint: "Authenticate with Auth0 and ensure your JWT includes the 'admin' role claim.",
             });
           }
 
@@ -707,6 +702,73 @@ function createCustomEndpointsServer(port: number) {
             maxUsers: license.maxUsers,
           })),
         }));
+        return;
+      }
+
+      // Admin tool: wikidata_sparql (requires admin role)
+      if (path === "/admin/tools/wikidata-sparql" && req.method === "POST") {
+        const authReq = req as AuthenticatedRequest;
+        const hasAdminRole = authReq.auth?.roles.includes("admin") ?? false;
+
+        if (!hasAdminRole && REQUIRE_AUTH) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            error: "Forbidden",
+            message: "Admin role required for wikidata_sparql tool",
+          }));
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            const params = body ? safeParseJson(body, "wikidata sparql params") : {};
+            const ctx = createDiagnosticContext();
+            const providerInstance = registry.createProviderInstance("wikidata", ctx);
+            const result = await providerInstance.executeTool("wikidata_sparql", params as Record<string, unknown>);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: true, result, timestamp: new Date().toISOString() }));
+          } catch (error) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: false, error: String(error), timestamp: new Date().toISOString() }));
+          }
+        });
+        return;
+      }
+
+      // Admin tool: cortexdx_delete_workflow (requires admin role)
+      if (path === "/admin/tools/delete-workflow" && req.method === "POST") {
+        const authReq = req as AuthenticatedRequest;
+        const hasAdminRole = authReq.auth?.roles.includes("admin") ?? false;
+
+        if (!hasAdminRole && REQUIRE_AUTH) {
+          res.writeHead(403, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            error: "Forbidden",
+            message: "Admin role required for cortexdx_delete_workflow tool",
+          }));
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            const params = body ? safeParseJson(body, "delete workflow params") : {};
+            const mcpTool = findMcpTool("cortexdx_delete_workflow");
+            if (!mcpTool) {
+              throw new Error("Tool not found: cortexdx_delete_workflow");
+            }
+            const ctx = createDevelopmentContext();
+            const result = await executeDevelopmentTool(mcpTool, params, ctx);
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: true, result, timestamp: new Date().toISOString() }));
+          } catch (error) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: false, error: String(error), timestamp: new Date().toISOString() }));
+          }
+        });
         return;
       }
 

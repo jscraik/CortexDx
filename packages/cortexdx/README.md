@@ -702,6 +702,112 @@ jobs:
 - **API Restrictions**: Blocked access to `fs`, `child_process`, raw sockets
 - **Fallback Safety**: Graceful degradation if worker threads unavailable
 
+### OAuth 2.0 Authentication
+
+CortexDx supports full OAuth 2.0 authentication via Auth0 for securing API endpoints and restricting access to sensitive tools.
+
+#### Configuration
+
+Set the following environment variables to enable authentication:
+
+```bash
+# Auth0 Configuration
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_AUDIENCE=https://api.cortexdx.com
+
+# Enable authentication enforcement
+REQUIRE_AUTH=true
+```
+
+#### Client Registration
+
+Register your application in Auth0:
+
+1. Create a new Application in Auth0 Dashboard
+2. Set Application Type to "Machine to Machine" or "Single Page Application"
+3. Configure the allowed callback URLs
+4. Note the Client ID and Domain for configuration
+
+#### Token Management
+
+CortexDx validates JWT (JSON Web Token) tokens on each request:
+
+- **Token Validation**: Verifies signature, expiration, and audience claims
+- **Role-Based Access**: Extracts roles from JWT claims for authorization
+- **Public Endpoints**: `/health` and `/providers` are accessible without authentication
+
+#### Authorization Flows
+
+**Machine-to-Machine (M2M) Flow:**
+```bash
+# Get access token
+curl -X POST "https://${AUTH0_DOMAIN}/oauth/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "'${AUTH0_CLIENT_ID}'",
+    "client_secret": "'${AUTH0_CLIENT_SECRET}'",
+    "audience": "'${AUTH0_AUDIENCE}'",
+    "grant_type": "client_credentials"
+  }'
+
+# Use token with CortexDx
+curl -X POST "http://localhost:5002/admin/dashboard" \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+**Device Code Flow (for CLI):**
+```bash
+# Enable device code flow
+CORTEXDX_AUTH0_DEVICE_CODE=1
+
+# Or use the CLI flag
+cortexdx orchestrate --auth0-device-code
+```
+
+#### Authentication Middleware
+
+The server applies authentication middleware to all non-public endpoints:
+
+- **JWT Verification**: Validates tokens against Auth0 JWKS (JSON Web Key Set)
+- **Role Extraction**: Parses roles from `permissions` or custom claims
+- **License Enforcement**: Combines with license tier for feature gating
+
+#### Role-Based Access Control
+
+Admin tools require the `admin` role in the JWT:
+
+| Endpoint | Required Role | Description |
+|----------|--------------|-------------|
+| `/admin/dashboard` | admin | Server dashboard and metrics |
+| `/admin/licenses` | admin | License management |
+| `/admin/tools/wikidata-sparql` | admin | Direct SPARQL (SPARQL Protocol and RDF Query Language) queries |
+| `/admin/tools/delete-workflow` | admin | Delete workflow state |
+
+**Setting up Admin Role in Auth0:**
+
+1. Go to Auth0 Dashboard → Users & Roles → Roles
+2. Create a new role called "admin"
+3. Assign permissions or use as a role claim
+4. Assign the role to users who need admin access
+
+#### License Enforcement
+
+Enable license-based feature gating:
+
+```bash
+REQUIRE_LICENSE=true
+DEFAULT_TIER=community  # community | professional | enterprise
+```
+
+**License Tiers:**
+
+| Tier | Features |
+|------|----------|
+| Community | Basic diagnostics, protocol validation, core MCP tools |
+| Professional | + Advanced diagnostics, LLM backends, academic validation, performance profiling |
+| Enterprise | All features, custom integrations, priority support |
+
 ## 🐛 Troubleshooting
 
 ### Common Issues
