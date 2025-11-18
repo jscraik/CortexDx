@@ -200,12 +200,27 @@ const cleanup = async () => {
   }
 
   taskStore.close();
-  process.exit(0);
 };
 
-process.on("SIGTERM", () => { cleanup().catch(err => { serverLogger.error({ err }, "Cleanup failed"); process.exit(1); }); });
-process.on("SIGINT", () => { cleanup().catch(err => { serverLogger.error({ err }, "Cleanup failed"); process.exit(1); }); });
 
+process.on("SIGTERM", async () => {
+  try {
+    await cleanup();
+    process.exit(0);
+  } catch (err) {
+    serverLogger.error({ err }, "Cleanup failed");
+    process.exit(1);
+  }
+});
+process.on("SIGINT", async () => {
+  try {
+    await cleanup();
+    process.exit(0);
+  } catch (err) {
+    serverLogger.error({ err }, "Cleanup failed");
+    process.exit(1);
+  }
+});
 // Create diagnostic context for providers
 const createDiagnosticContext = (req: IncomingMessage): DiagnosticContext => {
   const diagnosticLogger = createLogger({
