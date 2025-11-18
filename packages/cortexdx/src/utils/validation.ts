@@ -3,7 +3,7 @@
  * Validates tool inputs against JSON Schema for enhanced error handling (SEP-1303)
  */
 
-import Ajv, { type ValidateFunction } from 'ajv';
+import Ajv, { type ValidateFunction, type ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 
 const ajv = new Ajv({
@@ -31,6 +31,43 @@ export interface ValidationResult {
 }
 
 /**
+ * Get or compile schema from cache
+ */
+function getOrCompileSchema(
+  schema: Record<string, unknown>,
+  schemaKey: string
+): { validate: ValidateFunction | null; error?: string } {
+  let validate = schemaCache.get(schemaKey);
+  
+  if (!validate) {
+    try {
+      validate = ajv.compile(schema);
+      schemaCache.set(schemaKey, validate);
+    } catch (compileError) {
+      return {
+        validate: null,
+        error: compileError instanceof Error ? compileError.message : 'Schema compilation failed'
+      };
+    }
+  }
+  
+  return { validate: validate || null };
+}
+
+/**
+ * Convert Ajv errors to validation result details
+ */
+function convertAjvErrors(
+  errors: ErrorObject[]
+): Array<{ path: string; message: string; params?: Record<string, unknown> }> {
+  return errors.map(error => ({
+    path: error.instancePath || 'input',
+    message: formatErrorMessage(error),
+    params: error.params as Record<string, unknown>
+  }));
+}
+
+/**
  * Validate tool input against JSON Schema
  * Returns validation result with human-readable error messages
  *
@@ -45,25 +82,15 @@ export function validateToolInput(
 ): ValidationResult {
   // Use schema as cache key (Critical #4: avoid recompiling same schema)
   const schemaKey = JSON.stringify(schema);
-  let validate = schemaCache.get(schemaKey);
+  const { validate, error } = getOrCompileSchema(schema, schemaKey);
 
   if (!validate) {
-    try {
-      validate = ajv.compile(schema);
-      schemaCache.set(schemaKey, validate);
-    } catch (compileError) {
-      // Schema compilation error - this is a server issue
-      return {
-        valid: false,
-        errors: ['Invalid tool schema configuration'],
-        details: [
-          {
-            path: 'schema',
-            message: compileError instanceof Error ? compileError.message : 'Schema compilation failed',
-          },
-        ],
-      };
-    }
+    // Schema compilation error - this is a server issue
+    return {
+      valid: false,
+      errors: ['Invalid tool schema configuration'],
+      details: [{ path: 'schema', message: error || 'Schema compilation failed' }]
+    };
   }
 
   const valid = validate(input);
@@ -73,19 +100,8 @@ export function validateToolInput(
   }
 
   // Convert Ajv errors to human-readable format
-  const errors: string[] = [];
-  const details: Array<{ path: string; message: string; params?: Record<string, unknown> }> = [];
-
-  for (const error of validate.errors || []) {
-    const path = error.instancePath || 'input';
-    const message = formatErrorMessage(error);
-    errors.push(`${path}: ${message}`);
-    details.push({
-      path,
-      message,
-      params: error.params,
-    });
-  }
+  const details = convertAjvErrors(validate.errors || []);
+  const errors = details.map(d => `${d.path}: ${d.message}`);
 
   return { valid: false, errors, details };
 }
@@ -93,7 +109,7 @@ export function validateToolInput(
 /**
  * Format Ajv error into human-readable message
  */
-function formatErrorMessage(error: any): string {
+function formatErrorMessage(error: ErrorObject): string {
   const { keyword, message, params } = error;
 
   switch (keyword) {
