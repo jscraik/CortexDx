@@ -280,18 +280,77 @@ export interface ResourceTemplateDefinition {
  */
 export interface PromptDefinition {
   name: string;
+  /**
+   * Human-readable title for display purposes
+   */
+  title?: string;
   description?: string;
   arguments?: PromptArgument[];
   /**
-   * Icon for the prompt (SEP-973)
+   * Icons for the prompt (SEP-973)
    */
-  icon?: IconMetadata;
+  icons?: IconMetadata[];
 }
 
 export interface PromptArgument {
   name: string;
   description?: string;
   required?: boolean;
+}
+
+/**
+ * Prompt message content types
+ */
+export type PromptContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; data: string; mimeType: string }
+  | { type: 'audio'; data: string; mimeType: string }
+  | { type: 'resource'; resource: EmbeddedResource };
+
+/**
+ * Prompt message with role and content
+ */
+export interface PromptMessage {
+  role: 'user' | 'assistant';
+  content: PromptContent;
+}
+
+/**
+ * Prompts list request parameters
+ */
+export interface PromptListRequest {
+  cursor?: string;
+}
+
+/**
+ * Prompts list response
+ */
+export interface PromptListResponse {
+  prompts: PromptDefinition[];
+  nextCursor?: string;
+}
+
+/**
+ * Prompt get request parameters
+ */
+export interface PromptGetRequest {
+  name: string;
+  arguments?: Record<string, string>;
+}
+
+/**
+ * Prompt get response
+ */
+export interface PromptGetResponse {
+  description?: string;
+  messages: PromptMessage[];
+}
+
+/**
+ * Notification when prompts list changes
+ */
+export interface PromptListChangedNotification {
+  // Empty notification - just signals that list changed
 }
 
 /**
