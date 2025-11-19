@@ -419,7 +419,7 @@ export interface SamplingMessage {
   content: SamplingContent;
 }
 
-export type SamplingContent = TextContent | ImageContent | ToolResultContent;
+export type SamplingContent = TextContent | ImageContent | AudioContent | ToolResultContent;
 
 export interface TextContent {
   type: 'text';
@@ -428,6 +428,12 @@ export interface TextContent {
 
 export interface ImageContent {
   type: 'image';
+  data: string;
+  mimeType: string;
+}
+
+export interface AudioContent {
+  type: 'audio';
   data: string;
   mimeType: string;
 }

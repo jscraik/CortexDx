@@ -81,6 +81,7 @@ export {
   type SamplingContent,
   type TextContent,
   type ImageContent,
+  type AudioContent,
   type ToolResultContent,
   type ModelPreferences,
   type ModelHint,
