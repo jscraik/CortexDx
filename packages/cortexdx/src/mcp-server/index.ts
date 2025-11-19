@@ -25,6 +25,9 @@ export {
   type ProtocolVersion,
   type ServerCapabilities as ProtocolServerCapabilities,
   type ServerInfo as ProtocolServerInfo,
+  // For backward compatibility
+  type ServerCapabilities,
+  type ServerInfo,
   type InitializeResponse,
 } from './core/protocol.js';
 
