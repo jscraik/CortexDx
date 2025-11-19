@@ -144,6 +144,7 @@ export {
   type CompletionRequest,
   type CompletionReference,
   type CompletionArgument,
+  type CompletionContext,
   type CompletionResult,
   type ResourceLink,
   type StructuredToolOutput,

@@ -1352,6 +1352,10 @@ export interface LogMessageNotification {
 export interface CompletionRequest {
   ref: CompletionReference;
   argument: CompletionArgument;
+  /**
+   * Context with previously completed arguments
+   */
+  context?: CompletionContext;
 }
 
 export interface CompletionReference {
@@ -1363,6 +1367,16 @@ export interface CompletionReference {
 export interface CompletionArgument {
   name: string;
   value: string;
+}
+
+/**
+ * Context for completion with previous argument values
+ */
+export interface CompletionContext {
+  /**
+   * Previously resolved argument values
+   */
+  arguments?: Record<string, string>;
 }
 
 /**
