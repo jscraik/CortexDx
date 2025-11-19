@@ -252,6 +252,31 @@
             "ollama_model": "gemma3n:e4b",
             "quantization": "q4_0",
             "type": "general_purpose"
+        },
+        "jan-nano": {
+            "name": "mannix/jan-nano",
+            "model_tag": "mannix/jan-nano:latest",
+            "context_length": 8192,
+            "memory_gb": 2.0,
+            "priority": 6,
+            "status": "available",
+            "size_bytes": 0,
+            "modified": "2025-11-19T22:48:25Z",
+            "recommended_for": [
+                "research_tasks",
+                "experimental_analysis",
+                "lightweight_research",
+                "quick_exploration"
+            ],
+            "coding_tasks": [
+                "research",
+                "exploration",
+                "analysis",
+                "experimentation"
+            ],
+            "ollama_model": "mannix/jan-nano",
+            "quantization": "q4_0",
+            "type": "research"
         }
     },
     "reranker_models": {},
@@ -269,7 +294,8 @@
         "tool_calling": "qwen3-coder",
         "state_of_art_embedding": "qwen3-embed",
         "multilingual_embedding": "snowflake-arctic-embed2",
-        "frontier_embedding": "snowflake-arctic-embed2"
+        "frontier_embedding": "snowflake-arctic-embed2",
+        "research": "jan-nano"
     },
     "cloud_models": {
         "kimi-k2-cloud": {
@@ -567,6 +593,8 @@
         "perplexity_analysis": "qwen3-coder",
         "classification_tasks": "deepseek-coder",
         "autocomplete_tasks": "deepseek-coder",
+        "research_tasks": "jan-nano",
+        "experimental_analysis": "jan-nano",
         "default": "deepseek-coder"
     },
     "service_configuration": {
@@ -581,7 +609,7 @@
         "ollama_version": "v0.12.11+",
         "supported_features": [
             "logprobs",
-            "top_logprobs", 
+            "top_logprobs",
             "embedding_models",
             "vulkan_acceleration",
             "webp_images",
@@ -627,6 +655,11 @@
             "gemma3n",
             "glm-4.6-cloud",
             "qwen3-coder"
+        ],
+        "research": [
+            "jan-nano",
+            "phi4-mini-reasoning",
+            "gemma3n"
         ]
     },
     "performance_tiers": {
@@ -723,7 +756,7 @@
         "max_top_logprobs": 5,
         "use_cases": [
             "classification_tasks",
-            "retrieval_evaluation", 
+            "retrieval_evaluation",
             "autocomplete_suggestions",
             "token_highlighting",
             "perplexity_calculation",
