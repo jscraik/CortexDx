@@ -3,6 +3,10 @@ import type { DiagnosticPlugin, Finding } from "../types.js";
 /**
  * System prompt for LLM-assisted MCP server discovery analysis
  * Used when analyzing server capabilities and compliance
+ *
+ * @todo This prompt is intended for future LLM integration in the discovery plugin.
+ *       It will be used to guide LLM-based analysis of MCP server capabilities and compliance.
+ *       If not implemented soon, consider moving to documentation or removing.
  */
 export const DISCOVERY_ANALYSIS_PROMPT = `You are CortexDx's MCP server discovery analyzer.
 
