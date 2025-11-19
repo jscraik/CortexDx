@@ -248,17 +248,47 @@ export interface ToolDefinition {
 }
 
 /**
+ * Resource annotations for metadata
+ */
+export interface ResourceAnnotations {
+  /**
+   * Intended audience(s) for this resource
+   */
+  audience?: ('user' | 'assistant')[];
+  /**
+   * Importance from 0.0 (optional) to 1.0 (required)
+   */
+  priority?: number;
+  /**
+   * ISO 8601 timestamp of last modification
+   */
+  lastModified?: string;
+}
+
+/**
  * Resource definition with icon support
  */
 export interface ResourceDefinition {
   uri: string;
-  name?: string;
+  name: string;
+  /**
+   * Human-readable title for display purposes
+   */
+  title?: string;
   description?: string;
   mimeType?: string;
   /**
-   * Icon for the resource (SEP-973)
+   * Size in bytes
    */
-  icon?: IconMetadata;
+  size?: number;
+  /**
+   * Icons for the resource (SEP-973)
+   */
+  icons?: IconMetadata[];
+  /**
+   * Resource annotations
+   */
+  annotations?: ResourceAnnotations;
 }
 
 /**
@@ -266,13 +296,113 @@ export interface ResourceDefinition {
  */
 export interface ResourceTemplateDefinition {
   uriTemplate: string;
-  name?: string;
+  name: string;
+  /**
+   * Human-readable title for display purposes
+   */
+  title?: string;
   description?: string;
   mimeType?: string;
   /**
-   * Icon for the resource template (SEP-973)
+   * Icons for the resource template (SEP-973)
    */
-  icon?: IconMetadata;
+  icons?: IconMetadata[];
+  /**
+   * Resource annotations
+   */
+  annotations?: ResourceAnnotations;
+}
+
+/**
+ * Resource content (text or binary)
+ */
+export interface ResourceContent {
+  uri: string;
+  mimeType?: string;
+  /**
+   * Text content (mutually exclusive with blob)
+   */
+  text?: string;
+  /**
+   * Base64-encoded binary content
+   */
+  blob?: string;
+  /**
+   * Content annotations
+   */
+  annotations?: ResourceAnnotations;
+}
+
+/**
+ * Resources list request parameters
+ */
+export interface ResourceListRequest {
+  cursor?: string;
+}
+
+/**
+ * Resources list response
+ */
+export interface ResourceListResponse {
+  resources: ResourceDefinition[];
+  nextCursor?: string;
+}
+
+/**
+ * Resource read request parameters
+ */
+export interface ResourceReadRequest {
+  uri: string;
+}
+
+/**
+ * Resource read response
+ */
+export interface ResourceReadResponse {
+  contents: ResourceContent[];
+}
+
+/**
+ * Resource templates list request
+ */
+export interface ResourceTemplatesListRequest {
+  cursor?: string;
+}
+
+/**
+ * Resource templates list response
+ */
+export interface ResourceTemplatesListResponse {
+  resourceTemplates: ResourceTemplateDefinition[];
+  nextCursor?: string;
+}
+
+/**
+ * Resource subscribe request
+ */
+export interface ResourceSubscribeRequest {
+  uri: string;
+}
+
+/**
+ * Resource unsubscribe request
+ */
+export interface ResourceUnsubscribeRequest {
+  uri: string;
+}
+
+/**
+ * Notification when resources list changes
+ */
+export interface ResourceListChangedNotification {
+  // Empty notification - just signals that list changed
+}
+
+/**
+ * Notification when a subscribed resource is updated
+ */
+export interface ResourceUpdatedNotification {
+  uri: string;
 }
 
 /**
