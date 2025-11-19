@@ -417,6 +417,85 @@ export function buildWWWAuthenticateHeader(challenge: AuthChallenge): string {
   return parts.join(', ');
 }
 
+// =============================================================================
+// Authorization Types (OAuth 2.1, RFC 8414, RFC 9728, RFC 7591)
+// =============================================================================
+
+/**
+ * Protected Resource Metadata (RFC 9728)
+ */
+export interface ProtectedResourceMetadata {
+  resource: string;
+  authorization_servers: string[];
+  scopes_supported?: string[];
+  bearer_methods_supported?: ('header' | 'body' | 'query')[];
+}
+
+/**
+ * Authorization Server Metadata (RFC 8414)
+ */
+export interface AuthorizationServerMetadata {
+  issuer: string;
+  authorization_endpoint: string;
+  token_endpoint: string;
+  jwks_uri?: string;
+  registration_endpoint?: string;
+  scopes_supported?: string[];
+  response_types_supported: string[];
+  grant_types_supported?: string[];
+  code_challenge_methods_supported?: string[];
+  client_id_metadata_document_supported?: boolean;
+}
+
+/**
+ * Dynamic Client Registration (RFC 7591)
+ */
+export interface ClientRegistrationRequest {
+  redirect_uris: string[];
+  token_endpoint_auth_method?: string;
+  grant_types?: string[];
+  client_name?: string;
+  client_uri?: string;
+}
+
+export interface ClientRegistrationResponse {
+  client_id: string;
+  client_secret?: string;
+  client_secret_expires_at?: number;
+}
+
+/**
+ * OAuth Token Request/Response
+ */
+export interface TokenRequest {
+  grant_type: 'authorization_code' | 'refresh_token' | 'client_credentials';
+  code?: string;
+  redirect_uri?: string;
+  client_id?: string;
+  code_verifier?: string;
+  resource?: string; // RFC 8707
+}
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in?: number;
+  refresh_token?: string;
+  scope?: string;
+}
+
+/**
+ * Client ID Metadata Document
+ */
+export interface ClientIdMetadataDocument {
+  client_id: string;
+  client_name: string;
+  redirect_uris: string[];
+  grant_types?: string[];
+  client_uri?: string;
+  logo_uri?: string;
+}
+
 /**
  * Progress notification for long-running operations
  */

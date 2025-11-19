@@ -569,6 +569,357 @@ export function buildWWWAuthenticateHeader(challenge: AuthChallenge): string {
 }
 
 // =============================================================================
+// Authorization Types (OAuth 2.1, RFC 8414, RFC 9728, RFC 7591)
+// =============================================================================
+
+/**
+ * Protected Resource Metadata (RFC 9728)
+ * Advertises authorization server location for MCP servers
+ */
+export interface ProtectedResourceMetadata {
+  /**
+   * Protected resource identifier
+   */
+  resource: string;
+  /**
+   * Authorization server(s) that can issue tokens for this resource
+   */
+  authorization_servers: string[];
+  /**
+   * Supported scopes for this resource
+   */
+  scopes_supported?: string[];
+  /**
+   * Supported bearer token methods
+   */
+  bearer_methods_supported?: ('header' | 'body' | 'query')[];
+  /**
+   * Supported resource signing algorithms
+   */
+  resource_signing_alg_values_supported?: string[];
+  /**
+   * Documentation URL
+   */
+  resource_documentation?: string;
+  /**
+   * Policy URL
+   */
+  resource_policy_uri?: string;
+  /**
+   * Terms of service URL
+   */
+  resource_tos_uri?: string;
+}
+
+/**
+ * Authorization Server Metadata (RFC 8414)
+ * Full OAuth 2.0 authorization server metadata
+ */
+export interface AuthorizationServerMetadata {
+  /**
+   * Authorization server identifier
+   */
+  issuer: string;
+  /**
+   * Authorization endpoint URL
+   */
+  authorization_endpoint: string;
+  /**
+   * Token endpoint URL
+   */
+  token_endpoint: string;
+  /**
+   * JWKS URI
+   */
+  jwks_uri?: string;
+  /**
+   * Dynamic client registration endpoint
+   */
+  registration_endpoint?: string;
+  /**
+   * Supported scopes
+   */
+  scopes_supported?: string[];
+  /**
+   * Supported response types
+   */
+  response_types_supported: string[];
+  /**
+   * Supported response modes
+   */
+  response_modes_supported?: string[];
+  /**
+   * Supported grant types
+   */
+  grant_types_supported?: string[];
+  /**
+   * Supported token endpoint auth methods
+   */
+  token_endpoint_auth_methods_supported?: string[];
+  /**
+   * Supported PKCE code challenge methods
+   */
+  code_challenge_methods_supported?: string[];
+  /**
+   * Service documentation URL
+   */
+  service_documentation?: string;
+  /**
+   * UI locales supported
+   */
+  ui_locales_supported?: string[];
+  /**
+   * Revocation endpoint
+   */
+  revocation_endpoint?: string;
+  /**
+   * Introspection endpoint
+   */
+  introspection_endpoint?: string;
+  /**
+   * Whether Client ID Metadata Documents are supported
+   */
+  client_id_metadata_document_supported?: boolean;
+}
+
+/**
+ * Dynamic Client Registration Request (RFC 7591)
+ */
+export interface ClientRegistrationRequest {
+  /**
+   * Redirect URIs for authorization code flow
+   */
+  redirect_uris: string[];
+  /**
+   * Token endpoint authentication method
+   */
+  token_endpoint_auth_method?: 'none' | 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt';
+  /**
+   * Grant types the client will use
+   */
+  grant_types?: string[];
+  /**
+   * Response types the client will use
+   */
+  response_types?: string[];
+  /**
+   * Human-readable client name
+   */
+  client_name?: string;
+  /**
+   * Client homepage URL
+   */
+  client_uri?: string;
+  /**
+   * Logo URL
+   */
+  logo_uri?: string;
+  /**
+   * Requested scope
+   */
+  scope?: string;
+  /**
+   * Contacts
+   */
+  contacts?: string[];
+  /**
+   * Terms of service URL
+   */
+  tos_uri?: string;
+  /**
+   * Privacy policy URL
+   */
+  policy_uri?: string;
+  /**
+   * JWKS URI for client public keys
+   */
+  jwks_uri?: string;
+  /**
+   * Software identifier
+   */
+  software_id?: string;
+  /**
+   * Software version
+   */
+  software_version?: string;
+}
+
+/**
+ * Dynamic Client Registration Response (RFC 7591)
+ */
+export interface ClientRegistrationResponse {
+  /**
+   * Issued client identifier
+   */
+  client_id: string;
+  /**
+   * Client secret (for confidential clients)
+   */
+  client_secret?: string;
+  /**
+   * Client secret expiration time
+   */
+  client_secret_expires_at?: number;
+  /**
+   * Registration access token
+   */
+  registration_access_token?: string;
+  /**
+   * Registration client URI
+   */
+  registration_client_uri?: string;
+  /**
+   * All other registration metadata
+   */
+  [key: string]: unknown;
+}
+
+/**
+ * OAuth Token Request
+ */
+export interface TokenRequest {
+  /**
+   * Grant type
+   */
+  grant_type: 'authorization_code' | 'refresh_token' | 'client_credentials';
+  /**
+   * Authorization code (for authorization_code grant)
+   */
+  code?: string;
+  /**
+   * Redirect URI (for authorization_code grant)
+   */
+  redirect_uri?: string;
+  /**
+   * Client identifier
+   */
+  client_id?: string;
+  /**
+   * PKCE code verifier
+   */
+  code_verifier?: string;
+  /**
+   * Refresh token (for refresh_token grant)
+   */
+  refresh_token?: string;
+  /**
+   * Requested scope
+   */
+  scope?: string;
+  /**
+   * Resource indicator (RFC 8707)
+   */
+  resource?: string;
+}
+
+/**
+ * OAuth Token Response
+ */
+export interface TokenResponse {
+  /**
+   * Access token
+   */
+  access_token: string;
+  /**
+   * Token type (usually "Bearer")
+   */
+  token_type: string;
+  /**
+   * Token expiration in seconds
+   */
+  expires_in?: number;
+  /**
+   * Refresh token
+   */
+  refresh_token?: string;
+  /**
+   * Granted scope
+   */
+  scope?: string;
+}
+
+/**
+ * OAuth Error Response
+ */
+export interface OAuthErrorResponse {
+  /**
+   * Error code
+   */
+  error: 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_scope' | 'access_denied' | 'server_error';
+  /**
+   * Human-readable error description
+   */
+  error_description?: string;
+  /**
+   * Error URI for more information
+   */
+  error_uri?: string;
+}
+
+/**
+ * Client ID Metadata Document (draft-ietf-oauth-client-id-metadata-document)
+ * Extended version of OAuthClientMetadata with full document fields
+ */
+export interface ClientIdMetadataDocument {
+  /**
+   * Client identifier (MUST match the document URL)
+   */
+  client_id: string;
+  /**
+   * Human-readable client name
+   */
+  client_name: string;
+  /**
+   * Redirect URIs
+   */
+  redirect_uris: string[];
+  /**
+   * Grant types
+   */
+  grant_types?: string[];
+  /**
+   * Response types
+   */
+  response_types?: string[];
+  /**
+   * Token endpoint auth method
+   */
+  token_endpoint_auth_method?: string;
+  /**
+   * Client homepage
+   */
+  client_uri?: string;
+  /**
+   * Logo URL
+   */
+  logo_uri?: string;
+  /**
+   * Contacts
+   */
+  contacts?: string[];
+  /**
+   * Terms of service
+   */
+  tos_uri?: string;
+  /**
+   * Privacy policy
+   */
+  policy_uri?: string;
+  /**
+   * JWKS URI for client authentication
+   */
+  jwks_uri?: string;
+  /**
+   * Software identifier
+   */
+  software_id?: string;
+  /**
+   * Software version
+   */
+  software_version?: string;
+}
+
+// =============================================================================
 // Additional Utilities (Progress, Cancellation, Roots, Configuration)
 // =============================================================================
 

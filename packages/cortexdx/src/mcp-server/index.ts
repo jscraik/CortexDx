@@ -92,6 +92,15 @@ export {
   type OIDCDiscoveryMetadata,
   type AuthChallenge,
   buildWWWAuthenticateHeader,
+  // Authorization types (OAuth 2.1, RFC 8414, RFC 9728, RFC 7591)
+  type ProtectedResourceMetadata,
+  type AuthorizationServerMetadata,
+  type ClientRegistrationRequest,
+  type ClientRegistrationResponse,
+  type TokenRequest,
+  type TokenResponse,
+  type OAuthErrorResponse,
+  type ClientIdMetadataDocument,
   // Utility types
   type ProgressNotification,
   type CancellationNotification,
