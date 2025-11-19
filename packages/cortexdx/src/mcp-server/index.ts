@@ -52,6 +52,14 @@ export {
 export {
   type IconMetadata,
   type Implementation,
+  // Lifecycle types
+  type InfoIcon,
+  type ClientInfo,
+  type ServerInfo,
+  type ClientCapabilities,
+  type ServerCapabilities,
+  type InitializeParams,
+  type InitializeResult,
   type ToolDefinition,
   type ResourceDefinition,
   type ResourceTemplateDefinition,

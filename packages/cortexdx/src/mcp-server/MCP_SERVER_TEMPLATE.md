@@ -237,6 +237,89 @@ export interface Implementation {
   description?: string;
 }
 
+// =============================================================================
+// Lifecycle Types (Initialization, Capabilities)
+// =============================================================================
+
+/**
+ * Icon for client/server info
+ */
+export interface InfoIcon {
+  src: string;
+  mimeType?: string;
+  sizes?: string[];
+}
+
+/**
+ * Client/Server information
+ */
+export interface ClientInfo {
+  name: string;
+  title?: string;
+  version: string;
+  description?: string;
+  icons?: InfoIcon[];
+  websiteUrl?: string;
+}
+
+export interface ServerInfo {
+  name: string;
+  title?: string;
+  version: string;
+  description?: string;
+  icons?: InfoIcon[];
+  websiteUrl?: string;
+}
+
+/**
+ * Client capabilities for initialization
+ */
+export interface ClientCapabilities {
+  roots?: { listChanged?: boolean };
+  sampling?: Record<string, never>;
+  elicitation?: { form?: Record<string, never>; url?: Record<string, never> };
+  tasks?: {
+    requests?: {
+      elicitation?: { create?: Record<string, never> };
+      sampling?: { createMessage?: Record<string, never> };
+    };
+  };
+  experimental?: Record<string, unknown>;
+}
+
+/**
+ * Server capabilities for initialization
+ */
+export interface ServerCapabilities {
+  logging?: Record<string, never>;
+  prompts?: { listChanged?: boolean };
+  resources?: { subscribe?: boolean; listChanged?: boolean };
+  tools?: { listChanged?: boolean };
+  completions?: Record<string, never>;
+  tasks?: {
+    list?: Record<string, never>;
+    cancel?: Record<string, never>;
+    requests?: { tools?: { call?: Record<string, never> } };
+  };
+  experimental?: Record<string, unknown>;
+}
+
+/**
+ * Initialize request/response
+ */
+export interface InitializeParams {
+  protocolVersion: string;
+  capabilities: ClientCapabilities;
+  clientInfo: ClientInfo;
+}
+
+export interface InitializeResult {
+  protocolVersion: string;
+  capabilities: ServerCapabilities;
+  serverInfo: ServerInfo;
+  instructions?: string;
+}
+
 /**
  * Enum schema for elicitation (SEP-1330)
  */
@@ -1067,6 +1150,7 @@ await server.start();
 - [x] Resource links in tool results (types)
 - [x] Logging support (types)
 - [x] Completion/autocompletion (types)
+- [x] Lifecycle initialization (types)
 
 ### Draft Features (Post 2025-06-18)
 

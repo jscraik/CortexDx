@@ -35,6 +35,205 @@ export interface Implementation {
   description?: string;
 }
 
+// =============================================================================
+// Lifecycle Types (Initialization, Capabilities, Client/Server Info)
+// =============================================================================
+
+/**
+ * Icon for client/server info (different from IconMetadata)
+ */
+export interface InfoIcon {
+  /**
+   * URI to the icon
+   */
+  src: string;
+  /**
+   * MIME type of the icon
+   */
+  mimeType?: string;
+  /**
+   * Supported sizes (e.g., ["48x48", "any"])
+   */
+  sizes?: string[];
+}
+
+/**
+ * Client information sent during initialization
+ */
+export interface ClientInfo {
+  name: string;
+  /**
+   * Display name for the client
+   */
+  title?: string;
+  version: string;
+  /**
+   * Human-readable description
+   */
+  description?: string;
+  /**
+   * Client icons
+   */
+  icons?: InfoIcon[];
+  /**
+   * Client website URL
+   */
+  websiteUrl?: string;
+}
+
+/**
+ * Server information returned during initialization
+ */
+export interface ServerInfo {
+  name: string;
+  /**
+   * Display name for the server
+   */
+  title?: string;
+  version: string;
+  /**
+   * Human-readable description
+   */
+  description?: string;
+  /**
+   * Server icons
+   */
+  icons?: InfoIcon[];
+  /**
+   * Server website URL
+   */
+  websiteUrl?: string;
+}
+
+/**
+ * Client capabilities for initialization
+ */
+export interface ClientCapabilities {
+  /**
+   * Filesystem roots capability
+   */
+  roots?: {
+    listChanged?: boolean;
+  };
+  /**
+   * LLM sampling capability
+   */
+  sampling?: Record<string, never>;
+  /**
+   * Elicitation capability
+   */
+  elicitation?: {
+    form?: Record<string, never>;
+    url?: Record<string, never>;
+  };
+  /**
+   * Task-augmented requests capability
+   */
+  tasks?: {
+    requests?: {
+      elicitation?: {
+        create?: Record<string, never>;
+      };
+      sampling?: {
+        createMessage?: Record<string, never>;
+      };
+    };
+  };
+  /**
+   * Non-standard experimental features
+   */
+  experimental?: Record<string, unknown>;
+}
+
+/**
+ * Server capabilities for initialization
+ */
+export interface ServerCapabilities {
+  /**
+   * Structured log messages capability
+   */
+  logging?: Record<string, never>;
+  /**
+   * Prompt templates capability
+   */
+  prompts?: {
+    listChanged?: boolean;
+  };
+  /**
+   * Readable resources capability
+   */
+  resources?: {
+    subscribe?: boolean;
+    listChanged?: boolean;
+  };
+  /**
+   * Callable tools capability
+   */
+  tools?: {
+    listChanged?: boolean;
+  };
+  /**
+   * Argument autocompletion capability
+   */
+  completions?: Record<string, never>;
+  /**
+   * Task-augmented requests capability
+   */
+  tasks?: {
+    list?: Record<string, never>;
+    cancel?: Record<string, never>;
+    requests?: {
+      tools?: {
+        call?: Record<string, never>;
+      };
+    };
+  };
+  /**
+   * Non-standard experimental features
+   */
+  experimental?: Record<string, unknown>;
+}
+
+/**
+ * Initialize request parameters
+ */
+export interface InitializeParams {
+  /**
+   * Protocol version supported by client
+   */
+  protocolVersion: string;
+  /**
+   * Client capabilities
+   */
+  capabilities: ClientCapabilities;
+  /**
+   * Client implementation information
+   */
+  clientInfo: ClientInfo;
+}
+
+/**
+ * Initialize response result
+ */
+export interface InitializeResult {
+  /**
+   * Negotiated protocol version
+   */
+  protocolVersion: string;
+  /**
+   * Server capabilities
+   */
+  capabilities: ServerCapabilities;
+  /**
+   * Server implementation information
+   */
+  serverInfo: ServerInfo;
+  /**
+   * Optional instructions for the client
+   */
+  instructions?: string;
+}
+
 /**
  * Tool definition with icon support
  */
