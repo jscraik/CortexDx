@@ -136,17 +136,15 @@ export class RagSystem {
       normalize: true,
     });
 
-    const defaultEmbedding = {
-      values: [],
-      dimensions: 0,
-      model: "default",
-      timestamp: Date.now(),
-    };
+    if (!embedding) {
+      console.warn(
+        "[rag-system] Skipping problem indexing due to missing embedding",
+        problem.id,
+      );
+      return;
+    }
 
-    const document = createProblemDocument(
-      problem,
-      embedding ?? defaultEmbedding,
-    );
+    const document = createProblemDocument(problem, embedding);
     await this.vectorStorage.addDocument(document);
   }
 
@@ -161,18 +159,15 @@ export class RagSystem {
       normalize: true,
     });
 
-    const defaultEmbedding = {
-      values: [],
-      dimensions: 0,
-      model: "default",
-      timestamp: Date.now(),
-    };
+    if (!embedding) {
+      console.warn(
+        "[rag-system] Skipping solution indexing due to missing embedding",
+        solution.id,
+      );
+      return;
+    }
 
-    const document = createSolutionDocument(
-      solution,
-      problem,
-      embedding ?? defaultEmbedding,
-    );
+    const document = createSolutionDocument(solution, problem, embedding);
     await this.vectorStorage.addDocument(document);
   }
 
@@ -188,18 +183,19 @@ export class RagSystem {
       normalize: true,
     });
 
-    const defaultEmbedding = {
-      values: [],
-      dimensions: 0,
-      model: "default",
-      timestamp: Date.now(),
-    };
+    if (!embedding) {
+      console.warn(
+        "[rag-system] Skipping pattern indexing due to missing embedding",
+        pattern.id,
+      );
+      return;
+    }
 
     const document = createPatternDocument(
       pattern.id,
       pattern.problemSignature,
       pattern.solution,
-      embedding ?? defaultEmbedding,
+      embedding,
       pattern.successCount,
       pattern.confidence,
     );

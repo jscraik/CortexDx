@@ -1,28 +1,4 @@
 import { Command } from "commander";
-import { runCompare } from "./commands/compare.js";
-import {
-  runBestPractices,
-  runCreateTutorial,
-  runExplainConcept,
-  runGenerateConnector,
-  runGenerateDocumentation,
-  runGenerateTemplate,
-  runInteractiveMode,
-  runInterpretError,
-  runStartDebugging,
-} from "./commands/interactive-cli.js";
-import { runDiagnose } from "./orchestrator.js";
-import { runOrchestrate } from "./commands/orchestrate.js";
-import {
-  ensureWildcardApiKey,
-  runDeepContextClear,
-  runDeepContextIndex,
-  runDeepContextSearch,
-  runDeepContextStatus,
-} from "./commands/deepcontext.js";
-import { runResearch } from "./commands/research.js";
-import { runGenerateSbom } from "./commands/sbom.js";
-import { runLibraryIngestCommand } from "./commands/library.js";
 
 const program = new Command();
 program
@@ -44,7 +20,6 @@ program
   .option("--simulate-external", "probe as if remote client")
   .option("--out <dir>", "output dir", "reports")
   .option("--report-out <dir>", "store consolidated reports via ReportManager")
-  .option("--file-plan", "emit unified diffs")
   .option("--a11y", "screen-reader friendly output")
   .option("--no-color", "disable ANSI colors")
   .option("--deterministic", "stable timestamps and seeds")
@@ -52,12 +27,24 @@ program
   .option("--har", "capture redacted HAR on failures")
   .option("--compare <files...>", "diff two JSON findings")
   .option("--auth0-domain <domain>", "Auth0 domain used for MCP protection")
-  .option("--auth0-client-id <id>", "Auth0 client id for client-credential flow")
-  .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
+  .option(
+    "--auth0-client-id <id>",
+    "Auth0 client id for client-credential flow",
+  )
+  .option(
+    "--auth0-client-secret <secret>",
+    "Auth0 client secret (use env var when possible)",
+  )
   .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
   .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
-  .option("--auth0-device-code", "Use Auth0 device code flow instead of client credentials")
-  .option("--auth0-device-code-endpoint <url>", "Override Auth0 device authorization endpoint")
+  .option(
+    "--auth0-device-code",
+    "Use Auth0 device code flow instead of client credentials",
+  )
+  .option(
+    "--auth0-device-code-endpoint <url>",
+    "Override Auth0 device authorization endpoint",
+  )
   .option("--mcp-api-key <key>", "MCP API key for dual authentication")
   .option(
     "--budget-time <ms>",
@@ -73,10 +60,12 @@ program
   )
   .action(async (endpoint, opts) => {
     if (Array.isArray(opts.compare) && opts.compare.length >= 2) {
+      const { runCompare } = await import("./commands/compare.js");
       const code = await runCompare(opts.compare[0], opts.compare[1]);
       process.exitCode = code;
       return;
     }
+    const { runDiagnose } = await import("./orchestrator.js");
     const code = await runDiagnose({ endpoint, opts });
     process.exitCode = code;
   });
@@ -92,6 +81,7 @@ program
   )
   .option("--no-color", "disable ANSI colors")
   .action(async (opts) => {
+    const { runInteractiveMode } = await loadInteractiveCli();
     const code = await runInteractiveMode(opts);
     process.exitCode = code;
   });
@@ -121,6 +111,7 @@ program
       .option("--no-docs", "skip documentation generation")
       .option("--out <dir>", "output directory", ".")
       .action(async (name, opts) => {
+        const { runGenerateTemplate } = await loadInteractiveCli();
         const code = await runGenerateTemplate(name, opts);
         process.exitCode = code;
       }),
@@ -146,6 +137,7 @@ program
       .option("--no-tests", "skip test generation")
       .option("--out <dir>", "output directory", ".")
       .action(async (name, spec, opts) => {
+        const { runGenerateConnector } = await loadInteractiveCli();
         const code = await runGenerateConnector(name, spec, opts);
         process.exitCode = code;
       }),
@@ -166,6 +158,7 @@ program
       .option("--no-examples", "skip usage examples")
       .option("--out <file>", "output file path")
       .action(async (target, source, opts) => {
+        const { runGenerateDocumentation } = await loadInteractiveCli();
         const code = await runGenerateDocumentation(target, source, opts);
         process.exitCode = code;
       }),
@@ -178,12 +171,19 @@ program
     new Command("ingest-docs")
       .description("ingest normalized MCP docs snapshot into vector storage")
       .option("--version <version>", "snapshot version to ingest")
-      .option("--root <dir>", "library root directory", ".cortexdx/library/mcp-docs")
+      .option(
+        "--root <dir>",
+        "library root directory",
+        ".cortexdx/library/mcp-docs",
+      )
       .option("--storage <file>", "vector storage persistence path")
       .option("--limit <count>", "limit number of chunks ingested")
       .option("--promoted", "read from promoted snapshots instead of _staging")
       .option("--dry-run", "simulate ingestion without storing vectors")
       .action(async (opts) => {
+        const { runLibraryIngestCommand } = await import(
+          "./commands/library.js"
+        );
         const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
@@ -201,18 +201,33 @@ program
   .option("--deterministic", "enable deterministic seeds and timestamps")
   .option("--auth <scheme:value>", "bearer:XYZ | basic:u:p | header:Name:Value")
   .option("--auth0-domain <domain>", "Auth0 domain used for MCP protection")
-  .option("--auth0-client-id <id>", "Auth0 client id for client-credential flow")
-  .option("--auth0-client-secret <secret>", "Auth0 client secret (use env var when possible)")
+  .option(
+    "--auth0-client-id <id>",
+    "Auth0 client id for client-credential flow",
+  )
+  .option(
+    "--auth0-client-secret <secret>",
+    "Auth0 client secret (use env var when possible)",
+  )
   .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
   .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
-  .option("--auth0-device-code", "Use Auth0 device code flow instead of client credentials")
-  .option("--auth0-device-code-endpoint <url>", "Override Auth0 device authorization endpoint")
+  .option(
+    "--auth0-device-code",
+    "Use Auth0 device code flow instead of client credentials",
+  )
+  .option(
+    "--auth0-device-code-endpoint <url>",
+    "Override Auth0 device authorization endpoint",
+  )
   .option("--mcp-api-key <key>", "MCP API key for dual authentication")
   .option("--state-db <path>", "SQLite path for checkpoint persistence")
   .option("--thread-id <id>", "override thread identifier for checkpointing")
   .option("--checkpoint-id <id>", "custom checkpoint id for the current run")
   .option("--resume-checkpoint <id>", "resume from a saved checkpoint id")
-  .option("--resume-thread <id>", "resume from the latest checkpoint for a thread id")
+  .option(
+    "--resume-thread <id>",
+    "resume from the latest checkpoint for a thread id",
+  )
   .option("--mode <diagnostic|development>", "execution mode", "diagnostic")
   .option(
     "--expertise <level>",
@@ -227,10 +242,22 @@ program
   )
   .option("--no-research", "skip the academic research probe")
   .option("--research-topic <text>", "topic to send to the academic providers")
-  .option("--research-question <text>", "question/abstract for contextual providers")
-  .option("--research-providers <csv>", "subset of academic providers to include")
-  .option("--research-limit <number>", "maximum findings per provider for the research probe")
-  .option("--research-out <dir>", "write research artifacts before orchestration")
+  .option(
+    "--research-question <text>",
+    "question/abstract for contextual providers",
+  )
+  .option(
+    "--research-providers <csv>",
+    "subset of academic providers to include",
+  )
+  .option(
+    "--research-limit <number>",
+    "maximum findings per provider for the research probe",
+  )
+  .option(
+    "--research-out <dir>",
+    "write research artifacts before orchestration",
+  )
   .option("--report-out <dir>", "store consolidated reports via ReportManager")
   .option(
     "--disable-sse",
@@ -241,6 +268,7 @@ program
     "override the SSE endpoint used by streaming probes (CORTEXDX_SSE_ENDPOINT)",
   )
   .action(async (endpoint, opts) => {
+    const { runOrchestrate } = await import("./commands/orchestrate.js");
     const code = await runOrchestrate(endpoint ?? null, opts);
     process.exitCode = code;
   });
@@ -254,6 +282,8 @@ deepContext
   .argument("<codebase>", "absolute or relative path to the codebase root")
   .option("--force", "force a complete reindex")
   .action(async (codebase, opts) => {
+    const { ensureWildcardApiKey, runDeepContextIndex } =
+      await loadDeepContextCommands();
     ensureWildcardApiKey();
     const code = await runDeepContextIndex(codebase, opts);
     process.exitCode = code;
@@ -265,6 +295,8 @@ deepContext
   .argument("<query>", "natural language or keyword search query")
   .option("--max-results <number>", "override default result limit (5)")
   .action(async (codebase, query, opts) => {
+    const { ensureWildcardApiKey, runDeepContextSearch } =
+      await loadDeepContextCommands();
     ensureWildcardApiKey();
     const code = await runDeepContextSearch(codebase, query, opts);
     process.exitCode = code;
@@ -274,6 +306,8 @@ deepContext
   .command("status")
   .argument("[codebase]", "optional codebase path")
   .action(async (codebase) => {
+    const { ensureWildcardApiKey, runDeepContextStatus } =
+      await loadDeepContextCommands();
     ensureWildcardApiKey();
     const code = await runDeepContextStatus(codebase);
     process.exitCode = code;
@@ -283,6 +317,8 @@ deepContext
   .command("clear")
   .argument("[codebase]", "optional codebase path to clear")
   .action(async (codebase) => {
+    const { ensureWildcardApiKey, runDeepContextClear } =
+      await loadDeepContextCommands();
     ensureWildcardApiKey();
     const code = await runDeepContextClear(codebase);
     process.exitCode = code;
@@ -299,10 +335,21 @@ program
   .option("--out <dir>", "write JSON/Markdown artifacts")
   .option("--deterministic", "stable timestamps and seeds")
   .option("--json", "emit full JSON report")
-  .option("--credential <provider:value>", "override provider credential", collectRepeatableOption, [])
-  .option("--header <name:value>", "inject custom HTTP header", collectRepeatableOption, [])
+  .option(
+    "--credential <provider:value>",
+    "override provider credential",
+    collectRepeatableOption,
+    [],
+  )
+  .option(
+    "--header <name:value>",
+    "inject custom HTTP header",
+    collectRepeatableOption,
+    [],
+  )
   .action(async (topic, opts) => {
-    const code = await runResearch(topic, opts);
+      const { runResearch } = await import("./commands/research.js");
+      const code = await runResearch(topic, opts);
     process.exitCode = code;
   });
 
@@ -319,6 +366,7 @@ program
     "intermediate",
   )
   .action(async (problem, opts) => {
+    const { runStartDebugging } = await loadInteractiveCli();
     const code = await runStartDebugging(problem, opts);
     process.exitCode = code;
   });
@@ -326,21 +374,31 @@ program
 program
   .command("sbom")
   .description("generate SBOM artifacts (CycloneDX/SPDX)")
-  .option("--manifest <path>", "path to manifest (package.json, requirements.txt, pom.xml)")
-.option("--type <npm|pip|maven>", "override manifest type")
+  .option(
+    "--manifest <path>",
+    "path to manifest (package.json, requirements.txt, pom.xml)",
+  )
+  .option("--type <npm|pip|maven>", "override manifest type")
   .option("--format <cyclonedx|spdx>", "SBOM format", "cyclonedx")
   .option("--out <dir>", "output directory (default: reports/sbom)")
   .option("--include-dev", "include dev dependencies")
   .option("--no-licenses", "omit license metadata")
   .option("--hashes", "include component hashes")
   .option("--xml", "emit XML output alongside JSON")
-  .option("--dt-url <url>", "Dependency Track base URL (e.g., https://dt.example.com)")
+  .option(
+    "--dt-url <url>",
+    "Dependency Track base URL (e.g., https://dt.example.com)",
+  )
   .option("--dt-api-key <key>", "Dependency Track API key")
   .option("--dt-project <name>", "Dependency Track project name")
   .option("--dt-version <version>", "Dependency Track project version")
-  .option("--dt-subscribe", "Subscribe Dependency Track notifications to a webhook")
+  .option(
+    "--dt-subscribe",
+    "Subscribe Dependency Track notifications to a webhook",
+  )
   .option("--dt-webhook <url>", "Webhook URL for Dependency Track alerts")
   .action(async (opts) => {
+    const { runGenerateSbom } = await import("./commands/sbom.js");
     const code = await runGenerateSbom({
       manifest: opts.manifest,
       type: opts.type,
@@ -375,6 +433,7 @@ program
       )
       .option("--technical", "include technical details")
       .action(async (error, opts) => {
+        const { runInterpretError } = await loadInteractiveCli();
         const code = await runInterpretError(error, opts);
         process.exitCode = code;
       }),
@@ -394,6 +453,7 @@ program
       .option("--no-examples", "skip code examples")
       .option("--no-usecases", "skip use case examples")
       .action(async (concept, opts) => {
+        const { runExplainConcept } = await loadInteractiveCli();
         const code = await runExplainConcept(concept, opts);
         process.exitCode = code;
       }),
@@ -414,6 +474,7 @@ program
   .option("--standards <file>", "organization standards file (JSON)")
   .option("--no-samples", "skip code samples")
   .action(async (endpoint, opts) => {
+    const { runBestPractices } = await loadInteractiveCli();
     const code = await runBestPractices(endpoint, opts);
     process.exitCode = code;
   });
@@ -448,6 +509,7 @@ program
     "max findings per provider used in tutorials",
   )
   .action(async (topic, opts) => {
+    const { runCreateTutorial } = await loadInteractiveCli();
     const code = await runCreateTutorial(topic, opts);
     process.exitCode = code;
   });
@@ -464,7 +526,10 @@ program
   )
   .option("--no-research", "skip academic research probe")
   .option("--research-topic <text>", "topic for academic research probe")
-  .option("--research-question <text>", "question/abstract to pass to providers")
+  .option(
+    "--research-question <text>",
+    "question/abstract to pass to providers",
+  )
   .option("--research-providers <csv>", "providers to use for research probe")
   .option("--research-limit <number>", "max findings per provider")
   .option("--research-out <dir>", "write research artifacts to directory")
@@ -482,6 +547,7 @@ program
   .argument("<new>", "new findings JSON")
   .description("show added/removed findings")
   .action(async (oldFile, newFile) => {
+    const { runCompare } = await import("./commands/compare.js");
     const code = await runCompare(oldFile, newFile);
     process.exitCode = code;
   });
@@ -492,7 +558,11 @@ program
   .description("run comprehensive self-diagnosis and auto-fixing")
   .option("--auto-fix", "automatically apply fixes for identified issues")
   .option("--dry-run", "show what would be fixed without making changes")
-  .option("--severity <level>", "minimum severity level to auto-fix (blocker,major,minor,info)", "major")
+  .option(
+    "--severity <level>",
+    "minimum severity level to auto-fix (blocker,major,minor,info)",
+    "major",
+  )
   .option("--no-backup", "skip creating backups before applying fixes")
   .option("--validate", "run post-fix validation to verify fixes")
   .option("--out <file>", "save report to JSON file")
@@ -506,7 +576,10 @@ program
   .command("heal")
   .description("diagnose and attempt to fix issues with an MCP endpoint")
   .argument("<endpoint>", "MCP endpoint URL to diagnose and heal")
-  .option("--auto-fix", "automatically apply fixes (default: false for external endpoints)")
+  .option(
+    "--auto-fix",
+    "automatically apply fixes (default: false for external endpoints)",
+  )
   .option("--dry-run", "show what would be fixed without making changes")
   .option("--severity <level>", "minimum severity level to auto-fix", "major")
   .option("--probes <list>", "comma-separated list of probes to run", "all")
@@ -529,7 +602,10 @@ program
   .option("--webhook <url>", "send notifications to webhook URL")
   .option("--config <file>", "load monitoring configuration from file")
   .option("--export <file>", "export current configuration to file")
-  .option("--state-file <file>", "persist monitoring scheduler status to JSON file")
+  .option(
+    "--state-file <file>",
+    "persist monitoring scheduler status to JSON file",
+  )
   .action(async (opts) => {
     const { runMonitoring } = await import("./commands/self-healing.js");
     const code = await runMonitoring(opts);
@@ -542,13 +618,19 @@ program
   .addCommand(
     new Command("list")
       .description("list available fix templates")
-      .option("--area <type>", "filter by area (security,performance,protocol,development)")
-      .option("--severity <level>", "filter by severity (blocker,major,minor,info)")
+      .option(
+        "--area <type>",
+        "filter by area (security,performance,protocol,development)",
+      )
+      .option(
+        "--severity <level>",
+        "filter by severity (blocker,major,minor,info)",
+      )
       .action(async (opts) => {
         const { runTemplatesList } = await import("./commands/templates.js");
         const code = await runTemplatesList(opts);
         process.exitCode = code;
-      })
+      }),
   )
   .addCommand(
     new Command("apply")
@@ -561,7 +643,7 @@ program
         const { runTemplateApply } = await import("./commands/templates.js");
         const code = await runTemplateApply(templateId, opts);
         process.exitCode = code;
-      })
+      }),
   )
   .addCommand(
     new Command("show")
@@ -571,7 +653,7 @@ program
         const { runTemplateShow } = await import("./commands/templates.js");
         const code = await runTemplateShow(templateId);
         process.exitCode = code;
-      })
+      }),
   );
 
 program
@@ -585,6 +667,14 @@ program
     const code = await runHealthCheck(opts);
     process.exitCode = code;
   });
+
+async function loadInteractiveCli() {
+  return import("./commands/interactive-cli.js");
+}
+
+async function loadDeepContextCommands() {
+  return import("./commands/deepcontext.js");
+}
 
 function collectRepeatableOption(value: string, previous: string[]): string[] {
   return [...previous, value];

@@ -18,13 +18,16 @@ Only the latest CortexDx release receives security fixes. Please stay on the mos
 
 ## Reporting a Vulnerability
 
-Report issues privately via GitHub security advisories or email the maintainer listed in `package.json`. Expect acknowledgement within 48 hours; fixes are prioritized by severity and coordinated with downstream consumers (launchd services, Docker images, npm release).
+Report issues privately via GitHub security advisories or email the maintainer listed in `package.json`. Expect
+acknowledgement within 48 hours; fixes are prioritized by severity and coordinated with downstream consumers
+(launchd services, Docker images, npm release).
 
 ## Continuous Security
 
 - `pnpm security:semgrep` and `pnpm security:gitleaks` run locally and in CI.
 - CI gates (Biome lint, Vitest, `pnpm build`, Semgrep) run on every pull request.
 - Nightly DeepContext + MCP inspector baselines detect drift in MCP adapters.
-- The self-improvement suite (`pnpm internal:self-improvement`) runs with strict JSON output and uploads reports under `reports/`, producing an auditable trail of remediation steps for each release.
+- The self-improvement suite (`pnpm internal:self-improvement`) runs with strict JSON output and uploads reports
+  under `reports/`, producing an auditable trail of remediation steps for each release.
 
 For high-level safety guidelines, see [README.md](README.md) and the operational rules in [AGENTS.md](AGENTS.md).

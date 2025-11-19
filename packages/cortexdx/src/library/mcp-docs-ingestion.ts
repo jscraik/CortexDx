@@ -1,31 +1,31 @@
-import { safeParseJson } from "../utils/json.js";
-import { mkdir, readdir, readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
-  createReferenceDocument,
-  createVectorStorage,
+  type IVectorStorage,
   type ReferenceDocumentInput,
   type VectorDocument,
-  type VectorStorage,
+  createReferenceDocument,
+  createVectorStorage,
 } from "../storage/vector-storage.js";
-import type {
-  McpDocsChunkRecord,
-  McpDocsManifest,
-  McpDocsSourceInfo,
-} from "./mcp-docs.js";
+import { safeParseJson } from "../utils/json.js";
 import {
   MCP_DOCS_LIBRARY_ROOT,
   MCP_DOCS_STAGING_DIR,
   MCP_DOCS_VECTOR_PATH,
 } from "./mcp-docs-paths.js";
+import type {
+  McpDocsChunkRecord,
+  McpDocsManifest,
+  McpDocsSourceInfo,
+} from "./mcp-docs.js";
 
 export interface McpDocsIngestOptions {
   rootDir?: string;
   version?: string;
   staging?: boolean;
-  vectorStorage?: VectorStorage;
+  vectorStorage?: IVectorStorage;
   vectorStoragePath?: string;
   embeddingAdapter?: EmbeddingAdapter;
   chunkLimit?: number;
@@ -69,6 +69,7 @@ export async function ingestMcpDocsSnapshot(
 
   if (!options.dryRun) {
     await storageDetails.storage.addDocuments(documents);
+    await storageDetails.storage.close(); // Ensure writes are persisted
   }
 
   return {
@@ -175,7 +176,9 @@ async function readChunkFile(
   return records;
 }
 
-function buildSourceIndex(manifest: McpDocsManifest): Map<string, McpDocsSourceInfo> {
+function buildSourceIndex(
+  manifest: McpDocsManifest,
+): Map<string, McpDocsSourceInfo> {
   const index = new Map<string, McpDocsSourceInfo>();
   for (const source of manifest.sources) {
     index.set(source.id, source);
@@ -187,15 +190,16 @@ function buildSourceIndex(manifest: McpDocsManifest): Map<string, McpDocsSourceI
 }
 
 async function prepareVectorStorage(
-  provided: VectorStorage | undefined,
+  provided: IVectorStorage | undefined,
   customPath?: string,
-): Promise<{ storage: VectorStorage; path?: string }> {
+): Promise<{ storage: IVectorStorage; path?: string }> {
   if (provided) {
     return { storage: provided, path: customPath };
   }
-  const storagePath = customPath ?? MCP_DOCS_VECTOR_PATH;
+  const storagePath =
+    customPath ?? MCP_DOCS_VECTOR_PATH.replace(".json", ".db");
   await mkdir(path.dirname(storagePath), { recursive: true });
-  const storage = createVectorStorage(storagePath);
+  const storage = await createVectorStorage(storagePath);
   await storage.restoreFromDisk();
   return { storage, path: storagePath };
 }
@@ -238,7 +242,10 @@ function buildReferenceInput(
     sourceType: source?.type,
     sourceUrl: source?.url,
     artifact: source?.artifact,
-    commit: "commit" in (source ?? {}) ? (source as { commit: string }).commit : undefined,
+    commit:
+      "commit" in (source ?? {})
+        ? (source as { commit: string }).commit
+        : undefined,
     metadata: source?.metadata,
   };
 }

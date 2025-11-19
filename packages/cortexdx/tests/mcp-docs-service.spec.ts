@@ -145,6 +145,7 @@ async function seedVectorStorage(storagePath: string): Promise<void> {
     },
     timestamp: Date.now(),
   });
+  await storage.flushPendingWrites();
 }
 
 function buildManifest(version: string): McpDocsManifest {

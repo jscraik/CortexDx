@@ -1,12 +1,10 @@
 /**
  * Vector Storage for Embeddings
- * Provides persistent storage and semantic search for resolution patterns
+ * Provides persistent SQLite-backed storage and semantic search for resolution patterns
  * Requirements: 12.5, 10.2
  */
 
-import { safeParseJson } from "../utils/json.js";
 import type { EmbeddingVector } from "../adapters/embedding.js";
-import { cosineSimilarity } from "../adapters/embedding.js";
 import type { Problem, Solution } from "../types.js";
 
 export interface VectorDocument {
@@ -49,240 +47,39 @@ export interface VectorStorageStats {
 }
 
 /**
- * In-memory vector storage with optional persistence
+ * Vector storage interface - implemented by SQLiteVectorStorage
  */
-export class VectorStorage {
-  private documents = new Map<string, VectorDocument>();
-  private persistencePath?: string;
-
-  constructor(persistencePath?: string) {
-    this.persistencePath = persistencePath;
-  }
-
-  /**
-   * Add a document with its embedding to the storage
-   */
-  async addDocument(document: VectorDocument): Promise<void> {
-    this.documents.set(document.id, document);
-
-    if (this.persistencePath) {
-      await this.persistToDisk();
-    }
-  }
-
-  /**
-   * Add multiple documents in batch
-   */
-  async addDocuments(documents: VectorDocument[]): Promise<void> {
-    for (const doc of documents) {
-      this.documents.set(doc.id, doc);
-    }
-
-    if (this.persistencePath) {
-      await this.persistToDisk();
-    }
-  }
-
-  /**
-   * Search for similar documents using semantic similarity
-   */
-  async search(
+export interface IVectorStorage {
+  addDocument(document: VectorDocument): Promise<void>;
+  addDocuments(documents: VectorDocument[]): Promise<void>;
+  search(
     queryEmbedding: EmbeddingVector,
-    options: SearchOptions = {},
-  ): Promise<SearchResult[]> {
-    const {
-      topK = 10,
-      minSimilarity = 0.6,
-      filterType,
-      filterProblemType,
-    } = options;
-
-    const results: SearchResult[] = [];
-
-    for (const doc of this.documents.values()) {
-      // Apply filters
-      if (filterType && doc.metadata.type !== filterType) {
-        continue;
-      }
-      if (filterProblemType && doc.metadata.problemType !== filterProblemType) {
-        continue;
-      }
-
-      // Calculate similarity
-      const similarity = cosineSimilarity(
-        queryEmbedding.values,
-        doc.embedding.values,
-      );
-
-      if (similarity >= minSimilarity) {
-        results.push({
-          document: doc,
-          similarity,
-          rank: 0, // Will be set after sorting
-        });
-      }
-    }
-
-    // Sort by similarity descending
-    results.sort((a, b) => b.similarity - a.similarity);
-
-    // Limit to topK and set ranks
-    const topResults = results.slice(0, topK);
-    topResults.forEach((result, index) => {
-      result.rank = index + 1;
-    });
-
-    return topResults;
-  }
-
-  /**
-   * Get a document by ID
-   */
-  async getDocument(id: string): Promise<VectorDocument | null> {
-    return this.documents.get(id) || null;
-  }
-
-  /**
-   * Delete a document by ID
-   */
-  async deleteDocument(id: string): Promise<boolean> {
-    const deleted = this.documents.delete(id);
-
-    if (deleted && this.persistencePath) {
-      await this.persistToDisk();
-    }
-
-    return deleted;
-  }
-
-  /**
-   * Get all documents matching a filter
-   */
-  async getDocumentsByType(
+    options?: SearchOptions,
+  ): Promise<SearchResult[]>;
+  getDocument(id: string): Promise<VectorDocument | null>;
+  deleteDocument(id: string): Promise<boolean>;
+  getDocumentsByType(
     type: "problem" | "solution" | "pattern" | "reference",
-  ): Promise<VectorDocument[]> {
-    return Array.from(this.documents.values()).filter(
-      (doc) => doc.metadata.type === type,
-    );
-  }
-
-  /**
-   * Get storage statistics
-   */
-  getStats(): VectorStorageStats {
-    const docs = Array.from(this.documents.values());
-
-    if (docs.length === 0) {
-      return {
-        totalDocuments: 0,
-        documentsByType: {},
-        oldestDocument: null,
-        newestDocument: null,
-        averageEmbeddingDimensions: 0,
-      };
-    }
-
-    const documentsByType: Record<string, number> = {};
-    let totalDimensions = 0;
-
-    for (const doc of docs) {
-      documentsByType[doc.metadata.type] =
-        (documentsByType[doc.metadata.type] || 0) + 1;
-      totalDimensions += doc.embedding.dimensions;
-    }
-
-    const timestamps = docs.map((d) => d.timestamp);
-
-    return {
-      totalDocuments: docs.length,
-      documentsByType,
-      oldestDocument: Math.min(...timestamps),
-      newestDocument: Math.max(...timestamps),
-      averageEmbeddingDimensions: totalDimensions / docs.length,
-    };
-  }
-
-  /**
-   * Clean up old documents
-   */
-  async cleanupOldDocuments(maxAgeMs: number): Promise<number> {
-    const now = Date.now();
-    let cleaned = 0;
-
-    for (const [id, doc] of this.documents.entries()) {
-      if (now - doc.timestamp > maxAgeMs) {
-        this.documents.delete(id);
-        cleaned++;
-      }
-    }
-
-    if (cleaned > 0 && this.persistencePath) {
-      await this.persistToDisk();
-    }
-
-    return cleaned;
-  }
-
-  /**
-   * Restore from disk on startup
-   */
-  async restoreFromDisk(): Promise<number> {
-    if (!this.persistencePath) {
-      return 0;
-    }
-
-    try {
-      const fs = await import("node:fs/promises");
-      const data = await fs.readFile(this.persistencePath, "utf-8");
-      const stored: VectorDocument[] = safeParseJson(data);
-
-      for (const doc of stored) {
-        this.documents.set(doc.id, doc);
-      }
-
-      return stored.length;
-    } catch (error) {
-      // File doesn't exist or is invalid - that's okay on first run
-      return 0;
-    }
-  }
-
-  /**
-   * Persist current state to disk
-   */
-  private async persistToDisk(): Promise<void> {
-    if (!this.persistencePath) {
-      return;
-    }
-
-    const documents = Array.from(this.documents.values());
-    const fs = await import("node:fs/promises");
-    await fs.writeFile(
-      this.persistencePath,
-      JSON.stringify(documents, null, 2),
-      "utf-8",
-    );
-  }
-
-  /**
-   * Clear all documents
-   */
-  async clear(): Promise<void> {
-    this.documents.clear();
-
-    if (this.persistencePath) {
-      await this.persistToDisk();
-    }
-  }
+  ): Promise<VectorDocument[]>;
+  getStats(): VectorStorageStats;
+  cleanupOldDocuments(maxAgeMs: number): Promise<number>;
+  restoreFromDisk(): Promise<number>;
+  clear(): Promise<void>;
+  close(): Promise<void>;
 }
 
+// Re-export SQLite implementation as the default
+export { SQLiteVectorStorage } from "./vector-storage-sqlite.js";
+
 /**
- * Create a vector storage instance
+ * Create a SQLite-backed vector storage instance
+ * @param dbPath Path to SQLite database file (default: .cortexdx/vector-storage.db)
  */
-export const createVectorStorage = (
-  persistencePath?: string,
-): VectorStorage => {
-  return new VectorStorage(persistencePath);
+export const createVectorStorage = async (
+  dbPath = ".cortexdx/vector-storage.db",
+): Promise<IVectorStorage> => {
+  const { SQLiteVectorStorage } = await import("./vector-storage-sqlite.js");
+  return new SQLiteVectorStorage(dbPath);
 };
 
 /**

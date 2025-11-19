@@ -11,6 +11,14 @@ CortexDx is a stateless, **plugin-first diagnostic meta-inspector** for Model Co
 - **Evidence-Based Findings**: Every diagnostic result includes verifiable evidence pointers
 - **ArcTDD Methodology**: Red → Green → Refactor in ≤7 steps (tests before code)
 
+### Monorepo Structure (pnpm + Nx)
+This is a **pnpm workspace** orchestrated by **Nx 19.8.4**:
+- `packages/cortexdx/` - Main diagnostic engine (TypeScript ESM)
+- `packages/mcp/` - MCP protocol implementations
+- `packages/insula-mcp/` - MCP server utilities
+- Always use `nx run <project>:<target>` for builds/tests (never direct tooling)
+- Nx cloud is disabled (`NX_CLOUD=false`) for all workspace scripts
+
 ## Essential Development Workflow
 
 ### Setup & Dependencies
@@ -21,14 +29,24 @@ pnpm lint && pnpm test && pnpm build    # Required before any commit
 
 ### Critical Commands (Follow This Order)
 1. **`mise install`** - Ensures Node.js 20.11.1 and pnpm 9.12.2
-2. **`pnpm install`** - Install workspace dependencies  
+2. **`pnpm install`** - Install workspace dependencies (never use npm/yarn)
 3. **`pnpm lint`** - Biome lint (zero warnings required for merge)
 4. **`pnpm test`** - Vitest suite (includes build dependency)
-5. **`pnpm build`** - tsup bundle verification
+5. **`pnpm build`** - tsup bundle verification (builds `packages/cortexdx`)
 
 ### Integration Testing (Opt-in)
 ```bash
 pnpm test:integration    # Sets CORTEXDX_RUN_INTEGRATION=1 for long-running suites
+```
+
+### Important Workspace Scripts
+```bash
+pnpm self:diagnose              # Run CortexDx against itself (uses .env.self)
+pnpm research:smoke             # Academic provider smoke tests
+pnpm deepcontext:status         # Check DeepContext semantic index status
+pnpm sbom                       # Generate SBOM artifacts (CycloneDX/SPDX)
+pnpm internal:self-improvement  # Self-diagnostic with LLM analysis
+pnpm governance:validate        # Validate .cortex governance packs
 ```
 
 ## Plugin Development Patterns
@@ -64,9 +82,10 @@ export const myPlugin: DiagnosticPlugin = {
 ## Code Style Requirements
 
 ### Function & Export Rules
-- **Named exports only** - No `export default`
+- **Named exports only** - No `export default` anywhere
 - **≤40 lines per function** - Split larger functions into helpers
 - **No `any` types** - Use explicit types or type guards
+- **ESM imports MUST include `.js` extension** - `from "./foo.js"` not `from "./foo"`
 
 ### File Organization
 ```
@@ -76,7 +95,12 @@ packages/cortexdx/src/
 ├── report/            # Report generators (markdown, JSON, ArcTDD)
 ├── workers/           # Sandbox worker implementations
 ├── context/           # Context factories and sessions
-└── ml/               # LLM integration (Ollama, cloud providers)
+├── ml/                # LLM integration (Ollama router)
+├── orchestration/     # LangGraph workflow definitions
+├── self-healing/      # Self-improvement workflows
+├── providers/         # Academic research providers (Context7, Exa, etc.)
+├── storage/           # SQLite persistence (patterns, conversations, reports)
+└── types.ts           # Core type definitions
 ```
 
 ## MCP Protocol Integration
@@ -93,7 +117,16 @@ ctx.evidence({ type: 'url', ref: ctx.endpoint });      // Log evidence
 ### Session Management
 - Plugins share MCP sessions via `SharedSessionState`
 - Session initialization happens once per diagnostic run
+- **CRITICAL**: Always include `MCP-Session-ID` header in all JSON-RPC requests
 - Use `ctx.transport?.transcript()` for transport-level findings
+- FastMCP requires session ID before any RPC calls (including `initialize`)
+
+### MCP Session Lifecycle
+1. Generate session ID: `cortexdx-<timestamp>` or UUID
+2. Send with first `initialize` call via `MCP-Session-ID` header
+3. Reuse same session ID for all subsequent requests (`rpc.ping`, `tools/list`, etc.)
+4. Include session ID in SSE probes (`/events?mcp-session-id=...`)
+5. See `src/context/inspector-session.ts` for reference implementation
 
 ## Testing Conventions
 
@@ -144,16 +177,28 @@ LLM_PROVIDER=ollama OLLAMA_BASE_URL=http://localhost:11434
 - **Registry**: `src/registry/providers/academic.ts` - Provider registration
 - **Researcher**: `src/research/academic-researcher.ts` - Execution engine
 - **Providers**: `src/providers/academic/` - Individual provider implementations
+- **Supported**: Context7, Vibe Check, OpenAlex, Exa, Wikidata, arXiv
+- **Preview-only**: Semantic Scholar (exclude from production flows)
 
 ### Self-Healing Workflows
 - **LangGraph Integration**: `src/self-healing/graph.ts` - Workflow definitions
 - **State Management**: Uses SQLite checkpoints (`CORTEXDX_STATE_DB`)
 - **Orchestration**: `src/commands/orchestrate.ts` - CLI entry point
+- **Deterministic**: Seeds LLM adapter for reproducible conversations
 
 ### Monitoring & Observability
 - **Health Checks**: `src/commands/health.ts` - System health monitoring
 - **SBOM Generation**: `src/commands/sbom.ts` - Dependency tracking
 - **Report Manager**: `src/storage/report-manager.ts` - Report aggregation
+- **OpenTelemetry**: Full OTEL integration with Shinzo Labs instrumentation
+
+### DeepContext Semantic Search
+- **Tool**: Wildcard's DeepContext MCP server for semantic code intelligence
+- **Index Command**: `cortexdx deepcontext index <codebase>`
+- **Search Command**: `cortexdx deepcontext search <codebase> "query"`
+- **Status Command**: `cortexdx deepcontext status` (reads cached snapshots)
+- **Auto-Integration**: Self-improvement plugins automatically use DeepContext
+- **Storage**: `.codex-context/` for semantic index, `.cortexdx/deepcontext-status.json` for cache
 
 ## Security & Compliance
 
@@ -161,11 +206,19 @@ LLM_PROVIDER=ollama OLLAMA_BASE_URL=http://localhost:11434
 - Never hardcode secrets - use environment variables or 1Password CLI
 - HAR files automatically redact `authorization`, `cookie`, `token` headers
 - Use `CORTEXDX_DISABLE_LLM=1` for air-gapped environments
+- All secrets managed via `op run --env-file=.env -- <command>`
+- **NEVER** duplicate secrets from `.env` into GitHub secrets
 
 ### Governance Integration
 - `.cortex` packs drive policy checks via `src/adapters/cel-rules.ts`
 - All changes must respect `/.cortexdx/rules/vision.md`
 - Evidence pointers required for audit trails
+
+### Security Tooling
+- **Semgrep**: `pnpm security:semgrep` - MCP-focused rules
+- **Gitleaks**: `pnpm security:gitleaks` - Secret scanning
+- **OWASP ZAP**: `pnpm security:zap <endpoint>` - Dynamic scanning
+- All emit JSON summaries with deterministic exit codes for CI
 
 ## Debugging & Troubleshooting
 

@@ -5,8 +5,8 @@ import { z } from "zod";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
+  type IVectorStorage,
   type VectorDocument,
-  type VectorStorage,
   createVectorStorage,
 } from "../storage/vector-storage.js";
 import { safeParseJson } from "../utils/json.js";
@@ -41,7 +41,7 @@ export interface McpDocsSearchOptions {
   scope?: "staging" | "promoted";
   storagePath?: string;
   embeddingAdapter?: EmbeddingAdapter;
-  vectorStorage?: VectorStorage;
+  vectorStorage?: IVectorStorage;
   rootDir?: string;
   stagingDir?: string;
 }
@@ -170,13 +170,14 @@ export async function readMcpDocsManifest(
 }
 
 async function hydrateVectorStorage(
-  existing: VectorStorage | undefined,
+  existing: IVectorStorage | undefined,
   customPath?: string,
-): Promise<VectorStorage> {
+): Promise<IVectorStorage> {
   if (existing) {
     return existing;
   }
-  const storage = createVectorStorage(customPath ?? MCP_DOCS_VECTOR_PATH);
+  const dbPath = (customPath ?? MCP_DOCS_VECTOR_PATH).replace(".json", ".db");
+  const storage = await createVectorStorage(dbPath);
   await storage.restoreFromDisk();
   return storage;
 }

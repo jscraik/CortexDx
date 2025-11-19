@@ -151,7 +151,124 @@ async function probeHealth(ctx: DevelopmentContext): Promise<Finding | null> {
   }
 }
 
-export async function analyzeWithLLM(
+export /**
+ * Improved MCP Inspector Prompt for @modelcontextprotocol inspector CLI
+ */
+type CortexDxInspectorOutput = {
+  rootCause: string; // Specific cause in CortexDx's codebase
+  filesToModify: string[];
+  codeChanges: string; // Unified diff (patch) with file paths + line numbers
+  validationSteps: string[]; // Executable commands or specific actions
+  riskLevel: "low" | "medium" | "high";
+  templateId: string | null;
+  canAutoFix: boolean;
+};
+
+function buildMcpInspectorPrompt(
+  finding: unknown,
+  ctx: {
+    projectContext?: {
+      sourceFiles?: string[];
+      dependencies?: string[];
+      language?: string;
+    };
+    userExpertiseLevel?: "novice" | "intermediate" | "advanced";
+  },
+): string {
+  return String.raw`
+ROLE
+You are CortexDx's self-healing AI assistant operating in an MCP-enabled environment. Your task is to analyze the Inspector finding and produce a *single JSON object* (no prose, no backticks) that the CortexDx fixer can consume directly.
+
+INPUTS
+- Inspector Finding (verbatim JSON):
+${JSON.stringify(finding, null, 2)}
+
+- Current CortexDx Context:
+  • Project Files: ${ctx.projectContext?.sourceFiles?.slice(0, 10).join(", ") || "unknown"}
+  • Dependencies: ${ctx.projectContext?.dependencies?.slice(0, 10).join(", ") || "unknown"}
+  • Language: ${ctx.projectContext?.language || "typescript"}
+  • Expertise Level: ${ctx.userExpertiseLevel || "intermediate"}
+
+MCP TOOLING (IF AVAILABLE)
+- If the connected MCP server exposes tools (e.g., fs/readFile, fs/glob, fs/exists, git/diff, package/readJson, shell/exec), *use them to confirm file paths, read target code for accurate line numbers, and validate assumptions* before proposing changes.
+- Never run destructive commands. Prefer read-only ops. If shell/exec is available, limit to safe, read-only commands (e.g., "node -v", "npx tsc --version").
+
+OUTPUT CONTRACT (STRICT)
+Return ONLY one JSON object matching this exact shape (no extra keys, no comments, no markdown):
+
+{
+  "rootCause": "Specific cause in CortexDx's codebase (REQUIRED)",
+  "filesToModify": ["path/from/repo/root.ts", "..."],
+  "codeChanges": "UNIFIED_DIFF_PATCH_WITH_CONTEXT_AND_LINE_NUMBERS",
+  "validationSteps": ["step1: ...", "step2: ..."],
+  "riskLevel": "low|medium|high",
+  "templateId": "template.identifier or null",
+  "canAutoFix": true/false
+}
+
+SCHEMA NOTES
+- rootCause: Precise, single-sentence diagnosis that directly references files/symbols/config involved.
+- filesToModify: The exact list of files appearing in your diff. Use repo-rooted paths.
+- codeChanges: Provide a unified diff (git-style) with correct line numbers & minimal, targeted hunks:
+  Example format (illustrative):
+  --- a/src/module/foo.ts
+  +++ b/src/module/foo.ts
+  @@ -12,7 +12,9 @@
+  -const x: any = load();
+  +import type { Config } from "../types";
+  +const x: Config = load();
+
+  Include enough surrounding context lines to apply cleanly. No placeholders or pseudo-diff.
+- validationSteps: A linear, executable checklist (CLI commands and/or specific actions) to prove the fix.
+- riskLevel: Assess blast radius and reversibility -> low | medium | high.
+- templateId: One of your known remediator templates if applicable (e.g., "ts.import.fix", "tsconfig.moduleResolution", "deps.version.bump", "eslint.rule.update", "security.sanitize.input") else null.
+- canAutoFix: true only if the change is local, deterministic, and safe to apply without human approval.
+
+CORTEXDX HEURISTICS & RULES
+1) Package manager selection:
+   - If Project Files includes "pnpm-lock.yaml" => use pnpm
+   - Else if "yarn.lock" => use yarn
+   - Else => use npm
+   Always prefer npx (or package-runner) where appropriate (e.g., npx tsc).
+
+2) Language-aware validation:
+   - TypeScript: include "tsc --noEmit" to ensure type soundness.
+   - If dependencies or files suggest ESLint (".eslintrc.*" or "eslint" dep): add an ESLint check (e.g., pnpm eslint . --max-warnings=0).
+   - If tests detected (jest, vitest): add a unit test command (e.g., pnpm vitest run --reporter=dot).
+   - If build scripts present: include a build step (e.g., pnpm build).
+
+3) Code changes quality bar:
+   - Use imports/types consistent with project conventions.
+   - Avoid broad refactors—keep diffs minimal and directly tied to the finding.
+   - Reference exact symbols and lines you modify. If a line number cannot be determined even after tool checks, first search the file (via MCP read/glob) to anchor by unique surrounding lines, then calculate the correct hunk position.
+
+4) Risk & autofix rules of thumb:
+   - canAutoFix=true when changes are localized (e.g., import/type fixes, missing export, config key correction) and do not require secrets, DB migrations, or contract changes.
+   - Otherwise set canAutoFix=false and increase riskLevel accordingly.
+
+5) If the finding lacks enough data:
+   - Still produce a best-effort, executable plan using heuristics.
+   - Set canAutoFix=false and riskLevel to "medium" or "high" as appropriate.
+   - rootCause must explain the uncertainty explicitly.
+
+TEMPLATE MAPPING (EXAMPLES)
+- Import/type repair ➜ "ts.import.fix"
+- tsconfig config drift ➜ "tsconfig.moduleResolution"
+- Lint rule correction ➜ "eslint.rule.update"
+- Dependency pin/bump ➜ "deps.version.bump"
+- Basic security sanitization ➜ "security.sanitize.input"
+
+FINAL CHECKS (MANDATORY)
+- Your JSON must parse.
+- filesToModify list matches the files in codeChanges.
+- validationSteps are runnable and reflect the chosen package manager.
+- No explanations outside the JSON. No code fences. No extra keys.
+
+NOW PRODUCE THE JSON OBJECT ONLY.
+`;
+}
+
+async function analyzeWithLLM(
   findings: Finding[],
   ctx: DevelopmentContext,
 ): Promise<Finding[]> {
@@ -175,31 +292,7 @@ export async function analyzeWithLLM(
         `[Self-Improvement] Analyzing finding with LLM: ${finding.id}`,
       );
 
-      const prompt = `
-You are CortexDx's self-healing AI assistant. Analyze this Inspector finding and provide CortexDx-specific guidance.
-
-Inspector Finding:
-${JSON.stringify(finding, null, 2)}
-
-Current CortexDx Context:
-- Project Files: ${ctx.projectContext?.sourceFiles?.slice(0, 10).join(", ") || "unknown"}
-- Dependencies: ${ctx.projectContext?.dependencies?.slice(0, 10).join(", ") || "unknown"}
-- Language: ${ctx.projectContext?.language || "typescript"}
-- Expertise Level: ${ctx.userExpertiseLevel || "intermediate"}
-
-Provide analysis in JSON format with these REQUIRED fields:
-{
-  "rootCause": "Specific cause in CortexDx's codebase (REQUIRED)",
-  "filesToModify": ["file1.ts", "file2.ts"],
-  "codeChanges": "Actual code changes needed with line numbers and context",
-  "validationSteps": ["step1: specific validation action", "step2: verification command"],
-  "riskLevel": "low|medium|high",
-  "templateId": "template.identifier or null",
-  "canAutoFix": true/false
-}
-
-IMPORTANT: Provide specific, actionable code changes with file paths and line numbers. Include validation commands that can be executed.
-`;
+      const prompt = buildMcpInspectorPrompt(finding, ctx);
 
       const analysis = await adapter.complete(prompt, 2000);
       const findingDuration = Date.now() - findingStartTime;
