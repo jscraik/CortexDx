@@ -1,7 +1,7 @@
 # System Prompts Reference
 
 **Version**: 2.0
-**Last Updated**: 2025-11-18
+**Last Updated**: 2025-11-12
 
 This document provides a comprehensive reference for all system prompts used in CortexDx's LLM (Large Language Model) integrations. All prompts enforce deterministic JSON output schemas and include explicit tool awareness sections.
 
