@@ -1,55 +1,59 @@
 /**
  * CortexDx Server - FastMCP Implementation
  * Simplified HTTP server using FastMCP's native HTTP transport
+ * 
+ * ARCHITECTURE UPDATE (Auth Migration Phase 1):
+ * - Main Server (Public): Runs on PORT. Handles .well-known, custom endpoints, and proxies MCP traffic.
+ * - FastMCP Server (Internal): Runs on PORT + 1. Handles standard MCP protocol.
  */
 
 import { FastMCP } from "fastmcp";
+import { existsSync, mkdirSync } from "node:fs";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { createServer as createHttpServer, request as httpRequest } from "node:http";
+import { join } from "node:path";
 import { z } from "zod";
 import { createLogger } from "./logging/logger.js";
-import { mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
-import { createServer as createHttpServer } from "node:http";
-import type { IncomingMessage, ServerResponse } from "node:http";
 
 // Tools and resources
 import {
-  getAllMcpToolsFlat,
-  findMcpTool,
-  executeAcademicIntegrationTool,
-  executeDeepContextTool,
-  executeMcpDocsTool,
-} from "./tools/index.js";
+  getMcpDocsResource,
+  listMcpDocsResources,
+} from "./resources/mcp-docs-store.js";
 import {
   getResearchResource,
   listResearchResources,
 } from "./resources/research-store.js";
 import {
-  getMcpDocsResource,
-  listMcpDocsResources,
-} from "./resources/mcp-docs-store.js";
+  executeAcademicIntegrationTool,
+  executeDeepContextTool,
+  executeMcpDocsTool,
+  findMcpTool,
+  getAllMcpToolsFlat,
+} from "./tools/index.js";
 
 // Registry and providers
 import { getAcademicRegistry } from "./registry/index.js";
 
 // Healing and monitoring
 import { AutoHealer } from "./healing/auto-healer.js";
-import { getGlobalMonitoring } from "./observability/monitoring.js";
 import {
   buildQuickHealthPayload,
   performHealthCheck,
   recordDiagnostic,
 } from "./observability/health-checks.js";
+import { getGlobalMonitoring } from "./observability/monitoring.js";
 
 // Middleware
 import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
 import { safeParseJson } from "./utils/json.js";
 
 // Plugin system
-import { runPlugins } from "./plugin-host.js";
 import { ConversationManager } from "./conversation/manager.js";
+import { runPlugins } from "./plugin-host.js";
 
 // Tasks
-import { TaskStore, TaskExecutor } from "./tasks/index.js";
+import { TaskExecutor, TaskStore } from "./tasks/index.js";
 
 // Types
 import type {
@@ -61,24 +65,22 @@ import type {
 
 // Server config
 import {
-  PORT,
-  HOST,
-  __dirname,
-  RESTRICTED_TOOLS,
-  AUTH0_DOMAIN,
-  AUTH0_CLIENT_ID,
   AUTH0_AUDIENCE,
+  AUTH0_CLIENT_ID,
+  AUTH0_DOMAIN,
+  DEFAULT_TIER,
+  HOST,
+  PORT,
   REQUIRE_AUTH,
   REQUIRE_LICENSE,
-  DEFAULT_TIER,
+  RESTRICTED_TOOLS
 } from "./server/config.js";
 
 // Auth and license middleware
 import {
   type AuthMiddlewareConfig,
   type AuthenticatedRequest,
-  checkToolAccess,
-  createAuthMiddleware,
+  createAuthMiddleware
 } from "./plugins/auth-middleware.js";
 import type { LicenseKey } from "./plugins/commercial-licensing.js";
 import {
@@ -138,6 +140,9 @@ const authMiddlewareConfig: AuthMiddlewareConfig = {
   publicEndpoints: [
     "/health",
     "/providers",
+    "/.well-known/mcp-configuration", // Allow public access to config
+    "/sse", // Allow initial connection (auth handled via protocol or headers)
+    "/messages",
   ],
 };
 
@@ -300,54 +305,55 @@ export function createFastMCPServer() {
       ? createZodSchemaFromJsonSchema(tool.inputSchema as Record<string, unknown>)
       : z.object({});
 
+    // Determine if tool is destructive
+    const isDestructive = tool.name === "cortexdx_delete_workflow" || 
+                          tool.name === "cortexdx_deepcontext_clear";
+
     mcp.addTool({
       name: tool.name,
       description: tool.description || "",
       parameters: zodSchema,
-      execute: async (args) => {
+      // @ts-ignore - FastMCP types might not yet reflect the latest RC annotations fully in all versions, but we pass it for compatibility
+      isDestructive,
+      execute: async (args: Record<string, unknown>) => {
         const ctx = createDevelopmentContext();
 
-        try {
-          // Check if tool is restricted (requires admin role via OAuth2)
-          // Restricted tools must be accessed via admin endpoints with proper authentication
-          if (RESTRICTED_TOOLS.has(tool.name)) {
-            const endpointMap: Record<string, string> = {
-              "wikidata_sparql": "/admin/tools/wikidata-sparql",
-              "cortexdx_delete_workflow": "/admin/tools/delete-workflow",
-            };
-            const endpoint = endpointMap[tool.name] || "/admin/tools";
-            return JSON.stringify({
-              error: `Tool ${tool.name} requires admin role. Use POST ${endpoint} on port ${PORT + 1} with OAuth2 authentication.`,
-              isError: true,
-              hint: "Authenticate with Auth0 and ensure your JWT includes the 'admin' role claim.",
-            });
-          }
-
-          // Try development tools first
-          const mcpTool = findMcpTool(tool.name);
-          if (mcpTool) {
-            const result = await executeDevelopmentTool(mcpTool, args, ctx);
-            return result.content[0]?.text || JSON.stringify(result);
-          }
-
-          // Try academic providers
-          const providers = registry.getAllProviders();
-          for (const [providerId, providerReg] of Object.entries(providers)) {
-            const tools = providerReg.capabilities.tools as Array<{ name?: string }>;
-            const hasTool = tools.some((t) => t.name === tool.name);
-            if (hasTool) {
-              const diagCtx = createDiagnosticContext();
-              const providerInstance = registry.createProviderInstance(providerId, diagCtx);
-              const result = await providerInstance.executeTool(tool.name, args as Record<string, unknown>);
-              return JSON.stringify(result, null, 2);
-            }
-          }
-
-          throw new Error(`Tool not found: ${tool.name}`);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          return JSON.stringify({ error: errorMessage, isError: true });
+        // Check if tool is restricted (requires admin role via OAuth2)
+        // Restricted tools must be accessed via admin endpoints with proper authentication
+        if (RESTRICTED_TOOLS.has(tool.name)) {
+          const endpointMap: Record<string, string> = {
+            "wikidata_sparql": "/admin/tools/wikidata-sparql",
+            "cortexdx_delete_workflow": "/admin/tools/delete-workflow",
+          };
+          const endpoint = endpointMap[tool.name] || "/admin/tools";
+          
+          // Throw a proper error instead of returning a JSON error object
+          throw new Error(
+            `Tool ${tool.name} requires admin role. Use POST ${endpoint} on port ${PORT + 1} with OAuth2 authentication.`
+          );
         }
+
+        // Try development tools first
+        const mcpTool = findMcpTool(tool.name);
+        if (mcpTool) {
+          const result = await executeDevelopmentTool(mcpTool, args, ctx);
+          return result.content[0]?.text || JSON.stringify(result);
+        }
+
+        // Try academic providers
+        const providers = registry.getAllProviders();
+        for (const [providerId, providerReg] of Object.entries(providers)) {
+          const tools = providerReg.capabilities.tools as Array<{ name?: string }>;
+          const hasTool = tools.some((t) => t.name === tool.name);
+          if (hasTool) {
+            const diagCtx = createDiagnosticContext();
+            const providerInstance = registry.createProviderInstance(providerId, diagCtx);
+            const result = await providerInstance.executeTool(tool.name, args as Record<string, unknown>);
+            return JSON.stringify(result, null, 2);
+          }
+        }
+
+        throw new Error(`Tool not found: ${tool.name}`);
       },
     });
   }
@@ -375,7 +381,7 @@ export function createFastMCPServer() {
         name: providerTool.name,
         description: providerTool.description || "",
         parameters: zodSchema,
-        execute: async (args) => {
+        execute: async (args: Record<string, unknown>) => {
           const ctx = createDiagnosticContext();
           const providerInstance = registry.createProviderInstance(providerId, ctx);
           const result = await providerInstance.executeTool(
@@ -413,7 +419,15 @@ export function createFastMCPServer() {
     name: "Research Resource",
     description: "Individual academic research result",
     mimeType: "application/json",
-    async load({ id }) {
+    arguments: [
+      {
+        name: "id",
+        description: "Research ID",
+        required: true,
+      },
+    ],
+    async load(args: any) {
+      const { id } = args;
       const resource = getResearchResource(id);
       if (!resource) {
         throw new Error(`Resource not found: ${id}`);
@@ -470,7 +484,15 @@ export function createFastMCPServer() {
     name: "MCP Docs Resource",
     description: "Individual MCP documentation chunk",
     mimeType: "application/json",
-    async load({ id }) {
+    arguments: [
+      {
+        name: "id",
+        description: "Doc ID",
+        required: true,
+      },
+    ],
+    async load(args: any) {
+      const { id } = args;
       const resource = getMcpDocsResource(id);
       if (!resource) {
         throw new Error(`Resource not found: ${id}`);
@@ -485,72 +507,88 @@ export function createFastMCPServer() {
 }
 
 /**
- * Convert JSON Schema to Zod schema (simplified version)
+ * Convert JSON Schema to Zod schema (recursive version)
  */
 function createZodSchemaFromJsonSchema(jsonSchema: Record<string, unknown>): z.ZodType {
-  const properties = jsonSchema.properties as Record<string, unknown> | undefined;
-  const required = (jsonSchema.required as string[]) || [];
-
-  if (!properties) {
-    return z.object({}).passthrough();
+  // Handle basic types
+  if (jsonSchema.type === "string") {
+    let schema = z.string();
+    if (jsonSchema.enum && Array.isArray(jsonSchema.enum)) {
+      // @ts-ignore - Zod enum expects non-empty array of strings
+      return z.enum(jsonSchema.enum as [string, ...string[]]);
+    }
+    if (jsonSchema.description) {
+      schema = schema.describe(jsonSchema.description as string);
+    }
+    return schema;
   }
 
-  const shape: Record<string, z.ZodType> = {};
-
-  for (const [key, prop] of Object.entries(properties)) {
-    const propSchema = prop as Record<string, unknown>;
-    let zodType: z.ZodType;
-
-    switch (propSchema.type) {
-      case "string":
-        zodType = z.string();
-        if (propSchema.enum) {
-          zodType = z.enum(propSchema.enum as [string, ...string[]]);
-        }
-        break;
-      case "number":
-      case "integer":
-        zodType = z.number();
-        break;
-      case "boolean":
-        zodType = z.boolean();
-        break;
-      case "array":
-        zodType = z.array(z.unknown());
-        break;
-      case "object":
-        zodType = z.object({}).passthrough();
-        break;
-      default:
-        zodType = z.unknown();
+  if (jsonSchema.type === "number" || jsonSchema.type === "integer") {
+    let schema = z.number();
+    if (jsonSchema.description) {
+      schema = schema.describe(jsonSchema.description as string);
     }
-
-    // Make optional if not required
-    if (!required.includes(key)) {
-      zodType = zodType.optional();
-    }
-
-    // Add description
-    if (propSchema.description) {
-      zodType = zodType.describe(propSchema.description as string);
-    }
-
-    shape[key] = zodType;
+    return schema;
   }
 
-  return z.object(shape).passthrough();
+  if (jsonSchema.type === "boolean") {
+    let schema = z.boolean();
+    if (jsonSchema.description) {
+      schema = schema.describe(jsonSchema.description as string);
+    }
+    return schema;
+  }
+
+  if (jsonSchema.type === "array") {
+    const items = jsonSchema.items as Record<string, unknown> | undefined;
+    const itemSchema = items ? createZodSchemaFromJsonSchema(items) : z.unknown();
+    let schema = z.array(itemSchema);
+    if (jsonSchema.description) {
+      schema = schema.describe(jsonSchema.description as string);
+    }
+    return schema;
+  }
+
+  if (jsonSchema.type === "object" || jsonSchema.properties) {
+    const properties = (jsonSchema.properties || {}) as Record<string, unknown>;
+    const required = (jsonSchema.required as string[]) || [];
+    
+    const shape: Record<string, z.ZodType> = {};
+
+    for (const [key, prop] of Object.entries(properties)) {
+      const propSchema = prop as Record<string, unknown>;
+      let zodType = createZodSchemaFromJsonSchema(propSchema);
+
+      // Make optional if not required
+      if (!required.includes(key)) {
+        zodType = zodType.optional();
+      }
+
+      shape[key] = zodType;
+    }
+
+    let schema = z.object(shape).passthrough();
+    if (jsonSchema.description) {
+      schema = schema.describe(jsonSchema.description as string);
+    }
+    return schema;
+  }
+
+  // Fallback for unknown types
+  return z.unknown();
 }
 
 /**
- * Create custom HTTP server for non-MCP endpoints
+ * Create Main HTTP Server (Public)
+ * Handles .well-known, custom endpoints, and proxies MCP traffic
  */
-function createCustomEndpointsServer(port: number) {
+function createMainServer(port: number, internalMcpPort: number) {
   // Read allowed origins from environment variable (comma-separated)
   const allowedOrigins = (process.env.CORTEXDX_ALLOWED_ORIGINS
     ? process.env.CORTEXDX_ALLOWED_ORIGINS.split(",").map(o => o.trim()).filter(Boolean)
     : ["http://localhost", "http://127.0.0.1"]).map(origin => origin.toLowerCase());
 
-  const customServer = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
+  const server = createHttpServer(async (req: IncomingMessage, res: ServerResponse) => {
     // CORS
     const requestOrigin = req.headers.origin?.toLowerCase();
     if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
@@ -589,6 +627,111 @@ function createCustomEndpointsServer(port: number) {
     const path = url.pathname;
 
     try {
+      // ---------------------------------------------------------
+      // 1. MCP Configuration Endpoint (Discovery)
+      // ---------------------------------------------------------
+      if (path === "/.well-known/mcp-configuration") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({
+          authorization_endpoint: process.env.MCP_AUTH_ENDPOINT || `http://${HOST}:${port}/auth/authorize`,
+          token_endpoint: process.env.MCP_TOKEN_ENDPOINT || `http://${HOST}:${port}/auth/token`,
+          capabilities: {
+            authorization: {},
+            // Add other capabilities as needed
+          }
+        }));
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // 1.5 Auth Endpoints (OAuth 2.1)
+      // ---------------------------------------------------------
+      if (path === "/auth/authorize") {
+        if (!AUTH0_DOMAIN || !AUTH0_CLIENT_ID) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Auth0 not configured" }));
+          return;
+        }
+
+        const params = new URLSearchParams(url.search);
+        // Ensure required params for Auth0
+        if (!params.has("client_id")) params.set("client_id", AUTH0_CLIENT_ID);
+        if (!params.has("response_type")) params.set("response_type", "code");
+        if (!params.has("audience") && AUTH0_AUDIENCE) params.set("audience", AUTH0_AUDIENCE);
+        
+        // Construct Auth0 authorize URL
+        const auth0Url = `https://${AUTH0_DOMAIN}/authorize?${params.toString()}`;
+        
+        res.writeHead(302, { Location: auth0Url });
+        res.end();
+        return;
+      }
+
+      if (path === "/auth/token" && req.method === "POST") {
+        if (!AUTH0_DOMAIN) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Auth0 not configured" }));
+          return;
+        }
+
+        let body = "";
+        req.on("data", (chunk) => { body += chunk; });
+        req.on("end", async () => {
+          try {
+            // Proxy to Auth0 token endpoint
+            const tokenRes = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: body,
+            });
+
+            const data = await tokenRes.json();
+            res.writeHead(tokenRes.status, { "Content-Type": "application/json" });
+            res.end(JSON.stringify(data));
+          } catch (error) {
+            serverLogger.error({ error }, "Token proxy error");
+            res.writeHead(502, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Failed to proxy token request" }));
+          }
+        });
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // 2. Proxy to Internal FastMCP Server (/sse, /messages)
+      // ---------------------------------------------------------
+      if (path === "/sse" || path === "/messages" || path.startsWith("/messages/")) {
+        const options = {
+          hostname: HOST,
+          port: internalMcpPort,
+          path: req.url,
+          method: req.method,
+          headers: req.headers,
+        };
+
+        const proxyReq = httpRequest(options, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
+          proxyRes.pipe(res, { end: true });
+        });
+
+        proxyReq.on('error', (e) => {
+          serverLogger.error({ error: e }, "Proxy error");
+          if (!res.headersSent) {
+            res.writeHead(502, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Bad Gateway: Failed to connect to MCP server" }));
+          }
+        });
+
+        req.pipe(proxyReq, { end: true });
+        return;
+      }
+
+      // ---------------------------------------------------------
+      // 3. Custom Endpoints (Health, Providers, etc.)
+      // ---------------------------------------------------------
+      
       // Health check
       if (path === "/health") {
         const detailed = url.searchParams.get("detailed") === "true";
@@ -816,13 +959,13 @@ function createCustomEndpointsServer(port: number) {
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Not found" }));
     } catch (error) {
-      serverLogger.error({ error }, "Custom endpoint error");
+      serverLogger.error({ error }, "Main server error");
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Internal server error" }));
     }
   });
 
-  return customServer;
+  return server;
 }
 
 /**
@@ -831,32 +974,36 @@ function createCustomEndpointsServer(port: number) {
 export async function startServer() {
   const mcp = createFastMCPServer();
 
-  // Start FastMCP with HTTP transport
-  const mcpPort = PORT;
-  const customPort = PORT + 1; // Custom endpoints on adjacent port
+  // Ports
+  const mainPort = PORT;
+  const internalMcpPort = PORT + 1; // Internal FastMCP port
 
-  // Start FastMCP server
-  // Note: CORS is not a built-in FastMCP option for httpStream transport.
-  // Most MCP clients (Claude, ChatGPT) don't require CORS.
-  // The custom endpoints server handles CORS for browser-based tools.
+  // Start FastMCP server (Internal)
   await mcp.start({
     transportType: "httpStream",
     httpStream: {
-      port: mcpPort,
+      port: internalMcpPort,
       host: HOST,
     },
   });
 
-  serverLogger.info(`MCP Server running on http://${HOST}:${mcpPort}`);
+  serverLogger.info(`Internal FastMCP Server running on http://${HOST}:${internalMcpPort}`);
 
-  // Start custom endpoints server
-  const customServer = createCustomEndpointsServer(customPort);
-  customServer.listen(customPort, HOST, () => {
-    serverLogger.info(`Custom endpoints running on http://${HOST}:${customPort}`);
-    serverLogger.info(`  - Health: http://${HOST}:${customPort}/health`);
-    serverLogger.info(`  - Providers: http://${HOST}:${customPort}/providers`);
-    serverLogger.info(`  - Monitoring: http://${HOST}:${customPort}/monitoring/status`);
-    serverLogger.info(`  - Self-diagnose: http://${HOST}:${customPort}/api/v1/self-diagnose`);
+  // Start Main Server (Public)
+  const mainServer = createMainServer(mainPort, internalMcpPort);
+  
+  mainServer.on("error", (err) => {
+    serverLogger.error({ error: err }, "Main server error");
+  });
+
+  mainServer.listen(mainPort, HOST, () => {
+    serverLogger.info(`Main Server running on http://${HOST}:${mainPort}`);
+    serverLogger.info(`  - MCP Config: http://${HOST}:${mainPort}/.well-known/mcp-configuration`);
+    serverLogger.info(`  - MCP SSE: http://${HOST}:${mainPort}/sse`);
+    serverLogger.info(`  - Health: http://${HOST}:${mainPort}/health`);
+    serverLogger.info(`  - Providers: http://${HOST}:${mainPort}/providers`);
+    serverLogger.info(`  - Monitoring: http://${HOST}:${mainPort}/monitoring/status`);
+    serverLogger.info(`  - Self-diagnose: http://${HOST}:${mainPort}/api/v1/self-diagnose`);
   });
 
   // Start monitoring if enabled
@@ -874,14 +1021,14 @@ export async function startServer() {
     taskStore.close();
     monitoring.stop();
     await mcp.stop();
-    customServer.close();
+    mainServer.close();
     process.exit(0);
   };
 
   process.on("SIGTERM", shutdown);
   process.on("SIGINT", shutdown);
 
-  return { mcp, customServer };
+  return { mcp, mainServer };
 }
 
 // Auto-start if running directly
@@ -894,4 +1041,5 @@ if (SHOULD_LISTEN) {
   });
 }
 
-export { createDiagnosticContext, createDevelopmentContext };
+export { createDevelopmentContext, createDiagnosticContext };
+

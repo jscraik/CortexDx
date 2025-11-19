@@ -3,110 +3,109 @@
  * HTTP server that exposes the academic research providers as MCP endpoints
  */
 
-import { createLogger } from "./logging/logger.js";
-import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
-import { safeParseJson } from "./utils/json.js";
-import { existsSync, readFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import {
-  type IncomingMessage,
-  type ServerResponse,
-  createServer as createHttpServer,
+    type IncomingMessage,
+    type ServerResponse,
+    createServer as createHttpServer,
 } from "node:http";
 import { createServer as createHttpsServer } from "node:https";
 import { extname, join } from "node:path";
 import { performance } from "node:perf_hooks";
 import type { TLSSocket } from "node:tls";
-import { URL, fileURLToPath } from "node:url";
+import { URL } from "node:url";
 import { ConversationManager } from "./conversation/manager.js";
 import { AutoHealer } from "./healing/auto-healer.js";
 import {
-  type MonitoringConfig,
-  MonitoringScheduler,
+    MonitoringScheduler
 } from "./healing/scheduler.js";
+import { createLogger } from "./logging/logger.js";
+import { createRateLimiterFromEnv } from "./middleware/rate-limiter.js";
 import { createLlmOrchestrator } from "./ml/index.js";
 import {
-  buildQuickHealthPayload,
-  performHealthCheck,
-  recordDiagnostic,
-  recordRequest,
-  updateActiveConnections,
-  updateConversations,
+    buildQuickHealthPayload,
+    performHealthCheck,
+    recordDiagnostic,
+    recordRequest,
+    updateActiveConnections,
+    updateConversations,
 } from "./observability/health-checks.js";
 import { getGlobalMonitoring } from "./observability/monitoring.js";
 import { runPlugins } from "./plugin-host.js";
 import {
-  type AuthMiddlewareConfig,
-  type AuthenticatedRequest,
-  checkToolAccess,
-  createAuthMiddleware,
+    type AuthMiddlewareConfig,
+    type AuthenticatedRequest,
+    checkToolAccess,
+    createAuthMiddleware,
 } from "./plugins/auth-middleware.js";
 import type { LicenseKey } from "./plugins/commercial-licensing.js";
 import {
-  type LicenseEnforcementConfig,
-  createFeatureAccessMiddleware,
-  createLicenseEnforcementMiddleware,
+    type LicenseEnforcementConfig,
+    createFeatureAccessMiddleware,
+    createLicenseEnforcementMiddleware,
 } from "./plugins/license-enforcement.js";
 import { getAcademicRegistry } from "./registry/index.js";
 import {
-  getMcpDocsResource,
-  listMcpDocsResources,
+    getMcpDocsResource,
+    listMcpDocsResources,
 } from "./resources/mcp-docs-store.js";
 import {
-  getResearchResource,
-  listResearchResources,
+    getResearchResource,
+    listResearchResources,
 } from "./resources/research-store.js";
+import { TaskExecutor, TaskStore } from "./tasks/index.js";
 import { TemplateEngine } from "./template-engine/engine.js";
 import type { FixTemplate } from "./templates/fix-templates.js";
 import * as FixTemplateModule from "./templates/fix-templates.js";
 import { executeAcademicIntegrationTool } from "./tools/academic-integration-tools.js";
 import {
-  executeDeepContextTool,
-  findMcpTool,
-  getAllMcpToolsFlat,
+    executeDeepContextTool,
+    findMcpTool,
+    getAllMcpToolsFlat,
 } from "./tools/index.js";
 import { executeMcpDocsTool } from "./tools/mcp-docs-tools.js";
-import { TaskStore, TaskExecutor } from "./tasks/index.js";
-import {
-  validateToolInput,
-  createValidationErrorResult,
-  createExecutionErrorResult,
-} from "./utils/validation.js";
 import type {
-  DevelopmentContext,
-  DiagnosticContext,
-  McpTool,
-  McpToolResult,
-  ProjectContext,
+    DevelopmentContext,
+    DiagnosticContext,
+    McpTool,
+    McpToolResult,
+    ProjectContext,
 } from "./types.js";
+import { safeParseJson } from "./utils/json.js";
+import {
+    createExecutionErrorResult,
+    createValidationErrorResult,
+    validateToolInput,
+} from "./utils/validation.js";
 
 // Server configuration and types
 import {
-  PORT,
-  HOST,
-  TLS_CERT_PATH,
-  TLS_KEY_PATH,
-  ADMIN_TOOL_TOKEN,
-  RESTRICTED_TOOLS,
-  AUTH0_DOMAIN,
-  AUTH0_CLIENT_ID,
-  AUTH0_AUDIENCE,
-  REQUIRE_AUTH,
-  REQUIRE_LICENSE,
-  DEFAULT_TIER,
-  MIME_TYPES,
-  __dirname,
+    ADMIN_TOOL_TOKEN,
+    AUTH0_AUDIENCE,
+    AUTH0_CLIENT_ID,
+    AUTH0_DOMAIN,
+    DEFAULT_TIER,
+    HOST,
+    MIME_TYPES,
+    PORT,
+    REQUIRE_AUTH,
+    REQUIRE_LICENSE,
+    RESTRICTED_TOOLS,
+    TLS_CERT_PATH,
+    TLS_KEY_PATH,
+    __dirname,
 } from "./server/config.js";
 import type {
-  SelfDiagnoseOptions,
-  TemplateApplyOptions,
-  MonitoringControlOptions,
-  MonitoringActionPayload,
-  ProviderExecutePayload,
-  JsonRpcId,
-  JsonRpcResponsePayload,
-  JsonRpcRequestPayload,
-  JsonRpcTool,
+    JsonRpcId,
+    JsonRpcRequestPayload,
+    JsonRpcResponsePayload,
+    JsonRpcTool,
+    MonitoringActionPayload,
+    MonitoringControlOptions,
+    ProviderExecutePayload,
+    SelfDiagnoseOptions,
+    TemplateApplyOptions,
 } from "./server/types.js";
 
 const { getTemplate, getTemplatesByArea, getTemplatesBySeverity } =
@@ -1670,16 +1669,10 @@ async function handleJsonRpcCall(
           serverLogger.error({ taskId, error: updateErr }, 'Failed to update task error state');
           // Fallback: forcibly mark task as failed with minimal info
           try {
-            if (typeof taskStore.forceFailTask === "function") {
-              taskStore.forceFailTask(taskId, "Task failed and error state could not be updated");
-            } else if (taskStore.tasks && taskStore.tasks[taskId]) {
-              // Directly update status if possible (for in-memory stores)
-              taskStore.tasks[taskId].status = "failed";
-              taskStore.tasks[taskId].error = {
-                code: -32603,
-                message: "Task failed and error state could not be updated"
-              };
-            }
+            taskStore.setTaskError(taskId, {
+              code: -32603,
+              message: "Task failed and error state could not be updated"
+            });
           } catch (forceErr) {
             serverLogger.error({ taskId, error: forceErr }, 'Critical: Unable to forcibly fail zombie task');
           }
