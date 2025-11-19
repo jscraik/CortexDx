@@ -23,8 +23,8 @@ export {
   supportsFeature,
   ProtocolError,
   type ProtocolVersion,
-  type ServerCapabilities,
-  type ServerInfo,
+  type ServerCapabilities as ProtocolServerCapabilities,
+  type ServerInfo as ProtocolServerInfo,
   type InitializeResponse,
 } from './core/protocol.js';
 

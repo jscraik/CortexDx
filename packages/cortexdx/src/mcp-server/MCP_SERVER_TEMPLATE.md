@@ -1,6 +1,38 @@
 # Modular MCP Server Template
 
-A portable template for building MCP servers that conform to the RC release (2025-06-18+).
+A portable template for building Model Context Protocol (MCP) servers that conform to the Release Candidate (RC) specification (2025-06-18+).
+
+📖 **[View Glossary](../../docs/GLOSSARY.md)** for definitions of abbreviations and technical terms.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview) - Architecture and design principles
+- [Dependencies](#dependencies) - Required packages and protocol versions
+- [Project Structure](#project-structure) - Directory layout
+- [Core Modules](#core-modules) - Protocol, errors, and schema conversion
+- [Transport Layer](#transport-layer) - HTTP, STDIO, and WebSocket transports
+- [Plugin System](#plugin-system) - Extensible plugin architecture
+- [Main Server](#main-server) - Server orchestrator implementation
+- [Usage Examples](#usage-examples) - Basic, with plugins, and advanced usage
+- [RC Compliance Checklist](#rc-compliance-checklist) - Specification compliance status
+- [Architecture Diagrams](#architecture-diagrams) - Visual system architecture
+- [Testing](#testing) - Testing guidelines
+
+---
+
+## Overview
+
+This template provides a **modular, production-ready MCP server implementation** that:
+
+- Conforms to MCP RC specification 2025-06-18 + Draft
+- Supports multiple transports: **HTTP Streamable**, **STDIO**, and **WebSocket**
+- Features a formal **plugin system** for authentication, CORS (Cross-Origin Resource Sharing), and rate limiting
+- Includes **full JSON-RPC (Remote Procedure Call) 2.0** compliance
+- Provides **type-safe schema conversion** from JSON Schema to Zod
+
+---
 
 ## Dependencies
 
@@ -1275,6 +1307,119 @@ await server.start();
 - [x] Implementation description field
 - [x] HTTP 403 for invalid Origin clarification (PR #1439)
 - [ ] SSE stream polling support (SEP-1699)
+
+---
+
+## Architecture Diagrams
+
+### Server Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      MCP Server Instance                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐  │
+│  │   Transport     │    │   Plugin        │    │   Core      │  │
+│  │   Layer         │    │   Registry      │    │   Server    │  │
+│  │                 │    │                 │    │             │  │
+│  │ • HTTP Stream   │ ─> │ • Auth          │ ─> │ • Tools     │  │
+│  │ • STDIO         │    │ • CORS          │    │ • Resources │  │
+│  │ • WebSocket     │    │ • Rate Limit    │    │ • Prompts   │  │
+│  └─────────────────┘    └─────────────────┘    └─────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Request Flow
+
+```
+┌──────────┐     ┌───────────┐     ┌──────────┐     ┌──────────┐
+│  Client  │     │ Transport │     │ Plugins  │     │  Server  │
+│          │     │           │     │ (hooks)  │     │  (core)  │
+└────┬─────┘     └─────┬─────┘     └────┬─────┘     └────┬─────┘
+     │                 │                │                │
+     │  JSON-RPC Req   │                │                │
+     │ ───────────────>│                │                │
+     │                 │                │                │
+     │                 │  Parse & Route │                │
+     │                 │ ──────────────>│                │
+     │                 │                │                │
+     │                 │                │  onRequest()   │
+     │                 │                │ ──────────────>│
+     │                 │                │                │
+     │                 │                │  Execute Tool  │
+     │                 │                │ <─────────────>│
+     │                 │                │                │
+     │                 │                │ onToolResult() │
+     │                 │                │ <──────────────│
+     │                 │                │                │
+     │                 │  onResponse()  │                │
+     │                 │ <──────────────│                │
+     │                 │                │                │
+     │  JSON-RPC Resp  │                │                │
+     │ <───────────────│                │                │
+     │                 │                │                │
+```
+
+### Transport Layer Architecture
+
+```
+                    ┌─────────────────────┐
+                    │  Transport Factory  │
+                    └──────────┬──────────┘
+                               │
+           ┌───────────────────┼───────────────────┐
+           │                   │                   │
+           v                   v                   v
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│  HTTP Streamable │ │      STDIO       │ │    WebSocket     │
+│    Transport     │ │    Transport     │ │    Transport     │
+├──────────────────┤ ├──────────────────┤ ├──────────────────┤
+│ • Port/Host      │ │ • stdin/stdout   │ │ • Port/Host/Path │
+│ • CORS handling  │ │ • Line-based     │ │ • Multi-client   │
+│ • 403 for Origin │ │ • No batching    │ │ • Broadcast      │
+│ • Protocol Hdr   │ │                  │ │ • Bidirectional  │
+└──────────────────┘ └──────────────────┘ └──────────────────┘
+```
+
+### Plugin Execution Order
+
+```
+Request Received
+      │
+      v
+┌─────────────────┐
+│ Plugin 1        │  priority: 10 (Auth)
+│ onRequest()     │
+└───────┬─────────┘
+        │
+        v
+┌─────────────────┐
+│ Plugin 2        │  priority: 50 (CORS)
+│ onRequest()     │
+└───────┬─────────┘
+        │
+        v
+┌─────────────────┐
+│ Plugin 3        │  priority: 100 (Rate Limit)
+│ onRequest()     │
+└───────┬─────────┘
+        │
+        v
+┌─────────────────┐
+│ Execute Handler │
+└───────┬─────────┘
+        │
+        v
+┌─────────────────┐
+│ Plugins         │
+│ onResponse()    │  (reverse order)
+└───────┬─────────┘
+        │
+        v
+  Response Sent
+```
 
 ---
 

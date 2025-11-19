@@ -56,9 +56,10 @@ export function jsonSchemaToZod(
     if (schema.enum.every(v => typeof v === 'string')) {
       return z.enum(schema.enum as [string, ...string[]]);
     }
-    return z.union(
-      schema.enum.map(v => z.literal(v as string | number | boolean)) as [z.ZodType, z.ZodType, ...z.ZodType[]]
-    );
+    const literals = schema.enum.map(v => z.literal(v as string | number | boolean));
+    if (literals.length === 1) return literals[0]!;
+    if (literals.length === 2) return z.union([literals[0]!, literals[1]!]);
+    return z.union([literals[0]!, literals[1]!, ...literals.slice(2)] as [z.ZodType, z.ZodType, ...z.ZodType[]]);
   }
 
   // Handle allOf (intersection)
@@ -70,13 +71,13 @@ export function jsonSchemaToZod(
   // Handle anyOf/oneOf (union)
   if (schema.anyOf && schema.anyOf.length > 0) {
     const schemas = schema.anyOf.map(s => jsonSchemaToZod(s, refs));
-    if (schemas.length === 1) return schemas[0];
+    if (schemas.length === 1) return schemas[0]!;
     return z.union(schemas as [z.ZodType, z.ZodType, ...z.ZodType[]]);
   }
 
   if (schema.oneOf && schema.oneOf.length > 0) {
     const schemas = schema.oneOf.map(s => jsonSchemaToZod(s, refs));
-    if (schemas.length === 1) return schemas[0];
+    if (schemas.length === 1) return schemas[0]!;
     return z.union(schemas as [z.ZodType, z.ZodType, ...z.ZodType[]]);
   }
 
@@ -221,21 +222,24 @@ function createObjectSchema(schema: JsonSchema, refs: Map<string, z.ZodType>): z
   }
 
   // Create object schema
-  let zodType = z.object(shape);
+  const baseObj = z.object(shape);
 
   // Handle additionalProperties
+  let zodType: z.ZodType;
   if (schema.additionalProperties === false) {
     // Strict mode - no extra properties allowed
-    zodType = zodType.strict();
+    zodType = baseObj.strict();
   } else if (schema.additionalProperties === true || schema.additionalProperties === undefined) {
     // Default: allow additional properties but don't validate them
     // Using passthrough only when explicitly allowed
-    zodType = zodType.passthrough();
+    zodType = baseObj.passthrough();
   } else if (typeof schema.additionalProperties === 'object') {
     // Additional properties must match a schema
     // Zod doesn't support this directly, so we use catchall
     const additionalType = jsonSchemaToZod(schema.additionalProperties, refs);
-    zodType = zodType.catchall(additionalType);
+    zodType = baseObj.catchall(additionalType);
+  } else {
+    zodType = baseObj;
   }
 
   if (schema.description) {

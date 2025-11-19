@@ -164,7 +164,7 @@ export class McpServer {
 
     this.mcp = new FastMCP({
       name: config.name,
-      version: config.version,
+      version: config.version as `${number}.${number}.${number}`,
     });
 
     logger.info(
@@ -278,7 +278,8 @@ export class McpServer {
         // Run pre-read hooks
         await this.plugins.runHook('onResourceRead', ctx, resource.uri);
 
-        return resource.load();
+        const result = await resource.load();
+        return { text: result.text || '', uri: resource.uri };
       },
     });
 
@@ -297,7 +298,11 @@ export class McpServer {
       name: template.name || template.uriTemplate,
       description: template.description,
       mimeType: template.mimeType || 'application/json',
-      load: template.load,
+      arguments: [],
+      load: async (args) => {
+        const result = await template.load(args as unknown as Record<string, string>);
+        return { text: result.text || '', uri: template.uriTemplate };
+      },
     });
 
     logger.debug({ template: template.uriTemplate }, 'Resource template registered');
@@ -315,7 +320,14 @@ export class McpServer {
       description: prompt.description,
       arguments: prompt.arguments,
       load: async (args) => {
-        const content = await prompt.load(args);
+        // Convert args to Record<string, string> for our interface
+        const stringArgs: Record<string, string> = {};
+        for (const [key, value] of Object.entries(args)) {
+          if (value !== undefined) {
+            stringArgs[key] = value;
+          }
+        }
+        const content = await prompt.load(stringArgs);
         return content;
       },
     });
