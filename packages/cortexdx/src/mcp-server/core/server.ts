@@ -22,6 +22,7 @@ import type {
   RequestContext,
   PluginLogger,
 } from '../plugins/types.js';
+import type { IconMetadata } from './types.js';
 
 const logger = createLogger({ component: 'mcp-server' });
 
@@ -37,39 +38,51 @@ export interface McpServerConfig {
 }
 
 /**
- * Tool definition
+ * Tool definition with icon support (SEP-973)
  */
 export interface McpTool {
   name: string;
   description?: string;
   inputSchema?: Record<string, unknown>;
+  /**
+   * Icon metadata for the tool
+   */
+  icon?: IconMetadata;
   execute: (args: unknown, ctx: RequestContext) => Promise<unknown>;
 }
 
 /**
- * Resource definition
+ * Resource definition with icon support (SEP-973)
  */
 export interface McpResource {
   uri: string;
   name?: string;
   description?: string;
   mimeType?: string;
+  /**
+   * Icon metadata for the resource
+   */
+  icon?: IconMetadata;
   load: () => Promise<{ text?: string; blob?: Uint8Array }>;
 }
 
 /**
- * Resource template definition
+ * Resource template definition with icon support (SEP-973)
  */
 export interface McpResourceTemplate {
   uriTemplate: string;
   name?: string;
   description?: string;
   mimeType?: string;
+  /**
+   * Icon metadata for the resource template
+   */
+  icon?: IconMetadata;
   load: (params: Record<string, string>) => Promise<{ text?: string; blob?: Uint8Array }>;
 }
 
 /**
- * Prompt definition
+ * Prompt definition with icon support (SEP-973)
  */
 export interface McpPrompt {
   name: string;
@@ -79,6 +92,10 @@ export interface McpPrompt {
     description?: string;
     required?: boolean;
   }>;
+  /**
+   * Icon metadata for the prompt
+   */
+  icon?: IconMetadata;
   load: (args: Record<string, string>) => Promise<string>;
 }
 

@@ -48,6 +48,53 @@ export {
   type JsonSchema,
 } from './core/schema-converter.js';
 
+// Draft specification types (post 2025-06-18)
+export {
+  type IconMetadata,
+  type Implementation,
+  type ToolDefinition,
+  type ResourceDefinition,
+  type ResourceTemplateDefinition,
+  type PromptDefinition,
+  type PromptArgument,
+  type EnumSchema,
+  type EnumValue,
+  type TitledEnumValue,
+  type ElicitResult,
+  type ElicitContent,
+  type TextElicitContent,
+  type BooleanElicitContent,
+  type NumberElicitContent,
+  type EnumElicitContent,
+  type UrlElicitContent,
+  type ElicitationSchema,
+  type SamplingRequest,
+  type SamplingMessage,
+  type SamplingContent,
+  type TextContent,
+  type ImageContent,
+  type ToolResultContent,
+  type ModelPreferences,
+  type ModelHint,
+  type SamplingTool,
+  type ToolChoice,
+  type SamplingResponse,
+  type ToolUseContent,
+  type OAuthClientMetadata,
+  type OIDCDiscoveryMetadata,
+  type AuthChallenge,
+  buildWWWAuthenticateHeader,
+} from './core/types.js';
+
+// Re-export Tasks API from existing implementation
+export type {
+  TaskStatus,
+  TaskRecord,
+  TaskMetadata,
+  CreateTaskParams,
+  TaskAugmentation,
+} from '../tasks/types.js';
+
 // Transport types
 export {
   type Transport,
