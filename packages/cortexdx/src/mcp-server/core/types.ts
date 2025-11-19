@@ -393,6 +393,63 @@ export interface ElicitationSchema {
 }
 
 /**
+ * Elicitation create request parameters
+ */
+export interface ElicitationCreateRequest {
+  /**
+   * Message to display to the user
+   */
+  message: string;
+  /**
+   * Schema for the requested information
+   * Keys are property names, values define the expected type and constraints
+   */
+  requestedSchema: Record<string, ElicitationSchema>;
+}
+
+/**
+ * Elicitation create result for form mode
+ * Returns the user's response directly
+ */
+export interface ElicitationFormResult extends ElicitResult {
+  // Form mode returns ElicitResult directly
+}
+
+/**
+ * Elicitation create result for URL mode
+ * Returns URL for user to complete elicitation externally
+ */
+export interface ElicitationUrlResult {
+  /**
+   * Unique identifier for this elicitation
+   */
+  elicitationId: string;
+  /**
+   * URL where user should complete the elicitation
+   */
+  url: string;
+}
+
+/**
+ * Union of possible elicitation create results
+ */
+export type ElicitationCreateResult = ElicitationFormResult | ElicitationUrlResult;
+
+/**
+ * Notification sent when URL mode elicitation is completed
+ */
+export interface ElicitationCompleteNotification {
+  /**
+   * The elicitation ID from the create result
+   */
+  elicitationId: string;
+  /**
+   * The user's response
+   */
+  result: ElicitResult;
+}
+
+/**
  * Sampling request with tool calling support (SEP-1577)
  */
 export interface SamplingRequest {
