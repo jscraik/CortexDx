@@ -77,6 +77,9 @@ export function jsonSchemaToZod(
 
   if (schema.oneOf && schema.oneOf.length > 0) {
     const schemas = schema.oneOf.map(s => jsonSchemaToZod(s, refs));
+    if (schemas.length === 0) {
+      throw new Error('oneOf conversion resulted in empty schema array');
+    }
     if (schemas.length === 1) return schemas[0]!;
     return z.union(schemas as [z.ZodType, z.ZodType, ...z.ZodType[]]);
   }
