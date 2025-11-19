@@ -16,6 +16,11 @@ import type { DevelopmentContext, DevelopmentPlugin, Finding, PerformanceMetrics
 /**
  * System prompt for LLM-assisted performance analysis
  * Used when analyzing MCP server performance and generating optimization recommendations
+ *
+ * @remarks
+ * TODO: This prompt will be used in future LLM integration for the performance-analysis plugin.
+ * It will be passed to the LLM adapter in src/ml/ when generating optimization recommendations.
+ * Until then, it is exported for documentation and development purposes.
  */
 export const PERFORMANCE_ANALYSIS_PROMPT = `You are CortexDx's performance analysis engine.
 
