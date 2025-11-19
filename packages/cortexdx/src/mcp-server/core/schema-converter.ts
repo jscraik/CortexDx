@@ -54,6 +54,9 @@ export function jsonSchemaToZod(
   // Handle enum
   if (schema.enum && schema.enum.length > 0) {
     if (schema.enum.every(v => typeof v === 'string')) {
+      if (schema.enum.length === 1) {
+        return z.literal(schema.enum[0] as string);
+      }
       return z.enum(schema.enum as [string, ...string[]]);
     }
     const literals = schema.enum.map(v => z.literal(v as string | number | boolean));
