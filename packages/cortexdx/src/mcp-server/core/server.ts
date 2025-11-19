@@ -300,7 +300,16 @@ export class McpServer {
       mimeType: template.mimeType || 'application/json',
       arguments: [],
       load: async (args) => {
-        const result = await template.load(args as unknown as Record<string, string>);
+        const stringArgs: Record<string, string> = {};
+        for (const [key, value] of Object.entries(args)) {
+          if (typeof value === 'string') {
+            stringArgs[key] = value;
+          } else {
+            logger.warn({ key, value }, 'Non-string argument in resource template, converting to string');
+            stringArgs[key] = String(value);
+          }
+        }
+        const result = await template.load(stringArgs);
         return { text: result.text || '', uri: template.uriTemplate };
       },
     });
