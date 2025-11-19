@@ -107,6 +107,9 @@ interface SecurityVulnerability {
 /**
  * System prompt for LLM-assisted problem resolution
  * Used when generating automated fixes for MCP issues
+ *
+ * @todo This prompt will be used in future LLM integration for automated fix generation
+ *       in the problem-resolver plugin. Do not remove; integration planned for next release.
  */
 export const PROBLEM_RESOLVER_PROMPT = `You are CortexDx's problem resolution engine.
 
