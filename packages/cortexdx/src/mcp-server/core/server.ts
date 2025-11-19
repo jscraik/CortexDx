@@ -323,9 +323,7 @@ export class McpServer {
         // Convert args to Record<string, string> for our interface
         const stringArgs: Record<string, string> = {};
         for (const [key, value] of Object.entries(args)) {
-          if (value !== undefined) {
-            stringArgs[key] = value;
-          }
+          stringArgs[key] = String(value);
         }
         const content = await prompt.load(stringArgs);
         return content;
