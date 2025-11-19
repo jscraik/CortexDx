@@ -116,7 +116,7 @@ async function verifyToken(
 
   try {
     // Decode payload (without verification for demo)
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+    const payload = JSON.parse(Buffer.from(parts[1] || '', 'base64').toString());
 
     return {
       userId: payload.sub,

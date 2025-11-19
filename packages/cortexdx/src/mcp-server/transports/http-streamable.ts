@@ -140,7 +140,7 @@ export class HttpStreamableTransport implements Transport {
   }
 
   setProtocolVersion(version: string): void {
-    this.protocolVersion = version;
+    this.protocolVersion = version as typeof this.protocolVersion;
   }
 
   getProtocolVersion(): string {

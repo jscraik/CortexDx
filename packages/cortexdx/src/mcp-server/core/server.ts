@@ -162,9 +162,16 @@ export class McpServer {
   constructor(private config: McpServerConfig) {
     this.protocolVersion = config.protocolVersion || DEFAULT_PROTOCOL_VERSION;
 
+    // Validate version string at runtime
+    const semverRegex = /^\d+\.\d+\.\d+$/;
+    if (!semverRegex.test(config.version)) {
+      throw new Error(
+        `Invalid MCP server version "${config.version}". Expected format: "x.y.z"`
+      );
+    }
     this.mcp = new FastMCP({
       name: config.name,
-      version: config.version,
+      version: config.version as `${number}.${number}.${number}`,
     });
 
     logger.info(
@@ -278,7 +285,8 @@ export class McpServer {
         // Run pre-read hooks
         await this.plugins.runHook('onResourceRead', ctx, resource.uri);
 
-        return resource.load();
+        const result = await resource.load();
+        return { text: result.text || '', uri: resource.uri };
       },
     });
 
@@ -297,7 +305,20 @@ export class McpServer {
       name: template.name || template.uriTemplate,
       description: template.description,
       mimeType: template.mimeType || 'application/json',
-      load: template.load,
+      arguments: [],
+      load: async (args) => {
+        const stringArgs: Record<string, string> = {};
+        for (const [key, value] of Object.entries(args)) {
+          if (typeof value === 'string') {
+            stringArgs[key] = value;
+          } else {
+            logger.warn({ key, value }, 'Non-string argument in resource template, converting to string');
+            stringArgs[key] = String(value);
+          }
+        }
+        const result = await template.load(stringArgs);
+        return { text: result.text || '', uri: template.uriTemplate };
+      },
     });
 
     logger.debug({ template: template.uriTemplate }, 'Resource template registered');
@@ -315,7 +336,12 @@ export class McpServer {
       description: prompt.description,
       arguments: prompt.arguments,
       load: async (args) => {
-        const content = await prompt.load(args);
+        // Convert args to Record<string, string> for our interface
+        const stringArgs: Record<string, string> = {};
+        for (const [key, value] of Object.entries(args)) {
+          stringArgs[key] = String(value);
+        }
+        const content = await prompt.load(stringArgs);
         return content;
       },
     });

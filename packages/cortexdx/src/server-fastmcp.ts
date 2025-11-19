@@ -1,7 +1,21 @@
 /**
  * CortexDx Server - FastMCP Implementation
  * Simplified HTTP server using FastMCP's native HTTP transport
- * 
+ *
+ * @deprecated This file is deprecated and will be removed in a future version.
+ * Please migrate to the new modular MCP server architecture located at:
+ *
+ *   src/mcp-server/
+ *
+ * The new modular architecture provides:
+ * - MCP RC 2025-06-18 + Draft specification compliance
+ * - Multiple transports (HTTP Streamable, STDIO, WebSocket)
+ * - Formal plugin system for authentication, CORS, and rate limiting
+ * - Type-safe schema conversion
+ * - Full JSON-RPC 2.0 compliance
+ *
+ * See src/mcp-server/MCP_SERVER_TEMPLATE.md for migration documentation.
+ *
  * ARCHITECTURE UPDATE (Auth Migration Phase 1):
  * - Main Server (Public): Runs on PORT. Handles .well-known, custom endpoints, and proxies MCP traffic.
  * - FastMCP Server (Internal): Runs on PORT + 1. Handles standard MCP protocol.
