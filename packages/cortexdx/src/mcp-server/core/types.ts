@@ -235,16 +235,106 @@ export interface InitializeResult {
 }
 
 /**
+ * Tool annotations describing behavior
+ */
+export interface ToolAnnotations {
+  /**
+   * Human-assigned title for the tool
+   */
+  title?: string;
+  /**
+   * If true, the tool does not modify state
+   */
+  readOnlyHint?: boolean;
+  /**
+   * If true, the tool may have destructive effects
+   */
+  destructiveHint?: boolean;
+  /**
+   * If true, the tool may take a long time
+   */
+  idempotentHint?: boolean;
+  /**
+   * If true, the tool interacts with the external world
+   */
+  openWorldHint?: boolean;
+}
+
+/**
  * Tool definition with icon support
  */
 export interface ToolDefinition {
   name: string;
-  description?: string;
-  inputSchema?: Record<string, unknown>;
   /**
-   * Icon for the tool (SEP-973)
+   * Human-readable title for display purposes
    */
-  icon?: IconMetadata;
+  title?: string;
+  description?: string;
+  inputSchema: Record<string, unknown>;
+  /**
+   * JSON Schema for validating structured output
+   */
+  outputSchema?: Record<string, unknown>;
+  /**
+   * Icons for the tool (SEP-973)
+   */
+  icons?: IconMetadata[];
+  /**
+   * Tool behavior annotations
+   */
+  annotations?: ToolAnnotations;
+}
+
+/**
+ * Tools list request parameters
+ */
+export interface ToolListRequest {
+  cursor?: string;
+}
+
+/**
+ * Tools list response
+ */
+export interface ToolListResponse {
+  tools: ToolDefinition[];
+  nextCursor?: string;
+}
+
+/**
+ * Tool call request parameters
+ */
+export interface ToolCallRequest {
+  name: string;
+  arguments?: Record<string, unknown>;
+}
+
+/**
+ * Tool call response
+ */
+export interface ToolCallResponse {
+  content: ToolCallContent[];
+  /**
+   * Structured content conforming to outputSchema
+   */
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+}
+
+/**
+ * Tool call content types (for tool call responses)
+ */
+export type ToolCallContent =
+  | { type: 'text'; text: string; annotations?: ResourceAnnotations }
+  | { type: 'image'; data: string; mimeType: string; annotations?: ResourceAnnotations }
+  | { type: 'audio'; data: string; mimeType: string; annotations?: ResourceAnnotations }
+  | { type: 'resource_link'; uri: string; name?: string; description?: string; mimeType?: string; annotations?: ResourceAnnotations }
+  | { type: 'resource'; resource: EmbeddedResource };
+
+/**
+ * Notification when tools list changes
+ */
+export interface ToolListChangedNotification {
+  // Empty notification - just signals that list changed
 }
 
 /**
