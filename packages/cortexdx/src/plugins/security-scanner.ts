@@ -22,6 +22,11 @@ import type { DiagnosticContext, DiagnosticPlugin, Finding } from "../types.js";
 /**
  * System prompt for LLM-assisted security analysis
  * Used when enhanced analysis is enabled for vulnerability assessment
+ *
+ * @remarks
+ * This constant is reserved for future LLM integration in the security-scanner plugin.
+ * It will be used as the system prompt for vulnerability assessment workflows.
+ * TODO: Integrate with LLM adapter in a future release.
  */
 export const SECURITY_SCANNER_PROMPT = `You are CortexDx's security analysis engine.
 
