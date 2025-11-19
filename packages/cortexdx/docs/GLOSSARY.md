@@ -36,6 +36,16 @@ File format for logging and analyzing HTTP requests and responses, viewable in b
 ### JSON (JavaScript Object Notation)
 Lightweight data interchange format that is easy for humans to read and machines to parse.
 
+### JWKS (JSON Web Key Set)
+A set of cryptographic keys used to verify JWT signatures, typically hosted at a well-known URL by identity providers like Auth0.
+
+**Use in CortexDx:** The authentication middleware fetches JWKS from Auth0 to verify access tokens.
+
+### JWT (JSON Web Token)
+Compact, URL-safe token format for securely transmitting claims between parties. Contains a header, payload, and signature.
+
+**Use in CortexDx:** Used for OAuth 2.0 authentication with Auth0. Include in `Authorization: Bearer <token>` header.
+
 ### NPM (Node Package Manager)
 Package manager for JavaScript that manages project dependencies.
 
@@ -48,6 +58,11 @@ Observability framework for collecting traces, metrics, and logs from applicatio
 Complete inventory of all software components, libraries, and dependencies in an application.
 
 **Use in CortexDx:** Generate SBOM with `pnpm sbom` command for security audits.
+
+### SPARQL (SPARQL Protocol and RDF Query Language)
+Query language for databases that can retrieve and manipulate data stored in RDF (Resource Description Framework) format.
+
+**Use in CortexDx:** The `wikidata_sparql` admin tool allows direct SPARQL queries to Wikidata for research validation.
 
 ### SSE (Server-Sent Events)
 HTTP standard for server-to-client streaming where the server pushes updates to the client.
@@ -92,6 +107,11 @@ Reference to proof supporting a diagnostic finding, such as URLs, log entries, o
 - `url` - HTTP endpoint or web resource
 - `file` - Local file path
 - `log` - Log entry or error message
+
+### FastMCP
+High-level TypeScript framework for building MCP servers with simplified tool registration, resource handling, and native HTTP transport support.
+
+**Use in CortexDx:** The CortexDx server uses FastMCP for MCP protocol endpoints with automatic CORS, SSE streaming, and standardized JSON-RPC handling.
 
 ### Finding
 Issue or observation discovered during diagnostics, with severity level, description, and remediation guidance.
