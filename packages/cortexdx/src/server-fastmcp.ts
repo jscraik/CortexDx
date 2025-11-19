@@ -836,13 +836,14 @@ export async function startServer() {
   const customPort = PORT + 1; // Custom endpoints on adjacent port
 
   // Start FastMCP server
+  // Note: CORS is not a built-in FastMCP option for httpStream transport.
+  // Most MCP clients (Claude, ChatGPT) don't require CORS.
+  // The custom endpoints server handles CORS for browser-based tools.
   await mcp.start({
     transportType: "httpStream",
     httpStream: {
       port: mcpPort,
-      cors: {
-        allowOrigin: "*",
-      },
+      host: HOST,
     },
   });
 
