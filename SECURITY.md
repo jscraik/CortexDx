@@ -10,19 +10,6 @@ Only the latest CortexDx release receives security fixes. Please stay on the mos
 
 - **Prompt injection & LLM manipulation** – CortexDx uses version-controlled system prompts (see `config/ollama-models.json`) and validates the required JSON schema after each completion. The Meta-Mentor prompt that powers `pnpm internal:self-improvement` is published alongside deterministic temperature/stop settings so reviewers can verify that academic plug-ins and cloud models (e.g., `kimi-k2:1t`) interpret findings consistently. Findings are tagged when a fallback parser is used so reviewers can spot inconsistent outputs.
 
-  **Enhanced System Prompts (v2.0)**: All system prompts now enforce strict output schemas for determinism and include explicit tool awareness sections. Key security-focused prompts include:
-
-  - **SECURITY_SCANNER_PROMPT** (`security-scanner.ts`): Maps findings to OWASP Top 10 and CWE, enforces severity classification (critical/high/medium/low), and requires actionable remediation with code fixes
-  - **PROBLEM_RESOLVER_PROMPT** (`problem-resolver.ts`): Includes mandatory security impact assessment and rollback mechanisms for all generated fixes
-  - **DISCOVERY_ANALYSIS_PROMPT** (`discovery.ts`): Validates MCP server capabilities and flags potential security concerns in tool configurations
-  - **PERFORMANCE_ANALYSIS_PROMPT** (`performance-analysis.ts`): Detects resource exhaustion patterns and bottlenecks that could indicate security issues
-
-  All prompts enforce:
-  - **Deterministic output**: Same input produces same JSON structure
-  - **Tool awareness**: Prompts reference available CortexDx security tools (threat-model, compliance-check, asvs-compliance)
-  - **Priority ordering**: Security findings always prioritized over performance issues
-  - **No unsafe recommendations**: Prompts explicitly forbid suggesting disabling security features
-
 - **Tool or plugin misuse** – Core plugins are read-only and run inside worker threads with strict export lists (no filesystem writes or shell access). Custom plugins must pass Biome lint + Vitest in CI before they can run.
 - **Data leakage** – Diagnostics forward captured evidence to the configured LLM backend (local Ollama, Ollama Cloud, or frontier APIs). Do not include production secrets unless you control the backend. Use `CORTEXDX_DISABLE_LLM=1` for air-gapped workflows and prefer `op run --env-file=.env.cloud -- …` when booting cloud experiments to avoid storing raw secrets in the workspace.
 - **Impersonation / supply chain** – Install CortexDx from this repository or the published `@brainwav/cortexdx` package. Verify tags and SBOM output (`pnpm sbom`) before deployment. Launchd plists and Docker files live under `.Cortex-OS`; avoid unreviewed forks.
