@@ -136,6 +136,11 @@ export {
   type WebSocketConfig,
   type CorsConfig,
   type HttpRequestContext,
+  // Session management
+  MCP_HEADERS,
+  type SessionState,
+  type SseEvent,
+  type SessionManager,
   DEFAULT_CORS_CONFIG,
 } from './transports/types.js';
 

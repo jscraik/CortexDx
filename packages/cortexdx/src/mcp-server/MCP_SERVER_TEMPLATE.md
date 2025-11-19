@@ -542,6 +542,33 @@ export interface TransportConfig {
   stdio?: Record<string, never>;
   websocket?: { port: number; host?: string; path?: string };
 }
+
+// Session Management (Streamable HTTP)
+export const MCP_HEADERS = {
+  PROTOCOL_VERSION: 'MCP-Protocol-Version',
+  SESSION_ID: 'Mcp-Session-Id',
+} as const;
+
+export interface SessionState {
+  sessionId: string;
+  createdAt: number;
+  protocolVersion: string;
+  data?: Record<string, unknown>;
+}
+
+export interface SseEvent {
+  id?: string;       // Event ID for resumability
+  event?: string;    // Event type
+  data: string;      // JSON-RPC message
+  retry?: number;    // Retry interval in ms
+}
+
+export interface SessionManager {
+  create(protocolVersion: string): SessionState;
+  get(sessionId: string): SessionState | undefined;
+  terminate(sessionId: string): boolean;
+  isValid(sessionId: string): boolean;
+}
 ```
 
 ### HTTP Streamable Transport

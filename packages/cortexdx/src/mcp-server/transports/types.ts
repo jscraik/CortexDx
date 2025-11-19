@@ -145,6 +145,90 @@ export interface HttpRequestContext {
   res: ServerResponse;
   origin?: string;
   clientId?: string;
+  /**
+   * Session ID from Mcp-Session-Id header
+   */
+  sessionId?: string;
+}
+
+// =============================================================================
+// Session Management Types (Streamable HTTP)
+// =============================================================================
+
+/**
+ * MCP HTTP headers
+ */
+export const MCP_HEADERS = {
+  /** Protocol version header */
+  PROTOCOL_VERSION: 'MCP-Protocol-Version',
+  /** Session ID header */
+  SESSION_ID: 'Mcp-Session-Id',
+} as const;
+
+/**
+ * Session state for Streamable HTTP transport
+ */
+export interface SessionState {
+  /**
+   * Unique session identifier
+   */
+  sessionId: string;
+  /**
+   * When the session was created
+   */
+  createdAt: number;
+  /**
+   * Protocol version negotiated for this session
+   */
+  protocolVersion: string;
+  /**
+   * Custom session data
+   */
+  data?: Record<string, unknown>;
+}
+
+/**
+ * SSE event for resumability support
+ */
+export interface SseEvent {
+  /**
+   * Event ID for resumability (globally unique within session)
+   */
+  id?: string;
+  /**
+   * Event type
+   */
+  event?: string;
+  /**
+   * Event data (JSON-RPC message)
+   */
+  data: string;
+  /**
+   * Retry interval in milliseconds
+   */
+  retry?: number;
+}
+
+/**
+ * Session manager interface for Streamable HTTP
+ */
+export interface SessionManager {
+  /**
+   * Create a new session
+   */
+  create(protocolVersion: string): SessionState;
+  /**
+   * Get an existing session
+   */
+  get(sessionId: string): SessionState | undefined;
+  /**
+   * Terminate a session
+   */
+  terminate(sessionId: string): boolean;
+  /**
+   * Check if session exists and is valid
+   */
+  isValid(sessionId: string): boolean;
 }
 
 /**
