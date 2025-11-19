@@ -36,7 +36,8 @@ src/mcp-server/
 │   ├── server.ts           # Main server orchestrator
 │   ├── protocol.ts         # Protocol version & compliance
 │   ├── schema-converter.ts # JSON Schema to Zod conversion
-│   └── errors.ts           # Centralized error codes
+│   ├── errors.ts           # Centralized error codes
+│   └── types.ts            # Draft specification types
 ├── transports/
 │   ├── types.ts            # Transport interface definitions
 │   ├── http-streamable.ts  # HTTP Streamable transport
@@ -213,6 +214,209 @@ export function convertToolSchema(inputSchema: Record<string, unknown>): z.ZodTy
     additionalProperties: false,
   });
 }
+```
+
+### 4. Draft Specification Types (`core/types.ts`)
+
+```typescript
+/**
+ * Icon metadata for tools, resources, and prompts (SEP-973)
+ */
+export interface IconMetadata {
+  uri: string;
+  mimeType?: string;
+  alt?: string;
+}
+
+/**
+ * Implementation info with optional description
+ */
+export interface Implementation {
+  name: string;
+  version: string;
+  description?: string;
+}
+
+/**
+ * Enum schema for elicitation (SEP-1330)
+ */
+export interface EnumSchema {
+  type: 'enum';
+  multiSelect?: boolean;
+  values: (string | TitledEnumValue)[];
+}
+
+export interface TitledEnumValue {
+  value: string;
+  title: string;
+  description?: string;
+  icon?: IconMetadata;
+}
+
+/**
+ * Elicit result types (SEP-1330)
+ */
+export interface ElicitResult {
+  action: 'accept' | 'decline' | 'cancel';
+  content?: ElicitContent;
+}
+
+export type ElicitContent =
+  | { type: 'text'; value: string }
+  | { type: 'boolean'; value: boolean }
+  | { type: 'number'; value: number }
+  | { type: 'enum'; value: string | string[] }
+  | { type: 'url'; value: string; validated?: boolean };
+
+/**
+ * Sampling request with tool calling support (SEP-1577)
+ */
+export interface SamplingRequest {
+  messages: SamplingMessage[];
+  modelPreferences?: ModelPreferences;
+  systemPrompt?: string;
+  temperature?: number;
+  maxTokens?: number;
+  tools?: SamplingTool[];
+  toolChoice?: ToolChoice;
+}
+
+export interface SamplingTool {
+  name: string;
+  description?: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export type ToolChoice =
+  | { type: 'auto' }
+  | { type: 'none' }
+  | { type: 'required' }
+  | { type: 'tool'; name: string };
+
+/**
+ * OpenID Connect Discovery metadata (PR #797)
+ */
+export interface OIDCDiscoveryMetadata {
+  issuer: string;
+  authorization_endpoint: string;
+  token_endpoint: string;
+  jwks_uri: string;
+  scopes_supported?: string[];
+  response_types_supported: string[];
+}
+
+/**
+ * OAuth Client ID Metadata (SEP-991)
+ */
+export interface OAuthClientMetadata {
+  client_id: string;
+  client_name?: string;
+  client_uri?: string;
+  logo_uri?: string;
+}
+
+/**
+ * WWW-Authenticate challenge for incremental consent (SEP-835)
+ */
+export interface AuthChallenge {
+  scheme: 'Bearer';
+  realm?: string;
+  error?: 'invalid_token' | 'insufficient_scope';
+  error_description?: string;
+  scope?: string;
+}
+
+export function buildWWWAuthenticateHeader(challenge: AuthChallenge): string {
+  const parts = [challenge.scheme];
+  if (challenge.realm) parts.push(`realm="${challenge.realm}"`);
+  if (challenge.error) parts.push(`error="${challenge.error}"`);
+  if (challenge.scope) parts.push(`scope="${challenge.scope}"`);
+  return parts.join(', ');
+}
+
+/**
+ * Progress notification for long-running operations
+ */
+export interface ProgressNotification {
+  progressToken: string | number;
+  progress: number;
+  total?: number;
+  message?: string;
+}
+
+/**
+ * Cancellation notification
+ */
+export interface CancellationNotification {
+  requestId: string | number;
+  reason?: string;
+}
+
+/**
+ * Root definition for filesystem boundaries (Client feature)
+ */
+export interface Root {
+  uri: string;
+  name?: string;
+}
+
+/**
+ * Logging level
+ */
+export type LoggingLevel =
+  | 'debug' | 'info' | 'notice' | 'warning'
+  | 'error' | 'critical' | 'alert' | 'emergency';
+
+/**
+ * Completion request for argument autocompletion
+ */
+export interface CompletionRequest {
+  ref: { type: 'ref/prompt' | 'ref/resource'; name?: string; uri?: string };
+  argument: { name: string; value: string };
+}
+
+export interface CompletionResult {
+  values: string[];
+  total?: number;
+  hasMore?: boolean;
+}
+
+/**
+ * Resource link in tool results
+ */
+export interface ResourceLink {
+  uri: string;
+  name?: string;
+  description?: string;
+  mimeType?: string;
+}
+
+/**
+ * Structured tool output with resource links
+ */
+export interface StructuredToolOutput {
+  content: ToolOutputContent[];
+  resourceLinks?: ResourceLink[];
+  isError?: boolean;
+}
+
+export type ToolOutputContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; data: string; mimeType: string }
+  | { type: 'resource'; resource: EmbeddedResource };
+
+export interface EmbeddedResource {
+  uri: string;
+  mimeType?: string;
+  text?: string;
+  blob?: string;
+}
+
+/**
+ * Ping request/response for connection health
+ */
+export interface PingRequest {}
+export interface PingResponse {}
 ```
 
 ---
@@ -757,32 +961,130 @@ const wsServer = new McpServer({
 });
 ```
 
+### With Draft Features (Icons, Elicitation, Sampling)
+
+```typescript
+import {
+  McpServer,
+  type IconMetadata,
+  type ElicitResult,
+  type SamplingRequest,
+  buildWWWAuthenticateHeader,
+} from './mcp-server';
+
+const server = new McpServer({
+  name: 'Advanced MCP Server',
+  version: '1.0.0',
+  transport: { type: 'httpStreamable', httpStreamable: { port: 3000 } },
+});
+
+// Tool with icon (SEP-973)
+server.addTool({
+  name: 'analyze_data',
+  description: 'Analyze dataset and return insights',
+  icon: {
+    uri: 'data:image/svg+xml,<svg>...</svg>',
+    mimeType: 'image/svg+xml',
+    alt: 'Analysis icon',
+  },
+  inputSchema: {
+    type: 'object',
+    properties: {
+      dataset: { type: 'string', description: 'Dataset name' },
+    },
+    required: ['dataset'],
+  },
+  execute: async (args, ctx) => {
+    // Check for required scope (incremental consent)
+    if (!ctx.auth?.roles.includes('analyst')) {
+      const challenge = buildWWWAuthenticateHeader({
+        scheme: 'Bearer',
+        error: 'insufficient_scope',
+        scope: 'analyst:read',
+        error_description: 'Analyst role required',
+      });
+      throw new Error(`Authorization required: ${challenge}`);
+    }
+
+    const { dataset } = args as { dataset: string };
+    return { status: 'analyzed', dataset, insights: [] };
+  },
+});
+
+// Resource with icon
+server.addResource({
+  uri: 'cortexdx://reports/daily',
+  name: 'Daily Reports',
+  description: 'Daily analysis reports',
+  icon: {
+    uri: 'https://example.com/icons/report.png',
+    mimeType: 'image/png',
+  },
+  load: async () => ({
+    text: JSON.stringify({ reports: [] }),
+  }),
+});
+
+// Prompt with icon
+server.addPrompt({
+  name: 'security_audit',
+  description: 'Guided security audit workflow',
+  icon: {
+    uri: 'https://example.com/icons/security.svg',
+    mimeType: 'image/svg+xml',
+  },
+  arguments: [
+    { name: 'target', description: 'Audit target', required: true },
+  ],
+  load: async (args) => {
+    return `Perform security audit on: ${args.target}`;
+  },
+});
+
+await server.start();
+```
+
 ---
 
 ## RC Compliance Checklist
 
 ### Required for 2025-06-18
 
-- [ ] Protocol version negotiation
-- [ ] MCP-Protocol-Version header (HTTP)
-- [ ] No JSON-RPC batching
-- [ ] HTTP 403 for invalid Origin
-- [ ] Input validation as Tool Execution Errors
-- [ ] Structured tool output support
+- [x] Protocol version negotiation
+- [x] MCP-Protocol-Version header (HTTP)
+- [x] No JSON-RPC batching
+- [x] HTTP 403 for invalid Origin
+- [x] Input validation as Tool Execution Errors (SEP-1303)
+- [x] Structured tool output support (types)
 
 ### Recommended
 
-- [ ] Progress notifications
-- [ ] Cancellation support
+- [x] Progress notifications (types)
+- [x] Cancellation support (types)
+- [x] Roots support (types)
 - [ ] Resource subscriptions
-- [ ] Elicitation support
-- [ ] Resource links in tool results
+- [x] Elicitation support (types)
+- [x] Resource links in tool results (types)
+- [x] Logging support (types)
+- [x] Completion/autocompletion (types)
 
-### Draft Features (Experimental)
+### Draft Features (Post 2025-06-18)
 
-- [ ] Tasks API
-- [ ] Icon metadata
-- [ ] OpenID Connect Discovery
+**Major Features:**
+- [x] Icon metadata for tools/resources/prompts (SEP-973)
+- [x] OpenID Connect Discovery 1.0 (PR #797)
+- [x] Incremental scope consent via WWW-Authenticate (SEP-835)
+- [x] Tool naming guidance (SEP-986)
+- [x] ElicitResult and EnumSchema with titled/multi-select (SEP-1330)
+- [x] URL mode elicitation (SEP-1036)
+- [x] Sampling with tools and toolChoice (SEP-1577)
+- [x] OAuth Client ID Metadata Documents (SEP-991)
+- [x] Tasks API for durable requests (SEP-1686)
+
+**Minor Features:**
+- [x] Implementation description field
+- [x] HTTP 403 for invalid Origin clarification (PR #1439)
+- [ ] SSE stream polling support (SEP-1699)
 
 ---
 

@@ -84,6 +84,24 @@ export {
   type OIDCDiscoveryMetadata,
   type AuthChallenge,
   buildWWWAuthenticateHeader,
+  // Utility types
+  type ProgressNotification,
+  type CancellationNotification,
+  type Root,
+  type RootsListChangedNotification,
+  type LoggingLevel,
+  type SetLoggingLevelRequest,
+  type LogMessageNotification,
+  type CompletionRequest,
+  type CompletionReference,
+  type CompletionArgument,
+  type CompletionResult,
+  type ResourceLink,
+  type StructuredToolOutput,
+  type ToolOutputContent,
+  type EmbeddedResource,
+  type PingRequest,
+  type PingResponse,
 } from './core/types.js';
 
 // Re-export Tasks API from existing implementation

@@ -368,3 +368,158 @@ export function buildWWWAuthenticateHeader(challenge: AuthChallenge): string {
 
   return parts.join(', ');
 }
+
+// =============================================================================
+// Additional Utilities (Progress, Cancellation, Roots, Configuration)
+// =============================================================================
+
+/**
+ * Progress notification for long-running operations
+ */
+export interface ProgressNotification {
+  /**
+   * Progress token from the original request
+   */
+  progressToken: string | number;
+  /**
+   * Current progress value
+   */
+  progress: number;
+  /**
+   * Total expected value (optional)
+   */
+  total?: number;
+  /**
+   * Human-readable message
+   */
+  message?: string;
+}
+
+/**
+ * Cancellation notification
+ */
+export interface CancellationNotification {
+  /**
+   * ID of the request to cancel
+   */
+  requestId: string | number;
+  /**
+   * Reason for cancellation
+   */
+  reason?: string;
+}
+
+/**
+ * Root definition for filesystem boundaries (Client feature)
+ */
+export interface Root {
+  /**
+   * URI of the root (e.g., file:///path/to/project)
+   */
+  uri: string;
+  /**
+   * Human-readable name
+   */
+  name?: string;
+}
+
+/**
+ * Roots list changed notification
+ */
+export interface RootsListChangedNotification {
+  /**
+   * Updated list of roots
+   */
+  roots: Root[];
+}
+
+/**
+ * Logging level
+ */
+export type LoggingLevel = 'debug' | 'info' | 'notice' | 'warning' | 'error' | 'critical' | 'alert' | 'emergency';
+
+/**
+ * Set logging level request
+ */
+export interface SetLoggingLevelRequest {
+  level: LoggingLevel;
+}
+
+/**
+ * Log message notification
+ */
+export interface LogMessageNotification {
+  level: LoggingLevel;
+  logger?: string;
+  data?: unknown;
+}
+
+/**
+ * Completion request for argument autocompletion
+ */
+export interface CompletionRequest {
+  ref: CompletionReference;
+  argument: CompletionArgument;
+}
+
+export interface CompletionReference {
+  type: 'ref/prompt' | 'ref/resource';
+  name?: string;
+  uri?: string;
+}
+
+export interface CompletionArgument {
+  name: string;
+  value: string;
+}
+
+/**
+ * Completion result
+ */
+export interface CompletionResult {
+  values: string[];
+  total?: number;
+  hasMore?: boolean;
+}
+
+/**
+ * Resource link in tool results
+ */
+export interface ResourceLink {
+  uri: string;
+  name?: string;
+  description?: string;
+  mimeType?: string;
+}
+
+/**
+ * Structured tool output with resource links
+ */
+export interface StructuredToolOutput {
+  content: ToolOutputContent[];
+  resourceLinks?: ResourceLink[];
+  isError?: boolean;
+}
+
+export type ToolOutputContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; data: string; mimeType: string }
+  | { type: 'resource'; resource: EmbeddedResource };
+
+export interface EmbeddedResource {
+  uri: string;
+  mimeType?: string;
+  text?: string;
+  blob?: string;
+}
+
+/**
+ * Ping request/response for connection health
+ */
+export interface PingRequest {
+  // Empty
+}
+
+export interface PingResponse {
+  // Empty - just acknowledgement
+}
