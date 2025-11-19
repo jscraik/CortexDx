@@ -4,7 +4,7 @@
  * Requirements: 12.5, 9.4
  */
 
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type { Solution } from "@brainwav/cortexdx-core";
 
 export interface ResolutionPattern {

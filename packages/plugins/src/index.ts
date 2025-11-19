@@ -1,3 +1,9 @@
 export * from "./plugin-host.js";
 export * as registry from "./registry/index.js";
-// Export plugins if needed, or keep them internal to the registry
+
+// Export plugin lists and functions
+export {
+    BUILTIN_PLUGINS,
+    DEVELOPMENT_PLUGINS, getDevelopmentPluginById, getPluginById
+} from "./plugins/index.js";
+

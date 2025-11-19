@@ -4,7 +4,7 @@
  * Requirements: 14.4, 14.5
  */
 
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";

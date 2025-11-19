@@ -1,14 +1,14 @@
 import type {
-    ConversationalPlugin,
-    DevelopmentContext,
-    DevelopmentPlugin,
-    DiagnosticContext,
-    DiagnosticPlugin,
-    Finding,
-    TransportTranscript
+  ConversationalPlugin,
+  DevelopmentContext,
+  DevelopmentPlugin,
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+  TransportTranscript
 } from "@brainwav/cortexdx-core";
 import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic";
-import { getLlmAdapter } from "@brainwav/cortexdx-ml/ml/router";
+import { getLlmAdapter } from "@brainwav/cortexdx-ml";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
@@ -317,9 +317,8 @@ function buildTransportFinding(pluginId: string, transcript: TransportTranscript
     area: "framework",
     severity: "info",
     title: `Transport session (${pluginId})`,
-    description: `session=${transcript.sessionId ?? "n/a"} exchanges=${
-      transcript.exchanges.length
-    }`,
+    description: `session=${transcript.sessionId ?? "n/a"} exchanges=${transcript.exchanges.length
+      }`,
     evidence: [
       {
         type: "log",

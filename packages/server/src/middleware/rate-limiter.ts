@@ -5,7 +5,7 @@ import {
   createRateLimitState,
   getRateLimitConfig,
   recordApiRequest,
-} from "../plugins/ratelimit.js";
+} from "../plugins/ratelimit";
 
 // Rate limit store (in-memory for now, can be replaced with Redis)
 const rateLimitStore = new Map<string, RateLimitState>();

@@ -4,9 +4,9 @@
  */
 
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
-import { createLogger } from '../../logging/logger.js';
-import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol.js';
-import { MCP_ERRORS, formatJsonRpcError, McpError } from '../core/errors.js';
+import { createLogger } from '../../logging/logger';
+import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
+import { MCP_ERRORS, formatJsonRpcError, McpError } from '../core/errors';
 import type {
   Transport,
   RequestHandler,
@@ -14,7 +14,7 @@ import type {
   HttpStreamableConfig,
   CorsConfig,
   DEFAULT_CORS_CONFIG,
-} from './types.js';
+} from './types';
 
 const logger = createLogger({ component: 'http-streamable-transport' });
 

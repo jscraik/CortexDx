@@ -3,7 +3,7 @@
  * FASTMCP v3.22 compliant provider registry for academic research tools
  */
 
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import {
   ArxivProvider,
   arxivCapabilities,

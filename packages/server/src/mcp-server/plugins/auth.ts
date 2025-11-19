@@ -3,10 +3,10 @@
  * Wraps existing auth-middleware for use with MCP server
  */
 
-import { createLogger } from '../../logging/logger.js';
-import { McpError, MCP_ERRORS } from '../core/errors.js';
-import type { ServerPlugin, RequestContext, AuthPluginConfig } from './types.js';
-import type { JsonRpcResponse } from '../transports/types.js';
+import { createLogger } from '../../logging/logger';
+import { McpError, MCP_ERRORS } from '../core/errors';
+import type { ServerPlugin, RequestContext, AuthPluginConfig } from './types';
+import type { JsonRpcResponse } from '../transports/types';
 
 const logger = createLogger({ component: 'auth-plugin' });
 

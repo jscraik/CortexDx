@@ -5,24 +5,24 @@
 
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
-import { createLogger } from '../../logging/logger.js';
+import { createLogger } from '../../logging/logger';
 import {
   DEFAULT_PROTOCOL_VERSION,
   validateNotBatch,
   buildInitializeResponse,
   type ProtocolVersion,
   type ServerCapabilities,
-} from './protocol.js';
-import { convertToolSchema } from './schema-converter.js';
-import { McpError, MCP_ERRORS, createToolExecutionError } from './errors.js';
-import type { TransportConfig, JsonRpcRequest, JsonRpcResponse } from '../transports/types.js';
+} from './protocol';
+import { convertToolSchema } from './schema-converter';
+import { McpError, MCP_ERRORS, createToolExecutionError } from './errors';
+import type { TransportConfig, JsonRpcRequest, JsonRpcResponse } from '../transports/types';
 import type {
   ServerPlugin,
   ServerPluginHost,
   RequestContext,
   PluginLogger,
-} from '../plugins/types.js';
-import type { IconMetadata } from './types.js';
+} from '../plugins/types';
+import type { IconMetadata } from './types';
 
 const logger = createLogger({ component: 'mcp-server' });
 

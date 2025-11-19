@@ -9,7 +9,7 @@ import {
   type VectorDocument,
   createVectorStorage,
 } from "../storage/vector-storage.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import {
   MCP_DOCS_LIBRARY_ROOT,
   MCP_DOCS_STAGING_DIR,

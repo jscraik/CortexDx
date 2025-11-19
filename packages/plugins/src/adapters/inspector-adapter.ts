@@ -7,7 +7,7 @@ import {
   formatHeadersForCli,
   resolveInternalHeaders,
 } from "@brainwav/cortexdx-core/utils/internal-endpoint.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 
 const DEFAULT_INSPECTOR_RUNTIME_MS = 60000;
 const MIN_INSPECTOR_RUNTIME_MS = 1000;

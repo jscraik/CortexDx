@@ -1,5 +1,5 @@
 import type { DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 
 // Enhanced Auth0 integration types
 export interface Auth0Config {

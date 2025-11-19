@@ -3,7 +3,7 @@
  * Type definitions specific to the CortexDx server
  */
 
-import type { MonitoringConfig } from "../healing/scheduler.js";
+import type { MonitoringConfig } from "../healing/scheduler";
 
 export type SelfDiagnoseOptions = {
   autoFix?: boolean;

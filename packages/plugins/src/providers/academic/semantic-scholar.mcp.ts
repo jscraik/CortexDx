@@ -11,7 +11,7 @@ import {
   createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "@brainwav/cortexdx-core";
-import { LRUCache, createCacheKey } from "@brainwav/cortexdx-core/utils/lru-cache.js";
+import { LRUCache, createCacheKey } from "@brainwav/cortexdx-core/utils/lru-cache";
 import { HttpMcpClient, sanitizeToolArgs } from "./http-mcp-client.js";
 
 const SEMANTIC_SCHOLAR_CONTACT = "jscraik@brainwav.io";

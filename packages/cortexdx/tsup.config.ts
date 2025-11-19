@@ -6,8 +6,6 @@ export default defineConfig({
   entry: {
     cli: "src/cli.ts",
     index: "src/index.ts",
-    server: "src/server.ts",
-    "workers/sandbox": "src/workers/sandbox.ts",
     "plugins/index": "src/plugins/index.ts",
     "adapters/stdio-wrapper": "src/adapters/stdio-wrapper.ts",
   },

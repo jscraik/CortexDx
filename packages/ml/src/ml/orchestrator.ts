@@ -3,16 +3,6 @@
  * Manages conversation context, session handling, and prompt engineering with <2s response time requirement
  */
 
-import { createOllamaAdapter } from "@brainwav/cortexdx-plugins/adapters/ollama.js";
-import {
-  type ModelManager,
-  createModelManager,
-} from "@brainwav/cortexdx-plugins/plugins/development/model-manager.js";
-import {
-  type ModelPerformanceMetrics,
-  type ModelPerformanceMonitor,
-  createModelPerformanceMonitor,
-} from "@brainwav/cortexdx-plugins/plugins/development/model-performance-monitor.js";
 import type {
   CodeAnalysis,
   Constraints,
@@ -27,6 +17,7 @@ import type {
 } from "@brainwav/cortexdx-core";
 import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic.js";
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { createOllamaAdapter } from "../adapters/ollama.js";
 import { hasOllama } from "./detect.js";
 
 export interface OrchestratorConfig {
@@ -71,8 +62,8 @@ export class LlmOrchestrator {
   private readonly sessions = new Map<ConversationId, SessionMetrics>();
   private readonly responseCache = new Map<string, CacheEntry>();
   private readonly promptTemplates = new Map<string, PromptTemplate>();
-  private readonly modelManager: ModelManager;
-  private readonly performanceMonitor: ModelPerformanceMonitor;
+  // private readonly modelManager: ModelManager;
+  // private readonly performanceMonitor: ModelPerformanceMonitor;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(config: OrchestratorConfig = {}) {
@@ -85,12 +76,12 @@ export class LlmOrchestrator {
       cacheSize: config.cacheSize || 100,
     };
 
-    this.modelManager = createModelManager({
-      autoLoadModels: true,
-      warmUpOnStart: true,
-      preferredBackend: this.config.preferredBackend,
-    });
-    this.performanceMonitor = createModelPerformanceMonitor();
+    // this.modelManager = createModelManager({
+    //   autoLoadModels: true,
+    //   warmUpOnStart: true,
+    //   preferredBackend: this.config.preferredBackend,
+    // });
+    // this.performanceMonitor = createModelPerformanceMonitor();
 
     this.initializeAdapters();
     this.loadPromptTemplates();
@@ -309,27 +300,27 @@ export class LlmOrchestrator {
 
       // Record performance metrics
       if (metrics) {
-        const perfMetric: ModelPerformanceMetrics = {
-          modelId: metrics.backend,
-          backend: metrics.backend as "ollama",
-          taskType: "conversation",
-          inferenceTimeMs: inferenceTime,
-          tokensGenerated: response.length / 4, // Rough estimate
-          tokensPerSecond: response.length / 4 / (inferenceTime / 1000),
-          memoryUsageMb: 0, // Would need system monitoring
-          timestamp: Date.now(),
-        };
-        this.performanceMonitor.recordMetric(perfMetric);
+        // const perfMetric: ModelPerformanceMetrics = {
+        //   modelId: metrics.backend,
+        //   backend: metrics.backend as "ollama",
+        //   taskType: "conversation",
+        //   inferenceTimeMs: inferenceTime,
+        //   tokensGenerated: response.length / 4, // Rough estimate
+        //   tokensPerSecond: response.length / 4 / (inferenceTime / 1000),
+        //   memoryUsageMb: 0, // Would need system monitoring
+        //   timestamp: Date.now(),
+        // };
+        // this.performanceMonitor.recordMetric(perfMetric);
 
-        // Check if model should be switched
-        const switchRecommendation = this.performanceMonitor.shouldSwitchModel(
-          metrics.backend,
-        );
-        if (switchRecommendation.shouldSwitch) {
-          context.logger(
-            `Performance degradation detected for ${metrics.backend}: ${switchRecommendation.reason}`,
-          );
-        }
+        // // Check if model should be switched
+        // const switchRecommendation = this.performanceMonitor.shouldSwitchModel(
+        //   metrics.backend,
+        // );
+        // if (switchRecommendation.shouldSwitch) {
+        //   context.logger(
+        //     `Performance degradation detected for ${metrics.backend}: ${switchRecommendation.reason}`,
+        //   );
+        // }
       }
 
       // Update session metrics
@@ -766,20 +757,21 @@ Respond with ONLY valid JSON.`,
   }
 
   // Model management methods
-  getModelManager(): ModelManager {
-    return this.modelManager;
-  }
+  // Model management methods
+  // getModelManager(): ModelManager {
+  //   return this.modelManager;
+  // }
 
-  getPerformanceMonitor(): ModelPerformanceMonitor {
-    return this.performanceMonitor;
-  }
+  // getPerformanceMonitor(): ModelPerformanceMonitor {
+  //   return this.performanceMonitor;
+  // }
 
-  async getPerformanceReport(modelId?: string) {
-    if (modelId) {
-      return this.performanceMonitor.getReport(modelId);
-    }
-    return this.performanceMonitor.generateReports();
-  }
+  // async getPerformanceReport(modelId?: string) {
+  //   if (modelId) {
+  //     return this.performanceMonitor.getReport(modelId);
+  //   }
+  //   return this.performanceMonitor.generateReports();
+  // }
 
   // Cleanup method
   async shutdown(): Promise<void> {

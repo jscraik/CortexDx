@@ -1,4 +1,4 @@
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type { DiagnosticArtifacts } from "@brainwav/cortexdx-core";
 
 export function loadArtifactsFromEnv(): DiagnosticArtifacts | undefined {

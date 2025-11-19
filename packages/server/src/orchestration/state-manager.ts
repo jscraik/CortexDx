@@ -5,7 +5,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { MemorySaver } from "@langchain/langgraph";
 import Database from "better-sqlite3";
 import type { WorkflowState } from "./workflow-types.js";

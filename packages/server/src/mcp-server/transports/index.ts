@@ -2,7 +2,7 @@
  * Transport Exports
  */
 
-export * from './types.js';
-export { HttpStreamableTransport, createHttpStreamableTransport } from './http-streamable.js';
-export { StdioTransport, createStdioTransport } from './stdio.js';
-export { WebSocketTransport, createWebSocketTransport } from './websocket.js';
+export * from './types';
+export { HttpStreamableTransport, createHttpStreamableTransport } from './http-streamable';
+export { StdioTransport, createStdioTransport } from './stdio';
+export { WebSocketTransport, createWebSocketTransport } from './websocket';

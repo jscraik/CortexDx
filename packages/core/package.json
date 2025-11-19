@@ -7,10 +7,10 @@
     "types": "dist/index.d.ts",
     "exports": {
         ".": "./dist/index.js",
-        "./utils/*": "./dist/utils/*",
-        "./logging/*": "./dist/logging/*",
-        "./config/*": "./dist/config/*",
-        "./di/*": "./dist/di/*"
+        "./utils/*": "./dist/utils/*.js",
+        "./logging/*": "./dist/logging/*.js",
+        "./config/*": "./dist/config/*.js",
+        "./di/*": "./dist/di/*.js"
     },
     "scripts": {
         "build": "tsup",

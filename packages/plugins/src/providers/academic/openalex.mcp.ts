@@ -4,12 +4,12 @@
  * Enhanced with license validation, research trend analysis, and IP compliance
  */
 
+import type { DiagnosticContext } from "@brainwav/cortexdx-core";
+import { LRUCache, createCacheKey } from "@brainwav/cortexdx-core/utils/lru-cache";
 import {
   type LicenseValidatorPlugin,
   createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
-import type { DiagnosticContext } from "@brainwav/cortexdx-core";
-import { LRUCache, createCacheKey } from "@brainwav/cortexdx-core/utils/lru-cache.js";
 import { HttpMcpClient, sanitizeToolArgs } from "./http-mcp-client.js";
 
 export interface OpenAlexWork {
@@ -136,10 +136,10 @@ export class OpenAlexProvider {
     if (!this.contactEmail) {
       ctx.logger(
         "[OpenAlex] PERFORMANCE WARNING: OPENALEX_CONTACT_EMAIL not set. " +
-          "You are using the standard rate limit (100 requests/minute). " +
-          "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
-          "(10x higher rate limit: 1000 requests/minute). " +
-          "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com.",
+        "You are using the standard rate limit (100 requests/minute). " +
+        "Setting your email in OPENALEX_CONTACT_EMAIL grants access to the polite pool " +
+        "(10x higher rate limit: 1000 requests/minute). " +
+        "Example: export OPENALEX_CONTACT_EMAIL=your.email@example.com.",
       );
     } else {
       ctx.logger(
@@ -597,8 +597,7 @@ export class OpenAlexProvider {
     if (!response.ok) {
       const detail = await response.text();
       throw new Error(
-        `OpenAlex HTTP ${response.status}: ${
-          detail.slice(0, 200) || response.statusText
+        `OpenAlex HTTP ${response.status}: ${detail.slice(0, 200) || response.statusText
         }`,
       );
     }

@@ -19,6 +19,7 @@
         "@aws-sdk/client-s3": "^3.600.0",
         "@aws-sdk/s3-request-presigner": "^3.600.0",
         "@brainwav/cortexdx-core": "workspace:*",
+        "@brainwav/cortexdx-ml": "workspace:*",
         "@opentelemetry/api": "1.9.0",
         "ajv": "^8.12.0",
         "ajv-formats": "^3.0.1",

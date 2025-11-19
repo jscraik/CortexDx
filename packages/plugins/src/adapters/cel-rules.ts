@@ -7,7 +7,7 @@
  * Requirements: 23.3 - Implement custom CEL rules
  */
 
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type { CELRule } from "./protovalidate.js";
 
 /**

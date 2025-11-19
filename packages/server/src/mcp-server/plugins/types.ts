@@ -7,7 +7,7 @@
  * Diagnostic plugins analyze MCP server behavior
  */
 
-import type { JsonRpcRequest, JsonRpcResponse } from '../transports/types.js';
+import type { JsonRpcRequest, JsonRpcResponse } from '../transports/types';
 
 /**
  * Request context passed to plugin hooks

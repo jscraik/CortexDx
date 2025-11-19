@@ -1,4 +1,4 @@
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { createLogger } from "@brainwav/cortexdx-core/logging/logger.js";
 
 /**

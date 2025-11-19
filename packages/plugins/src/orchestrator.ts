@@ -7,7 +7,7 @@ import { buildFilePlan } from "./report/fileplan.js";
 import { buildJsonReport } from "./report/json.js";
 import { buildMarkdownReport } from "./report/markdown.js";
 import { storeConsolidatedReport } from "./report/consolidated-report.js";
-import type { Finding } from "./types.js";
+import type { Finding } from "@brainwav/cortexdx-core";
 
 interface DiagnoseOptions {
   out?: string;

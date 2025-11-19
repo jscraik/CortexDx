@@ -7,7 +7,7 @@ import type {
   TransportState,
   TransportTranscript,
 } from "@brainwav/cortexdx-core";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 
 export interface SharedSessionState {
   sessionId?: string;

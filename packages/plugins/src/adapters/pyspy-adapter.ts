@@ -5,7 +5,7 @@
  * flame graph generation, and subprocess profiling support.
  */
 
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

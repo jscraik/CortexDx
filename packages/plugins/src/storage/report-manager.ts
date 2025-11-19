@@ -1,4 +1,4 @@
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";

@@ -10,7 +10,7 @@ import {
   DEVELOPMENT_PLUGINS,
   getDevelopmentPluginById,
   getPluginById,
-} from "@brainwav/cortexdx-plugins/plugins/index.js";
+} from "@brainwav/cortexdx-plugins";
 import type {
   DevelopmentContext,
   DevelopmentPlugin,
@@ -18,7 +18,7 @@ import type {
   DiagnosticPlugin,
   Finding,
 } from "@brainwav/cortexdx-core";
-import { extractFindingFields } from "@brainwav/cortexdx-core/utils/type-helpers.js";
+import { extractFindingFields } from "@brainwav/cortexdx-core/utils/type-helpers";
 
 export interface PluginWorkflow {
   id: string;

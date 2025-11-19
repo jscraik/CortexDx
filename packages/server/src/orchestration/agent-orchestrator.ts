@@ -12,7 +12,7 @@ import {
     type StateGraphArgs,
 } from "@langchain/langgraph";
 import type { DiagnosticContext, Finding } from "@brainwav/cortexdx-core";
-import { fromRecord, hasProperty, toRecord } from "@brainwav/cortexdx-core/utils/type-helpers.js";
+import { fromRecord, hasProperty, toRecord } from "@brainwav/cortexdx-core/utils/type-helpers";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
 import type { StateManager } from "./state-manager.js";
 import type {

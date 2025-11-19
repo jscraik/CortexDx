@@ -1,4 +1,4 @@
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
 import { getEnhancedLlmAdapter } from "@brainwav/cortexdx-ml/ml/router.js";
 import { runAcademicResearch } from "../../research/academic-researcher.js";

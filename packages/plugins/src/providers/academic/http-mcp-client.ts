@@ -1,4 +1,4 @@
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { randomUUID } from "node:crypto";
 import type { McpToolResult } from "@brainwav/cortexdx-core";
 

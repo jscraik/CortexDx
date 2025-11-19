@@ -7,7 +7,7 @@
 import Database from "better-sqlite3";
 import type { EmbeddingVector } from "../adapters/embedding.js";
 import { cosineSimilarity } from "../adapters/embedding.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type {
   DocumentMetadata,
   IVectorStorage,

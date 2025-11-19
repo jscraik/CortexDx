@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { resolveCodexContextDir } from "./status-store.js";
 
 const API_KEY_ENV_PRIORITY = [

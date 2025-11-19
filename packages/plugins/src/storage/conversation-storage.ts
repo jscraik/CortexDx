@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from "@brainwav/cortexdx-core/logging/logger.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import Database, { type Database as DatabaseType } from "better-sqlite3";
 import type {
   ChatMessage,

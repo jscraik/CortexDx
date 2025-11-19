@@ -11,7 +11,7 @@ export {
   type McpResource,
   type McpResourceTemplate,
   type McpPrompt,
-} from './core/server.js';
+} from './core/server';
 
 export {
   PROTOCOL_VERSIONS,
@@ -29,7 +29,7 @@ export {
   type ServerCapabilities,
   type ServerInfo,
   type InitializeResponse,
-} from './core/protocol.js';
+} from './core/protocol';
 
 export {
   JSON_RPC_ERRORS,
@@ -43,13 +43,13 @@ export {
   type JsonRpcErrorCode,
   type McpErrorCode,
   type ErrorCode,
-} from './core/errors.js';
+} from './core/errors';
 
 export {
   jsonSchemaToZod,
   convertToolSchema,
   type JsonSchema,
-} from './core/schema-converter.js';
+} from './core/schema-converter';
 
 // Draft specification types (post 2025-06-18)
 export {
@@ -155,7 +155,7 @@ export {
   type EmbeddedResource,
   type PingRequest,
   type PingResponse,
-} from './core/types.js';
+} from './core/types';
 
 // Re-export Tasks API from existing implementation
 export type {
@@ -164,7 +164,7 @@ export type {
   TaskMetadata,
   CreateTaskParams,
   TaskAugmentation,
-} from '../tasks/types.js';
+} from '../tasks/types';
 
 // Transport types
 export {
@@ -187,23 +187,23 @@ export {
   type SseEvent,
   type SessionManager,
   DEFAULT_CORS_CONFIG,
-} from './transports/types.js';
+} from './transports/types';
 
 // Transport implementations
 export {
   HttpStreamableTransport,
   createHttpStreamableTransport,
-} from './transports/http-streamable.js';
+} from './transports/http-streamable';
 
 export {
   StdioTransport,
   createStdioTransport,
-} from './transports/stdio.js';
+} from './transports/stdio';
 
 export {
   WebSocketTransport,
   createWebSocketTransport,
-} from './transports/websocket.js';
+} from './transports/websocket';
 
 // Plugin types
 export {
@@ -218,10 +218,10 @@ export {
   type LicenseKey,
   type CorsPluginConfig,
   type PluginFactory,
-} from './plugins/types.js';
+} from './plugins/types';
 
 // Plugin registry
-export { PluginRegistry } from './plugins/registry.js';
+export { PluginRegistry } from './plugins/registry';
 
 // Plugin implementations
 export {
@@ -229,10 +229,10 @@ export {
   hasRole,
   hasAnyRole,
   requireAuthentication,
-} from './plugins/auth.js';
+} from './plugins/auth';
 
 export {
   createCorsPlugin,
   DEFAULT_CORS_CONFIG as DEFAULT_CORS_PLUGIN_CONFIG,
   PERMISSIVE_CORS_CONFIG,
-} from './plugins/cors.js';
+} from './plugins/cors';

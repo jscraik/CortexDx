@@ -14,7 +14,7 @@ import type {
   StageCondition,
   WorkflowStage,
 } from "./plugin-orchestrator.js";
-import { extractFindingFields } from "@brainwav/cortexdx-core/utils/type-helpers.js";
+import { extractFindingFields } from "@brainwav/cortexdx-core/utils/type-helpers";
 
 export interface WorkflowExecutionContext {
   workflowId: string;

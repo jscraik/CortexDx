@@ -1,5 +1,5 @@
 import type { EnhancedLlmAdapter, LlmAdapter } from "@brainwav/cortexdx-core";
-import { createOllamaAdapter } from "@brainwav/cortexdx-plugins/adapters/ollama.js";
+import { createOllamaAdapter } from "../adapters/ollama.js";
 import { hasOllama, isOllamaReachable } from "./detect.js";
 import { getCloudOllamaConfig, getLlmPrioritySource } from "./ollama-env.js";
 

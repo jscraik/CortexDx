@@ -837,7 +837,7 @@ export type {
   TaskMetadata,
   CreateTaskParams,
   TaskAugmentation,
-} from '../../tasks/types.js';
+} from '../../tasks/types';
 
 /**
  * OAuth Client ID Metadata (SEP-991)
