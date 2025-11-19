@@ -416,30 +416,8 @@ When suggesting next moves, reference specific CortexDx tools:
 
 ## Testing & Validation
 
-### Determinism Test
-
-Run the same input 5 times and verify structure matches:
-
-```bash
-pnpm test:prompts:determinism
-```
-
-### Schema Validation
-
-Validate outputs against JSON schemas:
-
-```bash
-pnpm test:prompts:schema
-```
-
-### Tool Coverage Test
-
-Verify prompts recommend relevant tools:
-
-```bash
-pnpm test:prompts:tools
-```
-
+> **Note:** Automated prompt tests for determinism, schema validation, and tool coverage are not yet implemented as workspace scripts.
+> Manual validation is recommended: run prompt inputs multiple times, check output structure against JSON schemas, and verify tool recommendations.
 ### Performance Targets
 
 - Code analysis: < 5 seconds
