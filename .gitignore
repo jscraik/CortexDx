@@ -15,3 +15,4 @@ cortex-test-report.json
 docs-maintenance-report.json
 docs-validation-report.json
 packages/cortexdx/server.log
+*.log
