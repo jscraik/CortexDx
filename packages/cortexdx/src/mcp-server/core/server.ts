@@ -162,6 +162,13 @@ export class McpServer {
   constructor(private config: McpServerConfig) {
     this.protocolVersion = config.protocolVersion || DEFAULT_PROTOCOL_VERSION;
 
+    // Validate version string at runtime
+    const semverRegex = /^\d+\.\d+\.\d+$/;
+    if (!semverRegex.test(config.version)) {
+      throw new Error(
+        `Invalid MCP server version "${config.version}". Expected format: "x.y.z"`
+      );
+    }
     this.mcp = new FastMCP({
       name: config.name,
       version: config.version as `${number}.${number}.${number}`,
