@@ -466,38 +466,133 @@ export class LlmOrchestrator {
       {
         id: "error-explanation",
         name: "Error Explanation",
-        template: `Explain this MCP error clearly for a {{userLevel}} user:
+        template: `Explain this MCP error for a {{userLevel}} user.
 
-Error: {{error}}
-Severity: {{severity}}
-Context: {{context}}
+## Error Details
+- Message: {{error}}
+- Severity: {{severity}}
+- Context: {{context}}
 
-Provide a clear explanation with next steps.`,
+## Response Requirements
+
+### For Beginners
+- Use analogies and avoid jargon
+- Provide copy-paste solutions
+- Include "what this means" section
+
+### For Intermediate Users
+- Reference MCP protocol sections
+- Explain root cause
+- Suggest debugging tools
+
+### For Experts
+- Be concise, technical
+- Reference specific protocol versions
+- Suggest optimization opportunities
+
+## Output Format
+\`\`\`json
+{
+  "explanation": "Clear description of what went wrong",
+  "cause": "Root cause analysis",
+  "solution": {
+    "steps": ["Numbered steps"],
+    "code": "Fix snippet if applicable",
+    "validation": "How to verify the fix worked"
+  },
+  "relatedTools": ["CortexDx plugins to run"],
+  "prevention": "How to prevent this in future"
+}
+\`\`\`
+
+Respond with ONLY valid JSON.`,
         variables: ["userLevel", "error", "severity", "context"],
         category: "explanation",
       },
       {
         id: "solution-generation",
         name: "Solution Generation",
-        template: `Generate a solution for this MCP problem:
+        template: `Generate a solution for this MCP problem.
 
-Problem: {{problem}}
-User Level: {{userLevel}}
-Constraints: {{constraints}}
+## Problem Details
+- Description: {{problem}}
+- User Level: {{userLevel}}
+- Constraints: {{constraints}}
 
-Provide a step-by-step solution with code examples if needed.`,
+## Solution Requirements
+
+### Quality Criteria
+1. Specificity: Reference exact files, lines, configs
+2. Safety: Include rollback steps for destructive actions
+3. Testability: Include validation commands
+4. Minimalism: Smallest change that fixes the issue
+
+## Output Format
+\`\`\`json
+{
+  "summary": "1-2 sentence solution overview",
+  "steps": [
+    {"order": 1, "action": "", "command": "", "expectedOutcome": ""}
+  ],
+  "codeChanges": [
+    {"file": "", "before": "", "after": ""}
+  ],
+  "validation": {
+    "command": "",
+    "expectedResult": ""
+  },
+  "rollback": ["Steps to undo if needed"],
+  "recommendedTools": ["CortexDx plugins for verification"],
+  "risks": ["Potential issues to watch for"]
+}
+\`\`\`
+
+Respond with ONLY valid JSON.`,
         variables: ["problem", "userLevel", "constraints"],
         category: "solution",
       },
       {
         id: "code-review",
         name: "Code Review",
-        template: `Review this {{language}} code for MCP compliance:
+        template: `Review this {{language}} code for MCP compliance.
 
-Code:
+## Code to Review
+\`\`\`{{language}}
 {{code}}
+\`\`\`
 
-Check for protocol compliance, security issues, and best practices.`,
+## Review Criteria
+1. MCP Protocol Compliance
+2. Security Issues (OWASP Top 10)
+3. Performance Concerns
+4. Best Practices
+5. Error Handling
+
+## Output Format
+\`\`\`json
+{
+  "compliance": {
+    "status": "compliant|partial|non-compliant",
+    "issues": [{"line": 0, "issue": "", "fix": ""}]
+  },
+  "security": {
+    "vulnerabilities": [{"severity": "critical|high|medium|low", "line": 0, "issue": "", "cwe": "", "fix": ""}]
+  },
+  "performance": {
+    "concerns": [{"line": 0, "issue": "", "impact": "", "optimization": ""}]
+  },
+  "bestPractices": {
+    "violations": [{"line": 0, "issue": "", "recommendation": ""}]
+  },
+  "errorHandling": {
+    "gaps": [{"line": 0, "missingHandler": "", "suggestedCode": ""}]
+  },
+  "overallScore": 0.0,
+  "recommendedTools": ["CortexDx plugins for deeper analysis"]
+}
+\`\`\`
+
+Respond with ONLY valid JSON.`,
         variables: ["language", "code"],
         category: "diagnostic",
       },
