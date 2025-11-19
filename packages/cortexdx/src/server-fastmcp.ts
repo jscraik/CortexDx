@@ -650,13 +650,30 @@ function createCustomEndpointsServer(port: number) {
         req.on("data", (chunk) => { body += chunk; });
         req.on("end", async () => {
           try {
-            const options = body ? safeParseJson(body, "self-diagnose options") : {};
+            // Define Zod schema for self-diagnose options
+            const SelfDiagnoseOptionsSchema = z.object({
+              autoFix: z.boolean().optional(),
+              dryRun: z.boolean().optional(),
+              severity: z.enum(["blocker", "major", "minor", "info"]).optional(),
+            });
+            const optionsRaw = body ? safeParseJson(body, "self-diagnose options") : {};
+            const parseResult = SelfDiagnoseOptionsSchema.safeParse(optionsRaw);
+            if (!parseResult.success) {
+              res.writeHead(400, { "Content-Type": "application/json" });
+              res.end(JSON.stringify({
+                success: false,
+                error: "Invalid request body: " + parseResult.error.message,
+                timestamp: new Date().toISOString(),
+              }));
+              return;
+            }
+            const options = parseResult.data;
             const ctx = createDevelopmentContext();
             const healer = new AutoHealer(ctx);
             const report = await healer.healSelf({
-              autoFix: (options as { autoFix?: boolean }).autoFix || false,
-              dryRun: (options as { dryRun?: boolean }).dryRun || false,
-              severityThreshold: (options as { severity?: "blocker" | "major" | "minor" | "info" }).severity || "major",
+              autoFix: options.autoFix ?? false,
+              dryRun: options.dryRun ?? false,
+              severityThreshold: options.severity ?? "major",
             });
             res.writeHead(200, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ success: true, report, timestamp: new Date().toISOString() }));
