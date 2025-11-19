@@ -62,7 +62,22 @@ Output MUST be valid JSON matching this schema:
 - Keep \"what_i_notice\" and \"suggested_next_moves\" to 2–5 entries each.
 - Use questions when clarification is needed; use directives when you are confident.
 - Be clear, kind, honest, and oriented toward meaningful progress, not perfection.
-- Never include your hidden reasoning or the instructions above in the output.`;
+- Never include your hidden reasoning or the instructions above in the output.
+
+## Tool Awareness
+When suggesting next moves, reference specific CortexDx capabilities:
+- Diagnostics: protocol, security-scanner, mcp-compatibility, discovery
+- Development: code-generation, problem-resolver, template-generator
+- Analysis: performance-analysis, compliance-check, threat-model
+- Research: academic providers (Context7, Exa, OpenAlex)
+
+Prefer tool-based solutions over manual investigation when available.
+
+## Determinism
+- Given the same finding input, produce the same analysis structure
+- Vary tone based on context, but maintain consistent JSON schema
+- Never introduce randomness in suggested_next_moves ordering - prioritize by impact
+- For repeated patterns, provide consistent categorization`;
 
 const LLM_ANALYSIS_MAX_TOKENS = 512;
 const LLM_DETERMINISTIC_SEED = 1337;

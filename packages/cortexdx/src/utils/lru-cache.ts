@@ -39,6 +39,7 @@ export class LRUCache<T = unknown> {
   private readonly onEvict?: (key: string, value: unknown) => void;
   private hits = 0;
   private misses = 0;
+  private pendingFetches = new Map<string, Promise<T>>();
 
   constructor(options: CacheOptions = {}) {
     this.maxSize = options.maxSize ?? 1000;
@@ -152,9 +153,8 @@ export class LRUCache<T = unknown> {
       maxSize: this.maxSize,
       hits: this.hits,
       misses: this.misses,
-      hitRate: this.hits + this.misses > 0
-        ? this.hits / (this.hits + this.misses)
-        : 0,
+      hitRate:
+        this.hits + this.misses > 0 ? this.hits / (this.hits + this.misses) : 0,
     };
   }
 
@@ -169,9 +169,23 @@ export class LRUCache<T = unknown> {
       return cached;
     }
 
-    const fresh = await fetcher();
-    this.set(key, fresh);
-    return fresh;
+    const pending = this.pendingFetches.get(key);
+    if (pending) {
+      return pending;
+    }
+
+    const fetchPromise = (async () => {
+      try {
+        const fresh = await fetcher();
+        this.set(key, fresh);
+        return fresh;
+      } finally {
+        this.pendingFetches.delete(key);
+      }
+    })();
+
+    this.pendingFetches.set(key, fetchPromise);
+    return fetchPromise;
   }
 
   /**
@@ -203,7 +217,7 @@ export class LRUCache<T = unknown> {
    * Get all values in cache
    */
   values(): T[] {
-    return Array.from(this.cache.values()).map(entry => entry.value);
+    return Array.from(this.cache.values()).map((entry) => entry.value);
   }
 
   /**
@@ -238,13 +252,13 @@ export function createCacheKey(...args: unknown[]): string {
  */
 export function cached<T>(
   cache: LRUCache<T>,
-  keyFn?: (...args: unknown[]) => string
+  keyFn?: (...args: unknown[]) => string,
 ) {
-  return function (
+  return (
     _target: unknown,
     _propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
+    descriptor: PropertyDescriptor,
+  ) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {

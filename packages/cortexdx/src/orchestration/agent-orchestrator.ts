@@ -5,30 +5,30 @@
  */
 
 import {
-  END,
-  MemorySaver,
-  START,
-  StateGraph,
-  type StateGraphArgs,
+    END,
+    MemorySaver,
+    START,
+    StateGraph,
+    type StateGraphArgs,
 } from "@langchain/langgraph";
 import type { DiagnosticContext, Finding } from "../types.js";
 import { fromRecord, hasProperty, toRecord } from "../utils/type-helpers.js";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
 import type { StateManager } from "./state-manager.js";
 import type {
-  WorkflowConfig,
-  WorkflowDefinition,
-  WorkflowNode,
-  WorkflowState,
+    WorkflowConfig,
+    WorkflowDefinition,
+    WorkflowNode,
+    WorkflowState,
 } from "./workflow-types.js";
 
 // Import and re-export shared workflow types (extracted to break circular dependency)
 export type {
-  WorkflowConfig,
-  WorkflowDefinition,
-  WorkflowEdge,
-  WorkflowNode,
-  WorkflowState,
+    WorkflowConfig,
+    WorkflowDefinition,
+    WorkflowEdge,
+    WorkflowNode,
+    WorkflowState
 } from "./workflow-types.js";
 
 /**
@@ -242,7 +242,7 @@ export class AgentOrchestrator {
         // Extract state from event
         const nodeId = Object.keys(event)[0];
         if (nodeId && hasProperty(event, nodeId)) {
-          const nodeStateRaw = (event as Record<string, any>)[nodeId];
+          const nodeStateRaw = (event as Record<string, unknown>)[nodeId];
           // Validate it's an object before treating as state
           if (typeof nodeStateRaw === "object" && nodeStateRaw !== null) {
             const nodeState = nodeStateRaw as Partial<WorkflowState>;
@@ -387,12 +387,6 @@ export class AgentOrchestrator {
                 updates.severity = "info";
               }
             }
-            break;
-          }
-
-          case "aggregation": {
-            // Aggregation nodes combine results
-            // Already handled by state updates
             break;
           }
 

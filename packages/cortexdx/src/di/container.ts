@@ -15,6 +15,7 @@ export class DIContainer {
   private factories = new Map<string, Factory<unknown>>();
   private asyncFactories = new Map<string, AsyncFactory<unknown>>();
   private transients = new Set<string>();
+  private pendingAsyncSingletons = new Map<string, Promise<unknown>>();
 
   /**
    * Register a singleton dependency
@@ -86,15 +87,30 @@ export class DIContainer {
       return this.singletons.get(key) as T;
     }
 
+    // Return pending promise if instantiation already in-flight
+    if (!this.transients.has(key) && this.pendingAsyncSingletons.has(key)) {
+      return this.pendingAsyncSingletons.get(key) as Promise<T>;
+    }
+
     // Try async factory first
     const asyncFactory = this.asyncFactories.get(key);
     if (asyncFactory) {
-      const instance = await asyncFactory();
-      // Cache for singletons only (skip transients)
+      const promise = asyncFactory()
+        .then((instance) => {
+          if (!this.transients.has(key)) {
+            this.singletons.set(key, instance);
+          }
+          return instance;
+        })
+        .finally(() => {
+          this.pendingAsyncSingletons.delete(key);
+        });
+
       if (!this.transients.has(key)) {
-        this.singletons.set(key, instance);
+        this.pendingAsyncSingletons.set(key, promise);
       }
-      return instance as T;
+
+      return promise as Promise<T>;
     }
 
     // Fall back to sync factory
@@ -104,12 +120,30 @@ export class DIContainer {
     }
 
     const result = factory();
-    const instance = result instanceof Promise ? await result : result;
+    if (result instanceof Promise) {
+      const promise = result
+        .then((instance) => {
+          if (!this.transients.has(key)) {
+            this.singletons.set(key, instance);
+          }
+          return instance;
+        })
+        .finally(() => {
+          this.pendingAsyncSingletons.delete(key);
+        });
+
+      if (!this.transients.has(key)) {
+        this.pendingAsyncSingletons.set(key, promise);
+      }
+
+      return promise as Promise<T>;
+    }
+
     // Cache for singletons only (skip transients)
     if (!this.transients.has(key)) {
-      this.singletons.set(key, instance);
+      this.singletons.set(key, result);
     }
-    return instance as T;
+    return result as T;
   }
 
   /**

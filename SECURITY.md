@@ -23,6 +23,7 @@ Only the latest CortexDx release receives security fixes. Please stay on the mos
 ## Threat Model
 
 - **Prompt injection & LLM manipulation** – CortexDx uses version-controlled system prompts (see `config/ollama-models.json`) and validates the required JSON schema after each completion. The Meta-Mentor prompt that powers `pnpm internal:self-improvement` is published alongside deterministic temperature/stop settings so reviewers can verify that academic plug-ins and cloud models (e.g., `kimi-k2:1t`) interpret findings consistently. Findings are tagged when a fallback parser is used so reviewers can spot inconsistent outputs.
+
 - **Tool or plugin misuse** – Core plugins are read-only and run inside worker threads with strict export lists (no filesystem writes or shell access). Custom plugins must pass Biome lint + Vitest in CI before they can run.
 - **Data leakage** – Diagnostics forward captured evidence to the configured LLM backend (local Ollama, Ollama Cloud, or frontier APIs). Do not include production secrets unless you control the backend. Use `CORTEXDX_DISABLE_LLM=1` for air-gapped workflows and prefer `op run --env-file=.env.cloud -- …` when booting cloud experiments to avoid storing raw secrets in the workspace.
 - **Impersonation / supply chain** – Install CortexDx from this repository or the published `@brainwav/cortexdx` package. Verify tags and SBOM output (`pnpm sbom`) before deployment. Launchd plists and Docker files live under `.Cortex-OS`; avoid unreviewed forks.
@@ -85,7 +86,9 @@ For detailed setup instructions, see the [OAuth 2.0 Authentication section](pack
 
 ## Reporting a Vulnerability
 
-Report issues privately via GitHub security advisories or email the maintainer listed in `package.json`. Expect acknowledgement within 48 hours; fixes are prioritized by severity and coordinated with downstream consumers (launchd services, Docker images, npm release).
+Report issues privately via GitHub security advisories or email the maintainer listed in `package.json`. Expect
+acknowledgement within 48 hours; fixes are prioritized by severity and coordinated with downstream consumers
+(launchd services, Docker images, npm release).
 
 ## Continuous Security
 
