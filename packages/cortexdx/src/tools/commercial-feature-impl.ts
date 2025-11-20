@@ -9,7 +9,7 @@ import {
   checkRoleAccess,
   trackAuthUsage,
   validateAuth0Token,
-} from "../plugins/auth.js";
+} from "../plugins/auth";
 import {
   exportBillingData,
   generateAdminDashboard,
@@ -17,7 +17,7 @@ import {
   generateBillingComplianceFindings,
   generateUsageReport,
   recordSubscriptionChange,
-} from "../plugins/billing-analytics.js";
+} from "../plugins/billing-analytics";
 import {
   type LicenseKey,
   type UsageMetrics,
@@ -25,8 +25,8 @@ import {
   generateComplianceReport,
   trackUsage,
   validateCommercialLicense,
-} from "../plugins/commercial-licensing.js";
-import type { McpToolResult } from "../types.js";
+} from "../plugins/commercial-licensing";
+import type { McpToolResult } from "../types";
 
 // In-memory storage for demo purposes
 // In production, these would be backed by a database
@@ -68,7 +68,7 @@ export const validateAuth0TokenImpl = async (
   const {
     token,
     audience,
-    issuer,
+    issuer: _issuer,
     validateExpiration = true,
     validateSignature = true,
   } = args as {
@@ -257,12 +257,11 @@ export const checkFeatureAccessImpl = async (
 export const trackFeatureUsageImpl = async (
   args: unknown,
 ): Promise<McpToolResult> => {
-  const { userId, feature, action, metadata, timestamp } = args as {
+  const { userId, feature, action, metadata } = args as {
     userId: string;
     feature: string;
     action: string;
     metadata?: Record<string, unknown>;
-    timestamp?: string;
   };
 
   const duration = metadata?.duration as number | undefined;
@@ -302,7 +301,7 @@ export const getUsageMetricsImpl = async (
     userId,
     organizationId,
     timeRange,
-    features,
+    features: _features,
     aggregation = "daily",
   } = args as {
     userId?: string;
@@ -327,8 +326,8 @@ export const getUsageMetricsImpl = async (
     );
   }
 
-  if (features && features.length > 0) {
-    filtered = filtered.filter((r) => features.includes(r.feature));
+  if (_features && _features.length > 0) {
+    filtered = filtered.filter((r) => _features.includes(r.feature));
   }
 
   // Aggregate metrics
@@ -633,7 +632,7 @@ export const getUsageMetricsWithAnalyticsImpl = async (
     userId,
     organizationId,
     timeRange,
-    features,
+    features: _features,
     aggregation = "daily",
   } = args as {
     userId?: string;

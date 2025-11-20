@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { NormalizedFinding } from "./findings.js";
-import { runSelfHealingGraph } from "./graph.js";
-import { generateReasoningSummary } from "./ollama-reasoner.js";
-import { PromptCache } from "./prompt-cache.js";
+import type { NormalizedFinding } from "./findings";
+import { runSelfHealingGraph } from "./graph";
+import { generateReasoningSummary } from "./ollama-reasoner";
+import { PromptCache } from "./prompt-cache";
 
 export interface SelfHealingRunOptions {
   outputDir: string;

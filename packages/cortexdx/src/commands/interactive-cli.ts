@@ -9,17 +9,17 @@ import * as readline from "node:readline";
 import {
   DeepContextClient,
   resolveDeepContextApiKey,
-} from "../deepcontext/client.js";
-import { createCliLogger } from "../logging/logger.js";
+} from "../deepcontext/client";
+import { createCliLogger } from "../logging/logger";
 import {
   runAcademicResearch,
   selectConfiguredProviders,
-} from "../research/academic-researcher.js";
+} from "../research/academic-researcher";
 import {
   createProgressIndicator,
   formatOutput,
   parseCSV,
-} from "./cli-utils.js";
+} from "./cli-utils";
 
 interface InteractiveModeOptions {
   expertise: string;
@@ -476,7 +476,7 @@ export const runStartDebugging = async (
  */
 export const runInterpretError = async (
   error: string,
-  opts: InterpretErrorOptions,
+  _opts: InterpretErrorOptions,
 ): Promise<number> => {
   logger.info(formatOutput("[brAInwav] Interpreting error", "info", true));
 
@@ -606,8 +606,8 @@ export const runGenerateDocumentation = async (
  * Provide best practices recommendations
  */
 export const runBestPractices = async (
-  endpoint: string | undefined,
-  opts: BestPracticesOptions,
+  _endpoint: string | undefined,
+  _opts: BestPracticesOptions,
 ): Promise<number> => {
   logger.info(
     formatOutput("[brAInwav] Analyzing best practices", "info", true),
@@ -733,12 +733,10 @@ function printTutorialSummary(
   opts: TutorialOptions,
   research: TutorialResearch | null,
 ): void {
-  logger.info(
-    formatOutput("\n✓ Tutorial created successfully!", "success", true),
-  );
-  logger.info(formatOutput(`\nTopic: ${topic}`, "info", true));
-  logger.info(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
-  logger.info(formatOutput(`Language: ${opts.lang}`, "info", true));
+  logLine(formatOutput("\n✓ Tutorial created successfully!", "success", true));
+  logLine(formatOutput(`\nTopic: ${topic}`, "info", true));
+  logLine(formatOutput(`Expertise Level: ${opts.expertise}`, "info", true));
+  logLine(formatOutput(`Language: ${opts.lang}`, "info", true));
 
   printListSection(
     "\nOutline:",
@@ -752,13 +750,18 @@ function printTutorialSummary(
 
   printResearchSection(research);
 
-  logger.info(
+  logLine(
     formatOutput(
       "\nNote: Tutorial creation is not yet fully implemented. This is a preview.",
       "warning",
       true,
     ),
   );
+}
+
+function logLine(message: string): void {
+  logger.info(message);
+  console.log(message.replace(/\u001b\[[0-9;]*m/g, ""));
 }
 
 /**
@@ -844,10 +847,11 @@ async function gatherTutorialResearch(
       : undefined;
     const { ready, missing } = selectConfiguredProviders(requested);
     if (missing.length) {
-      logger.warn(
-        "[Tutorial] Skipping providers with missing env vars: " +
-          missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", "),
-      );
+        logger.warn(
+          `[Tutorial] Skipping providers with missing env vars: ${missing
+            .map(({ id, vars }) => `${id}:${vars.join("/")}`)
+            .join(", ")}`,
+        );
     }
     if (ready.length === 0) {
       logger.warn(
@@ -883,8 +887,9 @@ async function gatherTutorialResearch(
     };
   } catch (error) {
     logger.warn(
-      "[Tutorial] Skipping academic research probe: " +
-        (error instanceof Error ? error.message : String(error)),
+      `[Tutorial] Skipping academic research probe: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return null;
   }
@@ -917,8 +922,9 @@ async function gatherDeepContextSnippets(topic: string): Promise<string[]> {
     });
   } catch (error) {
     logger.warn(
-      "[Tutorial] DeepContext search failed: " +
-        (error instanceof Error ? error.message : String(error)),
+      `[Tutorial] DeepContext search failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     return [];
   }
@@ -965,16 +971,16 @@ function buildTutorialExercises(
 
 function printListSection(title: string, entries: string[]): void {
   if (!entries.length) return;
-  logger.info(formatOutput(title, "info", true));
+  logLine(formatOutput(title, "info", true));
   for (const entry of entries) {
-    logger.info(formatOutput(`• ${entry}`, "info", true));
+    logLine(formatOutput(`• ${entry}`, "info", true));
   }
 }
 
 function printCodeSection(language: string | undefined, topic: string): void {
   const snippet = createTutorialSnippet(language ?? "typescript", topic);
-  logger.info(formatOutput("\nKey Snippet:", "info", true));
-  logger.info(snippet);
+  logLine(formatOutput("\nKey Snippet:", "info", true));
+  logLine(snippet);
 }
 
 function createTutorialSnippet(lang: string, topic: string): string {

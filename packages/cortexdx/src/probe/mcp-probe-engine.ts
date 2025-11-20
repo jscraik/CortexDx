@@ -13,11 +13,11 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { createLogger } from "../logging/logger.js";
-import { runPlugins } from "../plugin-host.js";
-import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
-import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
-import type { Finding, McpToolResult } from "../types.js";
+import { createLogger } from "../logging/logger";
+import { runPlugins } from "../plugin-host";
+import type { HttpMcpClient } from "../providers/academic/http-mcp-client";
+import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client";
+import type { Finding, McpToolResult } from "../types";
 
 export interface Auth0Config {
   domain: string;
@@ -221,12 +221,17 @@ async function enumerateCapabilities(
       })
       .catch(() => null);
 
-    // Type assertion since initResult structure is not fully typed
-    const initResultTyped = initResult as any;
+    const initResultTyped = initResult as
+      | {
+          serverInfo?: Record<string, unknown>;
+          protocolVersion?: string;
+          capabilities?: Record<string, unknown>;
+        }
+      | null;
     if (initResultTyped) {
-      metadata.serverInfo = initResultTyped.serverInfo || {};
-      metadata.protocolVersion = initResultTyped.protocolVersion || "unknown";
-      metadata.capabilities = initResultTyped.capabilities || {};
+      metadata.serverInfo = initResultTyped.serverInfo ?? {};
+      metadata.protocolVersion = initResultTyped.protocolVersion ?? "unknown";
+      metadata.capabilities = initResultTyped.capabilities ?? {};
     }
   } catch (error) {
     logger.warn({ error }, "Failed to enumerate some capabilities");

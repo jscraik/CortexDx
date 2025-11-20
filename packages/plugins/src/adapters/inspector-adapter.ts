@@ -473,7 +473,12 @@ export class InspectorAdapter {
   }
 
   private isTestMode(): boolean {
-    return process.env.VITEST === "true" || process.env.NODE_ENV === "test";
+    return (
+      process.env.VITEST === "true" ||
+      process.env.VITEST === "1" ||
+      process.env.VITEST === "TRUE" ||
+      process.env.NODE_ENV === "test"
+    );
   }
 
   private buildMockFindings(

@@ -12,7 +12,7 @@ const mockRegistry = {
   createProviderInstance: vi.fn(),
 };
 
-vi.mock("../src/registry/index.js", () => ({
+vi.mock("../../plugins/src/registry/index.js", () => ({
   getAcademicRegistry: () => mockRegistry,
 }));
 

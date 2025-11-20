@@ -1,13 +1,13 @@
 import path from "node:path";
 import process from "node:process";
-import { DeepContextClient, resolveDeepContextApiKey } from "../deepcontext/client.js";
+import { DeepContextClient, resolveDeepContextApiKey } from "../deepcontext/client";
 import {
   buildStatusRecord,
   formatStatusLine,
   persistDeepContextStatus,
   readAllDeepContextStatuses,
-} from "../deepcontext/status-store.js";
-import { createCliLogger } from "../logging/logger.js";
+} from "../deepcontext/status-store";
+import { createCliLogger } from "../logging/logger";
 
 const logger = createCliLogger("deepcontext");
 

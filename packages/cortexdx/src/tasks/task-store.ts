@@ -38,6 +38,7 @@ interface TaskRow {
  * Database row type for task list query
  */
 interface TaskListRow {
+  id: number;
   taskId: string;
   status: string;
   statusMessage: string | null;
@@ -212,9 +213,9 @@ export class TaskStore {
     const params: unknown[] = [Date.now()];
 
     if (cursor) {
-      // Use createdAt for cursor (must match ORDER BY)
-      whereClauses.push('createdAt < ?');
-      params.push(cursor);
+      // Use row id for pagination to avoid timestamp collisions
+      whereClauses.push('id < ?');
+      params.push(Number(cursor));
     }
     if (userId) {
       whereClauses.push('userId = ?');
@@ -222,10 +223,10 @@ export class TaskStore {
     }
 
     const query = `
-      SELECT taskId, status, statusMessage, createdAt, ttl, pollInterval
+      SELECT id, taskId, status, statusMessage, createdAt, ttl, pollInterval
       FROM tasks
       WHERE ${whereClauses.join(' AND ')}
-      ORDER BY createdAt DESC
+      ORDER BY id DESC
       LIMIT ?
     `;
     params.push(limit);
@@ -240,7 +241,10 @@ export class TaskStore {
       pollInterval: row.pollInterval
     }));
 
-    const nextCursor = tasks.length === limit && tasks[tasks.length - 1] ? tasks[tasks.length - 1].createdAt : undefined;
+    const nextCursor =
+      rows.length === limit && rows[rows.length - 1]
+        ? String(rows[rows.length - 1].id)
+        : undefined;
     return { tasks, nextCursor };
   }
 

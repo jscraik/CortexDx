@@ -4,7 +4,7 @@
  * Requirements: 13.1, 13.2, 13.4
  */
 
-import type { McpTool } from "../types.js";
+import type { McpTool } from "../types";
 
 export const createLicenseValidationTools = (): McpTool[] => [
   {

@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { InspectorAdapter } from "../adapters/inspector-adapter.js";
-import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
-import { analyzeWithLLM } from "../plugins/development/self-improvement.js";
-import { TemplateEngine } from "../template-engine/engine.js";
-import { getTemplateRecommendations } from "../templates/fix-templates.js";
-import type { FixTemplate } from "../templates/fix-templates.js";
-import type { ChatMessage, DevelopmentContext, Finding } from "../types.js";
+import { InspectorAdapter } from "../adapters/inspector-adapter";
+import { SelfImprovementPlugin } from "../plugins/development/self-improvement";
+import { analyzeWithLLM } from "../plugins/development/self-improvement";
+import { TemplateEngine } from "../template-engine/engine";
+import { getTemplateRecommendations } from "../templates/fix-templates";
+import type { FixTemplate } from "../templates/fix-templates";
+import type { ChatMessage, DevelopmentContext, Finding } from "../types";
 
 export interface HealingReport {
   jobId: string;

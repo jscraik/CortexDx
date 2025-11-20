@@ -235,7 +235,7 @@ export class TaskExecutor {
   /**
    * Execute sampling task (future implementation)
    */
-  private async executeSampling(params: unknown, ctx: DiagnosticContext): Promise<unknown> {
+  private async executeSampling(_params: unknown, _ctx: DiagnosticContext): Promise<unknown> {
     logger.warn('Sampling tasks not yet implemented');
     throw new Error('Sampling tasks not yet implemented');
   }
@@ -243,7 +243,7 @@ export class TaskExecutor {
   /**
    * Execute elicitation task (future implementation)
    */
-  private async executeElicitation(params: unknown, ctx: DiagnosticContext): Promise<unknown> {
+  private async executeElicitation(_params: unknown, _ctx: DiagnosticContext): Promise<unknown> {
     logger.warn('Elicitation tasks not yet implemented');
     throw new Error('Elicitation tasks not yet implemented');
   }

@@ -10,7 +10,7 @@ import type {
     DiagnosticContext,
     DiagnosticPlugin,
     Finding,
-} from "../types.js";
+} from "../types";
 
 export interface PluginMetadata {
     id: string;
@@ -400,16 +400,16 @@ function createMockContext(): DiagnosticContext {
         endpoint: "http://localhost:3000",
         headers: {},
         logger: (...args: unknown[]) => console.log(...args),
-        request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+        request: async <T>(_input: RequestInfo, _init?: RequestInit): Promise<T> => {
             return {} as T;
         },
-        jsonrpc: async <T>(method: string, params?: unknown): Promise<T> => {
+        jsonrpc: async <T>(_method: string, _params?: unknown): Promise<T> => {
             return {} as T;
         },
-        sseProbe: async (url: string, opts?: unknown) => {
+        sseProbe: async (_url: string, _opts?: unknown) => {
             return { ok: true };
         },
-        evidence: (ev) => { },
+        evidence: (_ev) => { },
         deterministic: false,
     };
 }

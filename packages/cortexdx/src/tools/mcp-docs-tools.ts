@@ -1,13 +1,13 @@
-import type { DevelopmentContext, McpTool, McpToolResult } from "../types.js";
+import type { DevelopmentContext, McpTool, McpToolResult } from "../types";
 import {
   listMcpDocsVersions,
   lookupMcpDoc,
   searchMcpDocs,
-} from "../library/mcp-docs-service.js";
+} from "../library/mcp-docs-service";
 import {
   recordMcpDocsChunkResource,
   recordMcpDocsSearchResource,
-} from "../resources/mcp-docs-store.js";
+} from "../resources/mcp-docs-store";
 
 export const createMcpDocsTools = (): McpTool[] => [
   {

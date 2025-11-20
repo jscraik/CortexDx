@@ -60,6 +60,7 @@ export async function ingestMcpDocsSnapshot(
     options.vectorStorage,
     options.vectorStoragePath,
   );
+  const userProvidedStorage = Boolean(options.vectorStorage);
   const adapter = options.embeddingAdapter ?? createOllamaEmbeddingAdapter();
   const documents = await embedChunks(
     snapshot.chunks,
@@ -69,7 +70,9 @@ export async function ingestMcpDocsSnapshot(
 
   if (!options.dryRun) {
     await storageDetails.storage.addDocuments(documents);
-    await storageDetails.storage.close(); // Ensure writes are persisted
+    if (!userProvidedStorage) {
+      await storageDetails.storage.close(); // Ensure writes are persisted
+    }
   }
 
   return {

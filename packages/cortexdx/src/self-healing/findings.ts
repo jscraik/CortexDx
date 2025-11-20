@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { EvidencePointer, Finding, Severity } from "../types.js";
+import type { EvidencePointer, Finding, Severity } from "../types";
 
 export type NormalizedSeverity = "info" | "minor" | "major" | "critical";
 export type NormalizedPrecision = "file" | "line" | "range";

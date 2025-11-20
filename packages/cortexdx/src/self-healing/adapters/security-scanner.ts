@@ -1,5 +1,5 @@
-import type { Finding } from "../../types.js";
-import { normalizeFindings, type NormalizedFinding } from "../findings.js";
+import type { Finding } from "../../types";
+import { normalizeFindings, type NormalizedFinding } from "../findings";
 
 interface AdaptSecurityOptions {
   sourceId?: string;

@@ -4,8 +4,8 @@
  * Requirements: 3.1, 5.1, 6.1
  */
 
-import { isStoryFeatureEnabled } from "../story/feature-flag.js";
-import type { McpTool } from "../types.js";
+import { isStoryFeatureEnabled } from "../story/feature-flag";
+import type { McpTool } from "../types";
 
 const baseDiagnosticTools: McpTool[] = [
   {
@@ -343,7 +343,7 @@ const baseDiagnosticTools: McpTool[] = [
   },
 ];
 
-const storyPayloadSchema = {
+const _storyPayloadSchema = {
   type: "object",
   additionalProperties: false,
   required: [
@@ -413,7 +413,7 @@ const storyPayloadSchema = {
   },
 } as const;
 
-const actionResultSchema = {
+const _actionResultSchema = {
   type: "object",
   required: [
     "action",

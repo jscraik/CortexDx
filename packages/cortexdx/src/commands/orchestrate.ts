@@ -1,34 +1,34 @@
-import { resolveAuthHeaders } from "../auth/auth0-handshake.js";
-import { createDiagnosticContext } from "../context/context-factory.js";
-import { createDevelopmentContext } from "../context/development-context.js";
-import { getEnhancedLlmAdapter } from "../ml/router.js";
-import { createCliLogger } from "../logging/logger.js";
-import type { WorkflowState } from "../orchestration/agent-orchestrator.js";
-import { getAgentOrchestrator } from "../orchestration/agent-orchestrator.js";
+import { resolveAuthHeaders } from "../auth/auth0-handshake";
+import { createDiagnosticContext } from "../context/context-factory";
+import { createDevelopmentContext } from "../context/development-context";
+import { getEnhancedLlmAdapter } from "../ml/router";
+import { createCliLogger } from "../logging/logger";
+import type { WorkflowState } from "../orchestration/agent-orchestrator";
+import { getAgentOrchestrator } from "../orchestration/agent-orchestrator";
 import {
   ensureDefaultAgentWorkflows,
   ensureDefaultPluginWorkflows,
-} from "../orchestration/default-workflows.js";
+} from "../orchestration/default-workflows";
 import {
   type ExecutionMode,
   normalizeExecutionMode,
   normalizeExpertiseLevel,
-} from "../orchestration/orchestrate-options.js";
-import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator.js";
-import { getOrchestrationStateManager } from "../orchestration/state-manager-factory.js";
-import type { StateManager } from "../orchestration/state-manager.js";
+} from "../orchestration/orchestrate-options";
+import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator";
+import { getOrchestrationStateManager } from "../orchestration/state-manager-factory";
+import type { StateManager } from "../orchestration/state-manager";
 import {
   createInitialWorkflowState,
   recoverWorkflowCheckpoint,
-} from "../orchestration/workflow-runtime.js";
+} from "../orchestration/workflow-runtime";
 import type {
   DevelopmentContext,
   DiagnosticContext,
   Finding,
-} from "../types.js";
-import { createDeterministicSeed } from "../utils/deterministic.js";
-import { runAcademicResearch, selectConfiguredProviders, type AcademicResearchReport } from "../research/academic-researcher.js";
-import { storeConsolidatedReport } from "../report/consolidated-report.js";
+} from "../types";
+import { createDeterministicSeed } from "../utils/deterministic";
+import { runAcademicResearch, selectConfiguredProviders, type AcademicResearchReport } from "../research/academic-researcher";
+import { storeConsolidatedReport } from "../report/consolidated-report";
 
 const logger = createCliLogger("orchestrate");
 

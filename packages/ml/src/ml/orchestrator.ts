@@ -15,8 +15,8 @@ import type {
   Problem,
   Solution,
 } from "@brainwav/cortexdx-core";
-import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import { hasOllama } from "./detect.js";
 

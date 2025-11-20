@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { NormalizedFinding } from "./findings.js";
-import { getOllamaEndpoint, resolveModelTag } from "./ollama-config.js";
-import type { PromptCache } from "./prompt-cache.js";
+import type { NormalizedFinding } from "./findings";
+import { getOllamaEndpoint, resolveModelTag } from "./ollama-config";
+import type { PromptCache } from "./prompt-cache";
 
 const PROMPT_VERSION = "2025-11-09";
 

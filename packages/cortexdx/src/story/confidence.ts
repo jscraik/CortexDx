@@ -1,4 +1,4 @@
-import type { Event } from "../anomaly/rules.js";
+import type { Event } from "../anomaly/rules";
 
 export type ConfidenceContext = {
   pathLength?: number;

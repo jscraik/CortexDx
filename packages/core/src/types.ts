@@ -431,6 +431,47 @@ export interface ContextEntry {
   duration: number;
 }
 
+export interface SpecContent {
+  section: string;
+  version: string;
+  content: string;
+  metadata: {
+    url: string;
+    fetchedAt: number;
+    etag?: string;
+    lastModified?: string;
+  };
+}
+
+export interface KnowledgeRequest {
+  section: string;
+  version?: string;
+  maxStaleness?: number;
+  fallbackToCache?: boolean;
+  priority?: "high" | "normal" | "low";
+}
+
+export interface KnowledgeResponse {
+  content: SpecContent;
+  source: "cache" | "fetch";
+  age: number;
+  fresh: boolean;
+}
+
+export interface CacheStatus {
+  entries: number;
+  hitRate: number;
+  avgAge: number;
+  staleSections: string[];
+}
+
+export interface KnowledgeOrchestrator {
+  get: (request: KnowledgeRequest) => Promise<KnowledgeResponse>;
+  prefetch?: (sections: string[]) => Promise<void>;
+  status?: () => Promise<CacheStatus>;
+  refresh?: (sections: string[]) => Promise<void>;
+}
+
 export interface Explanation {
   summary: string;
   details: string;
@@ -450,6 +491,7 @@ export interface DiagnosticContext {
   sseProbe: (url: string, opts?: SseProbeOptions) => Promise<SseResult>;
   governance?: GovernancePack;
   llm?: LlmAdapter | null;
+  knowledge?: KnowledgeOrchestrator;
   evidence: (ev: EvidencePointer) => void;
   deterministic?: boolean;
   deterministicSeed?: number;

@@ -90,7 +90,7 @@ export function buildSseFindings(
   findings.push({
     id: "perf.sse.first-event",
     area: "performance",
-    severity: metrics.firstEventMs > 500 ? "minor" : "info",
+    severity: metrics.firstEventMs > 500 ? "major" : "minor",
     title: `SSE first event: ${metrics.firstEventMs.toFixed(2)}ms`,
     description: buildSseDescription(metrics),
     evidence: [

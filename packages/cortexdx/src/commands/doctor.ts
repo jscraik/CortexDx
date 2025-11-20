@@ -4,8 +4,8 @@ import {
   DEFAULT_PROVIDERS,
   ACADEMIC_PROVIDER_ENV_REQUIREMENTS,
   selectConfiguredProviders,
-} from "../research/academic-researcher.js";
-import { createCliLogger } from "../logging/logger.js";
+} from "../research/academic-researcher";
+import { createCliLogger } from "../logging/logger";
 
 const logger = createCliLogger("doctor");
 
@@ -66,7 +66,9 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   }
 
   if (opts.json) {
-    logger.info(JSON.stringify(report, null, 2));
+    const payload = JSON.stringify(report, null, 2);
+    console.log(payload);
+    logger.info(payload);
   } else {
     printDoctorReport(report);
   }
@@ -166,6 +168,10 @@ async function runDoctorResearch(
           severity: provider.findings[0]?.severity,
         },
       ]),
+    );
+
+    console.log(
+      `[Doctor] Research ${report.summary.totalFindings} findings across ${report.summary.providersResponded}/${report.summary.providersRequested} providers`,
     );
 
     return {

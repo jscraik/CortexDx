@@ -100,7 +100,7 @@ export function buildWebSocketFindings(
   findings.push({
     id: "perf.websocket.messages",
     area: "performance",
-    severity: "info",
+    severity: metrics.reconnects > 0 ? "minor" : "info",
     title: `WebSocket: ${metrics.messageCount} messages`,
     description: buildWebSocketDescription(metrics),
     evidence: [

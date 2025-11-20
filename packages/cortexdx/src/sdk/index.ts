@@ -5,10 +5,10 @@
 
 export {
     BaseDevelopmentPlugin, BasePlugin, createPluginTestRunner, createPluginValidator, type BenchmarkResult, type PluginConfig, type PluginMetadata, type PluginTestRunner, type PluginValidator, type TestResult, type ValidationResult
-} from "./plugin-sdk.js";
+} from "./plugin-sdk";
 
 export {
     createPluginScaffolder, generatePluginTemplate, type GeneratedTemplate,
     type PluginScaffolder, type TemplateOptions
-} from "./plugin-templates.js";
+} from "./plugin-templates";
 

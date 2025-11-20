@@ -4,7 +4,7 @@
  * Requirements: 8.2, 10.1
  */
 
-import type { PluginMetadata } from "./plugin-sdk.js";
+import type { PluginMetadata } from "./plugin-sdk";
 
 export interface TemplateOptions {
     metadata: PluginMetadata;
@@ -74,7 +74,7 @@ function generatePluginCode(
         ? `import type {
   ${metadata.category === "development" ? "DevelopmentContext,\n  DevelopmentPlugin" : "DiagnosticContext,\n  DiagnosticPlugin"},
   Finding,
-} from "../types.js";`
+} from "../types";`
         : "";
 
     return `/**
@@ -132,7 +132,7 @@ function generateTestCode(
     isTypeScript: boolean,
 ): string {
     const typeImports = isTypeScript
-        ? `import type { ${metadata.category === "development" ? "DevelopmentContext" : "DiagnosticContext"} } from "../src/types.js";`
+        ? `import type { ${metadata.category === "development" ? "DevelopmentContext" : "DiagnosticContext"} } from "../src/types";`
         : "";
 
     return `/**
@@ -140,7 +140,7 @@ function generateTestCode(
  */
 
 import { describe, it, expect } from "vitest";
-import { ${toPascalCase(metadata.id)}Plugin } from "../src/plugins/${metadata.id}.js";
+import { ${toPascalCase(metadata.id)}Plugin } from "../src/plugins/${metadata.id}";
 ${typeImports}
 
 describe("${metadata.title}", () => {
@@ -214,7 +214,7 @@ ${metadata.requiresLlm ? "- **Requires LLM**: Yes\n" : ""}${metadata.supportedLa
 ## Usage
 
 \`\`\`typescript
-import { ${toPascalCase(metadata.id)}Plugin } from "./plugins/${metadata.id}.js";
+import { ${toPascalCase(metadata.id)}Plugin } from "./plugins/${metadata.id}";
 
 // The plugin is automatically registered and will run during diagnostics
 \`\`\`

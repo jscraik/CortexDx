@@ -1,7 +1,7 @@
-import type { Event } from "../anomaly/rules.js";
-import type { DepGraph } from "../graph/dependency-graph.js";
-import { scoreConfidence } from "./confidence.js";
-import { type Story, StorySchema } from "./story-schema.js";
+import type { Event } from "../anomaly/rules";
+import type { DepGraph } from "../graph/dependency-graph";
+import { scoreConfidence } from "./confidence";
+import { type Story, StorySchema } from "./story-schema";
 
 export type StoryComposeOptions = {
   defaultScope?: Story["scope"];

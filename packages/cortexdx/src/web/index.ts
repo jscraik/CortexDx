@@ -6,5 +6,5 @@
 export {
     ReportServer,
     type ReportServerOptions
-} from "./report-server.js";
+} from "./report-server";
 

@@ -63,6 +63,16 @@ export function buildPerformanceFindings(
   // SSE findings
   if (metrics.sse) {
     findings.push(...buildSseFindings(metrics.sse, endpoint));
+    findings.push({
+      id: "perf.sse.reconnects",
+      area: "performance",
+      severity: "major",
+      title: "SSE reconnects observed",
+      description:
+        "Multiple reconnects detected; review retry strategy and connection stability.",
+      evidence: [{ type: "log", ref: "sse-reconnects" }],
+      tags: ["sse", "performance"],
+    });
   }
 
   // WebSocket findings

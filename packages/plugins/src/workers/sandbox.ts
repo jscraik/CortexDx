@@ -3,6 +3,7 @@ import type { DiagnosticContext, DiagnosticPlugin, Finding, TransportExchange } 
 import { getPluginById } from "../plugins/index.js";
 import { httpAdapter } from "../adapters/http.js";
 import { createInspectorSession, type SharedSessionState } from "../context/inspector-session.js";
+import { createDefaultKnowledgeOrchestrator } from "../knowledge/default-orchestrator.js";
 
 type Inbound = {
   pluginId: string;
@@ -33,6 +34,7 @@ async function main(): Promise<void> {
     preinitialized: data.ctxInit.preinitialized,
     sharedState: workerSharedState,
   });
+  const knowledge = createDefaultKnowledgeOrchestrator();
 
   const baseHeaders = data.ctxInit.headers ?? {};
   const ctx: DiagnosticContext = {
@@ -53,7 +55,8 @@ async function main(): Promise<void> {
     llm: null,
     evidence: (ev) => parentPort?.postMessage({ type: "evidence", ev }),
     deterministic: !!data.ctxInit.deterministic,
-    transport: session.transport
+    transport: session.transport,
+    knowledge,
   };
 
   let findings: Finding[] = await plugin.run(ctx);

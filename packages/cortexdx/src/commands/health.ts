@@ -1,7 +1,7 @@
-import { loadProjectContext } from "../context/project-context.js";
-import { AutoHealer } from "../healing/auto-healer.js";
-import { createCliLogger } from "../logging/logger.js";
-import type { DevelopmentContext } from "../types.js";
+import { loadProjectContext } from "../context/project-context";
+import { AutoHealer } from "../healing/auto-healer";
+import { createCliLogger } from "../logging/logger";
+import type { DevelopmentContext } from "../types";
 
 const logger = createCliLogger("health");
 
@@ -142,6 +142,7 @@ function displayHealthResult(
   },
   endpoint: string,
 ): void {
+  logger.info("[Health] Running health check");
   logger.info("=".repeat(50));
   logger.info("CORTEXDX HEALTH CHECK");
   logger.info("=".repeat(50));

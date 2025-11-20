@@ -1,14 +1,14 @@
-import type { Event } from "../anomaly/rules.js";
+import type { Event } from "../anomaly/rules";
 import {
   detectErrorSpike,
   detectFallbackEngaged,
   detectHealthDown,
   detectLatencySpike,
-} from "../anomaly/rules.js";
-import type { DepGraph, ManifestLike, ProbeInventory } from "../graph/dependency-graph.js";
-import { buildDependencyGraph } from "../graph/dependency-graph.js";
-import { composeStory, type StoryComposeOptions } from "./story-composer.js";
-import type { Story } from "./story-schema.js";
+} from "../anomaly/rules";
+import type { DepGraph, ManifestLike, ProbeInventory } from "../graph/dependency-graph";
+import { buildDependencyGraph } from "../graph/dependency-graph";
+import { composeStory, type StoryComposeOptions } from "./story-composer";
+import type { Story } from "./story-schema";
 
 export type StorySignalInput = {
   latency?: { p95: number[]; pct?: number; minutes?: number; target?: string };

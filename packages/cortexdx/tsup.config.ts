@@ -7,7 +7,6 @@ export default defineConfig({
     cli: "src/cli.ts",
     index: "src/index.ts",
     "plugins/index": "src/plugins/index.ts",
-    "adapters/stdio-wrapper": "src/adapters/stdio-wrapper.ts",
   },
   format: ["esm"],
   splitting: true,
@@ -17,6 +16,14 @@ export default defineConfig({
   clean: true,
   target: "node20",
   minify: process.env.NODE_ENV === "production",
+  external: [
+    "@brainwav/cortexdx-core",
+    "@brainwav/cortexdx-core/*",
+    "@brainwav/cortexdx-ml",
+    "@brainwav/cortexdx-ml/*",
+    "@brainwav/cortexdx-plugins",
+    "@brainwav/cortexdx-plugins/*",
+  ],
   banner: { js: "#!/usr/bin/env node" },
   onSuccess: async () => {
     // Copy web assets to dist

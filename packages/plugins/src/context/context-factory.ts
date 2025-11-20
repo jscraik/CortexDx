@@ -1,7 +1,13 @@
 import { httpAdapter } from "../adapters/http.js";
-import type { DiagnosticArtifacts, DiagnosticContext, EvidencePointer, LlmAdapter } from "@brainwav/cortexdx-core";
+import type {
+    DiagnosticArtifacts,
+    DiagnosticContext,
+    EvidencePointer,
+    LlmAdapter,
+} from "@brainwav/cortexdx-core";
 import { loadArtifactsFromEnv } from "./artifacts.js";
 import { createInspectorSession, type SharedSessionState } from "./inspector-session.js";
+import { createDefaultKnowledgeOrchestrator } from "../knowledge/default-orchestrator.js";
 
 export interface DiagnosticContextOptions {
     endpoint: string;
@@ -16,6 +22,7 @@ export function createDiagnosticContext(options: DiagnosticContextOptions): Diag
     const { endpoint, headers, deterministic, deterministicSeed, sessionOptions, llm = null } = options;
     const session = createInspectorSession(endpoint, headers, sessionOptions);
     const baseHeaders = headers ?? {};
+    const knowledge = createDefaultKnowledgeOrchestrator();
 
     const request = async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
         const mergedHeaders =
@@ -52,6 +59,7 @@ export function createDiagnosticContext(options: DiagnosticContextOptions): Diag
         deterministicSeed,
         transport: session.transport,
         artifacts: loadArtifactsFromEnv(),
+        knowledge,
         llm,
     };
 

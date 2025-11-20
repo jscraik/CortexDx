@@ -403,7 +403,7 @@ export function formatValidationResults(results: ValidationResult[]): string {
   const lines = ["Validation Results:", ""];
 
   const errors = results.filter((r) => !r.passed);
-  const warnings = results.filter((r) => !r.passed);
+  const _warnings = results.filter((r) => !r.passed);
 
   if (errors.length === 0) {
     lines.push("✓ All validations passed");

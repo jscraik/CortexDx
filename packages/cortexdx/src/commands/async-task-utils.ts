@@ -90,7 +90,7 @@ function formatDuration(ms: number): string {
 /**
  * Format task status with color
  */
-function formatTaskStatus(status: TaskStatus, noColor: boolean = false): string {
+function formatTaskStatus(status: TaskStatus, noColor = false): string {
   if (noColor) return status;
 
   const colors = {
@@ -296,8 +296,9 @@ async function handleTerminalState(
     );
 
     return resultResponse;
+  }
 
-  } else if (currentStatus === 'failed') {
+  if (currentStatus === 'failed') {
     console.error(`✗ Task failed after ${formatDuration(Date.now() - startTime)}`);
 
     // Always throw after failed status (High #8)
@@ -311,13 +312,15 @@ async function handleTerminalState(
     }
     // If callMcpMethod succeeds without error, still throw
     throw new Error('Task failed');
+  }
 
-  } else if (currentStatus === 'cancelled') {
+  if (currentStatus === 'cancelled') {
     throw new Error(`Task was cancelled after ${formatDuration(Date.now() - startTime)}`);
+  }
 
-  } else if (currentStatus === 'input_required') {
-    console.warn(`⚠️  Task requires input (not supported in CLI mode)`);
-    console.warn(`   Try cancelling and running synchronously instead`);
+  if (currentStatus === 'input_required') {
+    console.warn('⚠️  Task requires input (not supported in CLI mode)');
+    console.warn('   Try cancelling and running synchronously instead');
     throw new Error('Task requires user input - not supported in CLI');
   }
 
@@ -349,7 +352,7 @@ export async function cancelTask(
  */
 export async function listTasks(
   endpoint: string,
-  limit: number = 50,
+  limit = 50,
   headers?: Record<string, string>
 ): Promise<void> {
   const response = await callMcpMethod<{ tasks: TaskMetadata[] }>(

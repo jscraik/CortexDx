@@ -45,6 +45,7 @@
     "test:reports": "vitest tests/report-mcp-tools.spec.ts tests/cloud-storage.spec.ts --run"
   },
   "dependencies": {
+    "@brainwav/cortexdx-plugins": "workspace:*",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0",
     "@langchain/core": "^1.0.4",
@@ -58,6 +59,7 @@
     "commander": "^11.1.0",
     "eventsource-parser": "^1.1.0",
     "fastmcp": "^3.23.1",
+    "cross-spawn": "^7.0.3",
     "pino": "^10.1.0",
     "yaml": "^2.6.0",
     "zod": "^3.22.4"

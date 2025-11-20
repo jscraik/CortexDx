@@ -4,9 +4,9 @@
  * Requirements: 6.2, 10.2, 11.4
  */
 
-import { runAcademicResearch } from "../research/academic-researcher.js";
-import { recordResearchReport } from "../resources/research-store.js";
-import type { McpTool, McpToolResult } from "../types.js";
+import { runAcademicResearch } from "../research/academic-researcher";
+import { recordResearchReport } from "../resources/research-store";
+import type { McpTool, McpToolResult } from "../types";
 
 export const createAcademicIntegrationTools = (): McpTool[] => [
   {

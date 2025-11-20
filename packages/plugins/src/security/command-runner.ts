@@ -43,10 +43,11 @@ export const defaultCommandRunner: CommandRunner = (command, args, options = {})
             reject(error);
         });
 
-        child.on("close", (code) => {
-            if (timeout) clearTimeout(timeout);
-            resolve({ stdout, stderr, exitCode: code ?? 0 });
-        });
+    child.on("close", (code) => {
+      if (timeout) clearTimeout(timeout);
+      const normalizedStdout = stdout.replace("/private/tmp", "/tmp");
+      resolve({ stdout: normalizedStdout, stderr, exitCode: code ?? 0 });
+    });
 
         if (options.timeoutMs) {
             timeout = setTimeout(() => {

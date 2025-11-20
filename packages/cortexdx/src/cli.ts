@@ -187,91 +187,7 @@ program
         const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
-  );
-
-program
-  .command("orchestrate")
-  .description("orchestrate plugins or LangGraph workflows")
-  .argument("[endpoint]", "MCP base URL (required unless --list)")
-  .option("--workflow <id>", "workflow identifier to execute")
-  .option("--plugin <id>", "run a single plugin by id")
-  .option("--parallel <csv>", "comma-delimited plugin ids to run in parallel")
-  .option("--list", "list available workflows")
-  .option("--json", "emit findings as JSON")
-  .option("--deterministic", "enable deterministic seeds and timestamps")
-  .option("--auth <scheme:value>", "bearer:XYZ | basic:u:p | header:Name:Value")
-  .option("--auth0-domain <domain>", "Auth0 domain used for MCP protection")
-  .option(
-    "--auth0-client-id <id>",
-    "Auth0 client id for client-credential flow",
-  )
-  .option(
-    "--auth0-client-secret <secret>",
-    "Auth0 client secret (use env var when possible)",
-  )
-  .option("--auth0-audience <audience>", "Auth0 audience/API identifier")
-  .option("--auth0-scope <scope>", "Optional Auth0 scopes (space-delimited)")
-  .option(
-    "--auth0-device-code",
-    "Use Auth0 device code flow instead of client credentials",
-  )
-  .option(
-    "--auth0-device-code-endpoint <url>",
-    "Override Auth0 device authorization endpoint",
-  )
-  .option("--mcp-api-key <key>", "MCP API key for dual authentication")
-  .option("--state-db <path>", "SQLite path for checkpoint persistence")
-  .option("--thread-id <id>", "override thread identifier for checkpointing")
-  .option("--checkpoint-id <id>", "custom checkpoint id for the current run")
-  .option("--resume-checkpoint <id>", "resume from a saved checkpoint id")
-  .option(
-    "--resume-thread <id>",
-    "resume from the latest checkpoint for a thread id",
-  )
-  .option("--mode <diagnostic|development>", "execution mode", "diagnostic")
-  .option(
-    "--expertise <level>",
-    "expertise level for development mode: beginner, intermediate, expert",
-    "intermediate",
-  )
-  .option("--stream", "stream workflow events to stdout")
-  .option(
-    "--research",
-    "run an academic research probe before orchestrating (default on)",
-    true,
-  )
-  .option("--no-research", "skip the academic research probe")
-  .option("--research-topic <text>", "topic to send to the academic providers")
-  .option(
-    "--research-question <text>",
-    "question/abstract for contextual providers",
-  )
-  .option(
-    "--research-providers <csv>",
-    "subset of academic providers to include",
-  )
-  .option(
-    "--research-limit <number>",
-    "maximum findings per provider for the research probe",
-  )
-  .option(
-    "--research-out <dir>",
-    "write research artifacts before orchestration",
-  )
-  .option("--report-out <dir>", "store consolidated reports via ReportManager")
-  .option(
-    "--disable-sse",
-    "skip SSE streaming probes (sets CORTEXDX_DISABLE_SSE=1 during the run)",
-  )
-  .option(
-    "--sse-endpoint <url>",
-    "override the SSE endpoint used by streaming probes (CORTEXDX_SSE_ENDPOINT)",
-  )
-  .action(async (endpoint, opts) => {
-    const { runOrchestrate } = await import("./commands/orchestrate.js");
-    const code = await runOrchestrate(endpoint ?? null, opts);
-    process.exitCode = code;
-  });
+);
 
 const deepContext = program
   .command("deepcontext")
@@ -348,8 +264,8 @@ program
     [],
   )
   .action(async (topic, opts) => {
-      const { runResearch } = await import("./commands/research.js");
-      const code = await runResearch(topic, opts);
+    const { runResearch } = await import("./commands/research.js");
+    const code = await runResearch(topic, opts);
     process.exitCode = code;
   });
 

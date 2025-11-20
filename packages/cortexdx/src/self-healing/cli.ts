@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 import path from "node:path";
-import { getSelfHealingDefaultModel } from "./ollama-config.js";
-import { parseCliOptions } from "./options.js";
-import { executeSelfHealingRun } from "./run.js";
+import { getSelfHealingDefaultModel } from "./ollama-config";
+import { parseCliOptions } from "./options";
+import { executeSelfHealingRun } from "./run";
 
 async function main() {
   const options = parseCliOptions(process.argv.slice(2));

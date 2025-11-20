@@ -19,7 +19,6 @@
     "dependencies": {
         "@ai-sdk/openai": "^2.0.65",
         "@brainwav/cortexdx-core": "workspace:*",
-        "@brainwav/cortexdx-plugins": "workspace:*",
         "zod": "^3.22.4"
     },
     "devDependencies": {

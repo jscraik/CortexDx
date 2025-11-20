@@ -5,7 +5,7 @@
 
 import Database from "better-sqlite3";
 import { join } from "node:path";
-import type { DiagnosticReport } from "./report-generator.js";
+import type { DiagnosticReport } from "./report-generator";
 
 export interface StoredReport {
     id: string;
@@ -138,7 +138,7 @@ export class ReportStore {
     /**
      * List all reports for a target URL
      */
-    listReportsByTarget(targetUrl: string, limit: number = 10): StoredReport[] {
+    listReportsByTarget(targetUrl: string, limit = 10): StoredReport[] {
         const stmt = this.db.prepare(`
             SELECT * FROM diagnostic_reports
             WHERE target_url = ? AND expires_at > ?
@@ -176,7 +176,7 @@ export class ReportStore {
     /**
      * List recent reports
      */
-    listRecentReports(limit: number = 20): StoredReport[] {
+    listRecentReports(limit = 20): StoredReport[] {
         const stmt = this.db.prepare(`
             SELECT * FROM diagnostic_reports
             WHERE expires_at > ?
@@ -291,7 +291,7 @@ export class ReportStore {
                     console.log(`[ReportStore] Cleaned up ${cleaned} expired reports`);
                 }
             } catch (err) {
-                console.error(`[ReportStore] Error during cleanup:`, err);
+                console.error("[ReportStore] Error during cleanup:", err);
             }
         }, 24 * 60 * 60 * 1000);
     }
@@ -306,8 +306,11 @@ const reportStoreMap: Map<string, ReportStore> = new Map();
 export function getReportStore(dbPath?: string): ReportStore {
     // Use a default path if none provided
     const resolvedPath = dbPath ?? join(process.cwd(), "cortexdx-report-store.db");
-    if (!reportStoreMap.has(resolvedPath)) {
-        reportStoreMap.set(resolvedPath, new ReportStore(resolvedPath));
+    const existing = reportStoreMap.get(resolvedPath);
+    if (existing) {
+        return existing;
     }
-    return reportStoreMap.get(resolvedPath)!;
+    const store = new ReportStore(resolvedPath);
+    reportStoreMap.set(resolvedPath, store);
+    return store;
 }

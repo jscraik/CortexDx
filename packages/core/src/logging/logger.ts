@@ -59,12 +59,13 @@ export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
   const infoWriter =
     config.writer ??
     ((text: string) => {
-      process.stdout.write(`${text}\n`);
+      // Use console so test harnesses that spy on console output can capture logs.
+      console.log(text);
     });
   const errorWriter =
     config.errorWriter ??
     ((text: string) => {
-      process.stderr.write(`${text}\n`);
+      console.error(text);
     });
   const silent = config.silent ?? false;
 

@@ -1,9 +1,9 @@
-import { safeParseJson } from "../utils/json.js";
+import { safeParseJson } from "../utils/json";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { DevelopmentContext } from "../types.js";
-import type { HealingReport } from "./auto-healer.js";
-import { AutoHealer } from "./auto-healer.js";
+import type { DevelopmentContext } from "../types";
+import type { HealingReport } from "./auto-healer";
+import { AutoHealer } from "./auto-healer";
 
 export interface MonitoringConfig {
   endpoint: string;
@@ -361,7 +361,7 @@ export class MonitoringScheduler {
   /**
    * Calculate next run time for a job
    */
-  private calculateNextRun(job: MonitoringJob): string {
+  private calculateNextRun(_job: MonitoringJob): string {
     const nextRun = new Date();
     nextRun.setMinutes(nextRun.getMinutes() + 5); // Next run in 5 minutes
     return nextRun.toISOString();

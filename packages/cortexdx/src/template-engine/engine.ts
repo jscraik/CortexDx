@@ -1,11 +1,11 @@
-import type { DevelopmentContext, Finding } from "../types.js";
-import { getTemplate } from "../templates/fix-templates.js";
-import type { FixTemplate } from "../templates/fix-templates.js";
-import { runChecklist, formatChecklistResult } from "../templates/checklists.js";
-import type { ChecklistResult } from "../templates/checklists.js";
-import { renderCodePattern, getCodePattern } from "../templates/code-patterns.js";
-import { runValidationRules, formatValidationResults } from "../templates/validation-rules.js";
-import type { ValidationResult } from "../templates/validation-rules.js";
+import type { DevelopmentContext, Finding } from "../types";
+import { getTemplate } from "../templates/fix-templates";
+import type { FixTemplate } from "../templates/fix-templates";
+import { runChecklist, formatChecklistResult } from "../templates/checklists";
+import type { ChecklistResult } from "../templates/checklists";
+import { renderCodePattern, getCodePattern } from "../templates/code-patterns";
+import { runValidationRules, formatValidationResults } from "../templates/validation-rules";
+import type { ValidationResult } from "../templates/validation-rules";
 import { promises as fs } from "node:fs";
 import { resolve, join } from "node:path";
 
@@ -252,7 +252,7 @@ export class TemplateEngine {
     originalContent: string,
     template: FixTemplate,
     finding: Finding,
-    ctx: DevelopmentContext
+    _ctx: DevelopmentContext
   ): Promise<string> {
     if (!template.codeTemplate) {
       return originalContent;
@@ -286,7 +286,7 @@ export class TemplateEngine {
   private insertCodeChanges(
     originalContent: string,
     codeChanges: string,
-    targetFiles: string[]
+    _targetFiles: string[]
   ): string {
     // Simple insertion logic - in a real implementation, this would be more sophisticated
     // with proper AST parsing and insertion point detection

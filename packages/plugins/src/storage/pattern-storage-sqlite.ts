@@ -71,7 +71,15 @@ const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<[RegExp, string]> = [
   [/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[EMAIL_REMOVED]"],
   [/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[IP_REMOVED]"],
   [/\b(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+\.)+[a-z]{2,}\b/gi, "example.com"],
-  [/((?:password|pwd|pass|secret|token|key)[:=])\s*[^\s;]+/gi, "$1[REDACTED]"],
+  [
+    /((?:password|pwd|pass|secret|token|key)[:=])\s*([^\s;]+)/gi,
+    (_match: string, prefix: string, value: string) => {
+      if (value.includes("[API_KEY_REMOVED]") || value.includes("[TOKEN_REMOVED]")) {
+        return `${prefix}${value}`;
+      }
+      return `${prefix}[REDACTED]`;
+    },
+  ],
 ];
 
 const SIMILARITY_CANDIDATE_LIMIT = 200;

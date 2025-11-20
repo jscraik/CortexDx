@@ -4,9 +4,9 @@
  * Requirements: 17.1, 17.5
  */
 
-import { ensureDefaultPluginWorkflows } from "../orchestration/default-workflows.js";
-import { getPluginOrchestrator, type PluginWorkflow, type WorkflowStage } from "../orchestration/plugin-orchestrator.js";
-import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolResult } from "../types.js";
+import { ensureDefaultPluginWorkflows } from "../orchestration/default-workflows";
+import { getPluginOrchestrator, type PluginWorkflow, type WorkflowStage } from "../orchestration/plugin-orchestrator";
+import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolResult } from "../types";
 
 /**
  * Create MCP tools for plugin orchestration

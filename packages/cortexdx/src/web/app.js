@@ -49,7 +49,7 @@ class CortexDxClient {
                 this.updateConnectionStatus(true, 'Connected');
                 this.setupEventSource();
             }
-        } catch (error) {
+        } catch (_error) {
             this.updateConnectionStatus(false, 'Disconnected');
             setTimeout(() => this.connectToServer(), 5000);
         }
@@ -130,10 +130,11 @@ class CortexDxClient {
                     <div class="finding-description">${data.error.message}</div>
                 </div>`;
             }
-        } catch (error) {
+        } catch (_error) {
+            const message = _error instanceof Error ? _error.message : 'unknown error';
             resultsPanel.innerHTML = `<div class="finding blocker">
                 <div class="finding-title">Connection Error</div>
-                <div class="finding-description">${error.message}</div>
+                <div class="finding-description">${message}</div>
             </div>`;
         }
     }
@@ -159,7 +160,7 @@ class CortexDxClient {
             `).join('');
 
             resultsPanel.innerHTML = html;
-        } catch (error) {
+        } catch (_error) {
             resultsPanel.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
         }
     }

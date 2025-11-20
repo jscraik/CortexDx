@@ -3,8 +3,8 @@
  * Generates diagnostic reports in multiple formats (Markdown, JSON, ArcTDD)
  */
 
-import type { Finding } from "../types.js";
-import type { ProbeMetadata, DiagnosticSummary } from "./mcp-probe-engine.js";
+import type { Finding } from "../types";
+import type { ProbeMetadata, DiagnosticSummary } from "./mcp-probe-engine";
 
 export interface DiagnosticReport {
     id: string;
@@ -60,31 +60,31 @@ function generateMarkdownReport(
 ): string {
     const { compliant, score, totalFindings, criticalFindings } = summary;
 
-    let md = `# CortexDx MCP Diagnostic Report\n\n`;
+    let md = "# CortexDx MCP Diagnostic Report\n\n";
     md += `**Report ID:** \`${reportId}\`  \n`;
     md += `**Target Server:** ${targetUrl}  \n`;
     md += `**Timestamp:** ${timestamp}  \n`;
     md += `**Duration:** ${duration}ms  \n\n`;
 
     // Summary Section
-    md += `## Executive Summary\n\n`;
+    md += "## Executive Summary\n\n";
     md += `**Compliance Score:** ${score}/100 ${getScoreEmoji(score)}  \n`;
     md += `**Status:** ${compliant ? '✅ COMPLIANT' : '❌ NON-COMPLIANT'}  \n`;
     md += `**Total Findings:** ${totalFindings}  \n`;
     md += `**Critical Issues:** ${criticalFindings}  \n\n`;
 
     if (score >= 90) {
-        md += `🎉 **Excellent!** This MCP server demonstrates high protocol compliance and best practices.\n\n`;
+        md += "🎉 **Excellent!** This MCP server demonstrates high protocol compliance and best practices.\n\n";
     } else if (score >= 70) {
-        md += `⚠️ **Good** with room for improvement. Address the findings below to achieve full compliance.\n\n`;
+        md += "⚠️ **Good** with room for improvement. Address the findings below to achieve full compliance.\n\n";
     } else if (score >= 50) {
-        md += `⚠️ **Needs Attention.** Several compliance and security issues need to be resolved.\n\n`;
+        md += "⚠️ **Needs Attention.** Several compliance and security issues need to be resolved.\n\n";
     } else {
-        md += `🚨 **Critical Issues Detected.** Immediate action required to meet MCP protocol standards.\n\n`;
+        md += "🚨 **Critical Issues Detected.** Immediate action required to meet MCP protocol standards.\n\n";
     }
 
     // Server Information
-    md += `## Server Information\n\n`;
+    md += "## Server Information\n\n";
     if (metadata.serverInfo) {
         md += `- **Name:** ${metadata.serverInfo.name}\n`;
         md += `- **Version:** ${metadata.serverInfo.version}\n`;
@@ -97,36 +97,36 @@ function generateMarkdownReport(
 
     // Capabilities
     if (Object.keys(metadata.capabilities).length > 0) {
-        md += `### Capabilities\n\n`;
+        md += "### Capabilities\n\n";
         md += `\`\`\`json\n${JSON.stringify(metadata.capabilities, null, 2)}\n\`\`\`\n\n`;
     }
 
     // Tools
     if (metadata.tools.length > 0) {
         md += `### Tools (${metadata.tools.length})\n\n`;
-        metadata.tools.slice(0, 10).forEach(tool => {
+        for (const tool of metadata.tools.slice(0, 10)) {
             md += `- **${tool.name}** - ${tool.description || 'No description'}\n`;
-        });
+        }
         if (metadata.tools.length > 10) {
             md += `\n*...and ${metadata.tools.length - 10} more*\n`;
         }
-        md += `\n`;
+        md += "\n";
     }
 
     // Resources
     if (metadata.resources.length > 0) {
         md += `### Resources (${metadata.resources.length})\n\n`;
-        metadata.resources.slice(0, 10).forEach(resource => {
+        for (const resource of metadata.resources.slice(0, 10)) {
             md += `- **${resource.name}** - \`${resource.uri}\`\n`;
-        });
+        }
         if (metadata.resources.length > 10) {
             md += `\n*...and ${metadata.resources.length - 10} more*\n`;
         }
-        md += `\n`;
+        md += "\n";
     }
 
     // Findings by Severity
-    md += `## Diagnostic Findings\n\n`;
+    md += "## Diagnostic Findings\n\n";
 
     const findingsBySeverity = {
         blocker: findings.filter(f => f.severity === 'blocker'),
@@ -137,37 +137,45 @@ function generateMarkdownReport(
 
     if (findingsBySeverity.blocker.length > 0) {
         md += `### 🚨 Critical Issues (${findingsBySeverity.blocker.length})\n\n`;
-        findingsBySeverity.blocker.forEach(f => md += formatFinding(f));
+        for (const f of findingsBySeverity.blocker) {
+            md += formatFinding(f);
+        }
     }
 
     if (findingsBySeverity.major.length > 0) {
         md += `### ⚠️ Major Issues (${findingsBySeverity.major.length})\n\n`;
-        findingsBySeverity.major.forEach(f => md += formatFinding(f));
+        for (const f of findingsBySeverity.major) {
+            md += formatFinding(f);
+        }
     }
 
     if (findingsBySeverity.minor.length > 0) {
         md += `### ℹ️ Minor Issues (${findingsBySeverity.minor.length})\n\n`;
-        findingsBySeverity.minor.forEach(f => md += formatFinding(f));
+        for (const f of findingsBySeverity.minor) {
+            md += formatFinding(f);
+        }
     }
 
     if (findingsBySeverity.info.length > 0) {
         md += `### ✓ Informational (${findingsBySeverity.info.length})\n\n`;
-        findingsBySeverity.info.forEach(f => md += formatFinding(f));
+        for (const f of findingsBySeverity.info) {
+            md += formatFinding(f);
+        }
     }
 
     // Recommendations
-    md += `## Recommendations\n\n`;
+    md += "## Recommendations\n\n";
     const recommendations = generateRecommendations(summary, findings);
     recommendations.forEach((rec, idx) => {
         md += `${idx + 1}. ${rec}\n`;
     });
-    md += `\n`;
+    md += "\n";
 
     // Footer
-    md += `---\n\n`;
-    md += `*Report generated by CortexDx MCP Meta-Inspector*  \n`;
-    md += `*Protocol: MCP v2024-11-05*  \n`;
-    md += `*For questions or support, visit https://github.com/jscraik/CortexDx*\n`;
+    md += "---\n\n";
+    md += "*Report generated by CortexDx MCP Meta-Inspector*  \n";
+    md += "*Protocol: MCP v2024-11-05*  \n";
+    md += "*For questions or support, visit https://github.com/jscraik/CortexDx*\n";
 
     return md;
 }
@@ -228,8 +236,8 @@ function formatFinding(finding: Finding): string {
     }
 
     if (finding.evidence && finding.evidence.length > 0) {
-        md += `**Evidence:**\n`;
-        finding.evidence.forEach(ev => {
+        md += "**Evidence:**\n";
+        for (const ev of finding.evidence) {
             if (ev.type === 'url') {
                 md += `- 🔗 URL: ${ev.ref}\n`;
             } else if (ev.type === 'log') {
@@ -237,11 +245,11 @@ function formatFinding(finding: Finding): string {
             } else if (ev.type === 'file') {
                 md += `- 📁 File: ${ev.ref}\n`;
             }
-        });
-        md += `\n`;
+        }
+        md += "\n";
     }
 
-    md += `---\n\n`;
+    md += "---\n\n";
     return md;
 }
 

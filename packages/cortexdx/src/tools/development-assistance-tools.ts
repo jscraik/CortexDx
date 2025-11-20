@@ -4,7 +4,7 @@
  * Requirements: 1.2, 2.2, 4.1
  */
 
-import type { McpTool } from "../types.js";
+import type { McpTool } from "../types";
 
 export const createDevelopmentAssistanceTools = (): McpTool[] => [
   {

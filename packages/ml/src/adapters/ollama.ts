@@ -16,7 +16,7 @@ import type {
   Problem,
   Solution,
 } from "@brainwav/cortexdx-core";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json.js";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import { randomUUID } from "node:crypto";
 import {
   getDefaultOllamaBaseUrl,

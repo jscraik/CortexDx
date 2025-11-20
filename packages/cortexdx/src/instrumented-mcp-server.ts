@@ -53,7 +53,7 @@ export async function createInstrumentedMcpServer() {
                 timestamp: z.string()
             }
         },
-        async ({ endpoint, suites = [] }) => {
+        async ({ endpoint }) => {
             const output = {
                 status: "diagnosed",
                 endpoint,

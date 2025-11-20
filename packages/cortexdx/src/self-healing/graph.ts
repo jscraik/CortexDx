@@ -5,10 +5,10 @@ import {
   START,
   StateGraph,
 } from "@langchain/langgraph";
-import { type SandboxBudgets, runPlugins } from "../plugin-host.js";
-import type { DevelopmentContext, Finding } from "../types.js";
-import type { NormalizedFinding } from "./findings.js";
-import { normalizeFindings } from "./findings.js";
+import { type SandboxBudgets, runPlugins } from "../plugin-host";
+import type { DevelopmentContext, Finding } from "../types";
+import type { NormalizedFinding } from "./findings";
+import { normalizeFindings } from "./findings";
 
 export interface GraphInput {
   plugins: string[];
@@ -125,7 +125,7 @@ async function buildContextNode(
 ): Promise<Partial<typeof GraphState.State>> {
   const context: DevelopmentContext = {
     endpoint: state.endpoint,
-    logger: (...args: unknown[]) => {
+    logger: (..._args: unknown[]) => {
       // We need to return the updated logs array
     },
     request: async <T>() => Promise.resolve({} as T),

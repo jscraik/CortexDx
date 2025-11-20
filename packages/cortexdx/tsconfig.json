@@ -1,13 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "../..",
     "outDir": "dist",
     "declaration": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "paths": {
+      "@brainwav/cortexdx-core": ["../core/src/index.ts"],
+      "@brainwav/cortexdx-core/*": ["../core/src/*"],
+      "@brainwav/cortexdx-ml": ["../ml/src/index.ts"],
+      "@brainwav/cortexdx-ml/*": ["../ml/src/*"],
+      "@brainwav/cortexdx-plugins": ["../plugins/src/index.ts"],
+      "@brainwav/cortexdx-plugins/*": ["../plugins/src/*"]
+    }
   },
   "include": ["src"]
 }

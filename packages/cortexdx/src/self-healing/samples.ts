@@ -1,4 +1,4 @@
-import type { EvidencePointer, Finding } from "../types.js";
+import type { EvidencePointer, Finding } from "../types";
 
 export function buildSampleSecurityFindings(): Finding[] {
   const evidence: EvidencePointer = {
