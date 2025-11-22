@@ -217,17 +217,28 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     };
 
     let fetchResult: FetchResult;
+    const startTime = Date.now();
 
     try {
       const adapter = this.transports.get(selectedTransport);
       if (!adapter) throw new Error(`Transport ${selectedTransport} not initialized`);
       fetchResult = await adapter.fetch(fetchInput);
+      this.transportSelector.updateMetrics(selectedTransport, true, Date.now() - startTime);
     } catch (e) {
+      this.transportSelector.updateMetrics(selectedTransport, false, Date.now() - startTime);
+
       // Fallback to HTTP if we tried something else and it failed
       if (selectedTransport !== TransportType.HTTP) {
+        const fallbackStartTime = Date.now();
         const httpAdapter = this.transports.get(TransportType.HTTP);
         if (httpAdapter) {
-          fetchResult = await httpAdapter.fetch(fetchInput);
+          try {
+            fetchResult = await httpAdapter.fetch(fetchInput);
+            this.transportSelector.updateMetrics(TransportType.HTTP, true, Date.now() - fallbackStartTime);
+          } catch (fallbackError) {
+            this.transportSelector.updateMetrics(TransportType.HTTP, false, Date.now() - fallbackStartTime);
+            throw fallbackError;
+          }
         } else {
           throw e;
         }

@@ -14,6 +14,16 @@ export interface ServerCapabilities {
     http3: boolean;
 }
 
+export interface TransportMetrics {
+    requestCount: number;
+    successCount: number;
+    errorCount: number;
+    totalLatencyMs: number;
+    avgLatencyMs: number;
+    lastFailure?: number;
+    consecutiveFailures: number;
+}
+
 export interface TransportSelector {
     /**
      * Select optimal transport for a fetch request
@@ -21,10 +31,7 @@ export interface TransportSelector {
      * @param capabilities - Server transport capabilities
      * @returns Selected transport type
      */
-    selectTransport(
-        request: KnowledgeRequest,
-        capabilities: ServerCapabilities
-    ): TransportType;
+    selectTransport(request: KnowledgeRequest, capabilities: ServerCapabilities): TransportType;
 
     /**
      * Detect server transport capabilities
@@ -32,6 +39,9 @@ export interface TransportSelector {
      * @returns Available transports
      */
     detectCapabilities(endpoint: string): Promise<ServerCapabilities>;
+
+    updateMetrics(transport: TransportType, success: boolean, latencyMs: number): void;
+    getMetrics(transport: TransportType): TransportMetrics;
 }
 
 export interface FetchInput {

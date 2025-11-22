@@ -1,30 +1,78 @@
 import type { KnowledgeRequest } from "@brainwav/cortexdx-core";
 import { WebSocket } from "ws";
-import { type ServerCapabilities, type TransportSelector, TransportType } from "./types.js";
+import { TransportType, type ServerCapabilities, type TransportMetrics, type TransportSelector } from "./types.js";
 
 export class DefaultTransportSelector implements TransportSelector {
-    selectTransport(
-        request: KnowledgeRequest,
-        capabilities: ServerCapabilities
-    ): TransportType {
-        // 1. Static content (specs, docs) → HTTP
-        if (this.isStaticContent(request.section)) {
-            return TransportType.HTTP;
+    private metrics = new Map<TransportType, TransportMetrics>();
+
+    constructor() {
+        Object.values(TransportType).forEach(type => {
+            this.metrics.set(type, {
+                requestCount: 0,
+                successCount: 0,
+                errorCount: 0,
+                totalLatencyMs: 0,
+                avgLatencyMs: 0,
+                consecutiveFailures: 0
+            });
+        });
+    }
+
+    updateMetrics(transport: TransportType, success: boolean, latencyMs: number): void {
+        const m = this.metrics.get(transport);
+        if (!m) return;
+
+        m.requestCount++;
+        m.totalLatencyMs += latencyMs;
+        m.avgLatencyMs = m.totalLatencyMs / m.requestCount;
+
+        if (success) {
+            m.successCount++;
+            m.consecutiveFailures = 0;
+        } else {
+            m.errorCount++;
+            m.consecutiveFailures++;
+            m.lastFailure = Date.now();
+        }
+    }
+
+    getMetrics(transport: TransportType): TransportMetrics {
+        return this.metrics.get(transport) ?? {
+            requestCount: 0,
+            successCount: 0,
+            errorCount: 0,
+            totalLatencyMs: 0,
+            avgLatencyMs: 0,
+            consecutiveFailures: 0
+        };
+    }
+
+    selectTransport(request: KnowledgeRequest, capabilities: ServerCapabilities): TransportType {
+        // 1. Check for unhealthy transports
+        const wsMetrics = this.getMetrics(TransportType.WEBSOCKET);
+        const sseMetrics = this.getMetrics(TransportType.SSE);
+        const isWsUnhealthy = wsMetrics.consecutiveFailures > 3 && Date.now() - (wsMetrics.lastFailure || 0) < 60000;
+        const isSseUnhealthy = sseMetrics.consecutiveFailures > 3 && Date.now() - (sseMetrics.lastFailure || 0) < 60000;
+
+        // 2. Interactive/Real-time requests prefer WebSocket
+        if (request.priority === "high" || request.maxStaleness === 0) {
+            if (capabilities.websocket && !isWsUnhealthy) {
+                return TransportType.WEBSOCKET;
+            }
+            if (capabilities.sse && !isSseUnhealthy) {
+                return TransportType.SSE;
+            }
         }
 
-        // 2. Real-time updates (changelog, live specs) → SSE
-        if (this.requiresRealTimeUpdates(request.section) && capabilities.sse) {
-            return TransportType.SSE;
+        // 3. Streaming/Updates prefer SSE
+        if (capabilities.sse && !isSseUnhealthy) {
+            // Heuristic: if we are fetching a changelog or events
+            if (request.section.includes("changelog") || request.section.includes("events")) {
+                return TransportType.SSE;
+            }
         }
 
-        // 3. Interactive queries (search, RAG) → WebSocket
-        // Note: We'll assume 'search' or 'validation' actions imply interactivity
-        // This logic might need refinement as KnowledgeRequest evolves
-        if (this.isInteractiveQuery(request) && capabilities.websocket) {
-            return TransportType.WEBSOCKET;
-        }
-
-        // 4. Default fallback → HTTP
+        // 4. Default to HTTP
         return TransportType.HTTP;
     }
 
