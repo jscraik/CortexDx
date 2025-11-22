@@ -88,7 +88,7 @@ export interface McpServerConfig {
   // FastMCP native options
   instructions?: string;
   authenticate?: (request: Request) => Promise<AuthSession>;
-  logger?: any;
+  logger?: PluginLogger;
 
   // Protocol options
   protocolVersion?: ProtocolVersion;
