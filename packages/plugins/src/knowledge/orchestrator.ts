@@ -5,6 +5,7 @@ import type {
   KnowledgeResponse,
   KnowledgeSearchResult,
   SpecContent,
+  VersionInfo,
 } from "@brainwav/cortexdx-core";
 import { LRUCache } from "@brainwav/cortexdx-core/utils/lru-cache";
 import { mkdirSync } from "node:fs";
@@ -17,6 +18,7 @@ import type { KnowledgeRAG, SearchResult } from "./rag/types.js";
 import { HttpTransportAdapter, SseTransportAdapter, WebSocketTransportAdapter } from "./transport/adapters.js";
 import { DefaultTransportSelector } from "./transport/selector.js";
 import { TransportType, type FetchInput, type FetchResult, type TransportAdapter } from "./transport/types.js";
+import { SemverVersionManager, type VersionManager } from "./version-manager.js";
 
 interface KnowledgeOrchestratorOptions {
   baseUrl: string;
@@ -36,12 +38,13 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
   private readonly defaultTtl: number;
   private readonly cache: LRUCache<CacheEntry>;
   private readonly store: SpecCacheStore;
-  private readonly inflight = new Map<string, Promise<CacheEntry>>();
+  private readonly inflight = new Map<string, Promise<CacheEntry | null>>();
 
   private readonly transportSelector = new DefaultTransportSelector();
   private readonly transports = new Map<TransportType, TransportAdapter>();
   private readonly baseUrl: string;
   private readonly rag?: KnowledgeRAG;
+  private readonly versionManager: VersionManager;
 
   constructor(options: KnowledgeOrchestratorOptions) {
     this.defaultVersion = options.defaultVersion;
@@ -69,10 +72,41 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
         embedding: options.rag.embedding,
       });
     }
+
+    // Initialize Version Manager
+    this.versionManager = new SemverVersionManager(async () => {
+      try {
+        const httpTransport = this.transports.get(TransportType.HTTP);
+        if (httpTransport) {
+          const result = await httpTransport.fetch({
+            url: `${this.baseUrl}/versions.json`,
+            section: "versions",
+            version: "meta"
+          });
+          if (result.content) {
+            return JSON.parse(result.content);
+          }
+        }
+      } catch (e) {
+        // Ignore error
+      }
+      return [{
+        version: this.defaultVersion,
+        releaseDate: new Date().toISOString(),
+        isLatest: true,
+        isDeprecated: false
+      }];
+    });
+  }
+
+  async getVersions(): Promise<VersionInfo[]> {
+    return this.versionManager.getVersions();
   }
 
   async get(request: KnowledgeRequest): Promise<KnowledgeResponse> {
-    const version = request.version ?? this.defaultVersion;
+    const requestedVersion = request.version ?? this.defaultVersion;
+    const version = await this.versionManager.resolveVersion(requestedVersion);
+
     const maxAge = request.maxStaleness ?? this.defaultTtl;
     const cacheKey = makeKey(version, request.section);
     const cached = await this.loadFromCache(cacheKey);
@@ -122,7 +156,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     for (const section of sections) {
       // Create a dummy request for refresh
       const request: KnowledgeRequest = { section, version: this.defaultVersion, fallbackToCache: false };
-      await this.fetchAndPersist(request, this.defaultVersion, undefined, 0).catch(() => undefined);
+      await this.fetchAndPersist(request, this.defaultVersion, null, 0).catch(() => undefined);
     }
   }
 
@@ -288,8 +322,11 @@ function makeKey(version: string, section: string): string {
 }
 
 function splitKey(key: string): [string, string] {
-  const [version, section] = key.split("::");
-  return [version, section];
+  const parts = key.split("::");
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    throw new Error(`Invalid cache key: ${key}`);
+  }
+  return [parts[0], parts[1]];
 }
 
 function buildSpecUrl(section: string, version: string, fallbackVersion: string): string {

@@ -484,12 +484,21 @@ export interface KnowledgeSearchResult {
   rank: number;
 }
 
+export interface VersionInfo {
+  version: string;
+  releaseDate: string;
+  isLatest: boolean;
+  isDeprecated: boolean;
+  changelogUrl?: string;
+}
+
 export interface KnowledgeOrchestrator {
   get: (request: KnowledgeRequest) => Promise<KnowledgeResponse>;
   prefetch?: (sections: string[]) => Promise<void>;
   status?: () => Promise<CacheStatus>;
   refresh?: (sections: string[]) => Promise<void>;
   search?: (query: string, options?: { limit?: number; minSimilarity?: number }) => Promise<KnowledgeSearchResult[]>;
+  getVersions?: () => Promise<VersionInfo[]>;
 }
 
 export interface Explanation {
