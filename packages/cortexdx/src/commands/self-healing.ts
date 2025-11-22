@@ -202,9 +202,6 @@ export async function runMonitoring(options: {
   export?: string;
   stateFile?: string;
 }): Promise<number> {
-  const _preloadedConfig = options.config
-    ? await fs.readFile(options.config, "utf-8").catch(() => undefined)
-    : undefined;
   const ctx = await createDevelopmentContext();
   const scheduler = new MonitoringScheduler(ctx);
   const stateFile =
