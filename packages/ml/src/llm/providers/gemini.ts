@@ -84,7 +84,19 @@ export class GeminiPlugin implements LLMProviderPlugin {
       setTimeout(() => reject(new Error("Timeout")), timeoutMs);
     });
     const result = await Promise.race([modelInstance.generateContent(prompt.prompt), timeoutPromise]);
-    return { text: extractText(result), model: targetModel, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
+    // Gemini API does not currently provide token usage statistics in the response.
+    // This is a known limitation: usage fields are hardcoded to zero.
+    // If future versions of the API provide usage metadata, extract it here.
+    // Example (if available): const usage = result.response?.usageMetadata || {};
+    return {
+      text: extractText(result),
+      model: targetModel,
+      usage: {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0
+      }
+    };
   }
 
   async generate(
