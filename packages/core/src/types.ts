@@ -465,11 +465,31 @@ export interface CacheStatus {
   staleSections: string[];
 }
 
+export interface SpecChunk {
+  id: string;
+  section: string;
+  version: string;
+  content: string;
+  metadata: {
+    startIndex: number;
+    endIndex: number;
+    header?: string;
+    level?: number;
+  };
+}
+
+export interface KnowledgeSearchResult {
+  chunk: SpecChunk;
+  similarity: number;
+  rank: number;
+}
+
 export interface KnowledgeOrchestrator {
   get: (request: KnowledgeRequest) => Promise<KnowledgeResponse>;
   prefetch?: (sections: string[]) => Promise<void>;
   status?: () => Promise<CacheStatus>;
   refresh?: (sections: string[]) => Promise<void>;
+  search?: (query: string, options?: { limit?: number; minSimilarity?: number }) => Promise<KnowledgeSearchResult[]>;
 }
 
 export interface Explanation {

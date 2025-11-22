@@ -3,12 +3,17 @@ import type {
   KnowledgeOrchestrator,
   KnowledgeRequest,
   KnowledgeResponse,
+  KnowledgeSearchResult,
   SpecContent,
 } from "@brainwav/cortexdx-core";
 import { LRUCache } from "@brainwav/cortexdx-core/utils/lru-cache";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import type { EmbeddingAdapter } from "../adapters/embedding.js";
+import type { IVectorStorage } from "../storage/vector-storage.js";
 import { SpecCacheStore, type CacheEntry } from "./cache-store.js";
+import { createKnowledgeRag } from "./rag/rag.js";
+import type { KnowledgeRAG, SearchResult } from "./rag/types.js";
 import { HttpTransportAdapter, SseTransportAdapter, WebSocketTransportAdapter } from "./transport/adapters.js";
 import { DefaultTransportSelector } from "./transport/selector.js";
 import { TransportType, type FetchInput, type FetchResult, type TransportAdapter } from "./transport/types.js";
@@ -20,6 +25,10 @@ interface KnowledgeOrchestratorOptions {
   defaultTtlMs?: number;
   fetchTimeoutMs?: number;
   memoryCacheSize?: number;
+  rag?: {
+    storage: IVectorStorage;
+    embedding: EmbeddingAdapter;
+  };
 }
 
 class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
@@ -32,6 +41,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
   private readonly transportSelector = new DefaultTransportSelector();
   private readonly transports = new Map<TransportType, TransportAdapter>();
   private readonly baseUrl: string;
+  private readonly rag?: KnowledgeRAG;
 
   constructor(options: KnowledgeOrchestratorOptions) {
     this.defaultVersion = options.defaultVersion;
@@ -51,6 +61,14 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     this.transports.set(TransportType.HTTP, new HttpTransportAdapter(options.baseUrl, timeout));
     this.transports.set(TransportType.SSE, new SseTransportAdapter(options.baseUrl, timeout));
     this.transports.set(TransportType.WEBSOCKET, new WebSocketTransportAdapter(options.baseUrl, timeout));
+
+    // Initialize RAG if configured
+    if (options.rag) {
+      this.rag = createKnowledgeRag({
+        storage: options.rag.storage,
+        embedding: options.rag.embedding,
+      });
+    }
   }
 
   async get(request: KnowledgeRequest): Promise<KnowledgeResponse> {
@@ -80,6 +98,18 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     }
 
     throw new Error(`Unable to load section ${request.section} (${version})`);
+  }
+
+  async search(query: string, options?: { limit?: number; minSimilarity?: number }): Promise<KnowledgeSearchResult[]> {
+    if (!this.rag) {
+      return [];
+    }
+    const results = await this.rag.search(query, options);
+    return results.map((r: SearchResult) => ({
+      chunk: r.chunk,
+      similarity: r.similarity,
+      rank: r.rank
+    }));
   }
 
   async prefetch(sections: string[]): Promise<void> {
@@ -192,6 +222,21 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     };
 
     this.save(entry);
+
+    // Index content in RAG if available
+    if (this.rag) {
+      // Fire and forget indexing to avoid blocking response
+      this.rag.indexSpec({
+        section: entry.section,
+        version: entry.version,
+        content: entry.content,
+        metadata: entry.metadata
+      }).catch((err: unknown) => {
+        // TODO: Log error properly
+        console.error(`Failed to index spec section ${entry.section}:`, err);
+      });
+    }
+
     return entry;
   }
 
