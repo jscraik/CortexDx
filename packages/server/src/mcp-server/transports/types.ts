@@ -64,6 +64,10 @@ export interface CorsConfig {
 export interface HttpStreamableConfig {
   port: number;
   host?: string;
+  /** Custom endpoint path (default: /mcp) */
+  endpoint?: string;
+  /** Enable stateless mode for serverless deployments */
+  stateless?: boolean;
   cors?: CorsConfig;
   // MCP spec 2025-06-18: require 403 for invalid origins
   strictOriginCheck?: boolean;
