@@ -1,3 +1,4 @@
+import { utils } from "@brainwav/cortexdx-core";
 import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -5,17 +6,17 @@ import { z } from "zod";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
-  type IVectorStorage,
   type VectorDocument,
-  createVectorStorage,
+  type VectorStorage,
+  createVectorStorage
 } from "../storage/vector-storage.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import {
   MCP_DOCS_LIBRARY_ROOT,
   MCP_DOCS_STAGING_DIR,
   MCP_DOCS_VECTOR_PATH,
 } from "./mcp-docs-paths.js";
 import type { McpDocsManifest } from "./mcp-docs.js";
+const { safeParseJson } = utils;
 
 const searchMatchSchema = z.object({
   chunkId: z.string(),
@@ -41,7 +42,7 @@ export interface McpDocsSearchOptions {
   scope?: "staging" | "promoted";
   storagePath?: string;
   embeddingAdapter?: EmbeddingAdapter;
-  vectorStorage?: IVectorStorage;
+  vectorStorage?: VectorStorage;
   rootDir?: string;
   stagingDir?: string;
 }
@@ -170,9 +171,9 @@ export async function readMcpDocsManifest(
 }
 
 async function hydrateVectorStorage(
-  existing: IVectorStorage | undefined,
+  existing: VectorStorage | undefined,
   customPath?: string,
-): Promise<IVectorStorage> {
+): Promise<VectorStorage> {
   if (existing) {
     return existing;
   }

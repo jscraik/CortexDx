@@ -1,11 +1,11 @@
 import type { SpecContent } from "@brainwav/cortexdx-core";
 import type { EmbeddingAdapter } from "../../adapters/embedding.js";
-import { type IVectorStorage, createReferenceDocument } from "../../storage/vector-storage.js";
+import { type VectorStorage, createReferenceDocument } from "../../storage/vector-storage.js";
 import type { SearchResult, SpecChunker, SpecIndexer } from "./types.js";
 
 export class DefaultSpecIndexer implements SpecIndexer {
     constructor(
-        private storage: IVectorStorage,
+        private storage: VectorStorage,
         private embedding: EmbeddingAdapter,
         private chunker: SpecChunker
     ) { }

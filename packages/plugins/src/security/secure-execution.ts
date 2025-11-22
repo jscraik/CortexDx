@@ -4,7 +4,17 @@
  * Requirements: 12.1, 12.2, 6.5
  */
 
-import type { EnhancedLlmAdapter, ModelInfo } from "@brainwav/cortexdx-core";
+import type {
+    CodeAnalysis,
+    Constraints,
+    Context,
+    ConversationContext,
+    EnhancedLlmAdapter,
+    Explanation,
+    ModelInfo,
+    Problem,
+    Solution
+} from "@brainwav/cortexdx-core";
 
 export interface ExecutionPolicy {
     allowNetworkAccess: boolean;
@@ -245,7 +255,7 @@ export class SecureLlmAdapter implements EnhancedLlmAdapter {
         return this.adapter.getModelInfo(modelId);
     }
 
-    async startConversation(context: import("../types.js").ConversationContext): Promise<string> {
+    async startConversation(context: ConversationContext): Promise<string> {
         this.execution.reset();
         return this.adapter.startConversation(context);
     }
@@ -262,23 +272,23 @@ export class SecureLlmAdapter implements EnhancedLlmAdapter {
     async analyzeCode(
         code: string,
         context: string
-    ): Promise<import("../types.js").CodeAnalysis> {
+    ): Promise<CodeAnalysis> {
         this.execution.checkExecutionTime();
         return this.adapter.analyzeCode(code, context);
     }
 
     async generateSolution(
-        problem: import("../types.js").Problem,
-        constraints: import("../types.js").Constraints
-    ): Promise<import("../types.js").Solution> {
+        problem: Problem,
+        constraints: Constraints
+    ): Promise<Solution> {
         this.execution.checkExecutionTime();
         return this.adapter.generateSolution(problem, constraints);
     }
 
     async explainError(
         error: Error,
-        context: import("../types.js").Context
-    ): Promise<import("../types.js").Explanation> {
+        context: Context
+    ): Promise<Explanation> {
         this.execution.checkExecutionTime();
         return this.adapter.explainError(error, context);
     }

@@ -1,5 +1,5 @@
+import { logging } from "@brainwav/cortexdx-core";
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
-import { createLogger } from "@brainwav/cortexdx-core/logging/logger.js";
 
 /**
  * Studio Wrapper - stdio transport bridge for MCP Inspector
@@ -45,7 +45,7 @@ interface StdioWrapperConfig {
 class StudioWrapper {
   private config: StdioWrapperConfig;
   private requestId = 1;
-  private logger = createLogger("stdio-wrapper");
+  private logger = logging.createLogger("stdio-wrapper");
 
   constructor(config: StdioWrapperConfig) {
     this.config = {
@@ -347,7 +347,7 @@ function parseArgs(): StdioWrapperConfig {
           if (!Number.isNaN(timeoutSec) && timeoutSec > 0) {
             config.timeout = timeoutSec * 1000;
           } else {
-            const logger = createLogger("stdio-wrapper");
+            const logger = logging.createLogger("stdio-wrapper");
             logger.warn({ value: timeoutArg }, "Invalid timeout value - must be a positive integer");
           }
         }
@@ -394,13 +394,12 @@ The wrapper reads JSON-RPC 2.0 requests from stdin, makes HTTP calls to the
 specified MCP server, and writes responses to stdout in JSON-RPC 2.0 format.
         `);
         process.exit(0);
-        break;
 
       default:
         if (arg && (arg.startsWith('http://') || arg.startsWith('https://'))) {
           config.endpoint = arg;
         } else {
-          const logger = createLogger("stdio-wrapper");
+          const logger = logging.createLogger("stdio-wrapper");
           logger.error({ argument: arg }, "Unknown argument");
           process.exit(1);
         }
@@ -419,7 +418,7 @@ async function main(): Promise<void> {
     const wrapper = new StudioWrapper(config);
     await wrapper.start();
   } catch (error) {
-    const logger = createLogger("stdio-wrapper");
+    const logger = logging.createLogger("stdio-wrapper");
     logger.error({ error }, "Studio wrapper failed");
     process.exit(1);
   }
@@ -428,7 +427,7 @@ async function main(): Promise<void> {
 // Run if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    const logger = createLogger("stdio-wrapper");
+    const logger = logging.createLogger("stdio-wrapper");
     logger.error({ error }, "Fatal error in stdio wrapper");
     process.exit(1);
   });

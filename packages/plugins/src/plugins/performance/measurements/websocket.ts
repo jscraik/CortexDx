@@ -2,8 +2,7 @@
  * WebSocket performance measurement
  */
 
-import type { Finding } from "@brainwav/cortexdx-core";
-import type { PerformanceHarness, WebSocketMetrics } from "@brainwav/cortexdx-core";
+import type { Finding, PerformanceHarness, WebSocketMetrics } from "@brainwav/cortexdx-core";
 
 /**
  * Measure WebSocket performance from transcript
@@ -76,7 +75,7 @@ export function buildWebSocketDescription(metrics: WebSocketMetrics): string {
     parts.push(`Max gap: ${metrics.maxGapMs.toFixed(2)}ms`);
   }
 
-  if (metrics.reconnects > 0) {
+  if (metrics.reconnects && metrics.reconnects > 0) {
     parts.push(`${metrics.reconnects} reconnects`);
   }
 
@@ -100,7 +99,7 @@ export function buildWebSocketFindings(
   findings.push({
     id: "perf.websocket.messages",
     area: "performance",
-    severity: metrics.reconnects > 0 ? "minor" : "info",
+    severity: (metrics.reconnects || 0) > 0 ? "minor" : "info",
     title: `WebSocket: ${metrics.messageCount} messages`,
     description: buildWebSocketDescription(metrics),
     evidence: [
@@ -111,7 +110,7 @@ export function buildWebSocketFindings(
   });
 
   // Reconnect warnings
-  if (metrics.reconnects > 0) {
+  if (metrics.reconnects && metrics.reconnects > 0) {
     findings.push({
       id: "perf.websocket.reconnects",
       area: "performance",

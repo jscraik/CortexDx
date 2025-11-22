@@ -11,7 +11,7 @@ import { LRUCache } from "@brainwav/cortexdx-core/utils/lru-cache";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
-import type { IVectorStorage } from "../storage/vector-storage.js";
+import type { VectorStorage } from "../storage/vector-storage.js";
 import { SpecCacheStore, type CacheEntry } from "./cache-store.js";
 import { createKnowledgeRag } from "./rag/rag.js";
 import type { KnowledgeRAG, SearchResult } from "./rag/types.js";
@@ -28,7 +28,7 @@ interface KnowledgeOrchestratorOptions {
   fetchTimeoutMs?: number;
   memoryCacheSize?: number;
   rag?: {
-    storage: IVectorStorage;
+    storage: VectorStorage;
     embedding: EmbeddingAdapter;
   };
 }

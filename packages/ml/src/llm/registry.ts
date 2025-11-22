@@ -1,11 +1,11 @@
 import { createRequire } from "node:module";
-import { secureLogger } from "./secure-logger.js";
-import type { SecureLogger } from "./secure-logger.js";
 import { anthropicPlugin } from "./providers/anthropic.js";
 import { geminiPlugin } from "./providers/gemini.js";
 import { ollamaPlugin } from "./providers/ollama.js";
 import { openaiPlugin } from "./providers/openai.js";
 import { zaiPlugin } from "./providers/zai.js";
+import type { SecureLogger } from "./secure-logger.js";
+import { secureLogger } from "./secure-logger.js";
 import type {
   LLMGenerateRequest,
   LLMPluginContext,
@@ -204,9 +204,10 @@ export class LLMPluginRegistry {
     if (available.length === 0) {
       return null;
     }
-    const fallback = available[0];
+    const fallback = available[0]!; // Safe: we just checked length > 0
     await this.ensureInitialized(fallback, context);
     return { plugin: fallback, context };
+
   }
 
   async generate(

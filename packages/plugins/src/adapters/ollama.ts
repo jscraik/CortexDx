@@ -3,17 +3,6 @@
  * Provides local LLM capabilities through Ollama with model management and conversation support
  */
 
-import { randomUUID } from "node:crypto";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
-import {
-  getDefaultOllamaBaseUrl,
-  getDefaultOllamaModel,
-  getOllamaApiKey,
-  getOllamaDeterministicSeed,
-  getOllamaMaxRetries,
-  getOllamaTemperature,
-  getOllamaTimeoutMs,
-} from "@brainwav/cortexdx-ml/ml/ollama-env.js";
 import type {
   CodeAnalysis,
   Constraints,
@@ -27,6 +16,17 @@ import type {
   Problem,
   Solution,
 } from "@brainwav/cortexdx-core";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+import {
+  getDefaultOllamaBaseUrl,
+  getDefaultOllamaModel,
+  getOllamaApiKey,
+  getOllamaDeterministicSeed,
+  getOllamaMaxRetries,
+  getOllamaTemperature,
+  getOllamaTimeoutMs,
+} from "@brainwav/cortexdx-ml";
+import { randomUUID } from "node:crypto";
 
 export interface OllamaConfig {
   baseUrl?: string;

@@ -3,7 +3,7 @@ import path from "node:path";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
-  type IVectorStorage,
+  type VectorStorage,
   type ReferenceDocumentInput,
   type VectorDocument,
   createReferenceDocument,
@@ -25,7 +25,7 @@ export interface McpDocsIngestOptions {
   rootDir?: string;
   version?: string;
   staging?: boolean;
-  vectorStorage?: IVectorStorage;
+  vectorStorage?: VectorStorage;
   vectorStoragePath?: string;
   embeddingAdapter?: EmbeddingAdapter;
   chunkLimit?: number;
@@ -193,9 +193,9 @@ function buildSourceIndex(
 }
 
 async function prepareVectorStorage(
-  provided: IVectorStorage | undefined,
+  provided: VectorStorage | undefined,
   customPath?: string,
-): Promise<{ storage: IVectorStorage; path?: string }> {
+): Promise<{ storage: VectorStorage; path?: string }> {
   if (provided) {
     return { storage: provided, path: customPath };
   }

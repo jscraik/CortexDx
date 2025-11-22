@@ -1,32 +1,30 @@
+import type { DevelopmentContext, Finding } from "@brainwav/cortexdx-core";
+import { config, utils } from "@brainwav/cortexdx-core";
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { createServer as createNetServer } from "node:net";
-import { randomUUID } from "node:crypto";
-import { getTimeoutWithOverride } from "@brainwav/cortexdx-core/config/timeouts.js";
-import type { DevelopmentContext, Finding } from "@brainwav/cortexdx-core";
-import {
-  formatHeadersForCli,
-  resolveInternalHeaders,
-} from "@brainwav/cortexdx-core/utils/internal-endpoint.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+
+const { getTimeoutWithOverride } = config;
+const { formatHeadersForCli, resolveInternalHeaders, safeParseJson } = utils;
 
 const DEFAULT_INSPECTOR_RUNTIME_MS = 60000;
 const MIN_INSPECTOR_RUNTIME_MS = 1000;
 
 export interface InspectorProbeConfig {
   kind:
-    | "handshake"
-    | "list_tools"
-    | "list_resources"
-    | "call_tool"
-    | "schema_validate"
-    | "stream_sse"
-    | "cors_preflight"
-    | "jsonrpc_batch"
-    | "http2_reset_behavior"
-    | "proxy_buffering"
-    | "security"
-    | "performance"
-    | "protocol";
+  | "handshake"
+  | "list_tools"
+  | "list_resources"
+  | "call_tool"
+  | "schema_validate"
+  | "stream_sse"
+  | "cors_preflight"
+  | "jsonrpc_batch"
+  | "http2_reset_behavior"
+  | "proxy_buffering"
+  | "security"
+  | "performance"
+  | "protocol";
   args?: Record<string, unknown>;
 }
 
@@ -65,14 +63,14 @@ export interface InspectorFinding {
   id: string;
   severity: "blocker" | "major" | "minor" | "info";
   area:
-    | "protocol"
-    | "schema"
-    | "auth"
-    | "streaming"
-    | "cors"
-    | "proxy"
-    | "perf"
-    | "security";
+  | "protocol"
+  | "schema"
+  | "auth"
+  | "streaming"
+  | "cors"
+  | "proxy"
+  | "perf"
+  | "security";
   description: string;
   evidence: { raw: unknown; path?: string; line?: number };
   remediation?: { suggestion: string; patch?: unknown };
@@ -178,14 +176,14 @@ export class InspectorAdapter {
         description: finding.description,
         evidence: finding.evidence
           ? [
-              {
-                type: "log",
-                ref: finding.evidence.path || "unknown",
-                lines: finding.evidence.line
-                  ? [finding.evidence.line, finding.evidence.line]
-                  : undefined,
-              },
-            ]
+            {
+              type: "log",
+              ref: finding.evidence.path || "unknown",
+              lines: finding.evidence.line
+                ? [finding.evidence.line, finding.evidence.line]
+                : undefined,
+            },
+          ]
           : [],
         recommendation: finding.remediation?.suggestion,
         tags: ["inspector", finding.area, "auto-generated"],
@@ -829,8 +827,8 @@ export class InspectorAdapter {
       },
       remediation: hasSecurityIssues
         ? {
-            suggestion: "Review and address security configuration issues",
-          }
+          suggestion: "Review and address security configuration issues",
+        }
         : undefined,
     };
   }
@@ -858,11 +856,11 @@ export class InspectorAdapter {
     const timeMatches = lines.join(" ").match(/(\d+)\s*ms/g);
     const avgTime = timeMatches
       ? Math.round(
-          timeMatches.reduce(
-            (sum, time) => sum + Number.parseInt(time, 10),
-            0,
-          ) / timeMatches.length,
-        )
+        timeMatches.reduce(
+          (sum, time) => sum + Number.parseInt(time, 10),
+          0,
+        ) / timeMatches.length,
+      )
       : null;
 
     return {
@@ -1067,7 +1065,7 @@ export class InspectorAdapter {
   private resolveInspectorRuntimeBudget(): number {
     const candidate = Number(
       process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS ??
-        process.env.INSPECTOR_MAX_RUNTIME_MS,
+      process.env.INSPECTOR_MAX_RUNTIME_MS,
     );
     if (Number.isFinite(candidate) && candidate >= MIN_INSPECTOR_RUNTIME_MS) {
       return candidate;

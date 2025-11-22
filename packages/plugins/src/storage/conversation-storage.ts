@@ -4,14 +4,14 @@
  * Requirement 12.5: Maintain conversation context across sessions
  */
 
-import { createLogger } from "@brainwav/cortexdx-core/logging/logger.js";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
-import Database, { type Database as DatabaseType } from "better-sqlite3";
 import type {
   ChatMessage,
   ConversationSession,
   DevelopmentContext,
 } from "@brainwav/cortexdx-core";
+import { logging } from "@brainwav/cortexdx-core";
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+import Database, { type Database as DatabaseType } from "better-sqlite3";
 
 export interface StoredConversation {
   id: string;
@@ -29,7 +29,7 @@ export interface ConversationExport {
   conversations: StoredConversation[];
 }
 
-const logger = createLogger("conversation-storage");
+const logger = logging.createLogger("conversation-storage");
 
 /**
  * Persistent storage for conversation sessions

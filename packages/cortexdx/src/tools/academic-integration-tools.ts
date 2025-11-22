@@ -4,9 +4,9 @@
  * Requirements: 6.2, 10.2, 11.4
  */
 
-import { runAcademicResearch } from "../research/academic-researcher";
-import { recordResearchReport } from "../resources/research-store";
-import type { McpTool, McpToolResult } from "../types";
+import { runAcademicResearch } from "../research/academic-researcher.js";
+import { recordResearchReport } from "../resources/research-store.js";
+import type { McpTool, McpToolResult } from "../types.js";
 
 export const createAcademicIntegrationTools = (): McpTool[] => [
   {
@@ -45,45 +45,7 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
       required: ["architectureSpec"],
     },
   },
-  {
-    name: "perform_vibe_check",
-    description:
-      "Comprehensive error checking and improvement suggestions using Vibe Check provider. Detects anti-patterns and provides refactoring recommendations with legal compliance.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        target: {
-          type: "string",
-          description: "MCP endpoint or codebase path to check",
-        },
-        checkTypes: {
-          type: "array",
-          items: {
-            type: "string",
-            enum: [
-              "anti-patterns",
-              "code-health",
-              "refactoring",
-              "methodology",
-              "ip-compliance",
-            ],
-          },
-          description:
-            "Types of checks to perform (performs all if not specified)",
-        },
-        includeRefactoringSuggestions: {
-          type: "boolean",
-          description: "Include refactoring suggestions (default: true)",
-        },
-        validateLegalCompliance: {
-          type: "boolean",
-          description:
-            "Validate legal compliance of suggested patterns (default: true)",
-        },
-      },
-      required: ["target"],
-    },
-  },
+
   {
     name: "validate_research_methodology",
     description:
@@ -331,7 +293,6 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
             enum: [
               "context7",
               "research-quality",
-              "cortex-vibe",
               "semantic-scholar",
               "openalex",
               "wikidata",

@@ -3,8 +3,8 @@
  * Provides real-time monitoring and performance degradation detection
  */
 
-import { createLogger } from "@brainwav/cortexdx-core/logging/logger.js";
 import type { DiagnosticContext } from "@brainwav/cortexdx-core";
+import { logging } from "@brainwav/cortexdx-core";
 import {
   type SystemHealthReport,
   getMemoryMetrics,
@@ -70,7 +70,7 @@ const DEFAULT_THRESHOLDS: AlertThresholds = {
   unhealthyProvidersPercent: 20,
 };
 
-const logger = createLogger("monitoring");
+const logger = logging.createLogger("monitoring");
 
 /**
  * Monitoring system class

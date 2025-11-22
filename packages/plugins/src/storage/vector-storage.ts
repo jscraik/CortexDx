@@ -4,8 +4,8 @@
  * Requirements: 12.5, 10.2
  */
 
-import type { EmbeddingVector } from "../adapters/embedding.js";
 import type { Problem, Solution } from "@brainwav/cortexdx-core";
+import type { EmbeddingVector } from "../adapters/embedding.js";
 
 export interface VectorDocument {
   id: string;
@@ -49,7 +49,7 @@ export interface VectorStorageStats {
 /**
  * Vector storage interface - implemented by SQLiteVectorStorage
  */
-export interface IVectorStorage {
+export interface VectorStorage {
   addDocument(document: VectorDocument): Promise<void>;
   addDocuments(documents: VectorDocument[]): Promise<void>;
   search(
@@ -77,7 +77,7 @@ export { SQLiteVectorStorage } from "./vector-storage-sqlite.js";
  */
 export const createVectorStorage = async (
   dbPath = ".cortexdx/vector-storage.db",
-): Promise<IVectorStorage> => {
+): Promise<VectorStorage> => {
   const { SQLiteVectorStorage } = await import("./vector-storage-sqlite.js");
   return new SQLiteVectorStorage(dbPath);
 };

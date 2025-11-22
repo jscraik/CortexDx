@@ -2,8 +2,7 @@
  * HTTP performance measurement
  */
 
-import type { DiagnosticContext } from "@brainwav/cortexdx-core";
-import type { HttpMetrics, PerformanceHarness } from "@brainwav/cortexdx-core";
+import type { DiagnosticContext, HttpMetrics, PerformanceHarness } from "@brainwav/cortexdx-core";
 
 /**
  * Measure HTTP request performance
@@ -34,8 +33,8 @@ export async function measureHttp(
     return {
       latencyMs,
       status: error instanceof Error && error.message.includes("404") ? 404 :
-              error instanceof Error && error.message.includes("500") ? 500 :
-              undefined,
+        error instanceof Error && error.message.includes("500") ? 500 :
+          undefined,
     };
   }
 }
@@ -46,8 +45,8 @@ export async function measureHttp(
 export function buildHttpFindings(
   metrics: HttpMetrics,
   endpoint: string
-): Array<import("../../../types.js").Finding> {
-  const findings: Array<import("../../../types.js").Finding> = [];
+): Array<import("@brainwav/cortexdx-core").Finding> {
+  const findings: Array<import("@brainwav/cortexdx-core").Finding> = [];
 
   // Basic latency finding
   findings.push({

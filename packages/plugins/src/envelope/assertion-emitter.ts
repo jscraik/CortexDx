@@ -3,15 +3,15 @@
  * Helper for building assertions with evidence during diagnostic runs
  */
 
-import type { CloudStorageAdapter } from "../adapters/cloud-storage-adapter.js";
 import type {
   Assertion,
   AssertionStatus,
-  Evidence,
+  EnvelopeEvidence,
+  EnvelopeSeverity,
   EvidenceKind,
-  Remediation,
-  Severity,
+  Remediation
 } from "@brainwav/cortexdx-core";
+import type { CloudStorageAdapter } from "../adapters/cloud-storage-adapter.js";
 
 /**
  * Assertion builder that supports incremental construction
@@ -19,7 +19,7 @@ import type {
  */
 export class AssertionEmitter {
   private assertion: Partial<Assertion>;
-  private evidenceList: Evidence[] = [];
+  private evidenceList: EnvelopeEvidence[] = [];
   private startTime: number;
   private runId: string;
   private caseId: string;
@@ -50,7 +50,7 @@ export class AssertionEmitter {
   /**
    * Set severity level (typically for failed assertions)
    */
-  severity(severity: Severity): this {
+  severity(severity: EnvelopeSeverity): this {
     this.assertion.severity = severity;
     return this;
   }
@@ -238,7 +238,7 @@ export class AssertionEmitter {
     title: string,
     runId: string,
     caseId: string,
-    severity: Severity,
+    severity: EnvelopeSeverity,
     message: string,
     cloudStorage?: CloudStorageAdapter,
   ): AssertionEmitter {
@@ -281,7 +281,7 @@ export class AssertionEmitter {
     runId: string,
     caseId: string,
     message: string,
-    severity: Severity = "high",
+    severity: EnvelopeSeverity = "high",
     cloudStorage?: CloudStorageAdapter,
   ): AssertionEmitter {
     return new AssertionEmitter(id, title, runId, caseId, cloudStorage)

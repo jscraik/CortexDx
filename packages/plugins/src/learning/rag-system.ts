@@ -4,6 +4,13 @@
  * Requirements: 12.5, 10.2
  */
 
+import type {
+  Problem,
+  ProblemType,
+  Severity,
+  Solution,
+  SolutionType,
+} from "@brainwav/cortexdx-core";
 import { randomUUID } from "node:crypto";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
@@ -17,15 +24,8 @@ import {
   type VectorStorage,
   createPatternDocument,
   createProblemDocument,
-  createSolutionDocument,
+  createSolutionDocument
 } from "../storage/vector-storage.js";
-import type {
-  Problem,
-  ProblemType,
-  Severity,
-  Solution,
-  SolutionType,
-} from "@brainwav/cortexdx-core";
 import type { PatternMatcher } from "./pattern-recognition.js";
 
 export interface RagConfig {

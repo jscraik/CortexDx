@@ -4,8 +4,6 @@
  * Requirements: 12.4, 5.3
  */
 
-import { createOllamaAdapter } from "../../adapters/ollama.js";
-import { hasOllama } from "@brainwav/cortexdx-ml/ml/detect.js";
 import type {
   DiagnosticContext,
   DiagnosticPlugin,
@@ -13,6 +11,8 @@ import type {
   Finding,
   ModelInfo,
 } from "@brainwav/cortexdx-core";
+import { hasOllama } from "@brainwav/cortexdx-ml";
+import { createOllamaAdapter } from "../../adapters/ollama.js";
 
 export interface ModelManagerConfig {
   autoLoadModels?: boolean;
@@ -44,11 +44,11 @@ export interface LoadedModel {
 
 export interface ModelSelectionCriteria {
   taskType:
-    | "development"
-    | "debugging"
-    | "code-analysis"
-    | "documentation"
-    | "conversation";
+  | "development"
+  | "debugging"
+  | "code-analysis"
+  | "documentation"
+  | "conversation";
   availableMemoryMb: number;
   responseTimeRequirement: number;
   preferredCapabilities: string[];
@@ -91,16 +91,16 @@ export class ModelManager implements DiagnosticPlugin {
       // Check available backends
       const backends = await this.getAvailableBackends();
       if (backends.length === 0) {
-      findings.push({
-        id: "model-manager-no-backends",
-        area: "Model Management",
-        severity: "blocker",
-        title: "No LLM Backends Available",
-        description: "No local LLM backend (Ollama) is available",
-        evidence: [{ type: "log", ref: "model-manager-backends-check" }],
-        confidence: 1.0,
-        recommendation: "Install and start Ollama to enable local LLM features",
-      });
+        findings.push({
+          id: "model-manager-no-backends",
+          area: "Model Management",
+          severity: "blocker",
+          title: "No LLM Backends Available",
+          description: "No local LLM backend (Ollama) is available",
+          evidence: [{ type: "log", ref: "model-manager-backends-check" }],
+          confidence: 1.0,
+          recommendation: "Install and start Ollama to enable local LLM features",
+        });
         return findings;
       }
 

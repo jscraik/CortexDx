@@ -1,14 +1,14 @@
 import type { SpecContent } from "@brainwav/cortexdx-core";
 import { describe, expect, it, vi } from "vitest";
 import type { EmbeddingAdapter } from "../../adapters/embedding.js";
-import type { IVectorStorage, VectorDocument } from "../../storage/vector-storage.js";
+import type { VectorStorage, VectorDocument } from "../../storage/vector-storage.js";
 import { KnowledgeRagImpl } from "./rag.js";
 
 describe("KnowledgeRAG", () => {
     const mockStorage = {
         addDocuments: vi.fn(),
         search: vi.fn(),
-    } as unknown as IVectorStorage;
+    } as unknown as VectorStorage;
 
     const mockEmbedding = {
         embed: vi.fn(),

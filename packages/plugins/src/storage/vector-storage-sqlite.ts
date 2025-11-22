@@ -10,7 +10,7 @@ import { cosineSimilarity } from "../adapters/embedding.js";
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type {
   DocumentMetadata,
-  IVectorStorage,
+  VectorStorage,
   SearchOptions,
   SearchResult,
   VectorDocument,
@@ -35,7 +35,7 @@ type VectorDocumentRow = {
  * SQLite-backed vector storage implementation
  * Provides efficient persistence and querying for vector embeddings
  */
-export class SQLiteVectorStorage implements IVectorStorage {
+export class SQLiteVectorStorage implements VectorStorage {
   private db: Database.Database;
 
   constructor(dbPath: string) {

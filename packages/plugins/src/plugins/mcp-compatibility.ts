@@ -1,4 +1,4 @@
-import type { DiagnosticPlugin, EvidencePointer, FilePlan, Finding } from "@brainwav/cortexdx-core";
+import type { DiagnosticContext, DiagnosticPlugin, EvidencePointer, FilePlan, Finding } from "@brainwav/cortexdx-core";
 import { getMcpSpecEvidence } from "../library/mcp-docs-evidence.js";
 
 /**
@@ -75,7 +75,7 @@ export const McpCompatibilityCheckerPlugin: DiagnosticPlugin = {
 };
 
 async function testProtocolVersions(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
   const versions = ["2024-11-05", "2024-10-07", "2024-09-01"];
@@ -142,7 +142,7 @@ async function testProtocolVersions(
 }
 
 async function testClientBehaviors(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -272,7 +272,7 @@ async function testClientBehaviors(
 }
 
 async function testFeatureInterop(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -339,7 +339,7 @@ async function testFeatureInterop(
 }
 
 async function generateMigrationPaths(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   existingFindings: Finding[],
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -461,7 +461,7 @@ function generateCompatSummary(findings: Finding[], score: number): string {
 }
 
 async function buildSpecEvidence(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   query?: string,
 ): Promise<EvidencePointer[]> {
   const evidence: EvidencePointer[] = [{ type: "url", ref: ctx.endpoint }];

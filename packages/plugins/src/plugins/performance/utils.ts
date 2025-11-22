@@ -14,7 +14,7 @@ export function getMemoryUsage(): number {
     typeof performance !== "undefined" &&
     "memory" in performance &&
     typeof (performance as { memory?: { usedJSHeapSize?: number } }).memory ===
-      "object"
+    "object"
   ) {
     const memory = (performance as { memory: { usedJSHeapSize: number } })
       .memory;
@@ -92,8 +92,8 @@ export function formatDuration(ms: number): string {
  * Create a performance harness from diagnostic context
  */
 export function createHarness(
-  ctx: import("../../types.js").DiagnosticContext,
-): import("./types.js").PerformanceHarness {
+  ctx: import("@brainwav/cortexdx-core").DiagnosticContext,
+): import("@brainwav/cortexdx-core").PerformanceHarness {
   return {
     now: () => performance.now(),
     fetch: fetch,

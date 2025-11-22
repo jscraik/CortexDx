@@ -1,12 +1,12 @@
 import type { SpecContent } from "@brainwav/cortexdx-core";
 import type { EmbeddingAdapter } from "../../adapters/embedding.js";
-import type { IVectorStorage } from "../../storage/vector-storage.js";
+import type { VectorStorage } from "../../storage/vector-storage.js";
 import { MarkdownSpecChunker } from "./chunker.js";
 import { DefaultSpecIndexer } from "./indexer.js";
 import type { KnowledgeRAG, SearchResult, SpecChunker, SpecIndexer } from "./types.js";
 
 export interface KnowledgeRagOptions {
-    storage: IVectorStorage;
+    storage: VectorStorage;
     embedding: EmbeddingAdapter;
     chunker?: SpecChunker;
     indexer?: SpecIndexer;

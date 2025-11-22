@@ -1,6 +1,6 @@
+import type { DiagnosticContext, DiagnosticPlugin, EvidencePointer, Finding } from "@brainwav/cortexdx-core";
 import type { CELRule } from "../adapters/protovalidate.js";
 import { ProtovalidateAdapter } from "../adapters/protovalidate.js";
-import type { DiagnosticPlugin, EvidencePointer, Finding } from "@brainwav/cortexdx-core";
 import { getMcpSpecEvidence } from "../library/mcp-docs-evidence.js";
 
 export const ProtocolPlugin: DiagnosticPlugin = {
@@ -81,7 +81,7 @@ export const EnhancedProtocolValidatorPlugin: DiagnosticPlugin = {
   }
 };
 
-async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function validateMcpProtocol(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
@@ -215,7 +215,7 @@ async function validateMcpProtocol(ctx: import("../types.js").DiagnosticContext)
 }
 
 async function buildProtocolEvidence(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   query?: string,
 ): Promise<EvidencePointer[]> {
   const evidence: EvidencePointer[] = [{ type: "url", ref: ctx.endpoint }];
@@ -228,7 +228,7 @@ async function buildProtocolEvidence(
   return evidence;
 }
 
-async function validateJsonRpcStructure(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function validateJsonRpcStructure(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
@@ -321,7 +321,7 @@ async function validateJsonRpcStructure(ctx: import("../types.js").DiagnosticCon
   return findings;
 }
 
-async function performCompatibilityTesting(ctx: import("../types.js").DiagnosticContext): Promise<Finding[]> {
+async function performCompatibilityTesting(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
@@ -418,7 +418,7 @@ async function performCompatibilityTesting(ctx: import("../types.js").Diagnostic
  * Requirements: 23.1, 23.2
  */
 async function validateMcpProtocolWithProtovalidate(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   protovalidate: ProtovalidateAdapter
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -547,7 +547,7 @@ async function validateMcpProtocolWithProtovalidate(
  * Requirements: 23.2
  */
 async function validateJsonRpcWithSemantics(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   protovalidate: ProtovalidateAdapter
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -669,7 +669,7 @@ async function validateJsonRpcWithSemantics(
  * Requirements: 23.2
  */
 async function validateGrpcMessages(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   protovalidate: ProtovalidateAdapter
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -707,7 +707,7 @@ async function validateGrpcMessages(
  * Requirements: 23.2
  */
 async function validateMcpHandshake(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
   protovalidate: ProtovalidateAdapter
 ): Promise<Finding[]> {
   const findings: Finding[] = [];

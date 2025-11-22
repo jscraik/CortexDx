@@ -25,23 +25,26 @@ export {
 
 // SQLite pattern storage with encryption and anonymization
 export {
-  PatternAnonymizer,
-  PatternEncryption, createSQLitePatternStorage
+  createSQLitePatternStorage, PatternAnonymizer,
+  PatternEncryption
 } from "./pattern-storage-sqlite.js";
 
 // Vector storage
 export {
-  VectorStorage, createPatternDocument,
+  createPatternDocument,
   createProblemDocument,
   createReferenceDocument,
   createSolutionDocument,
   createVectorStorage, type DocumentMetadata,
+  type VectorStorage,
   type ReferenceDocumentInput,
   type SearchOptions,
   type SearchResult,
   type VectorDocument,
   type VectorStorageStats
 } from "./vector-storage.js";
+
+
 
 // Report management
 export {
@@ -67,3 +70,4 @@ export {
   type OptimizedResponse,
   type ReportSearchResult
 } from "./report-optimizer.js";
+

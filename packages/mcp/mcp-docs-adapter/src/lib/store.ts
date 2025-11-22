@@ -93,7 +93,7 @@ export class DocsStore {
   /**
    * Full-text search using SQLite FTS5
    */
-  search(query: string, limit = 5): DocChunk[] {
+  search(query: string, limit = 5): Array<DocChunk & { score: number }> {
     const stmt = this.db.prepare(`
       SELECT
         c.id,
@@ -130,6 +130,7 @@ export class DocsStore {
       text: row.text,
       anchor: row.anchor ?? undefined,
       headings: JSON.parse(row.headings) as string[],
+      score: row.score,
     }));
   }
 
@@ -145,14 +146,14 @@ export class DocsStore {
 
     const row = stmt.get(id) as
       | {
-          id: string;
-          pageId: string;
-          url: string;
-          title: string;
-          text: string;
-          anchor: string | null;
-          headings: string;
-        }
+        id: string;
+        pageId: string;
+        url: string;
+        title: string;
+        text: string;
+        anchor: string | null;
+        headings: string;
+      }
       | undefined;
 
     if (!row) return null;

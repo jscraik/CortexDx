@@ -3,18 +3,18 @@
  * Provides runtime validation and type inference
  */
 
-import { z } from "zod";
 import type {
 	Assertion,
 	AssertionStatus,
 	Case,
 	DxEnvelope,
-	Evidence,
+	EnvelopeEvidence,
+	EnvelopeSeverity,
 	EvidenceKind,
 	Remediation,
 	RunSummary,
-	Severity,
 } from "@brainwav/cortexdx-core";
+import { z } from "zod";
 
 /**
  * Evidence Kind Schema
@@ -37,7 +37,7 @@ export const EvidenceSchema = z.object({
 	sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 	content_type: z.string().optional(),
 	expires_at: z.string().datetime().optional(),
-}) satisfies z.ZodType<Evidence>;
+}) satisfies z.ZodType<EnvelopeEvidence>;
 
 /**
  * Remediation Schema
@@ -67,7 +67,7 @@ export const SeveritySchema = z.enum([
 	"medium",
 	"high",
 	"critical",
-]) satisfies z.ZodType<Severity>;
+]) satisfies z.ZodType<EnvelopeSeverity>;
 
 /**
  * Assertion Schema
@@ -168,7 +168,7 @@ export function validateCase(data: unknown): ValidationResult<Case> {
 /**
  * Validate Evidence against the schema
  */
-export function validateEvidence(data: unknown): ValidationResult<Evidence> {
+export function validateEvidence(data: unknown): ValidationResult<EnvelopeEvidence> {
 	const result = EvidenceSchema.safeParse(data);
 	if (result.success) {
 		return { success: true, data: result.data };

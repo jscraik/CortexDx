@@ -1,9 +1,6 @@
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 // Use CortexDx adapter/ML/research implementations so Vitest spies in the CortexDx
 // package can hook into the same modules during unit tests.
-import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
-import { getEnhancedLlmAdapter } from "@brainwav/cortexdx-ml/ml/router.js";
-import { runAcademicResearch } from "../../research/academic-researcher.js";
 import type {
   ChatMessage,
   DevelopmentContext,
@@ -11,7 +8,10 @@ import type {
   Finding,
   ProjectContext,
 } from "@brainwav/cortexdx-core";
+import { getEnhancedLlmAdapter } from "@brainwav/cortexdx-ml";
+import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
 import { collectDeepContextFindings } from "../../deepcontext/integration.js";
+import { runAcademicResearch } from "../../research/academic-researcher.js";
 
 const HANDSHAKE_FILES = [
   { name: "jsonrpc.ts", matcher: /(?:^|\/)jsonrpc\.ts$/ },

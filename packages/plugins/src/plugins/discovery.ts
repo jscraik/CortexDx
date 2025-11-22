@@ -1,4 +1,4 @@
-import type { DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
+import type { DiagnosticContext, DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
 
 /**
  * System prompt for LLM-assisted MCP server discovery analysis
@@ -169,7 +169,7 @@ export const EnhancedMcpInspectorPlugin: DiagnosticPlugin = {
 };
 
 async function performMcpInspection(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -197,7 +197,7 @@ async function performMcpInspection(
 }
 
 async function inspectMcpTools(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -270,7 +270,7 @@ async function inspectMcpTools(
 }
 
 async function inspectMcpResources(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -330,7 +330,7 @@ async function inspectMcpResources(
 }
 
 async function inspectMcpPrompts(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 
@@ -373,7 +373,7 @@ async function inspectMcpPrompts(
 }
 
 async function inspectServerInstructions(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
   try {
@@ -436,7 +436,7 @@ function normalizeServerInstructions(input: unknown): string[] {
 }
 
 async function inspectServerCapabilities(
-  ctx: import("../types.js").DiagnosticContext,
+  ctx: DiagnosticContext,
 ): Promise<Finding[]> {
   const findings: Finding[] = [];
 

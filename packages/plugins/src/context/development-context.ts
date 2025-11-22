@@ -1,5 +1,5 @@
 import type { ChatMessage, DevelopmentContext, DiagnosticContext, EnhancedLlmAdapter } from "@brainwav/cortexdx-core";
-import { createConversationalAdapter } from "@brainwav/cortexdx-ml/ml/conversational-adapter.js";
+import { createConversationalAdapter } from "@brainwav/cortexdx-ml";
 
 export interface DevelopmentContextOptions {
     baseContext: DiagnosticContext;
@@ -24,8 +24,8 @@ export function createDevelopmentContext(options: DevelopmentContextOptions): De
 
     const conversationalLlm = enhancedLlm
         ? createConversationalAdapter(enhancedLlm, {
-              deterministic,
-          })
+            deterministic,
+        })
         : undefined;
 
     return {

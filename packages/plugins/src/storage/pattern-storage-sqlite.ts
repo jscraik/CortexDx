@@ -6,6 +6,7 @@
  * with encryption at rest and automatic anonymization of sensitive data.
  */
 
+import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import Database from "better-sqlite3";
 import {
   createCipheriv,
@@ -13,7 +14,6 @@ import {
   createHash,
   randomBytes,
 } from "node:crypto";
-import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
 import type {
   CommonIssuePattern,
   EnhancedPatternStorage,
@@ -64,7 +64,7 @@ type PatternStatsRow = {
   avg_confidence: number | null;
 };
 
-const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<[RegExp, string]> = [
+const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<[RegExp, string | ((...args: string[]) => string)]> = [
   [/https?:\/\/[^\s]+/gi, "https://example.com/mcp"],
   [/bearer\s+[A-Za-z0-9._-]+/gi, "bearer [TOKEN_REMOVED]"],
   [/\b(sk|pk|api)_[a-z]+_[A-Za-z0-9]{20,}\b/gi, "[API_KEY_REMOVED]"],
@@ -95,7 +95,7 @@ export function anonymizeProblemSignature(signature: string): string {
 
   return SENSITIVE_SIGNATURE_REPLACEMENTS.reduce<string>(
     (current, [pattern, replacement]) => {
-      return current.replace(pattern, replacement);
+      return current.replace(pattern, replacement as any);
     },
     signature,
   );
@@ -901,5 +901,5 @@ function buildSimilarityCandidatePatterns(
     likes.push(fallback);
   }
 
-  return [likes[0], likes[1], likes[2]];
+  return [likes[0]!, likes[1]!, likes[2]!] as [string, string, string];
 }
