@@ -4,7 +4,7 @@
 
 type Metadata = Record<string, unknown>;
 
-const APP_NAME = process.env.APP_NAME || "[APP_NAME]";
+const APP_NAME = process.env.APP_NAME || "CortexDx";
 
 export interface LogEntry {
   timestamp: Date;
