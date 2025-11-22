@@ -7,7 +7,8 @@
     "types": "dist/index.d.ts",
     "exports": {
         ".": "./dist/index.js",
-        "./ml/*": "./dist/ml/*.js"
+        "./ml/*": "./dist/ml/*.js",
+        "./llm/*": "./dist/llm/*.js"
     },
     "scripts": {
         "build": "tsup",
@@ -16,11 +17,13 @@
         "format": "biome format --write .",
         "test": "vitest run"
     },
-    "dependencies": {
-        "@ai-sdk/openai": "^2.0.65",
-        "@brainwav/cortexdx-core": "workspace:*",
-        "zod": "^3.22.4"
-    },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.65",
+    "@brainwav/cortexdx-core": "workspace:*",
+    "@google/generative-ai": "^0.21.0",
+    "openai": "^4.77.4",
+    "zod": "^3.22.4"
+  },
     "devDependencies": {
         "@types/node": "^22.19.1",
         "rimraf": "^6.0.1",

@@ -4,8 +4,6 @@ import type {
   WorkflowTransition,
 } from "../../../server/src/orchestration/workflow-types.js";
 
-type TransitionInput = Omit<WorkflowTransition, "id" | "timestamp">;
-
 export interface StateCheckpoint {
   checkpointId: string;
   workflowId: string;
