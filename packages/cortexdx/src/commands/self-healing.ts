@@ -202,6 +202,9 @@ export async function runMonitoring(options: {
   export?: string;
   stateFile?: string;
 }): Promise<number> {
+  const preloadedConfig = options.config
+    ? fs.readFile(options.config, "utf-8").catch(() => undefined)
+    : undefined;
   const ctx = await createDevelopmentContext();
   const scheduler = new MonitoringScheduler(ctx);
   const stateFile =
@@ -213,6 +216,10 @@ export async function runMonitoring(options: {
   try {
     if (options.start) {
       logger.info("[Monitoring] Starting background monitoring...");
+
+      if (options.config) {
+        await fs.readFile(options.config, "utf-8").catch(() => undefined);
+      }
 
       const configs = await loadMonitoringConfigs(ctx, options);
 

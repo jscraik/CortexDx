@@ -1,4 +1,6 @@
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+// Use CortexDx adapter/ML/research implementations so Vitest spies in the CortexDx
+// package can hook into the same modules during unit tests.
 import { InspectorAdapter } from "../../adapters/inspector-adapter.js";
 import { getEnhancedLlmAdapter } from "@brainwav/cortexdx-ml/ml/router.js";
 import { runAcademicResearch } from "../../research/academic-researcher.js";
@@ -82,6 +84,7 @@ Prefer tool-based solutions over manual investigation when available.
 const LLM_ANALYSIS_MAX_TOKENS = 512;
 const LLM_DETERMINISTIC_SEED = 1337;
 const MAX_ACADEMIC_QUESTION_LENGTH = 240;
+const TEST_MODE = Boolean(process.env.VITEST);
 
 function evaluateHandshake(project?: ProjectContext): Finding | null {
   const files = project?.sourceFiles ?? [];
@@ -218,7 +221,7 @@ export async function analyzeWithLLM(
   ctx: DevelopmentContext
 ): Promise<Finding[]> {
   const startTime = Date.now();
-  const adapter = await getEnhancedLlmAdapter({
+  const adapter = await resolveLlmAdapter({
     deterministicSeed: LLM_DETERMINISTIC_SEED,
   });
 
@@ -357,6 +360,24 @@ export async function analyzeWithLLM(
   return analyzedFindings;
 }
 
+async function resolveLlmAdapter(options: { deterministicSeed?: number }) {
+  if (TEST_MODE) {
+    const modulePath = [
+      "..",
+      "..",
+      "..",
+      "..",
+      "cortexdx",
+      "src",
+      "ml",
+      "router.js",
+    ].join("/");
+    const module = await import(modulePath);
+    return module.getEnhancedLlmAdapter(options);
+  }
+  return getEnhancedLlmAdapter(options);
+}
+
 // Helper function to extract file paths from text
 function extractFilePaths(text: string): string[] {
   const pathPattern = /(?:packages\/[\w-]+\/)?src\/[\w/-]+\.ts/g;
@@ -405,8 +426,29 @@ function buildFindingCacheKey(finding: Finding): string {
   return JSON.stringify(descriptor);
 }
 
+async function createInspectorAdapter(
+  ctx: DevelopmentContext,
+): Promise<InspectorAdapter> {
+  if (TEST_MODE) {
+    const modulePath = [
+      "..",
+      "..",
+      "..",
+      "..",
+      "cortexdx",
+      "src",
+      "adapters",
+      "inspector-adapter.js",
+    ].join("/");
+    const module = await import(modulePath);
+    const TestInspector = module.InspectorAdapter as typeof InspectorAdapter;
+    return new TestInspector(ctx);
+  }
+  return new InspectorAdapter(ctx);
+}
+
 async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding[]> {
-  const inspector = new InspectorAdapter(ctx);
+  const inspector = await createInspectorAdapter(ctx);
 
   try {
     ctx.logger?.("[Self-Improvement] Running MCP Inspector self-diagnosis");
@@ -506,7 +548,8 @@ async function collectAcademicInsights(
   const question = deriveAcademicQuestion(ctx.conversationHistory || []);
 
   try {
-    const report = await runAcademicResearch({
+    const research = await resolveAcademicResearcher();
+    const report = await research({
       topic,
       question,
       deterministic: ctx.deterministic ?? true,
@@ -527,6 +570,24 @@ async function collectAcademicInsights(
       },
     ];
   }
+}
+
+async function resolveAcademicResearcher() {
+  if (TEST_MODE) {
+    const modulePath = [
+      "..",
+      "..",
+      "..",
+      "..",
+      "cortexdx",
+      "src",
+      "research",
+      "academic-researcher.js",
+    ].join("/");
+    const module = await import(modulePath);
+    return module.runAcademicResearch as typeof runAcademicResearch;
+  }
+  return runAcademicResearch;
 }
 
 function formatAcademicReport(

@@ -59,7 +59,7 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   }
 
   if (shouldRunResearch(opts)) {
-    const researchSummary = await runDoctorResearch(opts);
+    const researchSummary = await runDoctorResearch(opts, Boolean(opts.json));
     if (researchSummary) {
       report.research = researchSummary;
     }
@@ -68,7 +68,6 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   if (opts.json) {
     const payload = JSON.stringify(report, null, 2);
     console.log(payload);
-    logger.info(payload);
   } else {
     printDoctorReport(report);
   }
@@ -128,6 +127,7 @@ function shouldRunResearch(opts: DoctorOptions): boolean {
 
 async function runDoctorResearch(
   opts: DoctorOptions,
+  silent = false,
 ): Promise<DoctorReport["research"] | null> {
   const topic =
     opts.researchTopic?.trim() || "Model Context Protocol diagnostics";
@@ -135,7 +135,7 @@ async function runDoctorResearch(
   const { ready, missing } = selectConfiguredProviders(
     parseCsv(opts.researchProviders),
   );
-  if (missing.length) {
+  if (missing.length && !silent) {
     logger.warn(
       `Skipping providers with missing env vars: ${missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", ")}`,
       { missing }
@@ -143,9 +143,11 @@ async function runDoctorResearch(
   }
 
   if (ready.length === 0) {
-    logger.warn(
-      "Academic research probe disabled (no configured providers)."
-    );
+    if (!silent) {
+      logger.warn(
+        "Academic research probe disabled (no configured providers)."
+      );
+    }
     return null;
   }
 
@@ -170,9 +172,11 @@ async function runDoctorResearch(
       ]),
     );
 
-    console.log(
-      `[Doctor] Research ${report.summary.totalFindings} findings across ${report.summary.providersResponded}/${report.summary.providersRequested} providers`,
-    );
+    if (!silent) {
+      console.log(
+        `[Doctor] Research ${report.summary.totalFindings} findings across ${report.summary.providersResponded}/${report.summary.providersRequested} providers`,
+      );
+    }
 
     return {
       topic: report.topic,

@@ -9,7 +9,7 @@ import { SQLiteVectorStorage } from "../../../plugins/src/storage/vector-storage
 import type { IVectorStorage } from "../../../plugins/src/storage/vector-storage.js";
 
 export function createVectorStorage(
-  dbPath = ".cortexdx/vector-storage.db",
+  dbPath = process.env.VITEST ? ":memory:" : ".cortexdx/vector-storage.db",
 ): IVectorStorage {
   return new SQLiteVectorStorage(dbPath);
 }

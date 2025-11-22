@@ -241,10 +241,17 @@ export class TaskStore {
       pollInterval: row.pollInterval
     }));
 
-    const nextCursor =
-      rows.length === limit && rows[rows.length - 1]
-        ? String(rows[rows.length - 1].id)
-        : undefined;
+    let nextCursor: string | undefined;
+    if (rows.length === limit && rows[rows.length - 1]) {
+      const remainingExists = this.db
+        .prepare(
+          `SELECT 1 FROM tasks WHERE ${whereClauses.join(' AND ')} AND id < ? LIMIT 1`,
+        )
+        .get(...params.slice(0, -1), rows[rows.length - 1].id);
+      if (remainingExists) {
+        nextCursor = String(rows[rows.length - 1].id);
+      }
+    }
     return { tasks, nextCursor };
   }
 

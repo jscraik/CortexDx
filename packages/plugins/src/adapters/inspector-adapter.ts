@@ -474,6 +474,7 @@ export class InspectorAdapter {
 
   private isTestMode(): boolean {
     return (
+      this.ctx?.deterministic === true ||
       process.env.VITEST === "true" ||
       process.env.VITEST === "1" ||
       process.env.VITEST === "TRUE" ||
