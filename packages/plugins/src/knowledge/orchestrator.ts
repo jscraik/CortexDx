@@ -1,5 +1,3 @@
-import { mkdirSync } from "node:fs";
-import path from "node:path";
 import type {
   CacheStatus,
   KnowledgeOrchestrator,
@@ -8,7 +6,12 @@ import type {
   SpecContent,
 } from "@brainwav/cortexdx-core";
 import { LRUCache } from "@brainwav/cortexdx-core/utils/lru-cache";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 import { SpecCacheStore, type CacheEntry } from "./cache-store.js";
+import { HttpTransportAdapter, SseTransportAdapter, WebSocketTransportAdapter } from "./transport/adapters.js";
+import { DefaultTransportSelector } from "./transport/selector.js";
+import { TransportType, type FetchInput, type FetchResult, type TransportAdapter } from "./transport/types.js";
 
 interface KnowledgeOrchestratorOptions {
   baseUrl: string;
@@ -16,42 +19,25 @@ interface KnowledgeOrchestratorOptions {
   cacheDir?: string;
   defaultTtlMs?: number;
   fetchTimeoutMs?: number;
-  fetcher?: SpecFetcher;
   memoryCacheSize?: number;
 }
-
-interface FetchInput {
-  section: string;
-  version: string;
-  url: string;
-  etag?: string;
-  lastModified?: string;
-}
-
-interface FetchResult {
-  content?: string;
-  metadata?: {
-    url: string;
-    fetchedAt: number;
-    etag?: string;
-    lastModified?: string;
-  };
-  notModified?: boolean;
-}
-
-type SpecFetcher = (input: FetchInput) => Promise<FetchResult>;
 
 class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
   private readonly defaultVersion: string;
   private readonly defaultTtl: number;
   private readonly cache: LRUCache<CacheEntry>;
   private readonly store: SpecCacheStore;
-  private readonly fetcher: SpecFetcher;
   private readonly inflight = new Map<string, Promise<CacheEntry>>();
+
+  private readonly transportSelector = new DefaultTransportSelector();
+  private readonly transports = new Map<TransportType, TransportAdapter>();
+  private readonly baseUrl: string;
 
   constructor(options: KnowledgeOrchestratorOptions) {
     this.defaultVersion = options.defaultVersion;
     this.defaultTtl = options.defaultTtlMs ?? 24 * 60 * 60 * 1000;
+    this.baseUrl = options.baseUrl;
+
     const cacheDir = options.cacheDir ?? path.resolve(process.cwd(), ".cortexdx/knowledge");
     mkdirSync(cacheDir, { recursive: true });
     this.store = new SpecCacheStore(path.join(cacheDir, "cache.db"));
@@ -59,7 +45,12 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
       maxSize: options.memoryCacheSize ?? 500,
       ttl: this.defaultTtl,
     });
-    this.fetcher = options.fetcher ?? createHttpFetcher(options.baseUrl, options.fetchTimeoutMs);
+
+    // Initialize transports
+    const timeout = options.fetchTimeoutMs ?? 10_000;
+    this.transports.set(TransportType.HTTP, new HttpTransportAdapter(options.baseUrl, timeout));
+    this.transports.set(TransportType.SSE, new SseTransportAdapter(options.baseUrl, timeout));
+    this.transports.set(TransportType.WEBSOCKET, new WebSocketTransportAdapter(options.baseUrl, timeout));
   }
 
   async get(request: KnowledgeRequest): Promise<KnowledgeResponse> {
@@ -73,7 +64,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     }
 
     try {
-      const entry = await this.fetchOrQueue(cacheKey, request.section, version, cached);
+      const entry = await this.fetchOrQueue(cacheKey, request, version, cached);
       if (entry) {
         return toResponse(entry, cached && entry === cached ? "cache" : "fetch", maxAge);
       }
@@ -99,7 +90,9 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
 
   async refresh(sections: string[]): Promise<void> {
     for (const section of sections) {
-      await this.fetchAndPersist(section, this.defaultVersion, undefined, 0).catch(() => undefined);
+      // Create a dummy request for refresh
+      const request: KnowledgeRequest = { section, version: this.defaultVersion, fallbackToCache: false };
+      await this.fetchAndPersist(request, this.defaultVersion, undefined, 0).catch(() => undefined);
     }
   }
 
@@ -120,7 +113,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
 
   private async fetchOrQueue(
     cacheKey: string,
-    section: string,
+    request: KnowledgeRequest,
     version: string,
     cached: CacheEntry | null,
   ): Promise<CacheEntry | null> {
@@ -128,7 +121,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     if (pending) {
       return pending;
     }
-    const fetchPromise = this.fetchAndPersist(section, version, cached, this.defaultTtl)
+    const fetchPromise = this.fetchAndPersist(request, version, cached, this.defaultTtl)
       .catch((error) => {
         this.inflight.delete(cacheKey);
         throw error;
@@ -140,18 +133,44 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
   }
 
   private async fetchAndPersist(
-    section: string,
+    request: KnowledgeRequest,
     version: string,
     cached: CacheEntry | null,
     ttl: number,
   ): Promise<CacheEntry | null> {
-    const fetchResult = await this.fetcher({
-      section,
+    // Detect capabilities (cached internally by selector if needed, or we could cache here)
+    // For now, we detect on every fetch or rely on selector optimization
+    const capabilities = await this.transportSelector.detectCapabilities(this.baseUrl);
+
+    const selectedTransport = this.transportSelector.selectTransport(request, capabilities);
+
+    const fetchInput: FetchInput = {
+      section: request.section,
       version,
-      url: buildSpecUrl(section, version, this.defaultVersion),
+      url: buildSpecUrl(request.section, version, this.defaultVersion),
       etag: cached?.metadata.etag,
       lastModified: cached?.metadata.lastModified,
-    });
+    };
+
+    let fetchResult: FetchResult;
+
+    try {
+      const adapter = this.transports.get(selectedTransport);
+      if (!adapter) throw new Error(`Transport ${selectedTransport} not initialized`);
+      fetchResult = await adapter.fetch(fetchInput);
+    } catch (e) {
+      // Fallback to HTTP if we tried something else and it failed
+      if (selectedTransport !== TransportType.HTTP) {
+        const httpAdapter = this.transports.get(TransportType.HTTP);
+        if (httpAdapter) {
+          fetchResult = await httpAdapter.fetch(fetchInput);
+        } else {
+          throw e;
+        }
+      } else {
+        throw e;
+      }
+    }
 
     if (fetchResult.notModified && cached) {
       const refreshed = { ...cached, metadata: { ...cached.metadata, fetchedAt: Date.now() } };
@@ -164,7 +183,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     }
 
     const entry: CacheEntry = {
-      section,
+      section: request.section,
       version,
       content: fetchResult.content,
       metadata: fetchResult.metadata,
@@ -202,54 +221,6 @@ export function createKnowledgeOrchestrator(
   return new KnowledgeOrchestratorImpl(options);
 }
 
-function createHttpFetcher(baseUrl: string, timeoutMs = 10_000): SpecFetcher {
-  return async (input: FetchInput): Promise<FetchResult> => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const headers: Record<string, string> = {
-        "user-agent": "CortexDx-knowledge/1.0",
-      };
-      if (input.etag) headers["If-None-Match"] = input.etag;
-      if (input.lastModified) headers["If-Modified-Since"] = input.lastModified;
-
-      const response = await fetch(buildRequestUrl(baseUrl, input.url), {
-        headers,
-        signal: controller.signal,
-      });
-
-      if (response.status === 304) {
-        return {
-          notModified: true,
-          metadata: {
-            url: buildRequestUrl(baseUrl, input.url),
-            fetchedAt: Date.now(),
-            etag: input.etag,
-            lastModified: input.lastModified,
-          },
-        };
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const body = await response.text();
-      return {
-        content: body,
-        metadata: {
-          url: buildRequestUrl(baseUrl, input.url),
-          fetchedAt: Date.now(),
-          etag: response.headers.get("etag") ?? undefined,
-          lastModified: response.headers.get("last-modified") ?? undefined,
-        },
-      };
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-}
-
 function toResponse(entry: CacheEntry, source: "cache" | "fetch", maxAge: number, freshOverride?: boolean): KnowledgeResponse {
   const age = Date.now() - entry.metadata.fetchedAt;
   const fresh = typeof freshOverride === "boolean" ? freshOverride : age <= maxAge;
@@ -279,9 +250,4 @@ function splitKey(key: string): [string, string] {
 function buildSpecUrl(section: string, version: string, fallbackVersion: string): string {
   const resolvedVersion = version || fallbackVersion;
   return `/specification/${resolvedVersion}/${section}`;
-}
-
-function buildRequestUrl(baseUrl: string, pathOnly: string): string {
-  const trimmedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-  return `${trimmedBase}${pathOnly}`;
 }

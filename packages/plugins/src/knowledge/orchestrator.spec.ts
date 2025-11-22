@@ -1,30 +1,32 @@
+import type { KnowledgeRequest } from "@brainwav/cortexdx-core";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { KnowledgeRequest } from "@brainwav/cortexdx-core";
+import { TransportType } from "./transport/types.js";
 
+// Mock Cache Store
 vi.mock("./cache-store.js", () => {
   class MemoryStore {
     private store = new Map<string, any>();
 
-    constructor(_dbPath: string) {}
+    constructor(_dbPath: string) { }
 
     upsert(entry: any): void {
-      this.store.set(`${entry.version}::${entry.section}`, { ...entry });
+      this.store.set(`${entry.version}::${entry.section} `, { ...entry });
     }
 
     get(section: string, version: string): any | null {
-      return this.store.get(`${version}::${section}`) ?? null;
+      return this.store.get(`${version}::${section} `) ?? null;
     }
 
-    touch(): void {}
+    touch(): void { }
 
     stats() {
       const entries = Array.from(this.store.values());
       const now = Date.now();
       const sections = entries.map((e) => ({
-        key: `${e.version}::${e.section}`,
+        key: `${e.version}::${e.section} `,
         age: now - e.metadata.fetchedAt,
         ttl: e.ttl ?? 0,
       }));
@@ -36,6 +38,35 @@ vi.mock("./cache-store.js", () => {
   }
 
   return { SpecCacheStore: MemoryStore };
+});
+
+// Mock Transport Adapters
+const mockFetch = vi.fn();
+vi.mock("./transport/adapters.js", () => {
+  return {
+    HttpTransportAdapter: vi.fn().mockImplementation(() => ({
+      fetch: mockFetch
+    })),
+    SseTransportAdapter: vi.fn().mockImplementation(() => ({
+      fetch: vi.fn()
+    })),
+    WebSocketTransportAdapter: vi.fn().mockImplementation(() => ({
+      fetch: vi.fn()
+    }))
+  };
+});
+
+// Mock Transport Selector
+const mockSelectTransport = vi.fn().mockReturnValue(TransportType.HTTP);
+const mockDetectCapabilities = vi.fn().mockResolvedValue({ http: true, sse: false, websocket: false });
+
+vi.mock("./transport/selector.js", () => {
+  return {
+    DefaultTransportSelector: vi.fn().mockImplementation(() => ({
+      selectTransport: mockSelectTransport,
+      detectCapabilities: mockDetectCapabilities
+    }))
+  };
 });
 
 import { createKnowledgeOrchestrator } from "./orchestrator.js";
@@ -59,16 +90,17 @@ function createTempDir(): string {
 
 describe("KnowledgeOrchestrator", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    mockSelectTransport.mockReturnValue(TransportType.HTTP);
   });
 
   it("returns cached content when fresh", async () => {
-    const fetcher = vi.fn(async () => mockSpec("authentication", "2025-06-18", "content-1"));
+    mockFetch.mockResolvedValue(mockSpec("authentication", "2025-06-18", "content-1"));
+
     const orchestrator = createKnowledgeOrchestrator({
       baseUrl: "https://example.com",
       defaultVersion: "2025-06-18",
       cacheDir: createTempDir(),
-      fetcher,
       defaultTtlMs: 60_000,
     });
 
@@ -83,12 +115,11 @@ describe("KnowledgeOrchestrator", () => {
     expect(first.source).toBe("fetch");
     expect(second.source).toBe("cache");
     expect(second.fresh).toBe(true);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
   it("fetches when content is stale and updates cache", async () => {
-    const fetcher = vi
-      .fn()
+    mockFetch
       .mockResolvedValueOnce(mockSpec("auth", "2025-06-18", "v1"))
       .mockResolvedValueOnce(mockSpec("auth", "2025-06-18", "v2"));
 
@@ -96,7 +127,6 @@ describe("KnowledgeOrchestrator", () => {
       baseUrl: "https://example.com",
       defaultVersion: "2025-06-18",
       cacheDir: createTempDir(),
-      fetcher,
       defaultTtlMs: 10_000,
     });
 
@@ -105,12 +135,11 @@ describe("KnowledgeOrchestrator", () => {
 
     expect(result.content.content).toBe("v2");
     expect(result.source).toBe("fetch");
-    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it("falls back to stale cache when fetch fails", async () => {
-    const fetcher = vi
-      .fn()
+    mockFetch
       .mockResolvedValueOnce(mockSpec("handshake", "2025-06-18", "fresh"))
       .mockRejectedValueOnce(new Error("network down"));
 
@@ -118,7 +147,6 @@ describe("KnowledgeOrchestrator", () => {
       baseUrl: "https://example.com",
       defaultVersion: "2025-06-18",
       cacheDir: createTempDir(),
-      fetcher,
       defaultTtlMs: 1,
     });
 
@@ -128,11 +156,11 @@ describe("KnowledgeOrchestrator", () => {
     expect(result.source).toBe("cache");
     expect(result.fresh).toBe(false);
     expect(result.content.content).toBe("fresh");
-    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it("deduplicates concurrent fetches for the same section", async () => {
-    const fetcher = vi.fn(async () => {
+    mockFetch.mockImplementation(async () => {
       await new Promise((resolve) => setTimeout(resolve, 5));
       return mockSpec("resources", "2025-06-18", "payload");
     });
@@ -141,7 +169,6 @@ describe("KnowledgeOrchestrator", () => {
       baseUrl: "https://example.com",
       defaultVersion: "2025-06-18",
       cacheDir: createTempDir(),
-      fetcher,
       defaultTtlMs: 60_000,
     });
 
@@ -152,8 +179,10 @@ describe("KnowledgeOrchestrator", () => {
 
     const [first, second] = await Promise.all(requests);
 
+    if (!first || !second) throw new Error("Requests failed");
+
     expect(first.content.content).toBe("payload");
     expect(second.content.content).toBe("payload");
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });
