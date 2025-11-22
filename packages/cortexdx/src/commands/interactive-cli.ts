@@ -759,9 +759,12 @@ function printTutorialSummary(
   );
 }
 
+const ansiEscapePattern = `${String.fromCharCode(27)}[0-9;]*m`;
+const ansiEscapeRegex = new RegExp(ansiEscapePattern, "g");
+
 function logLine(message: string): void {
   logger.info(message);
-  console.log(message.replace(/\u001b\[[0-9;]*m/g, ""));
+  console.log(message.replace(ansiEscapeRegex, ""));
 }
 
 /**

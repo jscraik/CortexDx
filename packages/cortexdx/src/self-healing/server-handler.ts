@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { AutoHealer } from "../healing/auto-healer.js";
 import { MonitoringScheduler } from "../healing/scheduler.js";
 import { TemplateEngine } from "../template-engine/engine.js";
