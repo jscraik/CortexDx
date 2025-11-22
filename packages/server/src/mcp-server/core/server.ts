@@ -11,7 +11,7 @@ import {
   type ProtocolVersion,
   type ServerCapabilities,
 } from './protocol';
-import { McpError, createToolExecutionError } from './errors';
+// import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
 import type { TransportConfig, JsonRpcRequest, JsonRpcResponse } from '../transports/types';
 import type {
   ServerPlugin,
