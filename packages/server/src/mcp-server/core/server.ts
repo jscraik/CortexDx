@@ -505,7 +505,7 @@ export class McpServer {
     });
 
     // Start transport based on config
-    const { type, httpStreamable, stdio } = this.config.transport;
+    const { type, httpStreamable } = this.config.transport;
 
     switch (type) {
       case 'httpStreamable':
