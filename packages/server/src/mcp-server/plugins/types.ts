@@ -49,6 +49,18 @@ export interface RequestContext {
     features: string[];
     expiresAt?: number;
   };
+
+  /**
+   * FastMCP native context (when using addTool with FastMCPContext)
+   */
+  fastMCP?: {
+    session?: unknown;
+    sessionId?: string;
+    requestId?: string;
+    log?: any;
+    reportProgress?: (progress: any) => Promise<void>;
+    streamContent?: (content: any) => Promise<void>;
+  };
 }
 
 /**
@@ -119,6 +131,27 @@ export interface ServerPlugin {
    * Called before a resource is read
    */
   onResourceRead?(ctx: RequestContext, uri: string): Promise<void>;
+
+  /**
+   * Called when a client connects (FastMCP session)
+   */
+  onSessionConnect?(ctx: RequestContext, session: unknown): Promise<void>;
+
+  /**
+   * Called when a client disconnects
+   */
+  onSessionDisconnect?(ctx: RequestContext, session: unknown): Promise<void>;
+
+  /**
+   * Called when filesystem roots change
+   */
+  onRootsChanged?(ctx: RequestContext, roots: unknown[]): Promise<void>;
+
+  /**
+   * Called to enrich context with plugin data
+   * Runs before tool execution
+   */
+  enrichContext?(ctx: RequestContext, fastMCPContext: unknown): Promise<void>;
 }
 
 /**

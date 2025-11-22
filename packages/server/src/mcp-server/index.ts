@@ -7,7 +7,10 @@
 export {
   McpServer,
   type McpServerConfig,
-  type McpTool,
+  type AuthSession,
+  type FastMCPContext,
+  type FastMCPToolConfig,
+  type ToolAnnotations as FastMCPToolAnnotations,
   type McpResource,
   type McpResourceTemplate,
   type McpPrompt,

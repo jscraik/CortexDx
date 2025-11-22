@@ -1,6 +1,6 @@
 /**
  * MCP Server Orchestrator
- * Main entry point for the modular FastMCP server
+ * FastMCP-aligned implementation with plugin support
  */
 
 import { FastMCP } from 'fastmcp';
@@ -8,13 +8,10 @@ import { z } from 'zod';
 import { createLogger } from '../../logging/logger';
 import {
   DEFAULT_PROTOCOL_VERSION,
-  validateNotBatch,
-  buildInitializeResponse,
   type ProtocolVersion,
   type ServerCapabilities,
 } from './protocol';
-import { convertToolSchema } from './schema-converter';
-import { McpError, MCP_ERRORS, createToolExecutionError } from './errors';
+// import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
 import type { TransportConfig, JsonRpcRequest, JsonRpcResponse } from '../transports/types';
 import type {
   ServerPlugin,
@@ -27,28 +24,76 @@ import type { IconMetadata } from './types';
 const logger = createLogger({ component: 'mcp-server' });
 
 /**
- * Server configuration
+ * Authentication session returned by authenticate function
+ */
+export interface AuthSession {
+  userId?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * FastMCP execution context available in tools
+ */
+export interface FastMCPContext {
+  session?: AuthSession;
+  sessionId?: string;
+  requestId: string;
+  log: {
+    debug: (msg: string, data?: unknown) => void;
+    info: (msg: string, data?: unknown) => void;
+    warn: (msg: string, data?: unknown) => void;
+    error: (msg: string, data?: unknown) => void;
+  };
+  reportProgress?: (progress: { progress: number; total: number }) => Promise<void>;
+  streamContent?: (content: {
+    type: string;
+    text?: string;
+    data?: string;
+    mimeType?: string;
+  }) => Promise<void>;
+}
+
+/**
+ * Tool annotations (MCP 2025-03-26+)
+ */
+export interface ToolAnnotations {
+  title?: string;
+  streamingHint?: boolean;
+  readOnlyHint?: boolean;
+  destructiveHint?: boolean;
+  idempotentHint?: boolean;
+  openWorldHint?: boolean;
+}
+
+/**
+ * FastMCP tool configuration
+ */
+export interface FastMCPToolConfig {
+  name: string;
+  description?: string;
+  parameters: z.ZodType;
+  annotations?: ToolAnnotations;
+  canAccess?: (session: unknown) => boolean;
+  execute: (args: unknown, ctx: FastMCPContext) => Promise<unknown>;
+}
+
+/**
+ * Server configuration with FastMCP options
  */
 export interface McpServerConfig {
   name: string;
   version: string;
+
+  // FastMCP native options
+  instructions?: string;
+  authenticate?: (request: Request) => Promise<AuthSession>;
+  logger?: PluginLogger;
+
+  // Protocol options
   protocolVersion?: ProtocolVersion;
   transport: TransportConfig;
   capabilities?: Partial<ServerCapabilities>;
-}
-
-/**
- * Tool definition with icon support (SEP-973)
- */
-export interface McpTool {
-  name: string;
-  description?: string;
-  inputSchema?: Record<string, unknown>;
-  /**
-   * Icon metadata for the tool
-   */
-  icon?: IconMetadata;
-  execute: (args: unknown, ctx: RequestContext) => Promise<unknown>;
 }
 
 /**
@@ -152,7 +197,7 @@ class PluginRegistry {
 export class McpServer {
   private mcp: FastMCP;
   private plugins = new PluginRegistry();
-  private tools: McpTool[] = [];
+  private toolNames: string[] = [];
   private resources: McpResource[] = [];
   private resourceTemplates: McpResourceTemplate[] = [];
   private prompts: McpPrompt[] = [];
@@ -169,9 +214,16 @@ export class McpServer {
         `Invalid MCP server version "${config.version}". Expected format: "x.y.z"`
       );
     }
+
+    // Create FastMCP with native options
     this.mcp = new FastMCP({
       name: config.name,
       version: config.version as `${number}.${number}.${number}`,
+      instructions: config.instructions,
+      logger: config.logger || logger,
+      authenticate: config.authenticate
+        ? this.wrapAuthenticate(config.authenticate)
+        : undefined,
     });
 
     logger.info(
@@ -180,9 +232,22 @@ export class McpServer {
         version: config.version,
         protocol: this.protocolVersion,
         transport: config.transport.type,
+        hasAuth: !!config.authenticate,
+        hasInstructions: !!config.instructions,
       },
       'MCP Server created'
     );
+  }
+
+  /**
+   * Get underlying FastMCP instance for advanced features
+   * @example
+   * server.fastMCP.on("connect", (event) => {
+   *   console.log("Client connected:", event.session);
+   * });
+   */
+  get fastMCP(): FastMCP {
+    return this.mcp;
   }
 
   /**
@@ -194,77 +259,115 @@ export class McpServer {
   }
 
   /**
-   * Register a tool
+   * Wrap authenticate to allow plugin enhancement
    */
-  addTool(tool: McpTool): this {
-    this.tools.push(tool);
+  private wrapAuthenticate(
+    authenticate: (req: Request) => Promise<AuthSession>
+  ) {
+    return async (req: Request) => {
+      try {
+        const session = await authenticate(req);
 
-    const zodSchema = tool.inputSchema
-      ? convertToolSchema(tool.inputSchema)
-      : z.object({}).strict();
+        // Allow plugins to enrich session
+        const ctx = this.createContext('authenticate', undefined);
+        ctx.fastMCP = { session } as any;
 
-    this.mcp.addTool({
-      name: tool.name,
-      description: tool.description || '',
-      parameters: zodSchema,
-      execute: async (args) => {
-        const ctx = this.createContext('tools/call', tool.name);
+        await this.plugins.runHook('enrichContext', ctx, { session });
 
-        // Run pre-execution hooks
-        const preResult = await this.plugins.runHook<JsonRpcResponse>(
-          'onToolCall',
+        return session;
+      } catch (error) {
+        logger.warn({ error }, 'Authentication failed');
+        throw error;
+      }
+    };
+  }
+
+  /**
+   * Add tool with full FastMCP features + plugin support
+   * @example
+   * server.addTool({
+   *   name: "search",
+   *   description: "Search with streaming results",
+   *   parameters: z.object({
+   *     query: z.string(),
+   *     maxResults: z.number().optional(),
+   *   }),
+   *   annotations: {
+   *     streamingHint: true,
+   *     title: "Advanced Search",
+   *   },
+   *   canAccess: (session) => session?.role === "admin",
+   *   execute: async (args, ctx) => {
+   *     ctx.log.info("Searching...");
+   *     await ctx.reportProgress({ progress: 50, total: 100 });
+   *     await ctx.streamContent({ type: "text", text: "Result" });
+   *     return results;
+   *   },
+   * });
+   */
+  addTool(config: FastMCPToolConfig): this {
+    this.toolNames.push(config.name);
+
+    // Wrap execute to run plugin hooks
+    const wrappedExecute = async (args: unknown, fastMCPContext: any) => {
+      // Create plugin context
+      const ctx = this.createContext('tools/call', config.name);
+      ctx.fastMCP = fastMCPContext;
+
+      // Pre-execution plugin hooks
+      const preResult = await this.plugins.runHook<JsonRpcResponse>(
+        'onToolCall',
+        ctx,
+        config.name,
+        args
+      );
+      if (preResult) {
+        return JSON.stringify(preResult);
+      }
+
+      try {
+        // Execute with full FastMCP context
+        let result = await config.execute(args, fastMCPContext);
+
+        // Post-execution plugin hooks
+        const transformedResult = await this.plugins.runHook<unknown>(
+          'onToolResult',
           ctx,
-          tool.name,
-          args
+          config.name,
+          result
         );
-        if (preResult) {
-          return JSON.stringify(preResult);
+        if (transformedResult !== undefined) {
+          result = transformedResult;
         }
 
-        try {
-          let result = await tool.execute(args, ctx);
-
-          // Allow plugins to transform result
-          const transformedResult = await this.plugins.runHook<unknown>(
-            'onToolResult',
-            ctx,
-            tool.name,
-            result
-          );
-          if (transformedResult !== undefined) {
-            result = transformedResult;
-          }
-
-          return typeof result === 'string' ? result : JSON.stringify(result);
-        } catch (error) {
-          // Handle errors through plugin hooks
-          const errorResponse = await this.plugins.runHook<JsonRpcResponse>(
-            'onError',
-            ctx,
-            error
-          );
-          if (errorResponse) {
-            return JSON.stringify(errorResponse);
-          }
-
-          // Convert to tool execution error (SEP-1303)
-          const mcpError =
-            error instanceof McpError
-              ? error
-              : createToolExecutionError(
-                  error instanceof Error ? error.message : String(error)
-                );
-
-          return JSON.stringify({
-            error: mcpError.message,
-            isError: true,
-            code: mcpError.code,
-          });
+        return result;
+      } catch (error) {
+        // Error handling plugin hooks
+        const errorResponse = await this.plugins.runHook<JsonRpcResponse>(
+          'onError',
+          ctx,
+          error
+        );
+        if (errorResponse) {
+          return JSON.stringify(errorResponse);
         }
-      },
+
+        // Re-throw for FastMCP to handle
+        throw error;
+      }
+    };
+
+    // Register with FastMCP
+    this.mcp.addTool({
+      name: config.name,
+      description: config.description || '',
+      parameters: config.parameters,
+      annotations: config.annotations,
+      canAccess: config.canAccess,
+      execute: wrappedExecute,
     });
 
-    logger.debug({ tool: tool.name }, 'Tool registered');
+    logger.debug({ tool: config.name }, 'Tool registered');
     return this;
   }
 
@@ -368,8 +471,41 @@ export class McpServer {
       }
     }
 
+    // Hook into FastMCP session events
+    this.mcp.on('connect', async (event: any) => {
+      const ctx = this.createContext('session/connect', undefined);
+      ctx.fastMCP = { session: event.session };
+
+      logger.info(
+        { sessionId: event.session?.id },
+        'Client connected'
+      );
+
+      // Run plugin hooks
+      await this.plugins.runHook('onSessionConnect', ctx, event.session);
+
+      // Listen for session-specific events
+      if (event.session?.on) {
+        event.session.on('rootsChanged', async (e: any) => {
+          await this.plugins.runHook('onRootsChanged', ctx, e.roots);
+        });
+      }
+    });
+
+    this.mcp.on('disconnect', async (event: any) => {
+      const ctx = this.createContext('session/disconnect', undefined);
+      ctx.fastMCP = { session: event.session };
+
+      logger.info(
+        { sessionId: event.session?.id },
+        'Client disconnected'
+      );
+
+      await this.plugins.runHook('onSessionDisconnect', ctx, event.session);
+    });
+
     // Start transport based on config
-    const { type, httpStreamable, stdio, websocket } = this.config.transport;
+    const { type, httpStreamable } = this.config.transport;
 
     switch (type) {
       case 'httpStreamable':
@@ -381,10 +517,17 @@ export class McpServer {
           httpStream: {
             port: httpStreamable.port,
             host: httpStreamable.host || '127.0.0.1',
+            endpoint: httpStreamable.endpoint || '/mcp',
+            stateless: httpStreamable.stateless || false,
           },
         });
         logger.info(
-          { port: httpStreamable.port, host: httpStreamable.host || '127.0.0.1' },
+          {
+            port: httpStreamable.port,
+            host: httpStreamable.host || '127.0.0.1',
+            endpoint: httpStreamable.endpoint || '/mcp',
+            stateless: httpStreamable.stateless || false,
+          },
           'HTTP Streamable transport started'
         );
         break;
@@ -393,11 +536,6 @@ export class McpServer {
         await this.mcp.start({ transportType: 'stdio' });
         logger.info('STDIO transport started');
         break;
-
-      case 'websocket':
-        // WebSocket requires custom implementation
-        // For now, throw not implemented
-        throw new Error('WebSocket transport not yet implemented');
 
       default:
         throw new Error(`Unknown transport type: ${type}`);
@@ -408,7 +546,7 @@ export class McpServer {
       {
         name: this.config.name,
         version: this.config.version,
-        tools: this.tools.length,
+        tools: this.toolNames.length,
         resources: this.resources.length,
         prompts: this.prompts.length,
       },
@@ -457,10 +595,10 @@ export class McpServer {
   }
 
   /**
-   * Get registered tools
+   * Get registered tool names
    */
-  getTools(): ReadonlyArray<McpTool> {
-    return this.tools;
+  getTools(): ReadonlyArray<string> {
+    return this.toolNames;
   }
 
   /**
@@ -510,7 +648,7 @@ export class McpServer {
     return {
       name: this.config.name,
       version: this.config.version,
-      getTools: () => this.tools.map((t) => ({ name: t.name, description: t.description })),
+      getTools: () => this.toolNames.map((name) => ({ name })),
       getResources: () => this.resources.map((r) => ({ uri: r.uri, name: r.name })),
       logger: pluginLogger,
     };
