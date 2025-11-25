@@ -47,7 +47,8 @@ Always include at least one evidence pointer:
 evidence: [
   { type: 'url', ref: ctx.endpoint },
   { type: 'file', ref: 'path/to/file.ts', lines: [10, 20] },
-  { type: 'log', ref: 'PluginName' }
+  { type: 'log', ref: 'PluginName' },
+  { type: 'resource', ref: 'resource-uri' }
 ]
 ```
 
