@@ -15,7 +15,7 @@ When working with CortexDx security modules, follow these conventions:
 
 ## Required Conventions
 
-- **Named exports only** - Never use `export default`
+- **Named exports only** - Never use `export default` (except for narrowly-scoped cases such as HTTP handlers, where default exports are permitted)
 - **≤40 lines per function** - Split larger functions into helpers
 - **No `any` types** - Use explicit types or type guards
 - **ESM imports with `.js` extension** - Always use `from "./foo.js"`
