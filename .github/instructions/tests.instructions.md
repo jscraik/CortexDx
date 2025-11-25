@@ -70,7 +70,7 @@ Tests must be deterministic:
 
 ## Required Conventions
 
-- **Named exports only** - No `export default`
+- **Named exports only** - No `export default` (except for documented cases such as HTTP handlers, where default exports are required for compatibility)
 - **ESM imports with `.js` extension** - `from "./module.js"`
 - **No `any` types** - Use explicit types
 - **Descriptive test names** - Start with "should"
