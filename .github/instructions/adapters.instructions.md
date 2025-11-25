@@ -69,7 +69,7 @@ Use the `withSpan` helper for long-running probes:
 
 ## Proxy Support
 
-Streaming probes must honour proxy settings:
+Streaming probes must honor proxy settings:
 - Implement retry semantics
 - Handle ID semantics properly
 - Support configurable timeouts
