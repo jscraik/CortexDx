@@ -59,7 +59,7 @@ Use the diagnostic context for all interactions:
 await ctx.jsonrpc('tools/list');           // JSON-RPC calls
 await ctx.request('/health');              // HTTP requests
 await ctx.sseProbe('/sse-endpoint');       // SSE testing
-ctx.evidence('key', data);                 // Store evidence
+ctx.evidence({ type: 'url', ref: ctx.endpoint }); // Store evidence
 ctx.logger('message', metadata);           // Structured logging
 ```
 
