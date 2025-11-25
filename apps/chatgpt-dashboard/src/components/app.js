@@ -667,21 +667,35 @@ class DashboardClient {
         </td>
         <td>
           ${run.status === 'running' ? `
-            <button type="button" class="action-btn" onclick="dashboard.pauseRun('${run.id}')" aria-label="Pause run ${run.id}">
+            <button type="button" class="action-btn" data-run-id="${run.id}" data-action="pause" aria-label="Pause run ${run.id}">
               Pause
             </button>
           ` : ''}
           ${run.status === 'paused' ? `
-            <button type="button" class="action-btn success" onclick="dashboard.resumeRun('${run.id}')" aria-label="Resume run ${run.id}">
+            <button type="button" class="action-btn success" data-run-id="${run.id}" data-action="resume" aria-label="Resume run ${run.id}">
               Resume
             </button>
           ` : ''}
-          <button type="button" class="action-btn warning" onclick="dashboard.cancelRun('${run.id}')" aria-label="Cancel run ${run.id}">
+          <button type="button" class="action-btn warning" data-run-id="${run.id}" data-action="cancel" aria-label="Cancel run ${run.id}">
             Cancel
           </button>
         </td>
       </tr>
     `).join('');
+
+    // Attach event listeners to action buttons
+    const actionButtons = tbody.querySelectorAll('button[data-run-id][data-action]');
+    actionButtons.forEach(btn => {
+      const runId = btn.getAttribute('data-run-id');
+      const action = btn.getAttribute('data-action');
+      if (action === 'pause') {
+        btn.addEventListener('click', () => this.pauseRun(runId));
+      } else if (action === 'resume') {
+        btn.addEventListener('click', () => this.resumeRun(runId));
+      } else if (action === 'cancel') {
+        btn.addEventListener('click', () => this.cancelRun(runId));
+      }
+    });
   }
 
   /**
