@@ -17,7 +17,7 @@ CortexDx supports multiple protocol adapters:
 
 ## Required Conventions
 
-- **Named exports only** - Never use `export default`
+- **Named exports only** — Default exports are prohibited except for explicit exceptions (e.g., HTTP handler functions or where required by frameworks). If a default export is used, document the reason in a comment above the export.
 - **≤40 lines per function** - Split larger functions into helpers
 - **No `any` types** - Use explicit types or type guards
 - **ESM imports with `.js` extension** - Always use `from "./foo.js"`
