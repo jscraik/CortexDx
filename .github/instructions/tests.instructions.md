@@ -52,11 +52,16 @@ const createMockContext = (): DiagnosticContext => ({
   endpoint: 'http://localhost:3000',
   headers: {},
   logger: () => {},
-  request: async () => ({}),
-  jsonrpc: async () => ({ tools: [] }),
+  request: async <T = unknown>() => ({} as T),
+  jsonrpc: async <T = unknown>() => ({} as T),
   sseProbe: async () => ({ ok: true }),
   evidence: () => {},
   deterministic: true,
+  governance: undefined,
+  llm: undefined,
+  knowledge: undefined,
+  transport: undefined,
+  artifacts: undefined,
 });
 ```
 
