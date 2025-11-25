@@ -936,12 +936,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show error in the UI
     const container = document.querySelector('.dashboard-container');
     if (container) {
-      container.innerHTML = `
-        <div class="finding blocker" style="margin: 20px; padding: 20px;">
-          <div class="finding-title">[ERROR] Dashboard Initialization Failed</div>
-          <div class="finding-description">Unable to initialize the dashboard. Please refresh the page or check the console for details.</div>
-        </div>
-      `;
+      // Remove previous content
+      container.textContent = '';
+      // Create error block
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'dashboard-error'; // Update to match styles.css
+      errorDiv.style.margin = '20px';
+      errorDiv.style.padding = '20px';
+
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'dashboard-error-title'; // Update to match styles.css
+      titleDiv.textContent = '[ERROR] Dashboard Initialization Failed';
+
+      const descDiv = document.createElement('div');
+      descDiv.className = 'dashboard-error-description'; // Update to match styles.css
+      descDiv.textContent = 'Unable to initialize the dashboard. Please refresh the page or check the console for details.';
+
+      errorDiv.appendChild(titleDiv);
+      errorDiv.appendChild(descDiv);
+      container.appendChild(errorDiv);
     }
   }
 });
