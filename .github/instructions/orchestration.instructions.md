@@ -25,7 +25,7 @@ Follow the phase machine pattern (R→G→F→REVIEW):
 
 ## Required Conventions
 
-- **Named exports only** - Never use `export default`
+- **Named exports only** - Never use `export default` (no exceptions, including HTTP handlers)
 - **≤40 lines per function** - Split larger functions into helpers
 - **No `any` types** - Use explicit types or type guards
 - **ESM imports with `.js` extension** - Always use `from "./foo.js"`
