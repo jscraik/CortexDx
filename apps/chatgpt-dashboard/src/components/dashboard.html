@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CortexDx ChatGPT Control Panel - Monitor health, logs, traces, metrics and control agents">
+    <title>CortexDx Control Panel</title>
+    <link rel="stylesheet" href="/dashboard/styles.css">
+</head>
+<body>
+    <!-- Skip navigation for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Live region for screen reader announcements -->
+    <div id="announcer" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    
+    <div class="dashboard-container">
+        <header role="banner">
+            <h1>
+                <span aria-hidden="true">🔬</span>
+                CortexDx Control Panel
+            </h1>
+            <div class="header-status" role="status" aria-label="Connection status">
+                <span id="connection-indicator" class="status-dot" aria-hidden="true"></span>
+                <span id="connection-text">Connecting...</span>
+            </div>
+        </header>
+
+        <nav role="navigation" aria-label="Dashboard tabs">
+            <ul class="tab-list" role="tablist">
+                <li role="presentation">
+                    <button 
+                        id="tab-health" 
+                        role="tab" 
+                        aria-selected="true" 
+                        aria-controls="panel-health"
+                        tabindex="0"
+                    >
+                        <span aria-hidden="true">❤️</span>
+                        Health
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button 
+                        id="tab-logs" 
+                        role="tab" 
+                        aria-selected="false" 
+                        aria-controls="panel-logs"
+                        tabindex="-1"
+                    >
+                        <span aria-hidden="true">📝</span>
+                        Logs
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button 
+                        id="tab-traces" 
+                        role="tab" 
+                        aria-selected="false" 
+                        aria-controls="panel-traces"
+                        tabindex="-1"
+                    >
+                        <span aria-hidden="true">🔍</span>
+                        Traces
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button 
+                        id="tab-metrics" 
+                        role="tab" 
+                        aria-selected="false" 
+                        aria-controls="panel-metrics"
+                        tabindex="-1"
+                    >
+                        <span aria-hidden="true">📊</span>
+                        Metrics
+                    </button>
+                </li>
+                <li role="presentation">
+                    <button 
+                        id="tab-controls" 
+                        role="tab" 
+                        aria-selected="false" 
+                        aria-controls="panel-controls"
+                        tabindex="-1"
+                    >
+                        <span aria-hidden="true">🎛️</span>
+                        Controls
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <main id="main-content" role="main">
+            <!-- Health Panel -->
+            <section 
+                id="panel-health" 
+                role="tabpanel" 
+                aria-labelledby="tab-health"
+                class="tab-panel active"
+            >
+                <h2 class="sr-only">System Health</h2>
+                <div class="health-summary" role="region" aria-label="Health summary">
+                    <div class="health-card">
+                        <h3>Overall Status</h3>
+                        <div id="overall-status" class="status-badge healthy" role="status">
+                            <span class="sr-only">Status:</span>
+                            Healthy
+                        </div>
+                    </div>
+                    <div class="health-card">
+                        <h3>Uptime</h3>
+                        <p id="uptime-value">--</p>
+                    </div>
+                    <div class="health-card">
+                        <h3>Version</h3>
+                        <p id="version-value">--</p>
+                    </div>
+                    <div class="health-card">
+                        <h3>Protocol</h3>
+                        <p id="protocol-value">MCP v2025-03-26</p>
+                    </div>
+                </div>
+                <div class="components-list" role="region" aria-label="Component health">
+                    <h3>Components</h3>
+                    <table id="components-table" aria-label="Component health status">
+                        <thead>
+                            <tr>
+                                <th scope="col">Component</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Last Check</th>
+                                <th scope="col">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="components-body">
+                            <tr>
+                                <td colspan="4">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Logs Panel -->
+            <section 
+                id="panel-logs" 
+                role="tabpanel" 
+                aria-labelledby="tab-logs"
+                class="tab-panel"
+                hidden
+            >
+                <h2 class="sr-only">System Logs</h2>
+                <div class="logs-toolbar" role="toolbar" aria-label="Log filters">
+                    <label for="log-level-filter">Level:</label>
+                    <select id="log-level-filter">
+                        <option value="all">All Levels</option>
+                        <option value="debug">Debug</option>
+                        <option value="info">Info</option>
+                        <option value="warn">Warning</option>
+                        <option value="error">Error</option>
+                    </select>
+                    <label for="log-search">Search:</label>
+                    <input 
+                        type="search" 
+                        id="log-search" 
+                        placeholder="Search logs..."
+                        aria-describedby="log-search-hint"
+                    >
+                    <span id="log-search-hint" class="sr-only">Enter text to filter log entries</span>
+                    <button id="refresh-logs" type="button">
+                        <span aria-hidden="true">🔄</span>
+                        Refresh
+                    </button>
+                </div>
+                <div 
+                    id="logs-container" 
+                    class="logs-list" 
+                    role="log" 
+                    aria-live="polite"
+                    aria-label="Log entries"
+                >
+                    <p>Loading logs...</p>
+                </div>
+            </section>
+
+            <!-- Traces Panel -->
+            <section 
+                id="panel-traces" 
+                role="tabpanel" 
+                aria-labelledby="tab-traces"
+                class="tab-panel"
+                hidden
+            >
+                <h2 class="sr-only">Distributed Traces</h2>
+                <div class="traces-toolbar" role="toolbar" aria-label="Trace filters">
+                    <label for="trace-search">Trace ID:</label>
+                    <input 
+                        type="search" 
+                        id="trace-search" 
+                        placeholder="Search by trace ID..."
+                    >
+                    <button id="refresh-traces" type="button">
+                        <span aria-hidden="true">🔄</span>
+                        Refresh
+                    </button>
+                </div>
+                <div id="traces-container" class="traces-list" aria-label="Trace spans">
+                    <p>Loading traces...</p>
+                </div>
+            </section>
+
+            <!-- Metrics Panel -->
+            <section 
+                id="panel-metrics" 
+                role="tabpanel" 
+                aria-labelledby="tab-metrics"
+                class="tab-panel"
+                hidden
+            >
+                <h2 class="sr-only">System Metrics</h2>
+                <div class="metrics-toolbar" role="toolbar" aria-label="Metrics controls">
+                    <button id="refresh-metrics" type="button">
+                        <span aria-hidden="true">🔄</span>
+                        Refresh
+                    </button>
+                    <label for="auto-refresh">
+                        <input type="checkbox" id="auto-refresh" checked>
+                        Auto-refresh (5s)
+                    </label>
+                </div>
+                <div id="metrics-container" class="metrics-grid" role="region" aria-label="Metrics display">
+                    <p>Loading metrics...</p>
+                </div>
+            </section>
+
+            <!-- Controls Panel -->
+            <section 
+                id="panel-controls" 
+                role="tabpanel" 
+                aria-labelledby="tab-controls"
+                class="tab-panel"
+                hidden
+            >
+                <h2 class="sr-only">Agent Controls</h2>
+                <div class="controls-section" role="region" aria-labelledby="active-runs-heading">
+                    <h3 id="active-runs-heading">Active Runs</h3>
+                    <table id="runs-table" aria-label="Active agent runs">
+                        <thead>
+                            <tr>
+                                <th scope="col">Run ID</th>
+                                <th scope="col">Workflow</th>
+                                <th scope="col">Phase</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Progress</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="runs-body">
+                            <tr>
+                                <td colspan="6">No active runs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="controls-section" role="region" aria-labelledby="global-actions-heading">
+                    <h3 id="global-actions-heading">Global Actions</h3>
+                    <div class="action-buttons">
+                        <button 
+                            id="action-pause-all" 
+                            type="button" 
+                            class="action-btn warning"
+                            aria-describedby="pause-all-desc"
+                        >
+                            <span aria-hidden="true">⏸️</span>
+                            Pause All
+                        </button>
+                        <span id="pause-all-desc" class="sr-only">Pause all running agent workflows</span>
+                        
+                        <button 
+                            id="action-resume-all" 
+                            type="button" 
+                            class="action-btn success"
+                            aria-describedby="resume-all-desc"
+                        >
+                            <span aria-hidden="true">▶️</span>
+                            Resume All
+                        </button>
+                        <span id="resume-all-desc" class="sr-only">Resume all paused agent workflows</span>
+                        
+                        <button 
+                            id="action-drain" 
+                            type="button" 
+                            class="action-btn"
+                            aria-describedby="drain-desc"
+                        >
+                            <span aria-hidden="true">🚿</span>
+                            Drain Queue
+                        </button>
+                        <span id="drain-desc" class="sr-only">Drain the agent task queue without processing new tasks</span>
+                    </div>
+                </div>
+                <div class="controls-section" role="region" aria-labelledby="test-flow-heading">
+                    <h3 id="test-flow-heading">Test Flow</h3>
+                    <form id="test-flow-form" class="test-flow-form">
+                        <div class="form-group">
+                            <label for="test-endpoint">MCP Endpoint:</label>
+                            <input 
+                                type="url" 
+                                id="test-endpoint" 
+                                placeholder="http://localhost:3024/mcp"
+                                required
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="test-workflow">Workflow:</label>
+                            <select id="test-workflow" required>
+                                <option value="">Select workflow</option>
+                                <option value="diagnose">Diagnose</option>
+                                <option value="self-healing">Self-Healing</option>
+                                <option value="research">Research</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="action-btn primary">
+                            <span aria-hidden="true">🚀</span>
+                            Run Test Flow
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer role="contentinfo">
+            <p>
+                CortexDx Control Panel v0.1.0 | 
+                <a href="/.well-known/oauth-protected-resource">OAuth Metadata</a> |
+                MCP v2025-03-26
+            </p>
+        </footer>
+    </div>
+
+    <script src="/dashboard/app.js" type="module"></script>
+</body>
+</html>
