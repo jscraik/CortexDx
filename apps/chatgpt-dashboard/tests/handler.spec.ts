@@ -158,7 +158,7 @@ describe('Dashboard API Handler', () => {
     });
     
     it('handles unknown action', () => {
-      const result = executeControl({ action: 'unknown' as 'pause' });
+      const result = executeControl({ action: 'unknown' });
       
       expect(result.success).toBe(false);
     });
