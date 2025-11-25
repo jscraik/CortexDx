@@ -29,7 +29,7 @@ class DashboardClient {
     this.eventSource = null;
     /** @type {boolean} */
     this.useWebSocket = false;
-    /** @type {NodeJS.Timeout|null} */
+    /** @type {number|null} */
     this.autoRefreshTimer = null;
     /** @type {DashboardTab} */
     this.currentTab = 'health';
