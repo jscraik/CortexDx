@@ -143,46 +143,51 @@ export function addTrace(span: Omit<TraceSpan, 'traceId' | 'spanId'>): void {
 
 /**
  * Get metrics snapshot
+ * 
+ * Note: Some metrics use placeholder values (Math.random()) for demonstration.
+ * In production, these should be replaced with actual metric collection from
+ * observability infrastructure (Prometheus, OpenTelemetry, etc.)
  */
 export function getMetrics(): MetricsSnapshot {
   const now = new Date().toISOString();
   
+  // Note: Demo values - replace with real metrics in production
   return {
     timestamp: now,
     metrics: [
       {
         name: 'requests_total',
-        value: Math.floor(Math.random() * 10000),
+        value: Math.floor(Math.random() * 10000), // Demo: Replace with actual counter
         unit: 'count',
         timestamp: now,
       },
       {
         name: 'request_latency_p95',
-        value: Math.random() * 100 + 10,
+        value: Math.random() * 100 + 10, // Demo: Replace with histogram percentile
         unit: 'ms',
         timestamp: now,
       },
       {
         name: 'memory_usage',
-        value: process.memoryUsage().heapUsed / 1024 / 1024,
+        value: process.memoryUsage().heapUsed / 1024 / 1024, // Real metric
         unit: 'MB',
         timestamp: now,
       },
       {
         name: 'cpu_usage',
-        value: Math.random() * 30,
+        value: Math.random() * 30, // Demo: Replace with actual CPU monitoring
         unit: '%',
         timestamp: now,
       },
       {
         name: 'active_connections',
-        value: Math.floor(Math.random() * 50),
+        value: Math.floor(Math.random() * 50), // Demo: Replace with connection counter
         unit: 'count',
         timestamp: now,
       },
       {
         name: 'diagnostics_run',
-        value: Math.floor(Math.random() * 100),
+        value: Math.floor(Math.random() * 100), // Demo: Replace with run counter
         unit: 'count',
         timestamp: now,
       },

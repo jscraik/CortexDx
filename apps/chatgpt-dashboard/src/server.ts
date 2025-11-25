@@ -5,7 +5,7 @@
  * Supports MCP v2025-03-26 with Streamable HTTP and WebSocket transports.
  */
 
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -453,7 +453,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
 /**
  * Start the dashboard server
  */
-export function startDashboardServer(): ReturnType<typeof createServer> {
+export function startDashboardServer(): Server {
   const server = createServer(handleRequest);
   setupWebSocket(server);
   

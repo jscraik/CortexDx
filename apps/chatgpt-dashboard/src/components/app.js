@@ -915,5 +915,19 @@ class DashboardClient {
 
 // Initialize dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  window.dashboard = new DashboardClient();
+  try {
+    window.dashboard = new DashboardClient();
+  } catch (error) {
+    console.error('Failed to initialize dashboard:', error);
+    // Show error in the UI
+    const container = document.querySelector('.dashboard-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="finding blocker" style="margin: 20px; padding: 20px;">
+          <div class="finding-title">[ERROR] Dashboard Initialization Failed</div>
+          <div class="finding-description">Unable to initialize the dashboard. Please refresh the page or check the console for details.</div>
+        </div>
+      `;
+    }
+  }
 });
