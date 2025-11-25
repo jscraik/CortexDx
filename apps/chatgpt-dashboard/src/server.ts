@@ -5,25 +5,25 @@
  * Supports MCP v2025-03-26 with Streamable HTTP and WebSocket transports.
  */
 
-import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
 import {
+  addLog,
+  executeControl,
+  getAgentRuns,
+  getConfig,
   getHealth,
   getLogs,
-  getTraces,
   getMetrics,
-  getAgentRuns,
-  executeControl,
-  getConfig,
-  updateConfig,
   getProtectedResourceMetadata,
   getSessions,
+  getTraces,
   startTestFlow,
-  addLog,
+  updateConfig,
 } from './api/handler.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -89,7 +89,7 @@ async function serveStatic(res: ServerResponse, filepath: string): Promise<void>
     const content = await readFile(filepath);
     const ext = filepath.slice(filepath.lastIndexOf('.'));
     const mimeType = MIME_TYPES[ext] || 'application/octet-stream';
-    
+
     res.writeHead(200, {
       'Content-Type': mimeType,
       'Cache-Control': 'public, max-age=3600',
@@ -106,7 +106,7 @@ async function serveStatic(res: ServerResponse, filepath: string): Promise<void>
  */
 async function handleApi(req: IncomingMessage, res: ServerResponse, pathname: string, query: Record<string, string>): Promise<void> {
   const method = req.method || 'GET';
-  
+
   // GET endpoints
   if (method === 'GET') {
     switch (pathname) {
@@ -128,21 +128,21 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, pathname: st
         return sendError(res, 'Not Found', 404);
     }
   }
-  
+
   // POST endpoints
   if (method === 'POST') {
     let body = '';
     for await (const chunk of req) {
       body += chunk;
     }
-    
+
     let data: unknown;
     try {
       data = JSON.parse(body);
     } catch {
       return sendError(res, 'Invalid JSON');
     }
-    
+
     switch (pathname) {
       case '/dashboard/api/control':
         return sendJson(res, executeControl(data as Parameters<typeof executeControl>[0]));
@@ -156,7 +156,7 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, pathname: st
         return sendError(res, 'Not Found', 404);
     }
   }
-  
+
   sendError(res, 'Method Not Allowed', 405);
 }
 
@@ -171,13 +171,13 @@ function handleSSE(res: ServerResponse): void {
     'Access-Control-Allow-Origin': '*',
     'MCP-Protocol-Version': '2025-03-26',
   });
-  
+
   sseClients.add(res);
   addLog('debug', 'sse', 'SSE client connected');
-  
+
   // Send initial health
   res.write(`data: ${JSON.stringify({ type: 'health', payload: getHealth() })}\n\n`);
-  
+
   // Heartbeat
   const heartbeat = setInterval(() => {
     if (res.writable) {
@@ -186,7 +186,7 @@ function handleSSE(res: ServerResponse): void {
       clearInterval(heartbeat);
     }
   }, 30000);
-  
+
   res.on('close', () => {
     sseClients.delete(res);
     clearInterval(heartbeat);
@@ -246,7 +246,7 @@ function handleWellKnown(res: ServerResponse, pathname: string): void {
  */
 async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const { pathname, query } = parseUrl(req.url || '/');
-  
+
   // CORS preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(200, {
@@ -258,44 +258,58 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     res.end();
     return;
   }
-  
+
   // Well-known endpoints
   if (pathname.startsWith('/.well-known/')) {
     handleWellKnown(res, pathname);
     return;
   }
-  
+
   // SSE endpoint
   if (pathname === '/events' || pathname === '/dashboard/events') {
     handleSSE(res);
     return;
   }
-  
+
   // API endpoints
   if (pathname.startsWith('/dashboard/api/')) {
     await handleApi(req, res, pathname, query);
     return;
   }
-  
-  // Dashboard UI routes
+
+  // Dashboard UI routes - Serve React App
   if (pathname === '/' || pathname === '/dashboard' || pathname === '/dashboard/') {
-    await serveStatic(res, join(COMPONENTS_DIR, 'dashboard.html'));
+    await serveStatic(res, join(__dirname, '../dist/client/index.html'));
     return;
   }
-  
-  // Static files
+
+  // Static files (JS, CSS, assets)
+  if (pathname.startsWith('/assets/') || pathname.startsWith('/dashboard/assets/')) {
+    const filename = pathname.split('/').pop() || '';
+    await serveStatic(res, join(__dirname, '../dist/client/assets', filename));
+    return;
+  }
+
+  // Legacy static files fallback (if any)
   if (pathname.startsWith('/dashboard/')) {
     const filename = pathname.replace('/dashboard/', '');
-    await serveStatic(res, join(COMPONENTS_DIR, filename));
-    return;
+    // Try to serve from client dist first
+    try {
+      await serveStatic(res, join(__dirname, '../dist/client', filename));
+      return;
+    } catch {
+      // Fallback to components dir if needed (though we're migrating away)
+      await serveStatic(res, join(COMPONENTS_DIR, filename));
+      return;
+    }
   }
-  
+
   // Health check
   if (pathname === '/health') {
     sendJson(res, getHealth());
     return;
   }
-  
+
   // Metrics endpoint (Prometheus format would go here)
   if (pathname === '/metrics') {
     const metrics = getMetrics();
@@ -306,9 +320,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
     res.end(prometheusFormat);
     return;
   }
-  
+
   // Default to dashboard
-  await serveStatic(res, join(COMPONENTS_DIR, 'dashboard.html'));
+  await serveStatic(res, join(__dirname, '../dist/client/index.html'));
 }
 
 /**
@@ -316,12 +330,12 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
  */
 function setupWebSocket(server: ReturnType<typeof createServer>): void {
   const wss = new WebSocketServer({ server, path: '/mcp' });
-  
+
   wss.on('connection', (ws) => {
     const clientId = `ws-${++wsClientCounter}`;
     wsClients.set(clientId, ws);
     addLog('debug', 'websocket', `WebSocket client connected: ${clientId}`);
-    
+
     // Send welcome message
     ws.send(JSON.stringify({
       jsonrpc: '2.0',
@@ -335,7 +349,7 @@ function setupWebSocket(server: ReturnType<typeof createServer>): void {
         },
       },
     }));
-    
+
     ws.on('message', (data) => {
       try {
         const message = JSON.parse(data.toString());
@@ -347,12 +361,12 @@ function setupWebSocket(server: ReturnType<typeof createServer>): void {
         }));
       }
     });
-    
+
     ws.on('close', () => {
       wsClients.delete(clientId);
       addLog('debug', 'websocket', `WebSocket client disconnected: ${clientId}`);
     });
-    
+
     ws.on('error', (error) => {
       addLog('error', 'websocket', `WebSocket error: ${error.message}`);
     });
@@ -364,7 +378,7 @@ function setupWebSocket(server: ReturnType<typeof createServer>): void {
  */
 function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jsonrpc: string; id?: string | number; method: string; params?: unknown }): void {
   const { method, id, params } = message;
-  
+
   // Handle JSON-RPC methods
   switch (method) {
     case 'initialize':
@@ -384,7 +398,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         },
       }));
       break;
-      
+
     case 'ping':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -392,7 +406,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: { status: 'ok', timestamp: new Date().toISOString() },
       }));
       break;
-      
+
     case 'health/get':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -400,7 +414,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: getHealth(),
       }));
       break;
-      
+
     case 'logs/list':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -408,7 +422,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: getLogs(),
       }));
       break;
-      
+
     case 'traces/list':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -416,7 +430,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: getTraces(),
       }));
       break;
-      
+
     case 'metrics/get':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -424,7 +438,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: getMetrics(),
       }));
       break;
-      
+
     case 'runs/list':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -432,7 +446,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: getAgentRuns(),
       }));
       break;
-      
+
     case 'control/execute':
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -440,7 +454,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
         result: executeControl(params as Parameters<typeof executeControl>[0]),
       }));
       break;
-      
+
     default:
       ws.send(JSON.stringify({
         jsonrpc: '2.0',
@@ -456,7 +470,7 @@ function handleWebSocketMessage(ws: WebSocket, _clientId: string, message: { jso
 export function startDashboardServer(): Server {
   const server = createServer(handleRequest);
   setupWebSocket(server);
-  
+
   server.listen(PORT, HOST, () => {
     console.log("\n🔬 CortexDx Control Panel");
     console.log(`   Dashboard: http://${HOST}:${PORT}/dashboard`);
@@ -466,21 +480,21 @@ export function startDashboardServer(): Server {
     console.log("   Protocol:  MCP v2025-03-26");
     console.log("\n   Press Ctrl+C to stop\n");
   });
-  
+
   // Broadcast health updates periodically
   setInterval(() => {
     const health = getHealth();
     broadcastSSE('health', health);
     broadcastWS('health', health);
   }, 10000);
-  
+
   // Broadcast metrics updates
   setInterval(() => {
     const metrics = getMetrics();
     broadcastSSE('metrics', metrics);
     broadcastWS('metrics', metrics);
   }, 5000);
-  
+
   return server;
 }
 
