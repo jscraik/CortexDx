@@ -88,7 +88,7 @@ Orchestration and storage surfaces:
    - **CLI dev**: `pnpm --filter @brainwav/cortexdx dev` or `pnpm --filter @brainwav/cortexdx run dev`.
    - **Server**: `pnpm --filter @brainwav/cortexdx run server` (TLS/auth recommended for /mcp); `pnpm --filter @brainwav/cortexdx run server:prod` runs built output.
    - **Self-diagnostics**: copy `.env.self.example` → `.env.self`, then `pnpm self:diagnose` to start the server and run diagnose/orchestrate against it with deterministic flags.
-5. **Tests/checks**: `pnpm lint`, `pnpm test`, `pnpm build`. Integration tests: `CORTEXDX_RUN_INTEGRATION=1 pnpm test:integration`. Research smoke (external research providers are not optional when validating research paths): `op run --env-file=.env -- pnpm research:smoke` (skips providers missing secrets but records gaps).
+5. **Tests/checks**: `pnpm lint`, `pnpm test`, `pnpm build`. Integration tests: `CORTEXDX_RUN_INTEGRATION=1 pnpm test:integration`. Research smoke (requires secrets for providers being tested, but automatically skips providers with missing credentials): `op run --env-file=.env -- pnpm research:smoke` (skips providers missing secrets but records gaps).
 6. **Optional tooling**: Security scans via `pnpm security:semgrep`, `pnpm security:gitleaks`, `pnpm security:zap <url>`. Software Bill of Materials (SBOM) generation via `pnpm sbom --manifest package.json --out reports/sbom`.
 
 ## How to Start Contributing
