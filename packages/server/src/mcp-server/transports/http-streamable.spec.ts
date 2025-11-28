@@ -287,7 +287,11 @@ describe("HttpStreamableTransport", () => {
 
     expect(response.status).toBe(400);
     const body = await response.json();
+    expect(body.jsonrpc).toBe("2.0");
+    expect(body.id).toBeNull();
     expect(body.error).toBeDefined();
+    expect(body.error.code).toBeDefined();
+    expect(body.error.message).toBeDefined();
   });
 
   it("handles SSE on /events endpoint", async () => {
