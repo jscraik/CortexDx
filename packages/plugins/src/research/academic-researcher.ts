@@ -1,4 +1,5 @@
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { getAcademicRegistry } from "../registry/index.js";
@@ -379,27 +380,64 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
+function normalizeHeaderEntries(
+  headers: Record<string, string>,
+  deterministic: boolean,
+): Array<[string, string]> {
+  const entries = Object.entries(headers)
+    .filter(([, value]) => Boolean(value?.trim()))
+    .map(([key, value]) => [key, value.trim()] as [string, string]);
+  return deterministic
+    ? entries.sort(([a], [b]) => a.localeCompare(b))
+    : entries;
+}
+
+function normalizeHeadersInit(
+  headers: HeadersInit | undefined,
+  deterministic: boolean,
+): Array<[string, string]> {
+  if (!headers) return [];
+  const entries = Array.from(new Headers(headers).entries());
+  return deterministic
+    ? entries.sort(([a], [b]) => a.localeCompare(b))
+    : entries;
+}
+
+function buildTimestamp(topic: string, deterministic: boolean): string {
+  if (!deterministic) {
+    return new Date().toISOString();
+  }
+  const hash = createHash("sha256").update(topic).digest();
+  const seed = hash.readUInt32BE(0) ^ hash.readUInt32BE(hash.length - 4);
+  const offsetSeconds = seed % (365 * 24 * 60 * 60);
+  const base = Date.UTC(2024, 0, 1);
+  return new Date(base + offsetSeconds * 1000).toISOString();
+}
+
 function createResearchContext(
   topic: string,
   deterministic: boolean,
   headers: Record<string, string>,
 ): DiagnosticContext {
+  const normalizedHeaders = normalizeHeaderEntries(headers, deterministic);
   const defaultHeaders = new Headers();
-  for (const [key, value] of Object.entries(headers)) {
-    if (value?.trim()) {
-      defaultHeaders.set(key, value.trim());
-    }
+  for (const [key, value] of normalizedHeaders) {
+    defaultHeaders.set(key, value);
   }
+  const headerRecord = Object.fromEntries(normalizedHeaders);
   return {
     endpoint: `research://${slugify(topic)}`,
-    headers,
+    headers: headerRecord,
     logger: () => undefined,
     request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
       const mergedHeaders = new Headers(defaultHeaders);
       if (init?.headers) {
-        new Headers(init.headers).forEach((value, key) => {
+        for (const [key, value] of normalizeHeadersInit(
+          init.headers,
+          deterministic,
+        )) {
           mergedHeaders.set(key, value);
-        });
+        }
       }
       const response = await fetch(input, {
         ...init,
@@ -487,6 +525,7 @@ export async function runAcademicResearch(
     throw new Error("Topic is required for academic research");
   }
 
+  const deterministic = Boolean(options.deterministic);
   const providerIds = normalizeProviders(options.providers);
   const { headers, missingCredentials } = resolveCredentialHeaders(
     providerIds,
@@ -494,7 +533,7 @@ export async function runAcademicResearch(
   );
   const context = createResearchContext(
     topic,
-    Boolean(options.deterministic),
+    deterministic,
     headers,
   );
   const execCtx = createExecutionContext(topic, options);
@@ -512,6 +551,7 @@ export async function runAcademicResearch(
     providersRequested: providerIds.length,
     providers,
     errors,
+    deterministic,
   });
 
   if (options.outputDir) {
@@ -628,12 +668,13 @@ function createReport(input: {
   providersRequested: number;
   providers: ProviderExecutionResult[];
   errors: ResearchError[];
+  deterministic: boolean;
 }): AcademicResearchReport {
   const findings = input.providers.flatMap((provider) => provider.findings);
   return {
     topic: input.topic,
     question: input.question,
-    timestamp: new Date().toISOString(),
+    timestamp: buildTimestamp(input.topic, input.deterministic),
     providers: input.providers,
     findings,
     summary: {
