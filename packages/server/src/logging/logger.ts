@@ -1,17 +1,19 @@
-import pino, { type Logger as PinoLogger, stdTimeFunctions } from 'pino';
+import pino, { type Logger as PinoLogger, stdTimeFunctions } from "pino";
+
+type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 const DEFAULT_LEVEL =
   process.env.CORTEXDX_LOG_LEVEL ||
-  (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+  (process.env.NODE_ENV === "production" ? "info" : "debug");
 
 const baseLogger = pino({
   level: DEFAULT_LEVEL,
   base: {
-    brand: 'brAInwav',
-    service: 'cortexdx',
+    brand: "brAInwav",
+    service: "cortexdx",
   },
   timestamp: stdTimeFunctions.isoTime,
-  messageKey: 'message',
+  messageKey: "message",
   formatters: {
     bindings(bindings: Record<string, unknown>) {
       return { pid: bindings.pid, hostname: bindings.hostname };
@@ -29,19 +31,27 @@ export interface LoggerOptions {
   context?: Record<string, unknown>;
 }
 
-export function createLogger(options: LoggerOptions | string = {}): CortexLogger {
-  if (typeof options === 'string') {
+export function createLogger(
+  options: LoggerOptions | string = {},
+): CortexLogger {
+  if (typeof options === "string") {
     return baseLogger.child({ component: options });
   }
   const component = options.component ? { component: options.component } : {};
   return baseLogger.child({ ...component, ...(options.context ?? {}) });
 }
 
+/**
+ * CLI Logger interface with human-friendly signature (message, fields).
+ * Note: This differs from pino's (fields, message) order intentionally
+ * to provide a more ergonomic CLI logging experience.
+ */
 export interface CliLogger {
   info(message: string, fields?: Record<string, unknown>): void;
   warn(message: string, fields?: Record<string, unknown>): void;
   error(message: string, fields?: Record<string, unknown>): void;
   debug(message: string, fields?: Record<string, unknown>): void;
+  /** Access the underlying pino logger for advanced use cases */
   structured: CortexLogger;
 }
 
@@ -52,7 +62,7 @@ export interface CliLoggerOptions extends LoggerOptions {
 }
 
 export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
-  const config = typeof options === 'string' ? { component: options } : options;
+  const config = typeof options === "string" ? { component: options } : options;
   const structured = createLogger(config);
   const infoWriter =
     config.writer ??
@@ -67,29 +77,25 @@ export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
   const silent = config.silent ?? false;
 
   const emit =
-    (
-      level: keyof CortexLogger,
-      label: string,
-      destination: (text: string) => void,
-    ) =>
+    (level: LogLevel, label: string, destination: (text: string) => void) =>
     (message: string, fields?: Record<string, unknown>) => {
       switch (level) {
-        case 'info':
+        case "info":
           structured.info(fields ?? {}, message);
           break;
-        case 'warn':
+        case "warn":
           structured.warn(fields ?? {}, message);
           break;
-        case 'error':
+        case "error":
           structured.error(fields ?? {}, message);
           break;
-        case 'debug':
+        case "debug":
           structured.debug(fields ?? {}, message);
           break;
-        case 'trace':
+        case "trace":
           structured.trace(fields ?? {}, message);
           break;
-        case 'fatal':
+        case "fatal":
           structured.fatal(fields ?? {}, message);
           break;
         default:
@@ -101,10 +107,10 @@ export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
     };
 
   return {
-    info: emit('info', 'INFO', infoWriter),
-    warn: emit('warn', 'WARN', infoWriter),
-    error: emit('error', 'ERROR', errorWriter),
-    debug: emit('debug', 'DEBUG', infoWriter),
+    info: emit("info", "INFO", infoWriter),
+    warn: emit("warn", "WARN", infoWriter),
+    error: emit("error", "ERROR", errorWriter),
+    debug: emit("debug", "DEBUG", infoWriter),
     structured,
   };
 }
@@ -114,12 +120,15 @@ export function logBanner(
   title: string,
   lines: string[],
 ): void {
-  const contentWidth = Math.max(title.length, ...lines.map((line) => line.length));
-  const border = '═'.repeat(contentWidth + 4);
+  const contentWidth = Math.max(
+    title.length,
+    ...lines.map((line) => line.length),
+  );
+  const border = "═".repeat(contentWidth + 4);
   logger.info({ banner: title }, `╔${border}╗`);
-  logger.info({ banner: title }, `║  ${title.padEnd(contentWidth, ' ')}  ║`);
+  logger.info({ banner: title }, `║  ${title.padEnd(contentWidth, " ")}  ║`);
   for (const line of lines) {
-    logger.info({ banner: title }, `║  ${line.padEnd(contentWidth, ' ')}  ║`);
+    logger.info({ banner: title }, `║  ${line.padEnd(contentWidth, " ")}  ║`);
   }
   logger.info({ banner: title }, `╚${border}╝`);
 }
