@@ -66,7 +66,7 @@ export class HttpStreamableTransport implements Transport {
       const pathname = this.getPathname(req.url);
 
       if (req.method === "OPTIONS") {
-        this.handleOptions(res, corsConfig);
+        this.handleOptions(res);
         return;
       }
 
@@ -146,7 +146,7 @@ export class HttpStreamableTransport implements Transport {
     }
   }
 
-  private handleOptions(res: ServerResponse, _corsConfig: CorsConfig): void {
+  private handleOptions(res: ServerResponse): void {
     res.writeHead(200);
     res.end();
   }
