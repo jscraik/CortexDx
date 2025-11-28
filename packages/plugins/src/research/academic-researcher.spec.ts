@@ -67,7 +67,6 @@ describe("runAcademicResearch determinism", () => {
     });
 
     vi.setSystemTime(new Date("2025-01-01T00:00:00Z"));
-    mockExecuteTool.mockImplementation(async () => [{ ...basePaper }]);
 
     const second = await runAcademicResearch({
       topic: "Determinism in research",
