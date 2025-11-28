@@ -110,4 +110,3 @@ describe('McpServer addTool plugin hooks', () => {
     expect(result).toEqual(errorResponse);
   });
 });
-
