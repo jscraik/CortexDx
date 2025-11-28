@@ -446,13 +446,22 @@ function mergeSignals(
   }
   const controller = new AbortController();
   const forwardAbort = () => controller.abort();
+  const attachedSignals: AbortSignal[] = [];
   for (const signal of active) {
     if (signal.aborted) {
       controller.abort();
       break;
     }
     signal.addEventListener("abort", forwardAbort, { once: true });
+    attachedSignals.push(signal);
   }
+  // Cleanup listeners when controller aborts
+  const cleanup = () => {
+    for (const signal of attachedSignals) {
+      signal.removeEventListener("abort", forwardAbort);
+    }
+  };
+  controller.signal.addEventListener("abort", cleanup, { once: true });
   return controller.signal;
 }
 
