@@ -54,7 +54,7 @@ describe('McpServer addTool plugin hooks', () => {
     const plugin: ServerPlugin = {
       name: 'precall-plugin',
       async onToolCall() {
-        return preResponse as unknown as void;
+        return preResponse;
       },
     };
 
