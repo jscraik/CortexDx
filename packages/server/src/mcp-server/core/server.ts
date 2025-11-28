@@ -322,7 +322,7 @@ export class McpServer {
         args
       );
       if (preResult) {
-        return JSON.stringify(preResult);
+        return preResult;
       }
 
       try {
@@ -349,7 +349,7 @@ export class McpServer {
           error
         );
         if (errorResponse) {
-          return JSON.stringify(errorResponse);
+          return errorResponse;
         }
 
         // Re-throw for FastMCP to handle
