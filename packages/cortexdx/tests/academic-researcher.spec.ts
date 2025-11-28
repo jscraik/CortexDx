@@ -170,8 +170,9 @@ describe("runAcademicResearch", () => {
             await capturedContext.request("/test-signal");
           } catch {
             // Expected to fail (mock fetch throws)
+          } finally {
+            mockFetch.mockRestore();
           }
-          mockFetch.mockRestore();
         }
         // Return a promise that takes too long so timeout fires
         return new Promise((resolve) => {
