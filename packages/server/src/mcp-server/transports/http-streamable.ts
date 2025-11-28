@@ -117,8 +117,8 @@ export class HttpStreamableTransport implements Transport {
         const suffix = normalized.slice(1); // ".example.com"
         if (!origin.endsWith(suffix)) return false;
         const prefixLength = origin.length - suffix.length;
-        // Ensure there's a subdomain and the match is at a domain boundary
-        return prefixLength > 0 && origin[prefixLength - 1] === ".";
+        // Ensure there's a subdomain before the suffix
+        return prefixLength > 0;
       }
       return origin === normalized;
     });
