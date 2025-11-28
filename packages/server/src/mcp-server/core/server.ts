@@ -566,14 +566,21 @@ export class McpServer {
         });
 
         await this.websocketTransport.start(async (request) => {
-          const response =
-            (this.mcp as unknown as { server?: { handleRequest?: Function } })
-              .server?.handleRequest?.(request);
-
-          if (response) {
-            return (await response) as JsonRpcResponse;
+          // WARNING: Accessing FastMCP's internal server.handleRequest is undocumented and fragile.
+          // This workaround is required because FastMCP does not expose a public request handler API.
+          // If FastMCP adds a public API, replace this with the official method.
+          const mcpServer = (this.mcp as unknown as { server?: { handleRequest?: Function } }).server;
+          if (mcpServer && typeof mcpServer.handleRequest === 'function') {
+            const response = mcpServer.handleRequest(request);
+            if (response) {
+              return (await response) as JsonRpcResponse;
+            }
+          } else {
+            logger.error(
+              { hasServer: !!mcpServer, hasHandleRequest: !!(mcpServer && mcpServer.handleRequest) },
+              'FastMCP internal server.handleRequest is unavailable. This may break with FastMCP version updates.'
+            );
           }
-
           return {
             jsonrpc: '2.0',
             id: request.id ?? null,
