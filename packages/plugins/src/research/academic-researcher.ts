@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { getAcademicRegistry } from "../registry/index.js";
 import type {
+  AcademicRegistry,
   ProviderInstance,
   ProviderRegistration,
 } from "../registry/providers/academic.js";
@@ -31,6 +32,33 @@ interface ProviderExecutionResult {
   findings: Finding[];
   notes?: string[];
   raw?: unknown;
+}
+
+function sanitizeLicenseData<T>(
+  value: T,
+  includeLicense: boolean,
+): T | undefined {
+  if (includeLicense || value === undefined || value === null) {
+    return value;
+  }
+  return stripLicenseFields(value) as T;
+}
+
+function stripLicenseFields(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripLicenseFields);
+  }
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(
+    value as Record<string, unknown>,
+  )) {
+    if (key.toLowerCase().includes("license")) continue;
+    sanitized[key] = stripLicenseFields(nested);
+  }
+  return sanitized;
 }
 
 export interface AcademicResearchOptions {
@@ -75,6 +103,8 @@ type ProviderExecutor = (
   ctx: ProviderExecutionContext,
 ) => Promise<ProviderExecutionResult>;
 
+let registryOverride: AcademicRegistry | undefined;
+
 const providerExecutors: Record<string, ProviderExecutor> = {
   "semantic-scholar": async (instance, registration, ctx) => {
     const papers = (await instance.executeTool(
@@ -93,6 +123,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
         minCitationCount: 0,
       },
     )) as Array<Record<string, unknown>>;
+    const raw = sanitizeLicenseData(papers, ctx.includeLicense);
     const findings = (papers ?? []).map((paper, index) => {
       const title = String(
         paper.title ?? `Semantic Scholar result ${index + 1}`,
@@ -118,7 +149,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: papers,
+      raw,
     };
   },
   openalex: async (instance, registration, ctx) => {
@@ -132,6 +163,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     const works = Array.isArray(worksResponse)
       ? worksResponse
       : worksResponse?.results ?? [];
+    const raw = sanitizeLicenseData(worksResponse, ctx.includeLicense);
     const findings = works.map((work, index) => {
       const title = String(work.title ?? `OpenAlex work ${index + 1}`);
       const summary = String(
@@ -159,7 +191,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: worksResponse,
+      raw,
     };
   },
   arxiv: async (instance, registration, ctx) => {
@@ -169,6 +201,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       sort_by: "submittedDate",
       sort_order: "descending",
     })) as Array<Record<string, unknown>>;
+    const raw = sanitizeLicenseData(papers, ctx.includeLicense);
     const findings = (papers ?? []).map((paper, index) => {
       const title = String(paper.title ?? `arXiv paper ${index + 1}`);
       const summary = String(paper.summary ?? "No summary available");
@@ -191,7 +224,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: papers,
+      raw,
     };
   },
   context7: async (instance, registration, ctx) => {
@@ -221,7 +254,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: [summaryFinding],
-      raw: analysis,
+      raw: sanitizeLicenseData(analysis, ctx.includeLicense),
     };
   },
   "research-quality": async (instance, registration, ctx) => {
@@ -248,7 +281,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
           confidence: score,
         },
       ],
-      raw: assessment,
+      raw: sanitizeLicenseData(assessment, ctx.includeLicense),
     };
   },
   "vibe-check": async (instance, registration, ctx) => {
@@ -278,7 +311,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
           confidence: score,
         },
       ],
-      raw: assessment,
+      raw: sanitizeLicenseData(assessment, ctx.includeLicense),
     };
   },
   "cortex-vibe": async (instance, registration, ctx) => {
@@ -302,7 +335,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
           confidence: 0.8,
         },
       ],
-      raw: vibeCheck,
+      raw: sanitizeLicenseData(vibeCheck, ctx.includeLicense),
     };
   },
   exa: async (instance, registration, ctx) => {
@@ -311,6 +344,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       limit: ctx.limit,
       includeAnalysis: false,
     })) as Array<Record<string, unknown>>;
+    const raw = sanitizeLicenseData(results, ctx.includeLicense);
     const findings = (results ?? []).map((result, index) => {
       const title = String(result.title ?? `Exa result ${index + 1}`);
       const snippet = String(result.snippet ?? "No snippet available");
@@ -333,7 +367,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: results,
+      raw,
     };
   },
   wikidata: async (instance, registration, ctx) => {
@@ -345,6 +379,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
           results?: { bindings?: Array<Record<string, { value?: string }>> };
         }
       )?.results?.bindings ?? [];
+    const raw = sanitizeLicenseData(data, ctx.includeLicense);
     const findings = bindings.map((binding, index) => {
       const label = binding.itemLabel?.value ?? `Wikidata entity ${index + 1}`;
       return {
@@ -363,10 +398,16 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       providerId: registration.id,
       providerName: registration.name,
       findings: findings.slice(0, ctx.limit),
-      raw: data,
+      raw,
     };
   },
 };
+
+export function setAcademicRegistryOverride(
+  registry: AcademicRegistry | undefined,
+): void {
+  registryOverride = registry;
+}
 
 function buildTags(topic: string, providerId: string): string[] {
   return ["academic", providerId, slugify(topic)];
@@ -499,11 +540,13 @@ export async function runAcademicResearch(
   );
   const execCtx = createExecutionContext(topic, options);
 
+  const registry = registryOverride ?? getAcademicRegistry();
   const { providers, errors } = await executeProviders({
     providerIds,
     context,
     execCtx,
     missingCredentials,
+    registry,
   });
 
   const report = createReport({
@@ -585,8 +628,8 @@ async function executeProviders(params: {
   context: DiagnosticContext;
   execCtx: ProviderExecutionContext;
   missingCredentials: Map<string, string>;
+  registry: AcademicRegistry;
 }): Promise<{ providers: ProviderExecutionResult[]; errors: ResearchError[] }> {
-  const registry = getAcademicRegistry();
   const providers: ProviderExecutionResult[] = [];
   const errors: ResearchError[] = [];
 
@@ -602,12 +645,12 @@ async function executeProviders(params: {
       continue;
     }
     try {
-      const registration = registry.getProvider(providerId);
+      const registration = params.registry.getProvider(providerId);
       if (!registration) {
         errors.push({ providerId, message: "Provider not registered" });
         continue;
       }
-      const instance = registry.createProviderInstance(
+      const instance = params.registry.createProviderInstance(
         providerId,
         params.context,
       );

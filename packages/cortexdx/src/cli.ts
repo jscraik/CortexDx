@@ -247,7 +247,10 @@ program
   .option("--question <text>", "optional research question/abstract")
   .option("--providers <csv>", "comma-delimited provider ids")
   .option("--limit <number>", "maximum results per provider")
-  .option("--no-license", "skip license metadata in results")
+  .option(
+    "--no-license",
+    "strip license metadata from provider payloads and artifacts",
+  )
   .option("--out <dir>", "write JSON/Markdown artifacts")
   .option("--deterministic", "stable timestamps and seeds")
   .option("--json", "emit full JSON report")
