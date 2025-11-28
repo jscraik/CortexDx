@@ -155,4 +155,255 @@ describe('HttpStreamableTransport', () => {
     expect(response.status).toBe(501);
     expect(await response.json()).toMatchObject({ error: 'SSE not supported for this handler' });
   });
+
+  it('streams error events via SSE using forwardError', async () => {
+    const port = await getAvailablePort();
+    const emitter = new EventEmitter();
+    const handler: RequestHandler = Object.assign(
+      async (request) => ({
+        jsonrpc: '2.0',
+        id: request.id ?? null,
+        result: { ok: true },
+      }),
+      { events: emitter }
+    );
+
+    transport = new HttpStreamableTransport({ port });
+    await transport.start(handler);
+
+    const controller = new AbortController();
+    const response = await fetch(`http://127.0.0.1:${port}/sse`, {
+      headers: { accept: 'text/event-stream' },
+      signal: controller.signal,
+    });
+
+    expect(response.status).toBe(200);
+
+    const reader = response.body?.getReader();
+    expect(reader).toBeDefined();
+    emitter.emit('error', new Error('test error'));
+
+    let payload = '';
+    for (let i = 0; i < 3; i++) {
+      const { done, value } = await reader!.read();
+      if (done) break;
+      payload += decoder.decode(value);
+      if (payload.includes('event: error')) break;
+    }
+
+    expect(payload).toContain('event: error');
+    expect(payload).toContain('test error');
+    try {
+      controller.abort();
+      await reader?.cancel();
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Unexpected error during reader.cancel():', error);
+        throw error;
+      }
+    }
+  });
+
+  it('returns 403 when strictOriginCheck is enabled and origin is invalid', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({
+      port,
+      strictOriginCheck: true,
+      cors: { allowedOrigins: ['http://allowed.test'] },
+    });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'http://evil.test',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'ping' }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: 'Forbidden: Invalid origin' });
+  });
+
+  it('returns 400 when JSON-RPC request is a batch array', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({ port });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify([
+        { jsonrpc: '2.0', id: '1', method: 'ping' },
+        { jsonrpc: '2.0', id: '2', method: 'pong' },
+      ]),
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error?.message).toContain('batching is not supported');
+  });
+
+  it('returns 400 when request body contains invalid JSON', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({ port });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: 'not valid json {{{',
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBeDefined();
+  });
+
+  it('handles SSE on /events endpoint', async () => {
+    const port = await getAvailablePort();
+    const emitter = new EventEmitter();
+    const handler: RequestHandler = Object.assign(
+      async (request) => ({
+        jsonrpc: '2.0',
+        id: request.id ?? null,
+        result: { ok: true },
+      }),
+      { events: emitter }
+    );
+
+    transport = new HttpStreamableTransport({ port });
+    await transport.start(handler);
+
+    const controller = new AbortController();
+    const response = await fetch(`http://127.0.0.1:${port}/events`, {
+      headers: { accept: 'text/event-stream' },
+      signal: controller.signal,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('text/event-stream');
+
+    const reader = response.body?.getReader();
+    expect(reader).toBeDefined();
+    emitter.emit('message', { test: 'events-path' });
+
+    let payload = '';
+    for (let i = 0; i < 3; i++) {
+      const { done, value } = await reader!.read();
+      if (done) break;
+      payload += decoder.decode(value);
+      if (payload.includes('data:')) break;
+    }
+
+    expect(payload).toMatch(/data: .*"events-path"/);
+    try {
+      controller.abort();
+      await reader?.cancel();
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Unexpected error during reader.cancel():', error);
+        throw error;
+      }
+    }
+  });
+
+  it('allows any origin when wildcard * is in allowedOrigins', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({
+      port,
+      strictOriginCheck: true,
+      cors: { allowedOrigins: ['*'] },
+    });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'http://any-origin.example.com',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'ping' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('access-control-allow-origin')).toBe(
+      'http://any-origin.example.com'
+    );
+  });
+
+  it('allows subdomain origins when *.domain.com pattern is used', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({
+      port,
+      strictOriginCheck: true,
+      cors: { allowedOrigins: ['*.example.com'] },
+    });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'http://sub.example.com',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'ping' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('access-control-allow-origin')).toBe('http://sub.example.com');
+  });
+
+  it('rejects subdomain origins that do not match the pattern', async () => {
+    const port = await getAvailablePort();
+    const handler: RequestHandler = async (request) => ({
+      jsonrpc: '2.0',
+      id: request.id ?? null,
+      result: { ok: true },
+    });
+    transport = new HttpStreamableTransport({
+      port,
+      strictOriginCheck: true,
+      cors: { allowedOrigins: ['*.example.com'] },
+    });
+    await transport.start(handler);
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'http://evil.notexample.com',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'ping' }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: 'Forbidden: Invalid origin' });
+  });
 });
