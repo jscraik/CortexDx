@@ -3,7 +3,7 @@
  * Handles Cross-Origin Resource Sharing for HTTP transports
  */
 
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import { MCP_ERRORS } from '../core/errors';
 import type { ServerPlugin, RequestContext, CorsPluginConfig } from './types';
 import type { JsonRpcResponse } from '../transports/types';
@@ -95,7 +95,7 @@ export const DEFAULT_CORS_CONFIG: CorsPluginConfig = {
     'http://localhost:5173',
   ],
   allowedMethods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
   maxAge: 86400,
   strictOriginCheck: true,
 };

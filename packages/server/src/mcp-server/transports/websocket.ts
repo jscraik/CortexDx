@@ -4,7 +4,7 @@
  */
 
 import { WebSocketServer, type WebSocket } from 'ws';
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
 import { formatJsonRpcError, McpError, MCP_ERRORS } from '../core/errors';
 import type { Transport, RequestHandler, TransportEvents, WebSocketConfig } from './types';

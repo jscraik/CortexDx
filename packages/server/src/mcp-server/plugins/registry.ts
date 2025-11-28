@@ -3,7 +3,7 @@
  * Manages server plugin lifecycle and hook execution
  */
 
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import type { ServerPlugin, ServerPluginHost, RequestContext, HookResult } from './types';
 import type { JsonRpcResponse } from '../transports/types';
 

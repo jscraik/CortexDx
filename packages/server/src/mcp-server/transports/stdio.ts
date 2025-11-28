@@ -4,7 +4,7 @@
  */
 
 import * as readline from 'node:readline';
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
 import { formatJsonRpcError, McpError, MCP_ERRORS } from '../core/errors';
 import type { Transport, RequestHandler, TransportEvents } from './types';

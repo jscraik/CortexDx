@@ -3,7 +3,7 @@
  * Wraps existing auth-middleware for use with MCP server
  */
 
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import { McpError, MCP_ERRORS } from '../core/errors';
 import type { ServerPlugin, RequestContext, AuthPluginConfig } from './types';
 import type { JsonRpcResponse } from '../transports/types';
