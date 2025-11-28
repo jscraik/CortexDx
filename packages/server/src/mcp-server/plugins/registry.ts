@@ -4,8 +4,8 @@
  */
 
 import { createLogger } from '../../logging/logger.js';
-import type { ServerPlugin, ServerPluginHost, RequestContext, HookResult } from './types';
-import type { JsonRpcResponse } from '../transports/types';
+import type { ServerPlugin, ServerPluginHost, RequestContext, HookResult } from './types.js';
+import type { JsonRpcResponse } from '../transports/types.js';
 
 const logger = createLogger({ component: 'plugin-registry' });
 
