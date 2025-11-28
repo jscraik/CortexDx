@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { pathToFileURL } from "node:url";
 import packageJson from "../package.json" with { type: "json" };
 
 const packageVersion = packageJson.version;
@@ -601,7 +602,7 @@ function collectRepeatableOption(value: string, previous: string[]): string[] {
 
 function isDirectExecution(metaUrl: string): boolean {
   if (!process.argv[1]) return false;
-  return new URL(`file://${process.argv[1]}`).href === metaUrl;
+  return pathToFileURL(process.argv[1]).href === metaUrl;
 }
 
 if (isDirectExecution(import.meta.url)) {
