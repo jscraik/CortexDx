@@ -3,6 +3,8 @@
  * FastMCP-aligned implementation with plugin support
  */
 
+import { randomUUID } from 'node:crypto';
+
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
 import { createLogger } from '../../logging/logger';
@@ -94,7 +96,29 @@ export interface McpServerConfig {
   protocolVersion?: ProtocolVersion;
   transport: TransportConfig;
   capabilities?: Partial<ServerCapabilities>;
+
+  // Deterministic testing options
+  deterministic?: boolean;
+  deterministicSeed?: number;
 }
+
+type RequestIdGenerator = () => string;
+
+const createRequestIdGenerator = (config: {
+  deterministic?: boolean;
+  deterministicSeed?: number;
+}): RequestIdGenerator => {
+  if (config.deterministic) {
+    let counter = config.deterministicSeed ?? 0;
+
+    return () => {
+      counter += 1;
+      return `det-${counter}`;
+    };
+  }
+
+  return () => randomUUID();
+};
 
 /**
  * Resource definition with icon support (SEP-973)
@@ -203,9 +227,11 @@ export class McpServer {
   private prompts: McpPrompt[] = [];
   private running = false;
   private protocolVersion: ProtocolVersion;
+  private generateRequestId: RequestIdGenerator;
 
   constructor(private config: McpServerConfig) {
     this.protocolVersion = config.protocolVersion || DEFAULT_PROTOCOL_VERSION;
+    this.generateRequestId = createRequestIdGenerator(config);
 
     // Validate version string at runtime
     const semverRegex = /^\d+\.\d+\.\d+$/;
@@ -622,7 +648,7 @@ export class McpServer {
     return {
       request: {
         jsonrpc: '2.0',
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id: this.generateRequestId(),
         method,
         params: target ? { name: target } : {},
       },
