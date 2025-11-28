@@ -109,4 +109,38 @@ describe('McpServer addTool plugin hooks', () => {
 
     expect(result).toEqual(errorResponse);
   });
+
+  it('returns post-execution hook responses without double encoding', async () => {
+    const transformedResponse: JsonRpcResponse = {
+      jsonrpc: '2.0',
+      id: 'result-id',
+      result: { status: 'transformed' },
+    };
+
+    const plugin: ServerPlugin = {
+      name: 'post-plugin',
+      async onToolResult() {
+        return transformedResponse;
+      },
+    };
+
+    const server = createServer();
+    server.use(plugin);
+
+    server.addTool({
+      name: 'transforming-tool',
+      description: 'returns raw result',
+      parameters: z.object({}),
+      async execute() {
+        return { status: 'raw' };
+      },
+    });
+
+    const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
+      .tools[0];
+    const result = await tool.execute({}, {});
+
+    expect(result).toEqual(transformedResponse);
+    expect(typeof result).not.toBe('string');
+  });
 });

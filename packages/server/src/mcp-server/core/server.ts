@@ -321,13 +321,13 @@ export class McpServer {
         config.name,
         args
       );
-      if (preResult) {
+      if (preResult !== undefined) {
         return preResult;
       }
 
       try {
         // Execute with full FastMCP context
-        let result = await config.execute(args, fastMCPContext);
+        const result = await config.execute(args, fastMCPContext);
 
         // Post-execution plugin hooks
         const transformedResult = await this.plugins.runHook<unknown>(
@@ -337,7 +337,7 @@ export class McpServer {
           result
         );
         if (transformedResult !== undefined) {
-          result = transformedResult;
+          return transformedResult;
         }
 
         return result;
@@ -348,7 +348,7 @@ export class McpServer {
           ctx,
           error
         );
-        if (errorResponse) {
+        if (errorResponse !== undefined) {
           return errorResponse;
         }
 
