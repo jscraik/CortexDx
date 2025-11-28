@@ -12,7 +12,13 @@ import {
   type ServerCapabilities,
 } from './protocol';
 // import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
-import type { TransportConfig, JsonRpcRequest, JsonRpcResponse } from '../transports/types';
+import type {
+  TransportConfig,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  WebSocketConfig,
+} from '../transports/types';
+import { createWebSocketTransport } from '../transports/websocket';
 import type {
   ServerPlugin,
   ServerPluginHost,
@@ -198,6 +204,7 @@ export class McpServer {
   private mcp: FastMCP;
   private plugins = new PluginRegistry();
   private toolNames: string[] = [];
+  private websocketTransport?: ReturnType<typeof createWebSocketTransport>;
   private resources: McpResource[] = [];
   private resourceTemplates: McpResourceTemplate[] = [];
   private prompts: McpPrompt[] = [];
@@ -505,7 +512,7 @@ export class McpServer {
     });
 
     // Start transport based on config
-    const { type, httpStreamable } = this.config.transport;
+    const { type, httpStreamable, websocket } = this.config.transport;
 
     switch (type) {
       case 'httpStreamable':
@@ -536,6 +543,54 @@ export class McpServer {
         await this.mcp.start({ transportType: 'stdio' });
         logger.info('STDIO transport started');
         break;
+
+      case 'websocket': {
+        if (!websocket) {
+          throw new Error('websocket config required');
+        }
+
+        const websocketConfig: WebSocketConfig = {
+          port: websocket.port,
+          host: websocket.host || '127.0.0.1',
+          path: websocket.path || '/mcp',
+        };
+
+        this.websocketTransport = createWebSocketTransport(websocketConfig);
+        this.websocketTransport.setProtocolVersion(this.protocolVersion);
+        this.websocketTransport.setEvents({
+          onConnect: (clientId) =>
+            logger.info({ clientId }, 'WebSocket client connected'),
+          onDisconnect: (clientId) =>
+            logger.info({ clientId }, 'WebSocket client disconnected'),
+          onError: (error) => logger.error({ error }, 'WebSocket transport error'),
+        });
+
+        await this.websocketTransport.start(async (request) => {
+          const response =
+            (this.mcp as unknown as { server?: { handleRequest?: Function } })
+              .server?.handleRequest?.(request);
+
+          if (response) {
+            return (await response) as JsonRpcResponse;
+          }
+
+          return {
+            jsonrpc: '2.0',
+            id: request.id ?? null,
+            error: { code: -32601, message: 'Method not implemented' },
+          } satisfies JsonRpcResponse;
+        });
+
+        logger.info(
+          {
+            port: websocketConfig.port,
+            host: websocketConfig.host,
+            path: websocketConfig.path,
+          },
+          'WebSocket transport started'
+        );
+        break;
+      }
 
       default:
         throw new Error(`Unknown transport type: ${type}`);
@@ -569,6 +624,11 @@ export class McpServer {
         await plugin.onUnload(host);
         logger.debug({ plugin: plugin.name }, 'Plugin unloaded');
       }
+    }
+
+    if (this.websocketTransport?.isRunning()) {
+      await this.websocketTransport.stop();
+      this.websocketTransport = undefined;
     }
 
     await this.mcp.stop();
