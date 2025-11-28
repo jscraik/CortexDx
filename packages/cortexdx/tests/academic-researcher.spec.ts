@@ -120,14 +120,14 @@ describe("runAcademicResearch", () => {
   it("aborts slow providers and records timeout evidence", async () => {
     vi.useFakeTimers();
     try {
-      const slowExecute = vi.fn(
-        () =>
-          new Promise((resolve) => {
-            setTimeout(() => resolve({ summary: "late" }), 60_000);
-          }),
-      );
+      const slowExecute = vi.fn(async () => {
+        // Simulate a long-running operation that should be abortable
+        return new Promise((resolve) => {
+          setTimeout(() => resolve({ summary: "late" }), 60_000);
+        });
+      });
       mockRegistry.createProviderInstance.mockImplementationOnce(
-        (id: string, context: DiagnosticContext) => {
+        (_id: string, context: DiagnosticContext) => {
           capturedContext = context;
           return { executeTool: slowExecute } as ProviderInstance;
         },
@@ -149,6 +149,61 @@ describe("runAcademicResearch", () => {
         "timeout/context7",
       );
       expect(slowExecute).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("passes abort signal to provider context request function", async () => {
+    vi.useFakeTimers();
+    try {
+      let capturedSignal: AbortSignal | undefined;
+      const slowExecute = vi.fn(async () => {
+        // Make a request during provider execution to capture the abort signal
+        if (capturedContext) {
+          // Create a mock fetch to capture the signal
+          const mockFetch = vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
+            capturedSignal = init?.signal ?? undefined;
+            throw new Error("Mock fetch - no actual request");
+          });
+          try {
+            await capturedContext.request("/test-signal");
+          } catch {
+            // Expected to fail (mock fetch throws)
+          } finally {
+            mockFetch.mockRestore();
+          }
+        }
+        // Return a promise that takes too long so timeout fires
+        return new Promise((resolve) => {
+          setTimeout(() => resolve({ summary: "late" }), 60_000);
+        });
+      });
+      mockRegistry.createProviderInstance.mockImplementationOnce(
+        (_id: string, context: DiagnosticContext) => {
+          capturedContext = context;
+          return { executeTool: slowExecute } as ProviderInstance;
+        },
+      );
+
+      const reportPromise = runAcademicResearch({
+        topic: "Abort signal verification",
+        providers: ["context7"],
+        deterministic: true,
+      });
+
+      // Advance time just a bit to let the request execute
+      await vi.advanceTimersByTimeAsync(100);
+      // The request should have captured a signal that isn't aborted yet
+      expect(capturedSignal).toBeDefined();
+      expect(capturedSignal?.aborted).toBe(false);
+
+      // Now advance past the timeout
+      await vi.advanceTimersByTimeAsync(25_000);
+      const report = await reportPromise;
+
+      expect(report.providers).toHaveLength(0);
+      expect(report.summary.errors[0].message).toMatch(/timed out/i);
     } finally {
       vi.useRealTimers();
     }

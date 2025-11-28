@@ -70,10 +70,18 @@ export interface AcademicResearchReport {
   };
 }
 
-const PROVIDER_TIMEOUT_MS = Number.parseInt(
-  process.env.ACADEMIC_PROVIDER_TIMEOUT_MS ?? "20000",
-  10,
-);
+const PROVIDER_TIMEOUT_MS = (() => {
+  const envValue = process.env.ACADEMIC_PROVIDER_TIMEOUT_MS;
+  if (envValue === undefined) return 20000;
+  const parsed = Number.parseInt(envValue, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.warn(
+      `[academic-researcher] Invalid ACADEMIC_PROVIDER_TIMEOUT_MS="${envValue}". Using default 20000ms.`,
+    );
+    return 20000;
+  }
+  return parsed;
+})();
 const PROVIDER_MAX_CONCURRENCY = Math.max(
   1,
   Number.parseInt(process.env.ACADEMIC_PROVIDER_MAX_CONCURRENCY ?? "3", 10) || 3,
@@ -635,11 +643,19 @@ async function executeProviders(params: {
   const registry = getAcademicRegistry();
   const providers: ProviderExecutionResult[] = [];
   const errors: ResearchError[] = [];
-  const queue = [...params.providerIds];
-  const worker = async (): Promise<void> => {
-    while (queue.length > 0) {
-      const providerId = queue.shift();
-      if (!providerId) return;
+
+  // Pre-partition work into buckets to avoid race conditions with shared queue
+  const workerCount = Math.min(
+    PROVIDER_MAX_CONCURRENCY,
+    Math.max(1, params.providerIds.length),
+  );
+  const buckets: string[][] = Array.from({ length: workerCount }, () => []);
+  for (let i = 0; i < params.providerIds.length; i++) {
+    buckets[i % workerCount].push(params.providerIds[i]);
+  }
+
+  const worker = async (bucket: string[]): Promise<void> => {
+    for (const providerId of bucket) {
       const missingMessage = params.missingCredentials.get(providerId);
       if (missingMessage) {
         errors.push({ providerId, message: missingMessage });
@@ -666,11 +682,7 @@ async function executeProviders(params: {
     }
   };
 
-  const workerCount = Math.min(
-    PROVIDER_MAX_CONCURRENCY,
-    Math.max(1, queue.length),
-  );
-  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  await Promise.all(buckets.map((bucket) => worker(bucket)));
   return { providers, errors };
 }
 
@@ -717,6 +729,8 @@ async function runProviderWithTimeout(params: {
       context,
     );
     const execution = params.handler(instance, registration, params.execCtx);
+    // Suppress unhandled rejection if timeout fires before execution completes
+    execution.catch(() => {});
     const result = await Promise.race([
       execution,
       new Promise<never>((_, reject) => {
