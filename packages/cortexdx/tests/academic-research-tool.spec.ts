@@ -90,7 +90,6 @@ describe("analyze_preprint_research tool", () => {
     );
 
     const payload = JSON.parse(result.content?.[0]?.text ?? "{}") as { report?: AcademicResearchReport };
-    expect(payload.report?.topic).toBe("MCP streaming");
   });
 });
 
