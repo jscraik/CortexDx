@@ -114,7 +114,11 @@ export class HttpStreamableTransport implements Transport {
       if (allowed === "*") return true;
       const normalized = allowed.toLowerCase();
       if (normalized.startsWith("*.")) {
-        return origin.endsWith(normalized.slice(1));
+        const suffix = normalized.slice(1); // ".example.com"
+        if (!origin.endsWith(suffix)) return false;
+        const prefixLength = origin.length - suffix.length;
+        // Ensure there's a subdomain and the match is at a domain boundary
+        return prefixLength > 0 && origin[prefixLength - 1] === ".";
       }
       return origin === normalized;
     });
