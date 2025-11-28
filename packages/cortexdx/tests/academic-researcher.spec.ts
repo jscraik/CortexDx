@@ -116,6 +116,43 @@ describe("runAcademicResearch", () => {
       "https://cortex-vibe.example.com",
     );
   });
+
+  it("aborts slow providers and records timeout evidence", async () => {
+    vi.useFakeTimers();
+    try {
+      const slowExecute = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve({ summary: "late" }), 60_000);
+          }),
+      );
+      mockRegistry.createProviderInstance.mockImplementationOnce(
+        (id: string, context: DiagnosticContext) => {
+          capturedContext = context;
+          return { executeTool: slowExecute } as ProviderInstance;
+        },
+      );
+
+      const reportPromise = runAcademicResearch({
+        topic: "Timeout scenarios",
+        providers: ["context7"],
+        deterministic: true,
+      });
+
+      vi.advanceTimersByTime(25_000);
+      const report = await reportPromise;
+
+      expect(report.providers).toHaveLength(0);
+      expect(report.summary.errors[0].providerId).toBe("context7");
+      expect(report.summary.errors[0].message).toMatch(/timed out/i);
+      expect(report.summary.errors[0].evidence?.ref).toContain(
+        "timeout/context7",
+      );
+      expect(slowExecute).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 function createRegistration(id: string): ProviderRegistration {
