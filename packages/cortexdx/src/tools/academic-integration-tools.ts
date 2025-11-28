@@ -534,7 +534,7 @@ const academicExecutors: Record<string, AcademicExecutor> = {
   validate_concept_implementation: async (raw) =>
     executeResearchRun({
       topic: requireString(raw, "concept", "validate_concept_implementation"),
-      question: (raw as { implementation?: string }).implementation,
+      question: requireString(raw, "implementation", "validate_concept_implementation"),
       providers: ["research-quality", "semantic-scholar"],
       includeLicense: extractBoolean(raw, "validateCorrectness", true),
     }),
