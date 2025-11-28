@@ -125,7 +125,6 @@ export class HttpStreamableTransport implements Transport {
   }
 
   private handleOptions(res: ServerResponse, corsConfig: CorsConfig): void {
-    this.setCorsHeaders(res, corsConfig);
     res.writeHead(200);
     res.end();
   }
