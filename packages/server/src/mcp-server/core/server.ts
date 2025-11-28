@@ -18,7 +18,7 @@ import type {
   JsonRpcResponse,
   WebSocketConfig,
 } from '../transports/types';
-import { createWebSocketTransport } from '../transports/websocket';
+import { createWebSocketTransport } from '../transports/websocket.js';
 import type {
   ServerPlugin,
   ServerPluginHost,
