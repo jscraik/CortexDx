@@ -389,7 +389,13 @@ export class McpServer {
         await this.plugins.runHook('onResourceRead', ctx, resource.uri);
 
         const result = await resource.load();
-        return { text: result.text || '', uri: resource.uri };
+        const mimeType = resource.mimeType || 'application/json';
+        return {
+          uri: resource.uri,
+          mimeType,
+          text: result.text,
+          blob: result.blob ? Buffer.from(result.blob).toString('base64') : undefined,
+        };
       },
     });
 
@@ -420,7 +426,13 @@ export class McpServer {
           }
         }
         const result = await template.load(stringArgs);
-        return { text: result.text || '', uri: template.uriTemplate };
+        const mimeType = template.mimeType || 'application/json';
+        return {
+          uri: template.uriTemplate,
+          mimeType,
+          text: result.text,
+          blob: result.blob ? Buffer.from(result.blob).toString('base64') : undefined,
+        };
       },
     });
 

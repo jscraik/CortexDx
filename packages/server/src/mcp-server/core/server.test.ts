@@ -18,14 +18,38 @@ interface CapturedTool {
   execute: (args: unknown, ctx: unknown) => Promise<unknown>;
 }
 
+interface CapturedResource {
+  uri: string;
+  mimeType?: string;
+  load: () => Promise<unknown>;
+}
+
+interface CapturedResourceTemplate {
+  load: (args: Record<string, unknown>) => Promise<unknown>;
+}
+
 const registeredTools: CapturedTool[] = [];
+const registeredResources: CapturedResource[] = [];
+const registeredResourceTemplates: CapturedResourceTemplate[] = [];
 
 vi.mock('fastmcp', () => {
   class MockFastMCP {
     public tools = registeredTools;
 
+    public resources = registeredResources;
+
+    public resourceTemplates = registeredResourceTemplates;
+
     addTool(tool: CapturedTool) {
       this.tools.push(tool);
+    }
+
+    addResource(resource: CapturedResource) {
+      this.resources.push(resource);
+    }
+
+    addResourceTemplate(template: CapturedResourceTemplate) {
+      this.resourceTemplates.push(template);
     }
   }
 
@@ -41,6 +65,8 @@ const createServer = () =>
 
 afterEach(() => {
   registeredTools.length = 0;
+  registeredResources.length = 0;
+  registeredResourceTemplates.length = 0;
 });
 
 describe('McpServer addTool plugin hooks', () => {
@@ -108,5 +134,34 @@ describe('McpServer addTool plugin hooks', () => {
     const result = await tool.execute({}, {});
 
     expect(result).toEqual(errorResponse);
+  });
+
+  it('returns blob content and mime type from resource loaders', async () => {
+    const binaryContent = new Uint8Array([1, 2, 3, 4]);
+
+    const server = createServer();
+
+    server.addResource({
+      uri: 'file://binary',
+      mimeType: 'application/octet-stream',
+      async load() {
+        return { blob: binaryContent };
+      },
+    });
+
+    const resource = (
+      server as unknown as {
+        mcp: { resources: Array<{ load: () => Promise<unknown> }> };
+      }
+    ).mcp.resources[0];
+
+    const result = await resource.load();
+
+    expect(result).toEqual({
+      uri: 'file://binary',
+      mimeType: 'application/octet-stream',
+      blob: Buffer.from(binaryContent).toString('base64'),
+      text: undefined,
+    });
   });
 });
