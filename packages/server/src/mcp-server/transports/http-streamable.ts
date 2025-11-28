@@ -261,6 +261,8 @@ export class HttpStreamableTransport implements Transport {
     const close = (): void => {
       emitter.off('message', forwardMessage);
       emitter.off('error', forwardError);
+      req.off('close', close);
+      req.off('aborted', close);
       res.end();
     };
 
