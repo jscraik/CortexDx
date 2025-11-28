@@ -584,7 +584,7 @@ export class McpServer {
           return {
             jsonrpc: '2.0',
             id: request.id ?? null,
-            error: { code: -32601, message: 'Method not implemented' },
+            error: { code: -32603, message: 'Request handler unavailable' },
           } satisfies JsonRpcResponse;
         });
 
