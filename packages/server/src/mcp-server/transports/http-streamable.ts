@@ -106,7 +106,9 @@ export class HttpStreamableTransport implements Transport {
   }
 
   private setCorsHeaders(res: ServerResponse, corsConfig: CorsConfig, origin?: string): void {
-    if (origin && this.isOriginAllowed(origin, corsConfig.allowedOrigins)) {
+    if (corsConfig.allowedOrigins.includes('*')) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    } else if (origin && this.isOriginAllowed(origin, corsConfig.allowedOrigins)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     }
     res.setHeader(
