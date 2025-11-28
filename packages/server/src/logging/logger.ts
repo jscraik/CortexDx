@@ -114,11 +114,12 @@ export function logBanner(
   title: string,
   lines: string[],
 ): void {
-  const border = '═'.repeat(Math.max(title.length, ...lines.map((line) => line.length)) + 4);
+  const contentWidth = Math.max(title.length, ...lines.map((line) => line.length));
+  const border = '═'.repeat(contentWidth + 4);
   logger.info({ banner: title }, `╔${border}╗`);
-  logger.info({ banner: title }, `║  ${title}  ║`);
+  logger.info({ banner: title }, `║  ${title.padEnd(contentWidth, ' ')}  ║`);
   for (const line of lines) {
-    logger.info({ banner: title }, `║  ${line.padEnd(border.length - 4, ' ')}  ║`);
+    logger.info({ banner: title }, `║  ${line.padEnd(contentWidth, ' ')}  ║`);
   }
   logger.info({ banner: title }, `╚${border}╝`);
 }
