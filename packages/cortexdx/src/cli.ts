@@ -66,7 +66,10 @@ program
       return;
     }
     const { runDiagnose } = await import("./orchestrator.js");
-    const code = await runDiagnose({ endpoint, opts });
+    const code = await runDiagnose({
+      endpoint,
+      opts: { ...opts, noColor: opts.noColor ?? opts.color === false },
+    });
     process.exitCode = code;
   });
 
