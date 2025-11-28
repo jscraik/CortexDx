@@ -630,7 +630,7 @@ function buildArchitectureQuestion(input: { endpoint?: string; researchDomains?:
   const parts: string[] = [];
   if (input.endpoint) parts.push(`Endpoint: ${input.endpoint}`);
   if (input.researchDomains?.length) parts.push(`Domains: ${input.researchDomains.join(", ")}`);
-  return parts.length ? parts.join(" | ") : undefined;
+  return parts.length > 0 ? parts.join(" | ") : undefined;
 }
 
 function deprecatedResult(toolName: string, message: string): McpToolResult {
