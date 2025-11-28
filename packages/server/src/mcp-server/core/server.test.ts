@@ -20,7 +20,7 @@ interface CapturedTool {
 
 const registeredTools: CapturedTool[] = [];
 
-const mockWebsocketStart = vi.fn();
+const mockWebsocketStart = vi.fn().mockResolvedValue(undefined);
 const mockWebsocketStop = vi.fn();
 const mockWebsocketSetEvents = vi.fn();
 const mockWebsocketSetProtocolVersion = vi.fn();
