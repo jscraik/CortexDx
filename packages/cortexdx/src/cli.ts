@@ -1,12 +1,15 @@
 import { Command } from "commander";
+import packageJson from "../package.json" with { type: "json" };
 
-const program = new Command();
+const packageVersion = packageJson.version;
+
+export const program = new Command();
 program
   .name("cortexdx")
   .description(
     "brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)",
   )
-  .version("0.1.0");
+  .version(packageVersion);
 
 program
   .command("diagnose")
@@ -596,7 +599,14 @@ function collectRepeatableOption(value: string, previous: string[]): string[] {
   return [...previous, value];
 }
 
-program.parseAsync().catch((e) => {
-  console.error("[brAInwav] fatal:", e?.stack || String(e));
-  process.exit(1);
-});
+function isDirectExecution(metaUrl: string): boolean {
+  if (!process.argv[1]) return false;
+  return new URL(`file://${process.argv[1]}`).href === metaUrl;
+}
+
+if (isDirectExecution(import.meta.url)) {
+  program.parseAsync().catch((e) => {
+    console.error("[brAInwav] fatal:", e?.stack || String(e));
+    process.exit(1);
+  });
+}
