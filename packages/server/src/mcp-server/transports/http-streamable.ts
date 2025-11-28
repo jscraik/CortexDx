@@ -7,13 +7,13 @@ import { createServer, type Server, type IncomingMessage, type ServerResponse } 
 import { createLogger } from '../../logging/logger';
 import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
 import { MCP_ERRORS, formatJsonRpcError, McpError } from '../core/errors';
-import type {
-  Transport,
-  RequestHandler,
-  TransportEvents,
-  HttpStreamableConfig,
-  CorsConfig,
+import {
   DEFAULT_CORS_CONFIG,
+  type CorsConfig,
+  type HttpStreamableConfig,
+  type RequestHandler,
+  type Transport,
+  type TransportEvents,
 } from './types';
 
 const logger = createLogger({ component: 'http-streamable-transport' });
@@ -33,11 +33,7 @@ export class HttpStreamableTransport implements Transport {
 
     this.server = createServer(async (req, res) => {
       // Handle CORS
-      const corsConfig = cors || {
-        allowedOrigins: ['http://localhost', 'http://127.0.0.1'],
-        allowedMethods: ['GET', 'POST', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version'],
-      };
+      const corsConfig = cors ?? DEFAULT_CORS_CONFIG;
 
       const origin = req.headers.origin?.toLowerCase();
 
