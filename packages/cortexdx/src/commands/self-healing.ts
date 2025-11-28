@@ -203,7 +203,7 @@ export async function runMonitoring(options: {
   stateFile?: string;
 }): Promise<number> {
   if (options.config) {
-    await fs.readFile(options.config, "utf-8").catch(() => undefined);
+    // Redundant file read removed; config will be loaded in loadMonitoringConfigs()
   }
 
   const ctx = await createDevelopmentContext();
