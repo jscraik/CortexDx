@@ -61,56 +61,50 @@ export interface CliLoggerOptions extends LoggerOptions {
   errorWriter?: (text: string) => void;
 }
 
+function logToStructured(
+  structured: CortexLogger,
+  level: LogLevel,
+  message: string,
+  fields: Record<string, unknown>,
+): void {
+  const logMethods: Record<LogLevel, () => void> = {
+    info: () => structured.info(fields, message),
+    warn: () => structured.warn(fields, message),
+    error: () => structured.error(fields, message),
+    debug: () => structured.debug(fields, message),
+    trace: () => structured.trace(fields, message),
+    fatal: () => structured.fatal(fields, message),
+  };
+  (logMethods[level] ?? logMethods.info)();
+}
+
+function createEmitHandler(
+  structured: CortexLogger,
+  level: LogLevel,
+  label: string,
+  destination: (text: string) => void,
+  silent: boolean,
+): (message: string, fields?: Record<string, unknown>) => void {
+  return (message: string, fields?: Record<string, unknown>) => {
+    logToStructured(structured, level, message, fields ?? {});
+    if (!silent) {
+      destination(`[${label}] ${message}`);
+    }
+  };
+}
+
 export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
   const config = typeof options === "string" ? { component: options } : options;
   const structured = createLogger(config);
-  const infoWriter =
-    config.writer ??
-    ((text: string) => {
-      console.log(text);
-    });
-  const errorWriter =
-    config.errorWriter ??
-    ((text: string) => {
-      console.error(text);
-    });
+  const infoWriter = config.writer ?? ((text: string) => console.log(text));
+  const errorWriter = config.errorWriter ?? ((text: string) => console.error(text));
   const silent = config.silent ?? false;
 
-  const emit =
-    (level: LogLevel, label: string, destination: (text: string) => void) =>
-    (message: string, fields?: Record<string, unknown>) => {
-      switch (level) {
-        case "info":
-          structured.info(fields ?? {}, message);
-          break;
-        case "warn":
-          structured.warn(fields ?? {}, message);
-          break;
-        case "error":
-          structured.error(fields ?? {}, message);
-          break;
-        case "debug":
-          structured.debug(fields ?? {}, message);
-          break;
-        case "trace":
-          structured.trace(fields ?? {}, message);
-          break;
-        case "fatal":
-          structured.fatal(fields ?? {}, message);
-          break;
-        default:
-          structured.info(fields ?? {}, message);
-      }
-      if (!silent) {
-        destination(`[${label}] ${message}`);
-      }
-    };
-
   return {
-    info: emit("info", "INFO", infoWriter),
-    warn: emit("warn", "WARN", infoWriter),
-    error: emit("error", "ERROR", errorWriter),
-    debug: emit("debug", "DEBUG", infoWriter),
+    info: createEmitHandler(structured, "info", "INFO", infoWriter, silent),
+    warn: createEmitHandler(structured, "warn", "WARN", infoWriter, silent),
+    error: createEmitHandler(structured, "error", "ERROR", errorWriter, silent),
+    debug: createEmitHandler(structured, "debug", "DEBUG", infoWriter, silent),
     structured,
   };
 }
