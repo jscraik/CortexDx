@@ -4,9 +4,9 @@
  */
 
 import { createLogger } from '../../logging/logger.js';
-import { MCP_ERRORS } from '../core/errors';
-import type { ServerPlugin, RequestContext, CorsPluginConfig } from './types';
-import type { JsonRpcResponse } from '../transports/types';
+import { MCP_ERRORS } from '../core/errors.js';
+import type { ServerPlugin, RequestContext, CorsPluginConfig } from './types.js';
+import type { JsonRpcResponse } from '../transports/types.js';
 
 const logger = createLogger({ component: 'cors-plugin' });
 
