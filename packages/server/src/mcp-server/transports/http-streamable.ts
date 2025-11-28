@@ -138,7 +138,8 @@ export class HttpStreamableTransport implements Transport {
   }
 
   private isSsePath(pathname: string): boolean {
-    return pathname.endsWith('/sse') || pathname.endsWith('/events');
+    // Only match exact SSE endpoints; avoids false positives from suffix matching.
+    return pathname === '/sse' || pathname === '/events';
   }
 
   private getSessionId(req: IncomingMessage): string | undefined {
