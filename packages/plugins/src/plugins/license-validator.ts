@@ -179,7 +179,7 @@ export const LicenseValidatorPlugin: DiagnosticPlugin = {
       const validation = validateAcademicLicense(content);
       const severity = getSeverityFromValidation(validation);
       findings.push({
-        id: `license.validator.${validation.complianceStatus}.${content.title.slice(0, 20)}`,
+        id: `license.validator.${validation.complianceStatus}.${content.title.slice(0, 20).toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
         area: "licensing",
         severity,
         title: `License validation: ${validation.license}`,
