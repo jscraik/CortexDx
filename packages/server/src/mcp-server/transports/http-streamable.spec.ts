@@ -131,6 +131,8 @@ describe('HttpStreamableTransport', () => {
       await reader?.cancel();
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
+        // Log unexpected errors during cleanup for better diagnostics
+        console.error('Unexpected error during reader.cancel():', error);
         throw error;
       }
     }
