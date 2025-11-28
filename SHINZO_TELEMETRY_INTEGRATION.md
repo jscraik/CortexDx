@@ -98,11 +98,6 @@ op run --env-file=.env -- pnpm dev
 SHINZO_TELEMETRY_TOKEN="your-secure-token-from-1password"
 ```
 
-**Demo token (for local testing only):**
-```bash
-# Fallback demo token: 38a0a136a9aab7d73ee3172b01b25d89
-```
-
 ## 🚀 Next Steps
 
 1. **Token is ready**: The `SHINZO_TELEMETRY_TOKEN` is securely stored in your 1Password `.env`
