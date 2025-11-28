@@ -7,17 +7,42 @@
 
 import { initializeTelemetry, instrumentTool, instrumentJsonRpc, recordMetric } from "./cortexdx-telemetry.js";
 
+type TelemetryOverrides = {
+    enabled?: boolean;
+    exporterEndpoint?: string;
+    serverName?: string;
+    serverVersion?: string;
+    token?: string;
+};
+
+function requireTelemetryToken(token?: string) {
+    const resolved = token ?? process.env.SHINZO_TELEMETRY_TOKEN;
+
+    if (!resolved) {
+        throw new Error("SHINZO_TELEMETRY_TOKEN is required when telemetry is enabled");
+    }
+
+    return resolved;
+}
+
 // Initialize telemetry at server startup
-export function setupTelemetry() {
+export function setupTelemetry(overrides: TelemetryOverrides = {}) {
+    const enabled = overrides.enabled ?? process.env.CORTEXDX_TELEMETRY_ENABLED !== "false";
+
+    if (!enabled) {
+        return null;
+    }
+
     const telemetry = initializeTelemetry({
-        serverName: "cortexdx-mcp-server",
-        serverVersion: "1.0.0", 
-        exporterEndpoint: "https://api.app.shinzo.ai/telemetry/ingest_http",
+        serverName: overrides.serverName ?? "cortexdx-mcp-server",
+        serverVersion: overrides.serverVersion ?? "1.0.0",
+        exporterEndpoint:
+            overrides.exporterEndpoint ?? "https://api.app.shinzo.ai/telemetry/ingest_http",
         exporterAuth: {
             type: "bearer",
-            token: process.env.SHINZO_TELEMETRY_TOKEN || "38a0a136a9aab7d73ee3172b01b25d89"
+            token: requireTelemetryToken(overrides.token)
         },
-        enabled: process.env.CORTEXDX_TELEMETRY_ENABLED !== "false"
+        enabled
     });
 
     console.log("📊 Telemetry initialized for CortexDx MCP server");
@@ -203,7 +228,7 @@ All sent to the Shinzo telemetry endpoint for analysis.
 
 // Environment configuration
 export const ENV_VARS = {
-    SHINZO_TELEMETRY_TOKEN: process.env.SHINZO_TELEMETRY_TOKEN || "38a0a136a9aab7d73ee3172b01b25d89",
+    SHINZO_TELEMETRY_TOKEN: process.env.SHINZO_TELEMETRY_TOKEN,
     CORTEXDX_TELEMETRY_ENABLED: process.env.CORTEXDX_TELEMETRY_ENABLED !== "false",
     TELEMETRY_ENDPOINT: "https://api.app.shinzo.ai/telemetry/ingest_http"
 };

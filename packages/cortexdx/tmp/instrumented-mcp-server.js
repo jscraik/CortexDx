@@ -59,9 +59,13 @@ var zod_1 = require("zod");
  */
 function createInstrumentedMcpServer() {
     return __awaiter(this, void 0, void 0, function () {
-        var server;
+        var telemetryToken, server;
         var _this = this;
         return __generator(this, function (_a) {
+            telemetryToken = process.env.SHINZO_TELEMETRY_TOKEN;
+            if (!telemetryToken) {
+                throw new Error("SHINZO_TELEMETRY_TOKEN is required to start the instrumented MCP server");
+            }
             server = new mcp_js_1.McpServer({
                 name: "cortexdx-mcp-server",
                 version: "1.0.0"
@@ -73,7 +77,7 @@ function createInstrumentedMcpServer() {
                 exporterEndpoint: "https://api.app.shinzo.ai/telemetry/ingest_http",
                 exporterAuth: {
                     type: "bearer",
-                    token: process.env.SHINZO_TELEMETRY_TOKEN || "38a0a136a9aab7d73ee3172b01b25d89"
+                    token: telemetryToken
                 }
             });
             // Register tools using the high-level API
@@ -186,8 +190,7 @@ exports.INTEGRATION_STEPS = [
 exports.TELEMETRY_CONFIG = {
     serverName: "cortexdx-mcp-server",
     serverVersion: "1.0.0",
-    exporterEndpoint: "https://api.app.shinzo.ai/telemetry/ingest_http",
-    defaultToken: "38a0a136a9aab7d73ee3172b01b25d89" // Demo token from your snippet
+    exporterEndpoint: "https://api.app.shinzo.ai/telemetry/ingest_http"
 };
 /**
  * Example standalone server that can be run directly
