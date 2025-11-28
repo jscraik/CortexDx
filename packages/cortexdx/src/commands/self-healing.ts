@@ -214,11 +214,11 @@ export async function runMonitoring(options: {
     join(process.cwd(), ".cortexdx", "monitoring-status.json");
   await scheduler.configurePersistence(stateFile);
 
-    try {
-      if (options.start) {
-        logger.info("[Monitoring] Starting background monitoring...");
+  try {
+    if (options.start) {
+      logger.info("[Monitoring] Starting background monitoring...");
 
-        const configs = await loadMonitoringConfigs(ctx, options);
+      const configs = await loadMonitoringConfigs(ctx, options);
 
       scheduler.start({
         checkIntervalMs:
