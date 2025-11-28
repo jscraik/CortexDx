@@ -235,14 +235,24 @@ export class HttpStreamableTransport implements Transport {
     res.write(': connected\n\n');
 
     const forwardMessage = (payload: unknown): void => {
-      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      if (res.writableEnded) return;
+      try {
+        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      } catch (err) {
+        logger.warn('SSE res.write() failed in forwardMessage', { error: err });
+      }
     };
     const forwardError = (error: unknown): void => {
-      res.write(
-        `event: error\ndata: ${JSON.stringify({
-          error: error instanceof Error ? error.message : String(error),
-        })}\n\n`
-      );
+      if (res.writableEnded) return;
+      try {
+        res.write(
+          `event: error\ndata: ${JSON.stringify({
+            error: error instanceof Error ? error.message : String(error),
+          })}\n\n`
+        );
+      } catch (err) {
+        logger.warn('SSE res.write() failed in forwardError', { error: err });
+      }
     };
 
     emitter.on('message', forwardMessage);
