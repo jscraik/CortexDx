@@ -109,4 +109,71 @@ describe('McpServer addTool plugin hooks', () => {
 
     expect(result).toEqual(errorResponse);
   });
+
+  it('produces deterministic request ids when deterministic mode is enabled', async () => {
+    const capturedIds: string[] = [];
+
+    const server = new McpServer({
+      name: 'deterministic-server',
+      version: '1.0.0',
+      deterministic: true,
+      deterministicSeed: 5,
+      transport: { type: 'stdio' },
+    });
+
+    server.use({
+      name: 'capture-plugin',
+      async onToolCall(ctx) {
+        capturedIds.push(ctx.request.id);
+        return undefined;
+      },
+    });
+
+    server.addTool({
+      name: 'deterministic-tool',
+      description: 'captures ids',
+      parameters: z.object({}),
+      async execute() {
+        return { status: 'ok' };
+      },
+    });
+
+    const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
+      .tools[0];
+
+    await tool.execute({}, {});
+    await tool.execute({}, {});
+
+    expect(capturedIds).toEqual(['det-6', 'det-7']);
+  });
+
+  it('generates unique request ids under concurrent execution', async () => {
+    const ids = new Set<string>();
+
+    const server = createServer();
+
+    server.use({
+      name: 'concurrent-capture',
+      async onToolCall(ctx) {
+        ids.add(ctx.request.id);
+        return undefined;
+      },
+    });
+
+    server.addTool({
+      name: 'concurrent-tool',
+      description: 'runs concurrently',
+      parameters: z.object({}),
+      async execute() {
+        return { status: 'ok' };
+      },
+    });
+
+    const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
+      .tools[0];
+
+    await Promise.all(Array.from({ length: 25 }, () => tool.execute({}, {})));
+
+    expect(ids.size).toBe(25);
+  });
 });
