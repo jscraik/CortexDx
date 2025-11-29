@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
-import { createLogger } from '../../logging/logger';
+import { createLogger } from '../../logging/logger.js';
 import {
   DEFAULT_PROTOCOL_VERSION,
   type ProtocolVersion,

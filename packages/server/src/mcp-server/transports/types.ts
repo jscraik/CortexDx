@@ -246,6 +246,6 @@ export type TransportFactory = (config: TransportConfig) => Transport;
 export const DEFAULT_CORS_CONFIG: CorsConfig = {
   allowedOrigins: ['http://localhost', 'http://127.0.0.1'],
   allowedMethods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
   maxAge: 86400, // 24 hours
 };
