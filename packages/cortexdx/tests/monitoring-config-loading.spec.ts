@@ -3,7 +3,7 @@ import { fileSystem as fs } from "../src/utils/file-system.js";
 
 import { mockConsole } from "./utils/mock-console";
 describe("Monitoring Config Loading", () => {
-  mockConsole();
+  const { getLogs } = mockConsole();
   let readFileSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
