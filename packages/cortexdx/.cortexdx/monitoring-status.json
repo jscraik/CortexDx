@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2025-11-28T22:28:30.612Z",
+  "generatedAt": "2025-11-29T13:52:44.535Z",
   "status": {
     "running": false,
     "activeJobs": 0,
-    "lastCheck": "2025-11-12T07:53:34.407Z",
+    "lastCheck": "2025-11-29T13:51:01.786Z",
     "nextCheck": "No scheduled jobs"
   },
   "jobs": [
@@ -13,9 +13,10 @@
         "endpoint": "http://localhost:3000",
         "schedule": "*/5 * * * *",
         "probes": [
-          "handshake"
+          "handshake",
+          "protocol"
         ],
-        "autoHeal": true,
+        "autoHeal": false,
         "enabled": true
       },
       "running": false,
