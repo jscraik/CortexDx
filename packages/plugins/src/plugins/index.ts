@@ -14,7 +14,7 @@ import {
   UnifiedFlameGraphPlugin,
 } from "./performance/index.js";
 import { PermissioningPlugin } from "./permissioning.js";
-import { ProtocolPlugin } from "./protocol.js";
+import { EnhancedProtocolValidatorPlugin, JSONRPC20ValidationPlugin, ProtocolPlugin, SamplingValidationPlugin, TaskAugmentedRequestPlugin } from "./protocol.js";
 import { RateLimitPlugin } from "./ratelimit.js";
 import { SseReconnectPlugin } from "./sse-reconnect.js";
 import { StreamingSsePlugin } from "./streaming-sse.js";
@@ -59,6 +59,10 @@ export const BUILTIN_PLUGINS: DiagnosticPlugin[] = [
   AuthPlugin,
   DiscoveryPlugin,
   ProtocolPlugin,
+  EnhancedProtocolValidatorPlugin,
+  JSONRPC20ValidationPlugin,
+  TaskAugmentedRequestPlugin,
+  SamplingValidationPlugin,
   JsonRpcBatchPlugin,
   PermissioningPlugin,
   StreamingSsePlugin,
