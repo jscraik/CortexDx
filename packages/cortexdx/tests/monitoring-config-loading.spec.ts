@@ -1,32 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fileSystem as fs } from "../src/utils/file-system.js";
 
-// Mock console methods to capture output
-const mockConsole = () => {
-  const logs: string[] = [];
-  const originalLog = console.log;
-  const originalError = console.error;
-
-  beforeEach(() => {
-    console.log = vi.fn((...args) => {
-      logs.push(args.join(" "));
-    });
-    console.error = vi.fn((...args) => {
-      logs.push(args.join(" "));
-    });
-  });
-
-  afterEach(() => {
-    console.log = originalLog;
-    console.error = originalError;
-    logs.length = 0;
-  });
-
-  return {
-    getLogs: () => logs,
-  };
-};
-
+import { mockConsole } from "./utils/mock-console";
 describe("Monitoring Config Loading", () => {
   mockConsole();
   let readFileSpy: ReturnType<typeof vi.spyOn>;
