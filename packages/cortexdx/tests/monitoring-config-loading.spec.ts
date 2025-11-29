@@ -46,19 +46,19 @@ describe("Monitoring Config Loading", () => {
     const { runMonitoring } = await import("../src/commands/self-healing.js");
 
     const configContent = JSON.stringify({
-        jobs: [{ endpoint: "http://localhost:3000" }],
+      jobs: [{ endpoint: "http://localhost:3000" }],
     });
     readFileSpy.mockResolvedValue(configContent);
 
     // Run monitoring with start: true (which hangs)
     const startPromise = runMonitoring({
-        start: true,
-        config: "new-test-config.json",
+      start: true,
+      config: "new-test-config.json",
     });
 
     // Verify that we can wait for the read to happen
     await vi.waitFor(() => {
-        expect(readFileSpy).toHaveBeenCalledWith("new-test-config.json", "utf-8");
+      expect(readFileSpy).toHaveBeenCalledWith("new-test-config.json", "utf-8");
     });
 
     // Cleanup
