@@ -5,16 +5,16 @@
  */
 
 import type {
-  HealthStatus,
-  LogEntry,
-  TraceSpan,
-  MetricsSnapshot,
   AgentRun,
   ControlAction,
   ControlActionResult,
   DashboardConfig,
+  HealthStatus,
+  LogEntry,
+  MetricsSnapshot,
   ProtectedResourceMetadata,
   SessionInfo,
+  TraceSpan,
 } from '../types/index.js';
 
 /**
@@ -44,14 +44,19 @@ function generateId(): string {
  * Get system health status
  */
 export function getHealth(): HealthStatus {
-  const uptime = Math.floor((Date.now() - state.startTime) / 1000);
-  
+  const uptimeSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+  const hours = Math.floor(uptimeSeconds / 3600);
+  const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+  const uptimeFormatted = `${hours}h ${minutes}m`;
+
   return {
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime,
+    uptime: uptimeSeconds,
+    uptimeFormatted,
     version: '0.1.0',
     protocolVersion: '2025-03-26',
+    protocol: 'MCP v2025-03-26',
     components: [
       {
         name: 'MCP Server',
@@ -71,12 +76,6 @@ export function getHealth(): HealthStatus {
         lastCheck: new Date().toISOString(),
         message: 'Ready',
       },
-      {
-        name: 'Storage',
-        status: 'healthy',
-        lastCheck: new Date().toISOString(),
-        message: 'SQLite connected',
-      },
     ],
   };
 }
@@ -86,12 +85,12 @@ export function getHealth(): HealthStatus {
  */
 export function getLogs(limit = 100, since?: string): LogEntry[] {
   let logs = state.logs;
-  
+
   if (since) {
     const sinceDate = new Date(since).getTime();
     logs = logs.filter(log => new Date(log.timestamp).getTime() > sinceDate);
   }
-  
+
   return logs.slice(-limit);
 }
 
@@ -107,9 +106,9 @@ export function addLog(level: LogEntry['level'], component: string, message: str
     message,
     metadata,
   };
-  
+
   state.logs.push(entry);
-  
+
   // Trim logs if exceeding max
   if (state.logs.length > state.config.maxLogEntries) {
     state.logs = state.logs.slice(-state.config.maxLogEntries);
@@ -132,9 +131,9 @@ export function addTrace(span: Omit<TraceSpan, 'traceId' | 'spanId'>): void {
     spanId: generateId(),
     ...span,
   };
-  
+
   state.traces.push(fullSpan);
-  
+
   // Trim traces if exceeding max
   if (state.traces.length > state.config.maxTraceSpans) {
     state.traces = state.traces.slice(-state.config.maxTraceSpans);
@@ -150,7 +149,7 @@ export function addTrace(span: Omit<TraceSpan, 'traceId' | 'spanId'>): void {
  */
 export function getMetrics(): MetricsSnapshot {
   const now = new Date().toISOString();
-  
+
   // Note: Demo values - replace with real metrics in production
   return {
     timestamp: now,
@@ -207,7 +206,7 @@ export function getAgentRuns(): AgentRun[] {
  */
 export function executeControl(action: ControlAction): ControlActionResult {
   const timestamp = new Date().toISOString();
-  
+
   switch (action.action) {
     case 'pause':
       if (action.targetId) {
@@ -227,7 +226,7 @@ export function executeControl(action: ControlAction): ControlActionResult {
       }
       addLog('info', 'control', 'Paused all runs');
       return { success: true, action: 'pause', message: 'All runs paused', timestamp };
-      
+
     case 'resume':
       if (action.targetId) {
         const run = state.runs.find(r => r.id === action.targetId);
@@ -246,7 +245,7 @@ export function executeControl(action: ControlAction): ControlActionResult {
       }
       addLog('info', 'control', 'Resumed all runs');
       return { success: true, action: 'resume', message: 'All runs resumed', timestamp };
-      
+
     case 'cancel':
       if (action.targetId) {
         const run = state.runs.find(r => r.id === action.targetId);
@@ -260,11 +259,11 @@ export function executeControl(action: ControlAction): ControlActionResult {
         return { success: false, action: 'cancel', targetId: action.targetId, message: 'Run not found or already completed', timestamp };
       }
       return { success: false, action: 'cancel', message: 'Target ID required for cancel', timestamp };
-      
+
     case 'drain':
       addLog('info', 'control', 'Queue drain initiated');
       return { success: true, action: 'drain', message: 'Queue drain initiated', timestamp };
-      
+
     case 'retry':
       if (action.targetId) {
         const run = state.runs.find(r => r.id === action.targetId);
@@ -279,7 +278,7 @@ export function executeControl(action: ControlAction): ControlActionResult {
         return { success: false, action: 'retry', targetId: action.targetId, message: 'Run not found or not failed', timestamp };
       }
       return { success: false, action: 'retry', message: 'Target ID required for retry', timestamp };
-      
+
     default:
       return { success: false, action: action.action, message: 'Unknown action', timestamp };
   }
@@ -341,7 +340,7 @@ export function getSessions(): SessionInfo[] {
 export function startTestFlow(endpoint: string, workflow: string): { success: boolean; runId?: string; message: string } {
   const runId = generateId();
   const now = new Date().toISOString();
-  
+
   const run: AgentRun = {
     id: runId,
     workflow,
@@ -352,13 +351,13 @@ export function startTestFlow(endpoint: string, workflow: string): { success: bo
     progress: 0,
     currentStep: 'Initializing',
   };
-  
+
   state.runs.push(run);
   addLog('info', 'test-flow', `Started test flow: ${workflow} against ${endpoint}`, { endpoint, workflow, runId });
-  
+
   // Simulate run progression
   simulateRunProgress(runId);
-  
+
   return { success: true, runId, message: `Test flow started: ${runId}` };
 }
 
@@ -368,21 +367,21 @@ export function startTestFlow(endpoint: string, workflow: string): { success: bo
 function simulateRunProgress(runId: string): void {
   const run = state.runs.find(r => r.id === runId);
   if (!run) return;
-  
+
   const phases: Array<'R' | 'G' | 'F' | 'REVIEW'> = ['R', 'G', 'F', 'REVIEW'];
   let phaseIndex = 0;
   let progress = 0;
-  
+
   run.status = 'running';
-  
+
   const interval = setInterval(() => {
     if (!run || run.status !== 'running') {
       clearInterval(interval);
       return;
     }
-    
+
     progress += Math.random() * 10;
-    
+
     if (progress >= 100) {
       phaseIndex++;
       if (phaseIndex >= phases.length) {
@@ -397,7 +396,7 @@ function simulateRunProgress(runId: string): void {
       progress = 0;
       run.phase = phases[phaseIndex];
     }
-    
+
     run.progress = Math.min(progress, 100);
     run.updatedAt = new Date().toISOString();
     run.currentStep = `Phase ${run.phase}: ${Math.floor(run.progress)}%`;

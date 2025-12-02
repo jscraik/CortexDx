@@ -4,23 +4,23 @@ export interface JsonRpcRequest {
     jsonrpc: '2.0';
     id: number | string;
     method: string;
-    params?: any;
+    params?: Record<string, unknown>;
 }
 
 export interface JsonRpcResponse {
     jsonrpc: '2.0';
     id: number | string;
-    result?: any;
+    result?: unknown;
     error?: {
         code: number;
         message: string;
-        data?: any;
+        data?: unknown;
     };
 }
 
 let requestId = 1;
 
-async function sendRequest(method: string, params?: any): Promise<any> {
+async function sendRequest(method: string, params?: Record<string, unknown>): Promise<unknown> {
     const id = requestId++;
     const request: JsonRpcRequest = {
         jsonrpc: '2.0',
@@ -50,34 +50,40 @@ async function sendRequest(method: string, params?: any): Promise<any> {
     return data.result;
 }
 
-export async function fetchResource(uri: string): Promise<any> {
+export async function fetchResource(uri: string): Promise<unknown> {
     const result = await sendRequest('resources/read', { uri });
-    if (result.contents && result.contents.length > 0) {
-        const content = result.contents[0];
-        if (content.text) {
-            try {
-                return JSON.parse(content.text);
-            } catch (e) {
-                return content.text;
+    if (result && typeof result === 'object' && 'contents' in result) {
+        const contents = (result as { contents: Array<{ text?: string }> }).contents;
+        if (contents && contents.length > 0) {
+            const content = contents[0];
+            if (content.text) {
+                try {
+                    return JSON.parse(content.text);
+                } catch {
+                    return content.text;
+                }
             }
+            return content;
         }
-        return content;
     }
     return null;
 }
 
-export async function callTool(name: string, args: any = {}): Promise<any> {
+export async function callTool(name: string, args: Record<string, unknown> = {}): Promise<unknown> {
     const result = await sendRequest('tools/call', { name, arguments: args });
-    if (result.content && result.content.length > 0) {
-        const content = result.content[0];
-        if (content.type === 'text') {
-            try {
-                return JSON.parse(content.text);
-            } catch (e) {
-                return content.text;
+    if (result && typeof result === 'object' && 'content' in result) {
+        const content = (result as { content: Array<{ type: string; text?: string }> }).content;
+        if (content && content.length > 0) {
+            const firstContent = content[0];
+            if (firstContent.type === 'text' && firstContent.text) {
+                try {
+                    return JSON.parse(firstContent.text);
+                } catch {
+                    return firstContent.text;
+                }
             }
+            return firstContent;
         }
-        return content;
     }
     return null;
 }

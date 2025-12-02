@@ -1,21 +1,23 @@
+import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { Input } from '@openai/apps-sdk-ui/components/Input';
-import { RefreshCw, Search } from 'lucide-react';
+import { ChevronRight, Clock, RefreshCw, Search } from 'lucide-react';
 
 interface TraceSpan {
   id: string;
   traceId: string;
+  name: string;
   operation: string;
   duration: number;
-  status: 'ok' | 'error';
+  status: 'success' | 'danger';
   timestamp: string;
 }
 
 export function TracesPanel() {
   const traces: TraceSpan[] = [
-    { id: 's1', traceId: 't1', name: 'GET /api/health', duration: 45, status: 'success', timestamp: '10:00:01' }, // Changed 'operation' to 'name', 'ok' to 'success'
-    { id: 's2', traceId: 't2', name: 'POST /api/control', duration: 120, status: 'success', timestamp: '10:05:22' }, // Changed 'operation' to 'name', 'ok' to 'success'
-    { id: 's3', traceId: 't3', name: 'BackgroundJob:Sync', duration: 540, status: 'danger', timestamp: '10:10:15' }, // Changed 'operation' to 'name', 'error' to 'danger'
+    { id: 's1', traceId: 't1', name: 'GET /api/health', operation: 'http.request', duration: 45, status: 'success', timestamp: '10:00:01' },
+    { id: 's2', traceId: 't2', name: 'POST /api/control', operation: 'http.request', duration: 120, status: 'success', timestamp: '10:05:22' },
+    { id: 's3', traceId: 't3', name: 'BackgroundJob:Sync', operation: 'background.job', duration: 540, status: 'danger', timestamp: '10:10:15' },
   ];
 
   return (

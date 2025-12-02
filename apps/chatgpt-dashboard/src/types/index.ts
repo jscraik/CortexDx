@@ -12,8 +12,10 @@ export interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
   uptime: number;
+  uptimeFormatted?: string;
   version: string;
   protocolVersion: string;
+  protocol?: string;
   components: ComponentHealth[];
 }
 

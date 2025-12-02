@@ -64,16 +64,18 @@ export function ControlsPanel() {
         <div className="bg-cortex-surface p-6 rounded-xl border border-cortex-border shadow-sm max-w-xl hover:shadow-md transition-shadow duration-300">
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-cortex-text">MCP Endpoint</label>
+              <label htmlFor="mcp-endpoint" className="block text-sm font-medium text-cortex-text">MCP Endpoint</label>
               <Input
+                id="mcp-endpoint"
                 placeholder="http://localhost:3024/mcp"
                 defaultValue="http://localhost:3024/mcp"
                 className="bg-cortex-bg border-cortex-border text-cortex-text placeholder:text-cortex-muted focus:ring-cortex-accent"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-cortex-text">Workflow</label>
+              <label htmlFor="workflow-select" className="block text-sm font-medium text-cortex-text">Workflow</label>
               <Select
+                id="workflow-select"
                 options={[
                   { label: 'Diagnose', value: 'diagnose' },
                   { label: 'Self-Healing', value: 'self-healing' },
