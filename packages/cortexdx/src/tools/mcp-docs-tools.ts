@@ -120,7 +120,8 @@ async function handleSearch(args: unknown): Promise<McpToolResult> {
         text: JSON.stringify({ resourceUri, matches: result.matches }, null, 2),
       },
     ],
-    structuredContent: result.matches,
+    // Wrap array in object to conform to outputSchema (type: "object")
+    structuredContent: { resourceUri, matches: result.matches },
   };
 }
 
@@ -141,7 +142,8 @@ async function handleLookup(args: unknown): Promise<McpToolResult> {
         text: JSON.stringify({ resourceUri, chunk: match }, null, 2),
       },
     ],
-    structuredContent: [match],
+    // Wrap single result in object to conform to outputSchema (type: "object")
+    structuredContent: { resourceUri, chunk: match },
   };
 }
 
@@ -151,6 +153,7 @@ async function handleVersions(): Promise<McpToolResult> {
     content: [
       { type: "text", text: JSON.stringify({ versions }, null, 2) },
     ],
-    structuredContent: versions,
+    // Wrap array in object to conform to outputSchema (type: "object")
+    structuredContent: { versions },
   };
 }

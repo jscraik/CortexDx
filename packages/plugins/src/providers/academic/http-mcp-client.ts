@@ -96,9 +96,20 @@ export class HttpMcpClient {
 }
 
 export function extractJsonPayload<T>(result: McpToolResult): T {
-  if (Array.isArray(result.structuredContent) && result.structuredContent.length > 0) {
-    return result.structuredContent[0] as T;
+  // Handle structured content (new pattern: object, old pattern: array for compatibility)
+  if (result.structuredContent) {
+    // New pattern: structuredContent is an object matching outputSchema
+    if (Array.isArray(result.structuredContent)) {
+      // Old pattern: structuredContent is an array (external MCP servers)
+      if (result.structuredContent.length > 0) {
+        return result.structuredContent[0] as T;
+      }
+    } else {
+      // New pattern: structuredContent is already an object
+      return result.structuredContent as T;
+    }
   }
+  // Fallback to parsing text content
   const textual = (result.content ?? [])
     .filter((item) => item.type === "text" && typeof item.text === "string")
     .map((item) => item.text?.trim())

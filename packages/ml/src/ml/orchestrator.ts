@@ -17,6 +17,7 @@ import type {
 } from "@brainwav/cortexdx-core";
 import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic";
 import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core/mcp-protocol";
 import { createOllamaAdapter } from "../adapters/ollama.js";
 import { hasOllama } from "./detect.js";
 
@@ -104,7 +105,7 @@ export class LlmOrchestrator {
       sessionType,
       mcpContext: {
         serverEndpoint: context.endpoint,
-        protocolVersion: "2024-11-05",
+        protocolVersion: PROTOCOL_VERSIONS.CURRENT,
         capabilities: [],
         configuration: {},
       },

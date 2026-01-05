@@ -58,7 +58,11 @@ describe("DeepContext MCP tools", () => {
       baseCtx,
     );
     expect(mockSearch).toHaveBeenCalledWith(expect.stringContaining("/repo"), "handshake", 3);
-    expect(result.structuredContent).toHaveLength(1);
+    // structuredContent is now an object wrapping the array results
+    expect(result.structuredContent).toMatchObject({
+      matches: expect.any(Array),
+      text: expect.any(String),
+    });
   });
 
   it("reports status via MCP tool", async () => {

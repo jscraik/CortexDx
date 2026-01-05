@@ -6,6 +6,7 @@ import {
   selectConfiguredProviders,
 } from "../research/academic-researcher";
 import { createCliLogger } from "../logging/logger";
+import { SchemaVersion, ErrorCode, type JsonOutput } from "../cli/index.js";
 
 const logger = createCliLogger("doctor");
 
@@ -66,8 +67,35 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   }
 
   if (opts.json) {
-    const payload = JSON.stringify(report, null, 2);
-    console.log(payload);
+    // Use schema-versioned JSON output
+    const jsonOutput: JsonOutput<DoctorReport> = {
+      schema: SchemaVersion.Doctor,
+      data: report,
+      success: !(
+        (report.providers?.some(
+          (provider) => provider.status === "missing" && provider.missingEnv?.length,
+        ) ?? false) || report.research?.error
+      ),
+      errors:
+        report.research?.error || report.providers?.some((p) => p.status === "missing")
+          ? [
+              {
+                code:
+                  report.research?.error && !report.providers?.some((p) => p.status === "missing")
+                    ? ErrorCode.E_INTERNAL
+                    : ErrorCode.E_VALIDATION,
+                message:
+                  report.research?.error ??
+                  "Some providers are missing required environment variables",
+              },
+            ]
+          : undefined,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        version: "0.1.0",
+      },
+    };
+    console.log(JSON.stringify(jsonOutput, null, 2));
   } else {
     printDoctorReport(report);
   }

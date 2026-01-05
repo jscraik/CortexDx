@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { sseProbe } from "../adapters/sse.js";
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-server/mcp-server/core/protocol";
 import type {
   SseProbeOptions,
   SseResult,
@@ -96,7 +97,7 @@ export function createInspectorSession(
       id: "__cortexdx_init__",
       method: "initialize",
       params: {
-        protocolVersion: "2024-11-05",
+        protocolVersion: PROTOCOL_VERSIONS.CURRENT,
         capabilities: {},
         clientInfo: { name: "cortexdx-inspector", version: "0.1.0" },
       },

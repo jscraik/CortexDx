@@ -23,6 +23,8 @@ export default defineConfig({
     "@brainwav/cortexdx-ml/*",
     "@brainwav/cortexdx-plugins",
     "@brainwav/cortexdx-plugins/*",
+    "@brainwav/cortexdx-server",
+    "@brainwav/cortexdx-server/*",
   ],
   banner: { js: "#!/usr/bin/env node" },
   onSuccess: async () => {

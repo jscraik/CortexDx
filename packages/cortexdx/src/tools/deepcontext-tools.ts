@@ -84,7 +84,8 @@ export async function executeDeepContextTool(
             text: result.text,
           },
         ],
-        structuredContent: result.matches,
+        // Wrap array in object to conform to outputSchema (type: "object")
+        structuredContent: { matches: result.matches, text: result.text },
       };
     }
     case "cortexdx_deepcontext_status": {

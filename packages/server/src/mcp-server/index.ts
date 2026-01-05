@@ -34,6 +34,17 @@ export {
   type InitializeResponse,
 } from './core/protocol';
 
+// URI Template validation and matching
+export {
+  validateUriTemplate,
+  extractTemplateParameters,
+  matchUriTemplate,
+  matchesAnyTemplate,
+  buildUriFromTemplate,
+  type UriTemplateValidationResult,
+  type UriTemplateMatch,
+} from './core/uri-template';
+
 export {
   JSON_RPC_ERRORS,
   MCP_ERRORS,

@@ -385,11 +385,18 @@ export interface ToolCallRequest extends TaskAugmentedRequestParams {
 
 /**
  * Tool call response
+ *
+ * NOTE: structuredContent should conform to the tool's outputSchema.
+ * - If outputSchema defines type: "object", structuredContent must be a single object
+ * - For array results, wrap in an object like { items: [...] }
+ * - This ensures schema validation and proper LLM integration
  */
 export interface ToolCallResponse {
   content: ToolCallContent[];
   /**
    * Structured content conforming to outputSchema
+   * Must be a single object matching the outputSchema definition
+   * @see https://modelcontextprotocol.io/best-practices/response-formatting
    */
   structuredContent?: Record<string, unknown>;
   isError?: boolean;

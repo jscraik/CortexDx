@@ -5,6 +5,7 @@
  */
 
 import { isStoryFeatureEnabled } from "../story/feature-flag";
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-server/mcp-server/core/protocol";
 import type { McpTool } from "../types";
 
 const baseDiagnosticTools: McpTool[] = [
@@ -44,7 +45,7 @@ const baseDiagnosticTools: McpTool[] = [
   {
     name: "validate_protocol_compliance",
     description:
-      "Validate MCP server compliance with protocol specification version 2024-11-05. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.",
+      `Validate MCP server compliance with protocol specification version ${PROTOCOL_VERSIONS.CURRENT}. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -55,7 +56,8 @@ const baseDiagnosticTools: McpTool[] = [
         protocolVersion: {
           type: "string",
           description:
-            "MCP protocol version to validate against (default: 2024-11-05)",
+            `MCP protocol version to validate against (default: ${PROTOCOL_VERSIONS.CURRENT})`,
+          default: PROTOCOL_VERSIONS.CURRENT,
         },
         strictMode: {
           type: "boolean",

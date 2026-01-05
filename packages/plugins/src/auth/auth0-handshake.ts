@@ -1,5 +1,11 @@
 import { URL } from "node:url";
 import { oauthAuthenticator } from "../adapters/oauth-authenticator.js";
+import { enhancedOAuthAuthenticator } from "./enhanced-oauth-authenticator.js";
+import {
+  maskSensitiveValue,
+  validateEndpointSecurity,
+  validateAudience,
+} from "./oauth-security-audit.js";
 
 interface Auth0MachineConfig {
   domain: string;
@@ -154,45 +160,39 @@ async function getAuth0AccessToken(
     return cached.token;
   }
 
+  // Validate endpoint security
   const tokenUrl = buildTokenUrl(config.domain);
-  const body = new URLSearchParams({
-    grant_type: "client_credentials",
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
-    audience: config.audience,
-  });
-
-  if (config.scope && config.scope.length > 0) {
-    body.set("scope", config.scope);
-  }
-
-  const response = await fetch(tokenUrl, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body,
-  });
-
-  if (!response.ok) {
-    const errorText = await safeReadError(response);
+  const endpointValidation = validateEndpointSecurity(tokenUrl);
+  if (!endpointValidation.valid) {
     throw new Error(
-      `Auth0 token request failed (${response.status} ${response.statusText}): ${errorText}`,
+      `Token endpoint security validation failed: ${endpointValidation.errors.join(", ")}`,
     );
   }
 
-  const payload = (await response.json()) as {
-    access_token?: string;
-    expires_in?: number;
-    token_type?: string;
-  };
+  const scopeArray =
+    config.scope?.split(/\s+/).filter((entry) => entry.length > 0) ?? [];
 
-  if (!payload?.access_token) {
-    throw new Error("Auth0 token response missing access_token");
+  // Use enhanced client credentials flow with audience validation
+  const tokenResult = await enhancedOAuthAuthenticator.clientCredentialsFlowEnhanced(
+    config.clientId,
+    config.clientSecret,
+    tokenUrl,
+    scopeArray,
+    config.audience,
+  );
+
+  // Validate token audience
+  if (config.audience && tokenResult.audience) {
+    const audienceCheck = validateAudience(tokenResult.audience, config.audience);
+    if (!audienceCheck.valid) {
+      throw new Error(audienceCheck.error || "Audience validation failed");
+    }
   }
 
-  const expiresInMs = Math.max(30, (payload.expires_in ?? 60) - 30) * 1000;
+  const expiresInMs = Math.max(30, (tokenResult.expiresIn ?? 60) - 30) * 1000;
   const expiresAt = Date.now() + expiresInMs;
-  tokenCache.set(cacheKey, { token: payload.access_token, expiresAt });
-  return payload.access_token;
+  tokenCache.set(cacheKey, { token: tokenResult.accessToken, expiresAt });
+  return tokenResult.accessToken;
 }
 
 async function getAuth0DeviceCodeToken(
@@ -205,10 +205,29 @@ async function getAuth0DeviceCodeToken(
     return cached.token;
   }
 
+  // Validate endpoint security
+  const deviceEndpoint = config.deviceCodeEndpoint ?? buildDeviceCodeUrl(config.domain);
+  const tokenEndpoint = buildTokenUrl(config.domain);
+
+  const deviceValidation = validateEndpointSecurity(deviceEndpoint);
+  if (!deviceValidation.valid) {
+    throw new Error(
+      `Device code endpoint security validation failed: ${deviceValidation.errors.join(", ")}`,
+    );
+  }
+
+  const tokenValidation = validateEndpointSecurity(tokenEndpoint);
+  if (!tokenValidation.valid) {
+    throw new Error(
+      `Token endpoint security validation failed: ${tokenValidation.errors.join(", ")}`,
+    );
+  }
+
   const scopeArray =
     config.scope?.split(/\s+/).filter((entry) => entry.length > 0) ?? [];
-  const deviceEndpoint = config.deviceCodeEndpoint ?? buildDeviceCodeUrl(config.domain);
-  const deviceCodeResult = await oauthAuthenticator.deviceCodeFlow(
+
+  // Use enhanced OAuth authenticator with PKCE
+  const deviceCodeResult = await enhancedOAuthAuthenticator.deviceCodeFlowWithPKCE(
     config.clientId,
     scopeArray,
     deviceEndpoint,
@@ -221,12 +240,23 @@ async function getAuth0DeviceCodeToken(
     deviceCodeResult.verificationUriComplete ?? deviceCodeResult.verificationUri,
   );
 
-  const tokenResult = await oauthAuthenticator.pollDeviceCode(
+  // Poll with PKCE verifier and audience validation
+  const tokenResult = await enhancedOAuthAuthenticator.pollDeviceCodeWithPKCE(
     deviceCodeResult.deviceCode,
-    buildTokenUrl(config.domain),
+    deviceCodeResult.codeVerifier,
+    tokenEndpoint,
     config.clientId,
     deviceCodeResult.interval,
+    config.audience,
   );
+
+  // Validate token audience
+  if (config.audience && tokenResult.audience) {
+    const audienceCheck = validateAudience(tokenResult.audience, config.audience);
+    if (!audienceCheck.valid) {
+      throw new Error(audienceCheck.error || "Audience validation failed");
+    }
+  }
 
   const expiresAt =
     Date.now() + Math.max(30, (tokenResult.expiresIn ?? 60) - 30) * 1000;

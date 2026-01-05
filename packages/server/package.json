@@ -8,7 +8,10 @@
     "exports": {
         ".": "./dist/index.js",
         "./jsonrpc": "./dist/mcp-server/core/jsonrpc.js",
-        "./types": "./dist/mcp-server/core/types.js"
+        "./types": "./dist/mcp-server/core/types.js",
+        "./mcp-server/index.js": "./dist/mcp-server/index.js",
+        "./mcp-server/core/protocol": "./dist/mcp-server/core/protocol.js",
+        "./mcp-server/core/server": "./dist/mcp-server/core/server.js"
     },
     "scripts": {
         "build": "tsup",

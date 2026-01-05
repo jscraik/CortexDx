@@ -22,6 +22,7 @@ import type {
   PluginLogger,
 } from '../plugins/types';
 import type { IconMetadata } from './types';
+import { validateUriTemplate, matchUriTemplate } from './uri-template.js';
 
 const logger = createLogger({ component: 'mcp-server' });
 
@@ -75,6 +76,8 @@ export interface FastMCPToolConfig {
   name: string;
   description?: string;
   parameters: z.ZodType;
+  /** Output schema for structured results (JSON Schema 2020-12) */
+  outputSchema?: Record<string, unknown>;
   annotations?: ToolAnnotations;
   canAccess?: (session: unknown) => boolean;
   execute: (args: unknown, ctx: FastMCPContext) => Promise<unknown>;
@@ -388,12 +391,13 @@ export class McpServer {
       name: config.name,
       description: config.description || '',
       parameters: config.parameters,
+      outputSchema: config.outputSchema,
       annotations: config.annotations,
       canAccess: config.canAccess,
       execute: wrappedExecute,
     });
 
-    logger.debug({ tool: config.name }, 'Tool registered');
+    logger.debug({ tool: config.name, hasOutputSchema: !!config.outputSchema }, 'Tool registered');
     return this;
   }
 
@@ -427,6 +431,22 @@ export class McpServer {
    * Register a resource template
    */
   addResourceTemplate(template: McpResourceTemplate): this {
+    // Validate URI template before registration
+    const validation = validateUriTemplate(template.uriTemplate);
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid URI template '${template.uriTemplate}': ${validation.error}`
+      );
+    }
+
+    logger.debug(
+      {
+        template: template.uriTemplate,
+        parameters: validation.parameters,
+      },
+      'Resource template validation passed'
+    );
+
     this.resourceTemplates.push(template);
 
     this.mcp.addResourceTemplate({

@@ -63,7 +63,11 @@ describe("mcp docs tools", () => {
       version: undefined,
     });
     expect(recordSearch).toHaveBeenCalled();
-    expect(result.structuredContent).toHaveLength(1);
+    // structuredContent is now an object wrapping the array results
+    expect(result.structuredContent).toMatchObject({
+      resourceUri: expect.any(String),
+      matches: expect.any(Array),
+    });
   });
 
   it("executes lookup tool and records chunk resource", async () => {
@@ -82,7 +86,11 @@ describe("mcp docs tools", () => {
 
     expect(lookupMcpDoc).toHaveBeenCalledWith({ chunkId: "spec-basic-0000" });
     expect(recordChunk).toHaveBeenCalled();
-    expect(result.structuredContent).toHaveLength(1);
+    // structuredContent is now an object wrapping the result
+    expect(result.structuredContent).toMatchObject({
+      resourceUri: expect.any(String),
+      chunk: expect.any(Object),
+    });
   });
 
   it("lists versions", async () => {
@@ -93,8 +101,13 @@ describe("mcp docs tools", () => {
     const tool = createMcpDocsTools()[2]!;
     const result = await executeMcpDocsTool(tool, {}, ctx);
 
-    expect(result.structuredContent?.[0]).toMatchObject({
+    // structuredContent is now an object wrapping the versions array
+    expect(result.structuredContent).toMatchObject({
+      versions: expect.any(Array),
+    });
+    expect(result.structuredContent?.versions).toContainEqual({
       version: "2025-06-18",
+      scope: "staging",
     });
   });
 });
