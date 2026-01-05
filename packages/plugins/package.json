@@ -20,7 +20,7 @@
         "@aws-sdk/s3-request-presigner": "^3.600.0",
         "@brainwav/cortexdx-core": "workspace:*",
         "@brainwav/cortexdx-ml": "workspace:*",
-        "@modelcontextprotocol/sdk": "^1.22.0",
+        "@modelcontextprotocol/sdk": "^1.24.0",
         "@opentelemetry/api": "1.9.0",
         "ajv": "^8.12.0",
         "ajv-formats": "^3.0.1",
@@ -34,8 +34,8 @@
     "devDependencies": {
         "@types/better-sqlite3": "^7.6.13",
         "@types/node": "^22.19.1",
-        "rimraf": "^6.0.1",
-        "tsup": "^8.1.0",
+        "rimraf": "^6.1.0",
+        "tsup": "^8.5.1",
         "typescript": "^5.6.3",
         "vitest": "^2.1.3"
     }
