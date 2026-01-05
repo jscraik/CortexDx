@@ -37,6 +37,6 @@ describe("Monitoring Config Loading", () => {
     });
 
     // Cleanup
-    startPromise.catch(() => { });
+    startPromise.catch(() => {});
   });
 });

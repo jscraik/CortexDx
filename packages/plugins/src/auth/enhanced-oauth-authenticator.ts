@@ -131,26 +131,35 @@ export interface EnhancedTokenResult {
  */
 export class EnhancedOAuthAuthenticator {
   private sessions: Map<string, EnhancedOAuth2Session> = new Map();
-  private tokenCache: Map<string, { token: string; expiresAt: number; audience?: string }> =
-    new Map();
+  private tokenCache: Map<
+    string,
+    { token: string; expiresAt: number; audience?: string }
+  > = new Map();
 
   /**
    * Validate configuration before initiating flow
    */
-  private validateConfig(config: OAuth2Config, endpoint: string): {
+  private validateConfig(
+    config: OAuth2Config,
+    endpoint: string,
+  ): {
     valid: boolean;
     errors: string[];
   } {
     const errors: string[] = [];
 
     // Validate endpoints
-    const tokenEndpointValidation = validateEndpointSecurity(config.tokenEndpoint);
+    const tokenEndpointValidation = validateEndpointSecurity(
+      config.tokenEndpoint,
+    );
     if (!tokenEndpointValidation.valid) {
       errors.push(...tokenEndpointValidation.errors);
     }
 
     if (config.deviceCodeEndpoint) {
-      const deviceValidation = validateEndpointSecurity(config.deviceCodeEndpoint);
+      const deviceValidation = validateEndpointSecurity(
+        config.deviceCodeEndpoint,
+      );
       if (!deviceValidation.valid) {
         errors.push(...deviceValidation.errors);
       }
@@ -223,9 +232,7 @@ export class EnhancedOAuthAuthenticator {
 
       const elapsed = Date.now() - startTime;
       if (elapsed > 2000) {
-        console.warn(
-          `Device code flow exceeded 2s threshold: ${elapsed}ms`,
-        );
+        console.warn(`Device code flow exceeded 2s threshold: ${elapsed}ms`);
       }
 
       return {
@@ -306,7 +313,10 @@ export class EnhancedOAuthAuthenticator {
             currentInterval = Math.min(interval + 5, 30);
             continue;
           }
-          if (response.error === "access_denied" || response.error === "expired_token") {
+          if (
+            response.error === "access_denied" ||
+            response.error === "expired_token"
+          ) {
             throw new Error(
               `Authorization failed: ${response.error}${response.error_description ? ` - ${response.error_description}` : ""}`,
             );
@@ -316,14 +326,22 @@ export class EnhancedOAuthAuthenticator {
 
         // Validate audience if expected
         if (expectedAudience && response.aud) {
-          const audienceValidation = validateAudience(response.aud, expectedAudience);
+          const audienceValidation = validateAudience(
+            response.aud,
+            expectedAudience,
+          );
           if (!audienceValidation.valid) {
-            throw new Error(audienceValidation.error || "Audience validation failed");
+            throw new Error(
+              audienceValidation.error || "Audience validation failed",
+            );
           }
         }
 
         // Validate token lifetime
-        if (response.expires_in && response.expires_in > OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME) {
+        if (
+          response.expires_in &&
+          response.expires_in > OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME
+        ) {
           throw new Error(
             `Token lifetime too long: ${response.expires_in}s (max ${OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME}s)`,
           );
@@ -406,7 +424,10 @@ export class EnhancedOAuthAuthenticator {
       }
 
       // Validate token lifetime
-      if (response.expires_in && response.expires_in > OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME) {
+      if (
+        response.expires_in &&
+        response.expires_in > OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME
+      ) {
         throw new Error(
           `Token lifetime too long: ${response.expires_in}s (max ${OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME}s)`,
         );
@@ -508,7 +529,9 @@ export class EnhancedOAuthAuthenticator {
       if (expectedAudience) {
         const tokenAudience = payload.aud || payload.audience;
         const audienceValidation = validateAudience(
-          typeof tokenAudience === "string" ? tokenAudience : String(tokenAudience),
+          typeof tokenAudience === "string"
+            ? tokenAudience
+            : String(tokenAudience),
           expectedAudience,
         );
 
@@ -523,7 +546,10 @@ export class EnhancedOAuthAuthenticator {
       return {
         valid: true,
         expiresAt: payload.exp ? new Date(payload.exp * 1000) : undefined,
-        scope: typeof payload.scope === "string" ? payload.scope.split(" ") : undefined,
+        scope:
+          typeof payload.scope === "string"
+            ? payload.scope.split(" ")
+            : undefined,
       };
     } catch (error) {
       return {
@@ -601,4 +627,9 @@ export class EnhancedOAuthAuthenticator {
 export const enhancedOAuthAuthenticator = new EnhancedOAuthAuthenticator();
 
 // Export utilities
-export { pkce, maskSensitiveValue, generateSecureSessionId, auditOAuthSecurity };
+export {
+  pkce,
+  maskSensitiveValue,
+  generateSecureSessionId,
+  auditOAuthSecurity,
+};

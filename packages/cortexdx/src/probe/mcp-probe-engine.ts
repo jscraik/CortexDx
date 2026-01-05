@@ -223,13 +223,11 @@ async function enumerateCapabilities(
       })
       .catch(() => null);
 
-    const initResultTyped = initResult as
-      | {
-        serverInfo?: Record<string, unknown>;
-        protocolVersion?: string;
-        capabilities?: Record<string, unknown>;
-      }
-      | null;
+    const initResultTyped = initResult as {
+      serverInfo?: Record<string, unknown>;
+      protocolVersion?: string;
+      capabilities?: Record<string, unknown>;
+    } | null;
     if (initResultTyped) {
       metadata.serverInfo = initResultTyped.serverInfo ?? {};
       metadata.protocolVersion = initResultTyped.protocolVersion ?? "unknown";

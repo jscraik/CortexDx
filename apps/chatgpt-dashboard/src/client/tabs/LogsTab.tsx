@@ -2,7 +2,7 @@
  * Logs tab - System logs with filtering
  */
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage } from "react-intl";
 
 export function LogsTab() {
   return (

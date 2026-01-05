@@ -1,8 +1,11 @@
 import http from "node:http";
 
 const server = http.createServer((_req, res) => {
-  res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" });
-  res.write("data: {\"ready\":true}\n\n");
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+  });
+  res.write('data: {"ready":true}\n\n');
   res.end();
 });
 

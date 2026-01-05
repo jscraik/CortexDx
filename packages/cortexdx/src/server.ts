@@ -17,7 +17,12 @@ const sendJson = (res: ServerResponse, status: number, data: unknown) => {
   res.end(JSON.stringify(data));
 };
 
-const sendError = (res: ServerResponse, id: string | number | null, code: number, message: string) => {
+const sendError = (
+  res: ServerResponse,
+  id: string | number | null,
+  code: number,
+  message: string,
+) => {
   sendJson(res, 400, {
     jsonrpc: "2.0",
     id,
@@ -28,7 +33,10 @@ const sendError = (res: ServerResponse, id: string | number | null, code: number
 export const server = createServer(async (req, res) => {
   try {
     // Minimal self-healing API passthrough
-    if (req.url?.startsWith("/api/self-healing") || req.url?.startsWith("/api/v1")) {
+    if (
+      req.url?.startsWith("/api/self-healing") ||
+      req.url?.startsWith("/api/v1")
+    ) {
       await handleSelfHealingAPI(req, res, req.url);
       return;
     }
@@ -73,7 +81,6 @@ export const server = createServer(async (req, res) => {
     }
 
     sendError(res, id, -32601, "Method not found");
-
   } catch (error) {
     sendError(res, null, -32603, (error as Error).message);
   }

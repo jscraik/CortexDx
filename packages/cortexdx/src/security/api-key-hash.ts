@@ -78,7 +78,10 @@ export async function hashApiKey(
   }
 
   // Validate work factor
-  if (workFactor < MIN_BCRYPT_WORK_FACTOR || workFactor > MAX_BCRYPT_WORK_FACTOR) {
+  if (
+    workFactor < MIN_BCRYPT_WORK_FACTOR ||
+    workFactor > MAX_BCRYPT_WORK_FACTOR
+  ) {
     throw new Error(
       `Work factor must be between ${MIN_BCRYPT_WORK_FACTOR} and ${MAX_BCRYPT_WORK_FACTOR}`,
     );
@@ -90,11 +93,7 @@ export async function hashApiKey(
   // Use PBKDF2 with SHA-256 as a bcrypt alternative
   // (bcrypt is not in Node.js standard library)
   const hash = await new Promise<Buffer>((resolve, reject) => {
-    createHash("sha256")
-      .update(apiKey)
-      .update(salt)
-      .digest()
-      ;
+    createHash("sha256").update(apiKey).update(salt).digest();
 
     // For proper key derivation, use PBKDF2
     const { pbkdf2 } = require("node:crypto");

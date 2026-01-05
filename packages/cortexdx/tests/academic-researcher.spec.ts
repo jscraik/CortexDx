@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ProviderInstance, ProviderRegistration } from "../src/registry/providers/academic.js";
+import type {
+  ProviderInstance,
+  ProviderRegistration,
+} from "../src/registry/providers/academic.js";
 import type { DiagnosticContext } from "../src/types.js";
 import { runAcademicResearch } from "../src/research/academic-researcher.js";
 
@@ -17,7 +20,7 @@ vi.mock("../../plugins/src/registry/index.js", () => ({
 }));
 
 const baseRegistrations: Record<string, ProviderRegistration> = {
-  "context7": createRegistration("context7"),
+  context7: createRegistration("context7"),
   exa: createRegistration("exa"),
   "research-quality": createRegistration("research-quality"),
   "cortex-vibe": createRegistration("cortex-vibe"),
@@ -29,11 +32,15 @@ let capturedContext: DiagnosticContext | null = null;
 beforeEach(() => {
   tempDir = mkdtempSync(join(tmpdir(), "cortexdx-research-"));
   capturedContext = null;
-  mockRegistry.getProvider.mockImplementation((id: string) => baseRegistrations[id]);
-  mockRegistry.createProviderInstance.mockImplementation((id: string, context: DiagnosticContext) => {
-    capturedContext = context;
-    return createProviderInstanceStub(id);
-  });
+  mockRegistry.getProvider.mockImplementation(
+    (id: string) => baseRegistrations[id],
+  );
+  mockRegistry.createProviderInstance.mockImplementation(
+    (id: string, context: DiagnosticContext) => {
+      capturedContext = context;
+      return createProviderInstanceStub(id);
+    },
+  );
   process.env.CONTEXT7_API_KEY = "test-context7";
   process.env.CONTEXT7_API_BASE_URL = "https://context7.example.com";
 });
@@ -61,7 +68,9 @@ describe("runAcademicResearch", () => {
     expect(report.summary.totalFindings).toBeGreaterThan(0);
     expect(report.artifacts?.markdown).toBeTruthy();
     if (report.artifacts?.markdown) {
-      expect(readFileSync(report.artifacts.markdown, "utf8")).toContain("Academic Research Report");
+      expect(readFileSync(report.artifacts.markdown, "utf8")).toContain(
+        "Academic Research Report",
+      );
     }
   });
 
@@ -101,7 +110,9 @@ describe("runAcademicResearch", () => {
       "https://context7.example.com",
     );
     expect(capturedContext?.headers?.["x-context7-profile"]).toBe("staging");
-    expect(capturedContext?.headers?.authorization).toBe("Bearer test-context7");
+    expect(capturedContext?.headers?.authorization).toBe(
+      "Bearer test-context7",
+    );
   });
 
   it("injects Cortex Vibe HTTP headers from env", async () => {
@@ -150,7 +161,12 @@ function createProviderInstanceStub(id: string): ProviderInstance {
   }
   return {
     executeTool: vi.fn(async () => [
-      { title: "Result", url: "https://example.com", snippet: "desc", relevanceScore: 0.8 },
+      {
+        title: "Result",
+        url: "https://example.com",
+        snippet: "desc",
+        relevanceScore: 0.8,
+      },
     ]),
   } satisfies ProviderInstance;
 }

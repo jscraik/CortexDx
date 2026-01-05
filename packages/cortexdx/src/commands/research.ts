@@ -17,7 +17,10 @@ interface ResearchCliOptions {
   header?: string[];
 }
 
-export async function runResearch(topic: string, opts: ResearchCliOptions): Promise<number> {
+export async function runResearch(
+  topic: string,
+  opts: ResearchCliOptions,
+): Promise<number> {
   const report = await runAcademicResearch({
     topic,
     question: opts.question,
@@ -42,7 +45,10 @@ export async function runResearch(topic: string, opts: ResearchCliOptions): Prom
 
 function parseCsv(value?: string): string[] | undefined {
   if (!value) return undefined;
-  return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function parseNumber(value?: string): number | undefined {
@@ -51,7 +57,10 @@ function parseNumber(value?: string): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-function collectKeyValues(entries: string[] | undefined, lowercaseKeys: boolean): Record<string, string> | undefined {
+function collectKeyValues(
+  entries: string[] | undefined,
+  lowercaseKeys: boolean,
+): Record<string, string> | undefined {
   if (!entries || entries.length === 0) {
     return undefined;
   }
@@ -81,29 +90,35 @@ function printReport(report: AcademicResearchReport): void {
   const header = `Academic research for ${report.topic}`;
   logger.info(header, { topic: report.topic });
   const providersLine = `Providers: ${report.summary.providersResponded}/${report.summary.providersRequested} • Findings: ${report.summary.totalFindings}`;
-  logger.info(
-    providersLine,
-    { providersResponded: report.summary.providersResponded, providersRequested: report.summary.providersRequested, totalFindings: report.summary.totalFindings }
-  );
+  logger.info(providersLine, {
+    providersResponded: report.summary.providersResponded,
+    providersRequested: report.summary.providersRequested,
+    totalFindings: report.summary.totalFindings,
+  });
   for (const provider of report.providers) {
     if (provider.findings.length === 0) {
-
-      logger.info("  No findings returned.", { provider: provider.providerName });
+      logger.info("  No findings returned.", {
+        provider: provider.providerName,
+      });
       continue;
     }
     for (const finding of provider.findings) {
       const line = `[${finding.severity.toUpperCase()}] ${finding.title} — ${truncateDescription(finding.description)}`;
-      logger.info(
-        line,
-        { severity: finding.severity, title: finding.title, provider: provider.providerName }
-      );
+      logger.info(line, {
+        severity: finding.severity,
+        title: finding.title,
+        provider: provider.providerName,
+      });
     }
   }
   if (report.summary.errors.length > 0) {
     logger.error("Errors:");
     for (const error of report.summary.errors) {
       const line = `  [${error.providerId}] ${error.message}`;
-      logger.error(line, { providerId: error.providerId, error: error.message });
+      logger.error(line, {
+        providerId: error.providerId,
+        error: error.message,
+      });
     }
   }
   if (report.artifacts) {
@@ -116,5 +131,7 @@ function truncateDescription(description?: string | null): string {
   if (!description) {
     return "No description";
   }
-  return description.length > 160 ? `${description.slice(0, 157)}...` : description;
+  return description.length > 160
+    ? `${description.slice(0, 157)}...`
+    : description;
 }

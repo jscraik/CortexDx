@@ -1,4 +1,8 @@
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 /**
  * System prompt for LLM-assisted MCP server discovery analysis
@@ -196,9 +200,7 @@ async function performMcpInspection(
   return findings;
 }
 
-async function inspectMcpTools(
-  ctx: DiagnosticContext,
-): Promise<Finding[]> {
+async function inspectMcpTools(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
@@ -269,9 +271,7 @@ async function inspectMcpTools(
   return findings;
 }
 
-async function inspectMcpResources(
-  ctx: DiagnosticContext,
-): Promise<Finding[]> {
+async function inspectMcpResources(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {
@@ -329,9 +329,7 @@ async function inspectMcpResources(
   return findings;
 }
 
-async function inspectMcpPrompts(
-  ctx: DiagnosticContext,
-): Promise<Finding[]> {
+async function inspectMcpPrompts(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   try {

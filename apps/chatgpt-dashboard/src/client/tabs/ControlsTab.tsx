@@ -2,7 +2,7 @@
  * Controls tab - Workflow controls
  */
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage } from "react-intl";
 
 export function ControlsTab() {
   return (
@@ -11,7 +11,9 @@ export function ControlsTab() {
         <FormattedMessage id="controls.title" />
       </h2>
       <div className="bg-cortex-surface p-6 rounded-xl border border-cortex-border">
-        <p className="text-cortex-muted">Controls implementation coming soon...</p>
+        <p className="text-cortex-muted">
+          Controls implementation coming soon...
+        </p>
       </div>
     </div>
   );

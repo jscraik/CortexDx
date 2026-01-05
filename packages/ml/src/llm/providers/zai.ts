@@ -10,7 +10,11 @@ import type {
 const DEFAULT_MODEL = "claude-3-5-sonnet-20241022";
 const DEFAULT_BASE_URL = "https://api.z.ai/v1";
 
-function buildRequestBody(request: LLMGenerateRequest, model: string, options: LLMGenerateRequest["options"]): Record<string, unknown> {
+function buildRequestBody(
+  request: LLMGenerateRequest,
+  model: string,
+  options: LLMGenerateRequest["options"],
+): Record<string, unknown> {
   return {
     model,
     messages: [{ role: "user", content: request.prompt }],
@@ -28,11 +32,18 @@ function extractText(content?: Array<{ type: string; text?: string }>): string {
     .join("");
 }
 
-function toUsage(usage?: { input_tokens?: number; output_tokens?: number }): ProviderResponse["usage"] {
+function toUsage(usage?: {
+  input_tokens?: number;
+  output_tokens?: number;
+}): ProviderResponse["usage"] {
   if (!usage) return undefined;
   const promptTokens = usage.input_tokens ?? 0;
   const completionTokens = usage.output_tokens ?? 0;
-  return { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens };
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens: promptTokens + completionTokens,
+  };
 }
 
 export class ZaiPlugin implements LLMProviderPlugin {
@@ -79,7 +90,7 @@ export class ZaiPlugin implements LLMProviderPlugin {
       const errorText = await response.text();
       throw new Error(`Z.ai API error (${response.status}): ${errorText}`);
     }
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       content?: Array<{ type: string; text?: string }>;
       usage?: { input_tokens?: number; output_tokens?: number };
     };

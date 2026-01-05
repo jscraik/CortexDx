@@ -454,7 +454,10 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
   },
 ];
 
-export async function executeAcademicIntegrationTool(tool: McpTool, args: unknown): Promise<McpToolResult> {
+export async function executeAcademicIntegrationTool(
+  tool: McpTool,
+  args: unknown,
+): Promise<McpToolResult> {
   if (tool.name !== "cortexdx_academic_research") {
     throw new Error(`Unknown academic integration tool: ${tool.name}`);
   }

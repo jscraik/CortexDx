@@ -551,8 +551,8 @@ export class WikidataProvider {
     // Log fallback behavior for transparency
     this.ctx.logger(
       "[Wikidata] Vector search using enhanced keyword search fallback. " +
-      "For true semantic search, Wikidata vector database integration is required. " +
-      "See: https://wd-mcp.wmcloud.org/mcp/",
+        "For true semantic search, Wikidata vector database integration is required. " +
+        "See: https://wd-mcp.wmcloud.org/mcp/",
     );
 
     // Fallback to enhanced keyword search with scoring
@@ -593,8 +593,8 @@ export class WikidataProvider {
     // Log fallback behavior for transparency
     this.ctx.logger(
       "[Wikidata] Property vector search using enhanced keyword search fallback. " +
-      "For true semantic search, Wikidata vector database integration is required. " +
-      "See: https://wd-mcp.wmcloud.org/mcp/",
+        "For true semantic search, Wikidata vector database integration is required. " +
+        "See: https://wd-mcp.wmcloud.org/mcp/",
     );
 
     // Fallback to enhanced keyword search for properties
@@ -658,11 +658,7 @@ export class WikidataProvider {
             let valueLabel = "";
 
             // Handle different value types
-            if (
-              typeof value === "object" &&
-              value !== null &&
-              "id" in value
-            ) {
+            if (typeof value === "object" && value !== null && "id" in value) {
               // Entity reference
               valueString = (value as { id: string }).id;
               const valueEntity = await this.getEntity(valueString, language);
@@ -773,7 +769,9 @@ export class WikidataProvider {
       if (claimData.references) {
         for (const reference of claimData.references) {
           if (reference.snaks) {
-            for (const [refProp, refValues] of Object.entries(reference.snaks)) {
+            for (const [refProp, refValues] of Object.entries(
+              reference.snaks,
+            )) {
               const refPropLabel = await this.getPropertyLabel(
                 refProp,
                 language,

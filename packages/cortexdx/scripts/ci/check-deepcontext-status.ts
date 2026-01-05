@@ -18,7 +18,9 @@ async function main(): Promise<void> {
 
   const records = await readAllDeepContextStatuses();
   if (records.length === 0) {
-    console.error(`[DEEPCONTEXT] No DeepContext status entries found in ${statePath}`);
+    console.error(
+      `[DEEPCONTEXT] No DeepContext status entries found in ${statePath}`,
+    );
     process.exit(1);
   }
 

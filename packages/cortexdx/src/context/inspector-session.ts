@@ -6,7 +6,7 @@ import type {
   SseResult,
   TransportExchange,
   TransportState,
-  TransportTranscript
+  TransportTranscript,
 } from "../types.js";
 import { safeParseJson } from "../utils/json.js";
 
@@ -265,4 +265,3 @@ function buildExchange(
     timestamp: new Date().toISOString(),
   };
 }
-

@@ -3,9 +3,9 @@
  * Conforms to Apps SDK tool calling guidelines
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { callTool } from './useOpenAi.js';
-import { trackError } from '../lib/telemetry.js';
+import { useCallback, useEffect, useState } from "react";
+import { callTool } from "./useOpenAi.js";
+import { trackError } from "../lib/telemetry.js";
 
 interface UseToolCallResult<T> {
   data: T | null;
@@ -22,7 +22,7 @@ export function useToolCall<T = unknown>(
     enabled?: boolean;
     onSuccess?: (data: T) => void;
     onError?: (error: Error) => void;
-  }
+  },
 ): UseToolCallResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ export function useToolCall<T = unknown>(
   }, [fetchData]);
 
   const retry = useCallback(() => {
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
   }, []);
 
   return {

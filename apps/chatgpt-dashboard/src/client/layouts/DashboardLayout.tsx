@@ -3,25 +3,35 @@
  * Uses React Router for host-backed navigation
  */
 
-import { Activity, BarChart2, FileText, Search, Sliders } from 'lucide-react';
-import { FormattedMessage } from 'react-intl';
-import { NavLink, Outlet } from 'react-router-dom';
-import { requestClose } from '../hooks/useOpenAi.js';
-import { useTelemetry } from '../lib/telemetry.js';
+import { Activity, BarChart2, FileText, Search, Sliders } from "lucide-react";
+import { FormattedMessage } from "react-intl";
+import { NavLink, Outlet } from "react-router-dom";
+import { requestClose } from "../hooks/useOpenAi.js";
+import { useTelemetry } from "../lib/telemetry.js";
 
 const tabs = [
-  { id: 'overview', path: '/dashboard', icon: Activity, label: 'Overview' },
-  { id: 'metrics', path: '/dashboard/metrics', icon: BarChart2, label: 'Metrics' },
-  { id: 'logs', path: '/dashboard/logs', icon: FileText, label: 'Logs' },
-  { id: 'traces', path: '/dashboard/traces', icon: Search, label: 'Traces' },
-  { id: 'controls', path: '/dashboard/controls', icon: Sliders, label: 'Controls' },
+  { id: "overview", path: "/dashboard", icon: Activity, label: "Overview" },
+  {
+    id: "metrics",
+    path: "/dashboard/metrics",
+    icon: BarChart2,
+    label: "Metrics",
+  },
+  { id: "logs", path: "/dashboard/logs", icon: FileText, label: "Logs" },
+  { id: "traces", path: "/dashboard/traces", icon: Search, label: "Traces" },
+  {
+    id: "controls",
+    path: "/dashboard/controls",
+    icon: Sliders,
+    label: "Controls",
+  },
 ];
 
 export function DashboardLayout() {
   const track = useTelemetry();
 
   const handleClose = () => {
-    track('dashboard_closed');
+    track("dashboard_closed");
     requestClose();
   };
 
@@ -64,13 +74,13 @@ export function DashboardLayout() {
               <NavLink
                 key={tab.id}
                 to={tab.path}
-                end={tab.path === '/dashboard'}
-                onClick={() => track('tab_clicked', { tab: tab.id })}
+                end={tab.path === "/dashboard"}
+                onClick={() => track("tab_clicked", { tab: tab.id })}
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
                     isActive
-                      ? 'text-cortex-accent border-cortex-accent'
-                      : 'text-cortex-muted border-transparent hover:text-cortex-text hover:border-cortex-border'
+                      ? "text-cortex-accent border-cortex-accent"
+                      : "text-cortex-muted border-transparent hover:text-cortex-text hover:border-cortex-border"
                   }`
                 }
               >

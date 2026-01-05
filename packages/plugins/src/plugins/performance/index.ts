@@ -6,16 +6,28 @@
  * Now split into focused, maintainable modules.
  */
 
-import type { DiagnosticContext, DiagnosticPlugin, Finding, PerformanceSummary } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+  PerformanceSummary,
+} from "@brainwav/cortexdx-core";
 import { buildHttpFindings, measureHttp } from "./measurements/http.js";
 import { buildSseFindings, measureSse } from "./measurements/sse.js";
-import { buildWebSocketFindings, measureWebSocket } from "./measurements/websocket.js";
+import {
+  buildWebSocketFindings,
+  measureWebSocket,
+} from "./measurements/websocket.js";
 import { createHarness } from "./utils.js";
 
 // Re-export types for backward compatibility
 export type {
-  HttpMetrics, PerformanceHarness, PerformanceMeasurementOptions, PerformanceSummary, SseMetrics,
-  WebSocketMetrics
+  HttpMetrics,
+  PerformanceHarness,
+  PerformanceMeasurementOptions,
+  PerformanceSummary,
+  SseMetrics,
+  WebSocketMetrics,
 } from "@brainwav/cortexdx-core";
 
 /**
@@ -23,7 +35,7 @@ export type {
  */
 export async function measureTransports(
   ctx: DiagnosticContext,
-  options?: { harness?: import("./types.js").PerformanceHarness }
+  options?: { harness?: import("./types.js").PerformanceHarness },
 ): Promise<PerformanceSummary> {
   const harness = options?.harness || createHarness(ctx);
 
@@ -46,7 +58,7 @@ export async function measureTransports(
  */
 export function buildPerformanceFindings(
   metrics: PerformanceSummary,
-  endpoint: string
+  endpoint: string,
 ): Finding[] {
   const findings: Finding[] = [];
 
@@ -142,8 +154,13 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
         area: "performance-profiling",
         severity: "major",
         title: "Profiling failed",
-        description: error instanceof Error ? error.message : "Unknown error during profiling",
-        evidence: [{ type: "log", ref: "EnhancedPerformanceProfilerPlugin error" }],
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unknown error during profiling",
+        evidence: [
+          { type: "log", ref: "EnhancedPerformanceProfilerPlugin error" },
+        ],
         confidence: 1.0,
       });
     }
@@ -156,4 +173,3 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
 export { ClinicJsPerformanceProfilerPlugin } from "./plugins/clinic.js";
 export { UnifiedFlameGraphPlugin } from "./plugins/flamegraph.js";
 export { PySpyPerformanceProfilerPlugin } from "./plugins/pyspy.js";
-

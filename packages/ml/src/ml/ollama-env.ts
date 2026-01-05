@@ -8,15 +8,8 @@ const BASE_URL_KEYS = [
   "CORTEXDX_OLLAMA_URL",
 ];
 
-const MODEL_KEYS = [
-  "LLM_MODEL",
-  "OLLAMA_MODEL",
-  "CORTEXDX_OLLAMA_MODEL",
-];
-const API_KEY_KEYS = [
-  "OLLAMA_API_KEY",
-  "CORTEXDX_OLLAMA_API_KEY",
-];
+const MODEL_KEYS = ["LLM_MODEL", "OLLAMA_MODEL", "CORTEXDX_OLLAMA_MODEL"];
+const API_KEY_KEYS = ["OLLAMA_API_KEY", "CORTEXDX_OLLAMA_API_KEY"];
 
 const TIMEOUT_KEYS = ["OLLAMA_TIMEOUT_MS", "LLM_TIMEOUT_MS"];
 const RETRY_KEYS = ["OLLAMA_MAX_RETRIES"];
@@ -176,7 +169,7 @@ function parseEnvFile(contents: string): Record<string, string> {
     }
     let value = trimmed.slice(equalsIndex + 1).trim();
     if (
-      (value.startsWith("\"") && value.endsWith("\"")) ||
+      (value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'"))
     ) {
       value = value.slice(1, -1);
@@ -248,7 +241,15 @@ export function getCloudOllamaConfig(): CloudOllamaConfig | null {
     return null;
   }
 
-  return { baseUrl: fileBase, model: fileModel, apiKey: fileApi, source: "file" };
+  return {
+    baseUrl: fileBase,
+    model: fileModel,
+    apiKey: fileApi,
+    source: "file",
+  };
 }
 
-export { FALLBACK_BASE_URL as DEFAULT_OLLAMA_BASE_URL, FALLBACK_MODEL as DEFAULT_OLLAMA_MODEL };
+export {
+  FALLBACK_BASE_URL as DEFAULT_OLLAMA_BASE_URL,
+  FALLBACK_MODEL as DEFAULT_OLLAMA_MODEL,
+};

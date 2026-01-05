@@ -2,7 +2,11 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { AutoHealer } from "../healing/auto-healer.js";
 import { MonitoringScheduler } from "../healing/scheduler.js";
 import { TemplateEngine } from "../template-engine/engine.js";
-import { getTemplate, getTemplatesByArea, getTemplatesBySeverity } from "../templates/fix-templates.js";
+import {
+  getTemplate,
+  getTemplatesByArea,
+  getTemplatesBySeverity,
+} from "../templates/fix-templates.js";
 
 type Json = Record<string, unknown>;
 
@@ -34,7 +38,11 @@ export async function handleSelfHealingAPI(
     if (req.method === "GET" && path === "/api/v1/health") {
       const healer = new AutoHealer({} as never);
       const health = await healer.quickHealthCheck();
-      return json(res, 200, { success: true, health, timestamp: new Date().toISOString() });
+      return json(res, 200, {
+        success: true,
+        health,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     if (req.method === "POST" && path === "/api/v1/self-diagnose") {
@@ -60,7 +68,7 @@ export async function handleSelfHealingAPI(
         ? getTemplatesByArea(area)
         : severity
           ? getTemplatesBySeverity(severity)
-          : getTemplatesByArea("") ?? [];
+          : (getTemplatesByArea("") ?? []);
       return json(res, 200, {
         success: true,
         templates,

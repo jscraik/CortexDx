@@ -63,42 +63,42 @@ Documentation: https://docs.brainwav.ai/cortexdx
     // Optional authentication
     authenticate: apiKey
       ? async (req: Request) => {
-        const providedKey = req.headers.get("x-api-key");
-        if (!providedKey) {
-          throw new Response("Missing API key", { status: 401 });
+          const providedKey = req.headers.get("x-api-key");
+          if (!providedKey) {
+            throw new Response("Missing API key", { status: 401 });
+          }
+          if (providedKey === apiKey) {
+            return {
+              userId: "api-user",
+              role: "admin",
+            };
+          }
+          throw new Response("Invalid API key", { status: 401 });
         }
-        if (providedKey === apiKey) {
-          return {
-            userId: "api-user",
-            role: "admin",
-          };
-        }
-        throw new Response("Invalid API key", { status: 401 });
-      }
       : undefined,
     // Transport configuration
     transport: useStdio
       ? {
-        type: "stdio",
-      }
+          type: "stdio",
+        }
       : useWebSocket
         ? {
-          type: "websocket",
-          websocket: {
-            port,
-            host,
-            path: endpointPath,
-          },
-        }
+            type: "websocket",
+            websocket: {
+              port,
+              host,
+              path: endpointPath,
+            },
+          }
         : {
-          type: "httpStreamable",
-          httpStreamable: {
-            port,
-            host,
-            endpoint: endpointPath,
-            stateless: false,
+            type: "httpStreamable",
+            httpStreamable: {
+              port,
+              host,
+              endpoint: endpointPath,
+              stateless: false,
+            },
           },
-        },
   };
 
   // Create server
@@ -125,10 +125,7 @@ Documentation: https://docs.brainwav.ai/cortexdx
         .boolean()
         .default(false)
         .describe("Include performance profiling"),
-      timeout: z
-        .number()
-        .default(30)
-        .describe("Inspection timeout in seconds"),
+      timeout: z.number().default(30).describe("Inspection timeout in seconds"),
     }),
     outputSchema: {
       type: "object",
@@ -224,7 +221,10 @@ Documentation: https://docs.brainwav.ai/cortexdx
     outputSchema: {
       type: "object",
       properties: {
-        compliant: { type: "boolean", description: "Whether server is compliant" },
+        compliant: {
+          type: "boolean",
+          description: "Whether server is compliant",
+        },
         score: { type: "number", description: "Compliance score (0-100)" },
         findings: {
           type: "array",
@@ -247,7 +247,9 @@ Documentation: https://docs.brainwav.ai/cortexdx
       title: "Validate Protocol Compliance",
     },
     execute: async (args, ctx) => {
-      ctx.log.info("Validating protocol compliance", { endpoint: args.endpoint });
+      ctx.log.info("Validating protocol compliance", {
+        endpoint: args.endpoint,
+      });
       return {
         compliant: true,
         score: 95,

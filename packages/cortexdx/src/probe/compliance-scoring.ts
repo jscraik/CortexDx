@@ -42,7 +42,7 @@
 /**
  * Finding severity levels
  */
-export type FindingSeverity = 'blocker' | 'major' | 'minor' | 'info';
+export type FindingSeverity = "blocker" | "major" | "minor" | "info";
 
 /**
  * Scoring penalty configuration
@@ -67,7 +67,7 @@ export const SCORING_CONFIG = {
   /** Maximum major findings for compliance */
   MAX_MAJOR_FOR_COMPLIANCE: 2,
   /** Scoring algorithm version */
-  VERSION: '1.0.0',
+  VERSION: "1.0.0",
 } as const;
 
 /**
@@ -98,7 +98,7 @@ export interface ScoringResult {
   /** Whether the target meets compliance threshold */
   compliant: boolean;
   /** Letter grade (A/B/C/F) */
-  grade: 'A' | 'B' | 'C' | 'F';
+  grade: "A" | "B" | "C" | "F";
   /** Number of findings by severity */
   counts: {
     blocker: number;
@@ -130,7 +130,8 @@ const SEVERITY_ORDER: Record<FindingSeverity, number> = {
 export function sortFindings(findings: SortableFinding[]): SortableFinding[] {
   return [...findings].sort((a, b) => {
     // First by severity (blocker first)
-    const severityDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
+    const severityDiff =
+      SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
     if (severityDiff !== 0) return severityDiff;
 
     // Then by area (alphabetical)
@@ -153,16 +154,18 @@ export function sortFindings(findings: SortableFinding[]): SortableFinding[] {
  * @param findings - Array of findings to score
  * @returns Scoring result with score, compliance status, and grade
  */
-export function calculateComplianceScore(findings: SortableFinding[]): ScoringResult {
+export function calculateComplianceScore(
+  findings: SortableFinding[],
+): ScoringResult {
   // Sort findings deterministically
   const sortedFindings = sortFindings(findings);
 
   // Count findings by severity
   const counts = {
-    blocker: sortedFindings.filter((f) => f.severity === 'blocker').length,
-    major: sortedFindings.filter((f) => f.severity === 'major').length,
-    minor: sortedFindings.filter((f) => f.severity === 'minor').length,
-    info: sortedFindings.filter((f) => f.severity === 'info').length,
+    blocker: sortedFindings.filter((f) => f.severity === "blocker").length,
+    major: sortedFindings.filter((f) => f.severity === "major").length,
+    minor: sortedFindings.filter((f) => f.severity === "minor").length,
+    info: sortedFindings.filter((f) => f.severity === "info").length,
   };
 
   // Calculate score
@@ -171,17 +174,22 @@ export function calculateComplianceScore(findings: SortableFinding[]): ScoringRe
   score -= counts.major * SCORING_PENALTIES.major;
   score -= counts.minor * SCORING_PENALTIES.minor;
   // info findings have no penalty
-  score = Math.max(SCORING_CONFIG.MIN_SCORE, Math.min(SCORING_CONFIG.MAX_SCORE, score));
+  score = Math.max(
+    SCORING_CONFIG.MIN_SCORE,
+    Math.min(SCORING_CONFIG.MAX_SCORE, score),
+  );
 
   // Determine compliance
-  const compliant = counts.blocker === 0 && counts.major <= SCORING_CONFIG.MAX_MAJOR_FOR_COMPLIANCE;
+  const compliant =
+    counts.blocker === 0 &&
+    counts.major <= SCORING_CONFIG.MAX_MAJOR_FOR_COMPLIANCE;
 
   // Determine grade
-  let grade: 'A' | 'B' | 'C' | 'F';
-  if (score >= GRADE_THRESHOLDS.A) grade = 'A';
-  else if (score >= GRADE_THRESHOLDS.B) grade = 'B';
-  else if (score >= GRADE_THRESHOLDS.C) grade = 'C';
-  else grade = 'F';
+  let grade: "A" | "B" | "C" | "F";
+  if (score >= GRADE_THRESHOLDS.A) grade = "A";
+  else if (score >= GRADE_THRESHOLDS.B) grade = "B";
+  else if (score >= GRADE_THRESHOLDS.C) grade = "C";
+  else grade = "F";
 
   return {
     score,
@@ -197,10 +205,10 @@ export function calculateComplianceScore(findings: SortableFinding[]): ScoringRe
  * Get a human-readable description of the score
  */
 export function getScoreDescription(score: number): string {
-  if (score >= GRADE_THRESHOLDS.A) return 'Excellent compliance';
-  if (score >= GRADE_THRESHOLDS.B) return 'Good compliance';
-  if (score >= GRADE_THRESHOLDS.C) return 'Fair compliance';
-  return 'Poor compliance';
+  if (score >= GRADE_THRESHOLDS.A) return "Excellent compliance";
+  if (score >= GRADE_THRESHOLDS.B) return "Good compliance";
+  if (score >= GRADE_THRESHOLDS.C) return "Fair compliance";
+  return "Poor compliance";
 }
 
 /**
@@ -208,19 +216,23 @@ export function getScoreDescription(score: number): string {
  *
  * Useful for tracking compliance improvements over time.
  */
-export function calculateScoreDiff(previous: ScoringResult, current: ScoringResult): {
+export function calculateScoreDiff(
+  previous: ScoringResult,
+  current: ScoringResult,
+): {
   scoreDiff: number;
   improved: boolean;
   gradeChanged: boolean;
   summary: string;
 } {
   const scoreDiff = current.score - previous.score;
-  const improved = scoreDiff > 0 || (scoreDiff === 0 && current.grade > previous.grade);
+  const improved =
+    scoreDiff > 0 || (scoreDiff === 0 && current.grade > previous.grade);
   const gradeChanged = current.grade !== previous.grade;
 
   const summary = improved
-    ? `Compliance ${gradeChanged ? 'improved' : 'maintained'}: ${previous.score} → ${current.score} (${previous.grade} → ${current.grade})`
-    : `Compliance ${gradeChanged ? 'degraded' : 'maintained'}: ${previous.score} → ${current.score} (${previous.grade} → ${current.grade})`;
+    ? `Compliance ${gradeChanged ? "improved" : "maintained"}: ${previous.score} → ${current.score} (${previous.grade} → ${current.grade})`
+    : `Compliance ${gradeChanged ? "degraded" : "maintained"}: ${previous.score} → ${current.score} (${previous.grade} → ${current.grade})`;
 
   return {
     scoreDiff,
@@ -242,27 +254,27 @@ export function validateScoringConfig(): {
   const errors: string[] = [];
 
   if (SCORING_PENALTIES.blocker < SCORING_PENALTIES.major) {
-    errors.push('Blocker penalty must be >= major penalty');
+    errors.push("Blocker penalty must be >= major penalty");
   }
 
   if (SCORING_PENALTIES.major < SCORING_PENALTIES.minor) {
-    errors.push('Major penalty must be >= minor penalty');
+    errors.push("Major penalty must be >= minor penalty");
   }
 
   if (SCORING_PENALTIES.minor < SCORING_PENALTIES.info) {
-    errors.push('Minor penalty must be >= info penalty');
+    errors.push("Minor penalty must be >= info penalty");
   }
 
   if (SCORING_CONFIG.MIN_SCORE < 0) {
-    errors.push('Min score must be >= 0');
+    errors.push("Min score must be >= 0");
   }
 
   if (SCORING_CONFIG.MAX_SCORE > 100) {
-    errors.push('Max score must be <= 100');
+    errors.push("Max score must be <= 100");
   }
 
   if (SCORING_CONFIG.MIN_SCORE >= SCORING_CONFIG.MAX_SCORE) {
-    errors.push('Min score must be < max score');
+    errors.push("Min score must be < max score");
   }
 
   return {

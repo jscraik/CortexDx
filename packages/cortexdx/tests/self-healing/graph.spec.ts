@@ -5,7 +5,11 @@ import { buildSampleSecurityFindings } from "../../src/self-healing/samples.js";
 describe("self-healing graph", () => {
   it("produces normalized findings", async () => {
     const result = await runSelfHealingGraph(
-      { plugins: ["security-scanner"], endpoint: "http://localhost:5001", deterministic: false },
+      {
+        plugins: ["security-scanner"],
+        endpoint: "http://localhost:5001",
+        deterministic: false,
+      },
       {
         diagnosticsRunner: async () => buildSampleSecurityFindings(),
       },

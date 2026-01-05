@@ -44,7 +44,11 @@ export function createJsonOutput<T>(
   data: T,
   options?: {
     success?: boolean;
-    errors?: Array<{ code: string; message: string; context?: Record<string, unknown> }>;
+    errors?: Array<{
+      code: string;
+      message: string;
+      context?: Record<string, unknown>;
+    }>;
     metadata?: Record<string, unknown>;
   },
 ): JsonOutput<T> {
@@ -63,13 +67,17 @@ export function formatJsonOutput<T>(
   data: T,
   options?: {
     success?: boolean;
-    errors?: Array<{ code: string; message: string; context?: Record<string, unknown> }>;
+    errors?: Array<{
+      code: string;
+      message: string;
+      context?: Record<string, unknown>;
+    }>;
     metadata?: Record<string, unknown>;
     pretty?: boolean;
   },
 ): string {
   const output = createJsonOutput(schema, data, options);
-  return JSON.stringify(output, null, options?.pretty ?? true ? 2 : 0);
+  return JSON.stringify(output, null, (options?.pretty ?? true) ? 2 : 0);
 }
 
 /**
@@ -125,7 +133,11 @@ export function printJsonOutput<T>(
   data: T,
   options?: {
     success?: boolean;
-    errors?: Array<{ code: string; message: string; context?: Record<string, unknown> }>;
+    errors?: Array<{
+      code: string;
+      message: string;
+      context?: Record<string, unknown>;
+    }>;
     metadata?: Record<string, unknown>;
   },
 ): void {
@@ -180,7 +192,10 @@ export function wrapJsonWithSchema<T>(
 ): string {
   let data: T;
   try {
-    data = typeof existingJson === "string" ? JSON.parse(existingJson) : existingJson;
+    data =
+      typeof existingJson === "string"
+        ? JSON.parse(existingJson)
+        : existingJson;
   } catch {
     // If not valid JSON, wrap as-is
     data = existingJson as T;

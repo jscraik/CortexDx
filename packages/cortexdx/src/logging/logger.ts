@@ -8,4 +8,9 @@ export const createCliLogger = logging.createCliLogger;
 export const logBanner = logging.logBanner;
 
 // Re-export types
-export type { CortexLogger, CliLogger, CliLoggerOptions, LoggerOptions } from "../../../core/src/index.js";
+export type {
+  CortexLogger,
+  CliLogger,
+  CliLoggerOptions,
+  LoggerOptions,
+} from "../../../core/src/index.js";

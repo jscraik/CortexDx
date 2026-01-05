@@ -27,20 +27,18 @@ const tokenCache = new Map<string, CachedToken>();
  * Build Authorization headers either from explicit --auth flags or by performing an Auth0 handshake.
  * Also includes MCP API key if provided.
  */
-export async function resolveAuthHeaders(
-  opts: {
-    auth?: string;
-    auth0Domain?: string;
-    auth0ClientId?: string;
-    auth0ClientSecret?: string;
-    auth0Audience?: string;
-    auth0Scope?: string;
-    mcpApiKey?: string;
-    auth0DeviceCode?: boolean;
-    auth0DeviceCodeEndpoint?: string;
-    onDeviceCodePrompt?: (userCode: string, verifyUri: string) => void;
-  },
-): Promise<Record<string, string> | undefined> {
+export async function resolveAuthHeaders(opts: {
+  auth?: string;
+  auth0Domain?: string;
+  auth0ClientId?: string;
+  auth0ClientSecret?: string;
+  auth0Audience?: string;
+  auth0Scope?: string;
+  mcpApiKey?: string;
+  auth0DeviceCode?: boolean;
+  auth0DeviceCodeEndpoint?: string;
+  onDeviceCodePrompt?: (userCode: string, verifyUri: string) => void;
+}): Promise<Record<string, string> | undefined> {
   if (typeof opts.auth === "string" && opts.auth.trim().length > 0) {
     return parseManualAuth(opts.auth, opts.mcpApiKey);
   }
@@ -54,7 +52,9 @@ export async function resolveAuthHeaders(
 
     const token = useDeviceCode
       ? await getAuth0DeviceCodeToken(config, opts.onDeviceCodePrompt)
-      : await getAuth0AccessToken(config as Auth0MachineConfig & { clientSecret: string });
+      : await getAuth0AccessToken(
+          config as Auth0MachineConfig & { clientSecret: string },
+        );
     headers.authorization = `Bearer ${token}`;
   }
 
@@ -67,7 +67,10 @@ export async function resolveAuthHeaders(
   return Object.keys(headers).length > 0 ? headers : undefined;
 }
 
-function parseManualAuth(value: string, mcpApiKey?: string): Record<string, string> | undefined {
+function parseManualAuth(
+  value: string,
+  mcpApiKey?: string,
+): Record<string, string> | undefined {
   const [schemeRaw, ...restParts] = value.split(":");
   if (!schemeRaw || restParts.length === 0) return undefined;
   const scheme = schemeRaw.toLowerCase();
@@ -79,7 +82,9 @@ function parseManualAuth(value: string, mcpApiKey?: string): Record<string, stri
   } else if (scheme === "basic") {
     const [user, ...passwordParts] = restParts;
     if (!user || passwordParts.length === 0) return undefined;
-    const credentials = Buffer.from(`${user}:${passwordParts.join(":")}`).toString("base64");
+    const credentials = Buffer.from(
+      `${user}:${passwordParts.join(":")}`,
+    ).toString("base64");
     headers.authorization = `Basic ${credentials}`;
   } else if (scheme === "header") {
     const [name, ...valueParts] = restParts;
@@ -98,24 +103,34 @@ function parseManualAuth(value: string, mcpApiKey?: string): Record<string, stri
   return headers;
 }
 
-function resolveAuth0Config(
-  opts: {
-    auth0Domain?: string;
-    auth0ClientId?: string;
-    auth0ClientSecret?: string;
-    auth0Audience?: string;
-    auth0Scope?: string;
-    auth0DeviceCodeEndpoint?: string;
-  },
-): Auth0MachineConfig | null {
-  const domain = pickFirstDefined(opts.auth0Domain, process.env.CORTEXDX_AUTH0_DOMAIN);
-  const clientId = pickFirstDefined(opts.auth0ClientId, process.env.CORTEXDX_AUTH0_CLIENT_ID);
+function resolveAuth0Config(opts: {
+  auth0Domain?: string;
+  auth0ClientId?: string;
+  auth0ClientSecret?: string;
+  auth0Audience?: string;
+  auth0Scope?: string;
+  auth0DeviceCodeEndpoint?: string;
+}): Auth0MachineConfig | null {
+  const domain = pickFirstDefined(
+    opts.auth0Domain,
+    process.env.CORTEXDX_AUTH0_DOMAIN,
+  );
+  const clientId = pickFirstDefined(
+    opts.auth0ClientId,
+    process.env.CORTEXDX_AUTH0_CLIENT_ID,
+  );
   const clientSecret = pickFirstDefined(
     opts.auth0ClientSecret,
     process.env.CORTEXDX_AUTH0_CLIENT_SECRET,
   );
-  const audience = pickFirstDefined(opts.auth0Audience, process.env.CORTEXDX_AUTH0_AUDIENCE);
-  const scope = pickFirstDefined(opts.auth0Scope, process.env.CORTEXDX_AUTH0_SCOPE);
+  const audience = pickFirstDefined(
+    opts.auth0Audience,
+    process.env.CORTEXDX_AUTH0_AUDIENCE,
+  );
+  const scope = pickFirstDefined(
+    opts.auth0Scope,
+    process.env.CORTEXDX_AUTH0_SCOPE,
+  );
 
   if (!domain || !clientId || !audience) {
     return null;
@@ -127,8 +142,10 @@ function resolveAuth0Config(
     clientSecret: clientSecret?.trim(),
     audience: audience.trim(),
     scope: scope?.trim(),
-    deviceCodeEndpoint:
-      pickFirstDefined(opts.auth0DeviceCodeEndpoint, process.env.CORTEXDX_AUTH0_DEVICE_CODE_ENDPOINT)?.trim(),
+    deviceCodeEndpoint: pickFirstDefined(
+      opts.auth0DeviceCodeEndpoint,
+      process.env.CORTEXDX_AUTH0_DEVICE_CODE_ENDPOINT,
+    )?.trim(),
   };
 }
 
@@ -173,17 +190,21 @@ async function getAuth0AccessToken(
     config.scope?.split(/\s+/).filter((entry) => entry.length > 0) ?? [];
 
   // Use enhanced client credentials flow with audience validation
-  const tokenResult = await enhancedOAuthAuthenticator.clientCredentialsFlowEnhanced(
-    config.clientId,
-    config.clientSecret,
-    tokenUrl,
-    scopeArray,
-    config.audience,
-  );
+  const tokenResult =
+    await enhancedOAuthAuthenticator.clientCredentialsFlowEnhanced(
+      config.clientId,
+      config.clientSecret,
+      tokenUrl,
+      scopeArray,
+      config.audience,
+    );
 
   // Validate token audience
   if (config.audience && tokenResult.audience) {
-    const audienceCheck = validateAudience(tokenResult.audience, config.audience);
+    const audienceCheck = validateAudience(
+      tokenResult.audience,
+      config.audience,
+    );
     if (!audienceCheck.valid) {
       throw new Error(audienceCheck.error || "Audience validation failed");
     }
@@ -206,7 +227,8 @@ async function getAuth0DeviceCodeToken(
   }
 
   // Validate endpoint security
-  const deviceEndpoint = config.deviceCodeEndpoint ?? buildDeviceCodeUrl(config.domain);
+  const deviceEndpoint =
+    config.deviceCodeEndpoint ?? buildDeviceCodeUrl(config.domain);
   const tokenEndpoint = buildTokenUrl(config.domain);
 
   const deviceValidation = validateEndpointSecurity(deviceEndpoint);
@@ -227,17 +249,19 @@ async function getAuth0DeviceCodeToken(
     config.scope?.split(/\s+/).filter((entry) => entry.length > 0) ?? [];
 
   // Use enhanced OAuth authenticator with PKCE
-  const deviceCodeResult = await enhancedOAuthAuthenticator.deviceCodeFlowWithPKCE(
-    config.clientId,
-    scopeArray,
-    deviceEndpoint,
-    config.audience,
-  );
+  const deviceCodeResult =
+    await enhancedOAuthAuthenticator.deviceCodeFlowWithPKCE(
+      config.clientId,
+      scopeArray,
+      deviceEndpoint,
+      config.audience,
+    );
 
   const prompt = onPrompt ?? defaultDeviceCodePrompt;
   prompt(
     deviceCodeResult.userCode,
-    deviceCodeResult.verificationUriComplete ?? deviceCodeResult.verificationUri,
+    deviceCodeResult.verificationUriComplete ??
+      deviceCodeResult.verificationUri,
   );
 
   // Poll with PKCE verifier and audience validation
@@ -252,7 +276,10 @@ async function getAuth0DeviceCodeToken(
 
   // Validate token audience
   if (config.audience && tokenResult.audience) {
-    const audienceCheck = validateAudience(tokenResult.audience, config.audience);
+    const audienceCheck = validateAudience(
+      tokenResult.audience,
+      config.audience,
+    );
     if (!audienceCheck.valid) {
       throw new Error(audienceCheck.error || "Audience validation failed");
     }
@@ -293,7 +320,10 @@ async function safeReadError(response: Response): Promise<string> {
   }
 }
 
-function defaultDeviceCodePrompt(userCode: string, verificationUri: string): void {
+function defaultDeviceCodePrompt(
+  userCode: string,
+  verificationUri: string,
+): void {
   console.log(
     `[Auth0 Device Code] Visit ${verificationUri} and enter code ${userCode} to continue.`,
   );

@@ -3,16 +3,21 @@
  * Implements MCP over WebSocket for real-time communication
  */
 
-import { WebSocketServer, type WebSocket } from 'ws';
-import { createLogger } from '../../logging/logger.js';
-import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol.js';
-import { formatJsonRpcError, McpError, MCP_ERRORS } from '../core/errors.js';
-import type { Transport, RequestHandler, TransportEvents, WebSocketConfig } from './types.js';
+import { WebSocketServer, type WebSocket } from "ws";
+import { createLogger } from "../../logging/logger.js";
+import { DEFAULT_PROTOCOL_VERSION } from "../core/protocol.js";
+import { formatJsonRpcError, McpError, MCP_ERRORS } from "../core/errors.js";
+import type {
+  Transport,
+  RequestHandler,
+  TransportEvents,
+  WebSocketConfig,
+} from "./types.js";
 
-const logger = createLogger({ component: 'websocket-transport' });
+const logger = createLogger({ component: "websocket-transport" });
 
 export class WebSocketTransport implements Transport {
-  readonly type = 'websocket' as const;
+  readonly type = "websocket" as const;
 
   private wss: WebSocketServer | null = null;
   private protocolVersion = DEFAULT_PROTOCOL_VERSION;
@@ -24,17 +29,17 @@ export class WebSocketTransport implements Transport {
   constructor(private config: WebSocketConfig) {}
 
   async start(handler: RequestHandler): Promise<void> {
-    const { port, host = '127.0.0.1', path = '/mcp' } = this.config;
+    const { port, host = "127.0.0.1", path = "/mcp" } = this.config;
 
     this.wss = new WebSocketServer({ port, host, path });
 
-    this.wss.on('connection', (ws) => {
+    this.wss.on("connection", (ws) => {
       const clientId = `ws-${++this.clientCounter}`;
       this.clients.set(clientId, ws);
       this.events.onConnect?.(clientId);
-      logger.debug({ clientId }, 'WebSocket client connected');
+      logger.debug({ clientId }, "WebSocket client connected");
 
-      ws.on('message', async (data) => {
+      ws.on("message", async (data) => {
         try {
           const request = JSON.parse(data.toString());
 
@@ -42,7 +47,10 @@ export class WebSocketTransport implements Transport {
           if (Array.isArray(request)) {
             const errorResponse = formatJsonRpcError(
               null,
-              new McpError(MCP_ERRORS.PROTOCOL_VERSION_MISMATCH, 'JSON-RPC batching is not supported')
+              new McpError(
+                MCP_ERRORS.PROTOCOL_VERSION_MISMATCH,
+                "JSON-RPC batching is not supported",
+              ),
             );
             ws.send(JSON.stringify(errorResponse));
             return;
@@ -51,33 +59,33 @@ export class WebSocketTransport implements Transport {
           const response = await handler(request);
           ws.send(JSON.stringify(response));
         } catch (error) {
-          logger.error({ error, clientId }, 'WebSocket message error');
+          logger.error({ error, clientId }, "WebSocket message error");
           const errorResponse = formatJsonRpcError(
             null,
-            error instanceof Error ? error : new Error(String(error))
+            error instanceof Error ? error : new Error(String(error)),
           );
           ws.send(JSON.stringify(errorResponse));
         }
       });
 
-      ws.on('close', () => {
+      ws.on("close", () => {
         this.clients.delete(clientId);
         this.events.onDisconnect?.(clientId);
-        logger.debug({ clientId }, 'WebSocket client disconnected');
+        logger.debug({ clientId }, "WebSocket client disconnected");
       });
 
-      ws.on('error', (error) => {
-        logger.error({ error, clientId }, 'WebSocket client error');
+      ws.on("error", (error) => {
+        logger.error({ error, clientId }, "WebSocket client error");
         this.events.onError?.(error);
       });
     });
 
-    this.wss.on('error', (error) => {
+    this.wss.on("error", (error) => {
       this.events.onError?.(error);
     });
 
     this.running = true;
-    logger.info({ port, host, path }, 'WebSocket transport started');
+    logger.info({ port, host, path }, "WebSocket transport started");
   }
 
   async stop(): Promise<void> {
@@ -93,7 +101,7 @@ export class WebSocketTransport implements Transport {
         this.wss.close(() => {
           this.wss = null;
           this.running = false;
-          logger.info('WebSocket transport stopped');
+          logger.info("WebSocket transport stopped");
           resolve();
         });
       } else {
@@ -153,6 +161,8 @@ export class WebSocketTransport implements Transport {
 /**
  * Create WebSocket transport
  */
-export function createWebSocketTransport(config: WebSocketConfig): WebSocketTransport {
+export function createWebSocketTransport(
+  config: WebSocketConfig,
+): WebSocketTransport {
   return new WebSocketTransport(config);
 }

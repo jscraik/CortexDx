@@ -3,8 +3,8 @@
  * Conforms to Apps SDK telemetry guidelines
  */
 
-import React, { useCallback } from 'react';
-import { useOpenAiGlobal } from '../hooks/useOpenAi.js';
+import React, { useCallback } from "react";
+import { useOpenAiGlobal } from "../hooks/useOpenAi.js";
 
 export interface TelemetryEvent {
   event: string;
@@ -18,7 +18,7 @@ export interface TelemetryEvent {
  * Automatically includes tool call ID from window.openai context
  */
 export function useTelemetry() {
-  const toolMetadata = useOpenAiGlobal('toolResponseMetadata');
+  const toolMetadata = useOpenAiGlobal("toolResponseMetadata");
 
   return useCallback(
     (event: string, properties?: Record<string, unknown>) => {
@@ -30,14 +30,14 @@ export function useTelemetry() {
       };
 
       // Log to console in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Telemetry]', telemetryEvent);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[Telemetry]", telemetryEvent);
       }
 
       // TODO: Send to analytics service in production
       // Example: analytics.track(event, properties);
     },
-    [toolMetadata]
+    [toolMetadata],
   );
 }
 
@@ -49,7 +49,7 @@ export function useComponentMount(componentName: string) {
 
   // Track on mount
   React.useEffect(() => {
-    track('component_mounted', { component: componentName });
+    track("component_mounted", { component: componentName });
   }, [componentName, track]);
 }
 
@@ -58,7 +58,7 @@ export function useComponentMount(componentName: string) {
  */
 export function trackError(error: Error, context?: Record<string, unknown>) {
   const telemetryEvent: TelemetryEvent = {
-    event: 'error',
+    event: "error",
     properties: {
       message: error.message,
       stack: error.stack,
@@ -67,6 +67,6 @@ export function trackError(error: Error, context?: Record<string, unknown>) {
     timestamp: new Date().toISOString(),
   };
 
-  console.error('[Telemetry Error]', telemetryEvent);
+  console.error("[Telemetry Error]", telemetryEvent);
   // TODO: Send to error tracking service
 }

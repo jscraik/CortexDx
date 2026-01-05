@@ -419,10 +419,10 @@ export const generateBillingReportImpl = async (
               : undefined,
             costEstimate: includeCostEstimate
               ? {
-                currency: "USD",
-                amount: orgUsage.length * 0.01,
-                note: "Estimated based on usage",
-              }
+                  currency: "USD",
+                  amount: orgUsage.length * 0.01,
+                  note: "Estimated based on usage",
+                }
               : undefined,
           },
           null,

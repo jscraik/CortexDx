@@ -7,7 +7,10 @@ import {
   DependencyTrackIntegration,
 } from "../security/dependency-track-integration.js";
 import type { SBOM } from "../security/sbom-generator.js";
-import { type PackageManifest, SBOMGenerator } from "../security/sbom-generator.js";
+import {
+  type PackageManifest,
+  SBOMGenerator,
+} from "../security/sbom-generator.js";
 import { safeParseJson } from "../utils/json.js";
 
 const logger = createCliLogger("sbom");
@@ -54,7 +57,7 @@ export async function runGenerateSbom(opts: SbomCliOptions): Promise<number> {
     const manifestPath = findManifestPath(opts.manifest);
     if (!manifestPath) {
       logger.error(
-        "No manifest found. Specify --manifest or place a package.json/requirements.txt/pom.xml in the working directory."
+        "No manifest found. Specify --manifest or place a package.json/requirements.txt/pom.xml in the working directory.",
       );
       return 1;
     }
@@ -62,7 +65,7 @@ export async function runGenerateSbom(opts: SbomCliOptions): Promise<number> {
     const manifestType = detectManifestType(manifestPath, opts.type);
     if (!manifestType) {
       logger.error(
-        "Unsupported manifest type. Use --type to specify one of: npm, pip, maven."
+        "Unsupported manifest type. Use --type to specify one of: npm, pip, maven.",
       );
       return 1;
     }
@@ -126,13 +129,18 @@ export async function runGenerateSbom(opts: SbomCliOptions): Promise<number> {
 
     logger.info(
       `Generated ${sbom.bomFormat} ${sbom.specVersion} SBOM with ${sbom.components.length} components at ${targetDir}`,
-      { format: sbom.bomFormat, specVersion: sbom.specVersion, components: sbom.components.length, outputDir: targetDir }
+      {
+        format: sbom.bomFormat,
+        specVersion: sbom.specVersion,
+        components: sbom.components.length,
+        outputDir: targetDir,
+      },
     );
     return 0;
   } catch (error) {
     logger.error(
       `Generation failed: ${error instanceof Error ? error.message : error}`,
-      { error }
+      { error },
     );
     return 1;
   }
@@ -216,16 +224,18 @@ async function maybeUploadToDependencyTrack(params: {
     const upload = await integration.uploadSBOM(project.uuid, params.sbom);
     logger.info(
       `Uploaded to Dependency Track project ${project.name}@${project.version} (token=${upload.token})`,
-      { project: project.name, version: project.version, token: upload.token }
+      { project: project.name, version: project.version, token: upload.token },
     );
     if (params.subscribe && params.webhook) {
       await integration.subscribeToAlerts(project.uuid, params.webhook);
-      logger.info("Subscribed Dependency Track project to webhook.", { webhook: params.webhook });
+      logger.info("Subscribed Dependency Track project to webhook.", {
+        webhook: params.webhook,
+      });
     }
   } catch (error) {
     logger.warn(
       `Dependency Track upload failed: ${error instanceof Error ? error.message : String(error)}`,
-      { error }
+      { error },
     );
   }
 }

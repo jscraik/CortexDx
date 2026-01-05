@@ -749,7 +749,9 @@ Explain MCP concepts clearly and help users understand the protocol.
       return `${base}${path}`;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to build URL for endpoint ${endpoint}: ${message}`);
+      throw new Error(
+        `Failed to build URL for endpoint ${endpoint}: ${message}`,
+      );
     }
   }
 }

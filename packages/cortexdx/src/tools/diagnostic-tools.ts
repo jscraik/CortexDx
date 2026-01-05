@@ -44,8 +44,7 @@ const baseDiagnosticTools: McpTool[] = [
   },
   {
     name: "validate_protocol_compliance",
-    description:
-      `Validate MCP server compliance with protocol specification version ${PROTOCOL_VERSIONS.CURRENT}. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.`,
+    description: `Validate MCP server compliance with protocol specification version ${PROTOCOL_VERSIONS.CURRENT}. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -55,8 +54,7 @@ const baseDiagnosticTools: McpTool[] = [
         },
         protocolVersion: {
           type: "string",
-          description:
-            `MCP protocol version to validate against (default: ${PROTOCOL_VERSIONS.CURRENT})`,
+          description: `MCP protocol version to validate against (default: ${PROTOCOL_VERSIONS.CURRENT})`,
           default: PROTOCOL_VERSIONS.CURRENT,
         },
         strictMode: {

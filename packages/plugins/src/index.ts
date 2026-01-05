@@ -3,8 +3,10 @@ export * as registry from "./registry/index.js";
 
 // Export plugin lists and functions
 export {
-    BUILTIN_PLUGINS,
-    DEVELOPMENT_PLUGINS, getDevelopmentPluginById, getPluginById
+  BUILTIN_PLUGINS,
+  DEVELOPMENT_PLUGINS,
+  getDevelopmentPluginById,
+  getPluginById,
 } from "./plugins/index.js";
 
 // Export report generation functions

@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { InspectorAdapter } from "../adapters/inspector-adapter.js";
-import { analyzeWithLLM, SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
+import {
+  analyzeWithLLM,
+  SelfImprovementPlugin,
+} from "../plugins/development/self-improvement.js";
 import { TemplateEngine } from "../template-engine/engine.js";
 import type { FixTemplate } from "../templates/fix-templates.js";
 import { getTemplateRecommendations } from "../templates/fix-templates.js";

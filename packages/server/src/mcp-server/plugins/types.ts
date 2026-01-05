@@ -7,7 +7,7 @@
  * Diagnostic plugins analyze MCP server behavior
  */
 
-import type { JsonRpcRequest, JsonRpcResponse } from '../transports/types';
+import type { JsonRpcRequest, JsonRpcResponse } from "../transports/types";
 
 /**
  * Request context passed to plugin hooks
@@ -24,7 +24,7 @@ export interface RequestContext {
   meta: {
     clientId?: string;
     timestamp: number;
-    transport: 'httpStreamable' | 'stdio' | 'websocket';
+    transport: "httpStreamable" | "stdio" | "websocket";
   };
 
   /**
@@ -45,7 +45,7 @@ export interface RequestContext {
    * License information (set by license plugin)
    */
   license?: {
-    tier: 'community' | 'professional' | 'enterprise';
+    tier: "community" | "professional" | "enterprise";
     features: string[];
     expiresAt?: number;
   };
@@ -58,8 +58,15 @@ export interface RequestContext {
     sessionId?: string;
     requestId?: string;
     log?: (...args: unknown[]) => void;
-    reportProgress?: (progress: { progress: number; total?: number }) => Promise<void>;
-    streamContent?: (content: { type: string; text?: string; data?: unknown }) => Promise<void>;
+    reportProgress?: (progress: {
+      progress: number;
+      total?: number;
+    }) => Promise<void>;
+    streamContent?: (content: {
+      type: string;
+      text?: string;
+      data?: unknown;
+    }) => Promise<void>;
   };
 }
 
@@ -108,24 +115,38 @@ export interface ServerPlugin {
    * Called after response is generated
    * Can modify the response before sending
    */
-  onResponse?(ctx: RequestContext, response: JsonRpcResponse): Promise<JsonRpcResponse>;
+  onResponse?(
+    ctx: RequestContext,
+    response: JsonRpcResponse,
+  ): Promise<JsonRpcResponse>;
 
   /**
    * Called when an error occurs
    * Can transform the error response
    */
-  onError?(ctx: RequestContext, error: Error): Promise<JsonRpcResponse | undefined>;
+  onError?(
+    ctx: RequestContext,
+    error: Error,
+  ): Promise<JsonRpcResponse | undefined>;
 
   /**
    * Called before a tool is executed
    */
-  onToolCall?(ctx: RequestContext, toolName: string, args: unknown): Promise<void>;
+  onToolCall?(
+    ctx: RequestContext,
+    toolName: string,
+    args: unknown,
+  ): Promise<void>;
 
   /**
    * Called after a tool returns
    * Can transform the result
    */
-  onToolResult?(ctx: RequestContext, toolName: string, result: unknown): Promise<unknown>;
+  onToolResult?(
+    ctx: RequestContext,
+    toolName: string,
+    result: unknown,
+  ): Promise<unknown>;
 
   /**
    * Called before a resource is read
@@ -232,7 +253,7 @@ export interface AuthPluginConfig {
 export interface LicensePluginConfig {
   licenseDatabase: Map<string, LicenseKey>;
   requireLicense: boolean;
-  defaultTier?: 'community' | 'professional' | 'enterprise';
+  defaultTier?: "community" | "professional" | "enterprise";
 }
 
 /**
@@ -240,7 +261,7 @@ export interface LicensePluginConfig {
  */
 export interface LicenseKey {
   key: string;
-  tier: 'community' | 'professional' | 'enterprise';
+  tier: "community" | "professional" | "enterprise";
   features: string[];
   expiresAt?: number;
   organizationId?: string;

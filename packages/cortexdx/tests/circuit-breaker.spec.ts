@@ -473,7 +473,11 @@ describe("circuit-breaker", () => {
     });
 
     it("should accept custom message", () => {
-      const error = new CircuitBreakerError("OPEN", undefined, "Custom message");
+      const error = new CircuitBreakerError(
+        "OPEN",
+        undefined,
+        "Custom message",
+      );
       expect(error.message).toBe("Custom message");
     });
   });
@@ -488,7 +492,9 @@ describe("circuit-breaker", () => {
         name: "recovery-test",
       });
 
-      const failFn = vi.fn().mockRejectedValue(new Error("Service unavailable"));
+      const failFn = vi
+        .fn()
+        .mockRejectedValue(new Error("Service unavailable"));
       const successFn = vi.fn().mockResolvedValue("success");
 
       // Service is down - fail 3 times
@@ -499,7 +505,9 @@ describe("circuit-breaker", () => {
       expect(breaker.getState()).toBe("OPEN");
 
       // Requests should be rejected
-      await expect(breaker.execute(successFn)).rejects.toThrow(CircuitBreakerError);
+      await expect(breaker.execute(successFn)).rejects.toThrow(
+        CircuitBreakerError,
+      );
       expect(successFn).not.toHaveBeenCalled();
 
       // Wait for timeout

@@ -82,7 +82,11 @@ describe("mcp docs tools", () => {
     recordChunk.mockReturnValue({ id: "chunk123", type: "chunk", payload: {} });
 
     const tool = createMcpDocsTools()[1]!;
-    const result = await executeMcpDocsTool(tool, { chunkId: "spec-basic-0000" }, ctx);
+    const result = await executeMcpDocsTool(
+      tool,
+      { chunkId: "spec-basic-0000" },
+      ctx,
+    );
 
     expect(lookupMcpDoc).toHaveBeenCalledWith({ chunkId: "spec-basic-0000" });
     expect(recordChunk).toHaveBeenCalled();

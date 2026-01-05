@@ -74,7 +74,7 @@ export class CircuitBreakerError extends Error {
   ) {
     super(
       message ||
-      `Circuit breaker is ${state}. Try again after ${nextAttemptTime ? new Date(nextAttemptTime).toISOString() : "unknown"}.`,
+        `Circuit breaker is ${state}. Try again after ${nextAttemptTime ? new Date(nextAttemptTime).toISOString() : "unknown"}.`,
     );
     this.name = "CircuitBreakerError";
   }
@@ -123,7 +123,10 @@ export class CircuitBreaker {
     // Check if circuit is open
     if (this.state === "OPEN") {
       // Check if timeout has elapsed
-      if (this.openedAt && Date.now() - this.openedAt >= this.config.timeoutMs) {
+      if (
+        this.openedAt &&
+        Date.now() - this.openedAt >= this.config.timeoutMs
+      ) {
         this.transitionToHalfOpen();
       } else {
         this.rejectedRequests++;
@@ -135,7 +138,10 @@ export class CircuitBreaker {
     }
 
     // Check if half-open limit reached
-    if (this.state === "HALF_OPEN" && this.halfOpenCallCount >= this.config.halfOpenMaxCalls) {
+    if (
+      this.state === "HALF_OPEN" &&
+      this.halfOpenCallCount >= this.config.halfOpenMaxCalls
+    ) {
       this.rejectedRequests++;
       throw new CircuitBreakerError(this.state);
     }
@@ -254,7 +260,9 @@ export class CircuitBreaker {
       successCount: this.successCount,
       lastFailureTime: this.lastFailureTime,
       lastSuccessTime: this.lastSuccessTime,
-      nextAttemptTime: this.openedAt ? this.openedAt + this.config.timeoutMs : undefined,
+      nextAttemptTime: this.openedAt
+        ? this.openedAt + this.config.timeoutMs
+        : undefined,
       rejectedRequests: this.rejectedRequests,
       totalRequests: this.totalRequests,
       totalFailures: this.totalFailures,
@@ -304,7 +312,7 @@ export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private breakers = new Map<string, CircuitBreaker>();
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): CircuitBreakerRegistry {
     if (!CircuitBreakerRegistry.instance) {

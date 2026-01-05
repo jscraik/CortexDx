@@ -1,4 +1,10 @@
-import type { DiagnosticContext, DiagnosticPlugin, EvidencePointer, FilePlan, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  EvidencePointer,
+  FilePlan,
+  Finding,
+} from "@brainwav/cortexdx-core";
 import { getMcpSpecEvidence } from "../library/mcp-docs-evidence.js";
 
 /**
@@ -95,7 +101,10 @@ async function testProtocolVersions(
       }>("initialize", initRequest);
 
       if (response?.protocolVersion === version) {
-        const evidence = await buildSpecEvidence(ctx, `initialize protocol ${version}`);
+        const evidence = await buildSpecEvidence(
+          ctx,
+          `initialize protocol ${version}`,
+        );
         findings.push({
           id: `mcp.compat.version.${version.replace(/\./g, "_")}`,
           area: "version-compatibility",
@@ -141,9 +150,7 @@ async function testProtocolVersions(
   return findings;
 }
 
-async function testClientBehaviors(
-  ctx: DiagnosticContext,
-): Promise<Finding[]> {
+async function testClientBehaviors(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   const behaviorTests = [
@@ -271,9 +278,7 @@ async function testClientBehaviors(
   return findings;
 }
 
-async function testFeatureInterop(
-  ctx: DiagnosticContext,
-): Promise<Finding[]> {
+async function testFeatureInterop(ctx: DiagnosticContext): Promise<Finding[]> {
   const findings: Finding[] = [];
 
   const featureTests = [

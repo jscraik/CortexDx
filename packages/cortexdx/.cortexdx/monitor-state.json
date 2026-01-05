@@ -12,10 +12,7 @@
       "config": {
         "endpoint": "http://localhost:3000",
         "schedule": "*/5 * * * *",
-        "probes": [
-          "handshake",
-          "protocol"
-        ],
+        "probes": ["handshake", "protocol"],
         "autoHeal": false,
         "enabled": true
       },

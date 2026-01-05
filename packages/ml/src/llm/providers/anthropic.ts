@@ -22,7 +22,11 @@ function buildHeaders(context: LLMPluginContext): Record<string, string> {
   return headers;
 }
 
-function buildRequestBody(request: LLMGenerateRequest, model: string, options: LLMGenerateRequest["options"]): Record<string, unknown> {
+function buildRequestBody(
+  request: LLMGenerateRequest,
+  model: string,
+  options: LLMGenerateRequest["options"],
+): Record<string, unknown> {
   const body: Record<string, unknown> = {
     model,
     max_tokens: options?.maxTokens ?? 1024,
@@ -50,18 +54,27 @@ async function sendAnthropicRequest(
   if (!response.ok) {
     if (response.status === 429) {
       const retryAfter = response.headers.get("retry-after");
-      throw new Error(`Rate limit exceeded. Retry after ${retryAfter || "unknown"}`);
+      throw new Error(
+        `Rate limit exceeded. Retry after ${retryAfter || "unknown"}`,
+      );
     }
     throw new Error(`Anthropic API error: ${response.status}`);
   }
   return response;
 }
 
-function toUsage(usage?: { input_tokens?: number; output_tokens?: number }): ProviderResponse["usage"] {
+function toUsage(usage?: {
+  input_tokens?: number;
+  output_tokens?: number;
+}): ProviderResponse["usage"] {
   if (!usage) return undefined;
   const promptTokens = usage.input_tokens ?? 0;
   const completionTokens = usage.output_tokens ?? 0;
-  return { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens };
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens: promptTokens + completionTokens,
+  };
 }
 
 export class AnthropicPlugin implements LLMProviderPlugin {
@@ -73,7 +86,9 @@ export class AnthropicPlugin implements LLMProviderPlugin {
   };
 
   supports(context: LLMPluginContext): boolean {
-    return Boolean(context.env.ANTHROPIC_API_KEY || context.env.ANTHROPIC_AUTH_TOKEN);
+    return Boolean(
+      context.env.ANTHROPIC_API_KEY || context.env.ANTHROPIC_AUTH_TOKEN,
+    );
   }
 
   private generateRequestId(): string {
@@ -91,14 +106,23 @@ export class AnthropicPlugin implements LLMProviderPlugin {
     const startTime = Date.now();
     const apiKey = context.env.ANTHROPIC_API_KEY;
     const authToken = context.env.ANTHROPIC_AUTH_TOKEN;
-    const baseUrl = context.env.ANTHROPIC_API_URL || "https://api.anthropic.com";
+    const baseUrl =
+      context.env.ANTHROPIC_API_URL || "https://api.anthropic.com";
     if (!apiKey && !authToken) {
       throw new Error("ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN is required");
     }
     const model = options.model || context.defaults?.model || DEFAULT_MODEL;
     const body = buildRequestBody(request, model, options);
-    const response = await sendAnthropicRequest(baseUrl, context, body, options.timeout ?? 120000);
-    const data = await response.json() as { content?: Array<{ text?: string }>; usage?: { input_tokens?: number; output_tokens?: number } };
+    const response = await sendAnthropicRequest(
+      baseUrl,
+      context,
+      body,
+      options.timeout ?? 120000,
+    );
+    const data = (await response.json()) as {
+      content?: Array<{ text?: string }>;
+      usage?: { input_tokens?: number; output_tokens?: number };
+    };
     const text = data.content?.[0]?.text ?? "";
     context.logger.info(
       "AnthropicPlugin",

@@ -24,24 +24,24 @@ export interface UriTemplateMatch {
  * Valid URI schemes for MCP resources
  */
 const VALID_URI_SCHEMES = [
-  'file',
-  'http',
-  'https',
-  'config',
-  'data',
-  'resource',
-  'mcp',
-  'shell',
-  'log',
-  'memory',
-  'vault',
-  'stream',
-  'asset',
-  'git',
-  'pkg',
+  "file",
+  "http",
+  "https",
+  "config",
+  "data",
+  "resource",
+  "mcp",
+  "shell",
+  "log",
+  "memory",
+  "vault",
+  "stream",
+  "asset",
+  "git",
+  "pkg",
   // Custom schemes
-  'cortexdx',
-  'diagnostic',
+  "cortexdx",
+  "diagnostic",
 ];
 
 /**
@@ -80,11 +80,13 @@ const PATTERNS = {
 /**
  * Validate a URI template string
  */
-export function validateUriTemplate(template: string): UriTemplateValidationResult {
-  if (!template || typeof template !== 'string') {
+export function validateUriTemplate(
+  template: string,
+): UriTemplateValidationResult {
+  if (!template || typeof template !== "string") {
     return {
       valid: false,
-      error: 'URI template must be a non-empty string',
+      error: "URI template must be a non-empty string",
       parameters: [],
     };
   }
@@ -94,7 +96,8 @@ export function validateUriTemplate(template: string): UriTemplateValidationResu
   if (!schemeMatch) {
     return {
       valid: false,
-      error: 'URI template must include a valid scheme (e.g., file://, config://)',
+      error:
+        "URI template must include a valid scheme (e.g., file://, config://)",
       parameters: [],
     };
   }
@@ -105,7 +108,7 @@ export function validateUriTemplate(template: string): UriTemplateValidationResu
   if (!VALID_URI_SCHEMES.includes(scheme)) {
     return {
       valid: false,
-      error: `URI scheme '${scheme}' is not supported. Valid schemes: ${VALID_URI_SCHEMES.join(', ')}`,
+      error: `URI scheme '${scheme}' is not supported. Valid schemes: ${VALID_URI_SCHEMES.join(", ")}`,
       parameters: [],
     };
   }
@@ -127,7 +130,7 @@ export function validateUriTemplate(template: string): UriTemplateValidationResu
   for (const match of rawMatches) {
     const name = match.slice(1, -1); // Remove braces
     // Split on dot and add each part
-    const parts = name.split('.');
+    const parts = name.split(".");
     for (const part of parts) {
       paramCounts.set(part, (paramCounts.get(part) || 0) + 1);
     }
@@ -154,7 +157,7 @@ export function validateUriTemplate(template: string): UriTemplateValidationResu
     if (openBraces !== closeBraces) {
       return {
         valid: false,
-        error: 'Unmatched braces in URI template',
+        error: "Unmatched braces in URI template",
         parameters,
       };
     }
@@ -166,7 +169,8 @@ export function validateUriTemplate(template: string): UriTemplateValidationResu
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : 'Unknown validation error',
+      error:
+        error instanceof Error ? error.message : "Unknown validation error",
       parameters,
     };
   }
@@ -181,11 +185,11 @@ export function extractTemplateParameters(template: string): string[] {
   // Match all expansion patterns
   for (const pattern of Object.values(PATTERNS)) {
     let match;
-    const regex = new RegExp(pattern.source, 'g');
+    const regex = new RegExp(pattern.source, "g");
     while ((match = regex.exec(template)) !== null) {
       if (match[1]) {
         // Split on dot for compound variables like {parent.child}
-        const vars = match[1].split('.');
+        const vars = match[1].split(".");
         vars.forEach((v) => parameters.add(v));
       }
     }
@@ -197,7 +201,10 @@ export function extractTemplateParameters(template: string): string[] {
 /**
  * Match a URI against a template and extract parameters
  */
-export function matchUriTemplate(template: string, uri: string): UriTemplateMatch {
+export function matchUriTemplate(
+  template: string,
+  uri: string,
+): UriTemplateMatch {
   const validation = validateUriTemplate(template);
   if (!validation.valid) {
     return { matches: false };
@@ -233,31 +240,28 @@ export function matchUriTemplate(template: string, uri: string): UriTemplateMatc
  */
 function templateToRegex(template: string): string {
   // First, escape dots in static parts (not inside {...})
-  let pattern = template.replace(/\.(?![^{}]*})/g, '\\.');
+  let pattern = template.replace(/\.(?![^{}]*})/g, "\\.");
 
   // Replace template expansions with regex named groups
   // Simple expansion: {var} -> (?<var>[^/]+)
   pattern = pattern.replace(
     /\{([A-Za-z0-9_\.]+)\}/g,
-    (_, name) => `(?<name_${name.replace(/\./g, '_')}>[^/]+)`
+    (_, name) => `(?<name_${name.replace(/\./g, "_")}>[^/]+)`,
   );
 
   // Reserved expansion: {+var} -> (?<var>[^/?#]+)
   pattern = pattern.replace(
     /\{\+([A-Za-z0-9_\.]+)\}/g,
-    (_, name) => `(?<reserved_${name.replace(/\./g, '_')}>[^/?#]+)`
+    (_, name) => `(?<reserved_${name.replace(/\./g, "_")}>[^/?#]+)`,
   );
 
   // Path expansion: {/var} -> /(?<var>[^/?#]+)
-  pattern = pattern.replace(
-    /\{\/([A-Za-z0-9_\.]+)\}/g,
-    '/(?<path_$1>[^/?#]+)'
-  );
+  pattern = pattern.replace(/\{\/([A-Za-z0-9_\.]+)\}/g, "/(?<path_$1>[^/?#]+)");
 
   // Query expansion: {?var} -> (?<var>.*)
   pattern = pattern.replace(
     /\{\?([A-Za-z0-9_\.]+)\}/g,
-    (_, name) => `(?:\\?(?<query_${name.replace(/\./g, '_')}>[^#]*))?`
+    (_, name) => `(?:\\?(?<query_${name.replace(/\./g, "_")}>[^#]*))?`,
   );
 
   return pattern;
@@ -268,8 +272,12 @@ function templateToRegex(template: string): string {
  */
 export function matchesAnyTemplate(
   uri: string,
-  templates: string[]
-): { matches: boolean; template?: string; parameters?: Record<string, string> } {
+  templates: string[],
+): {
+  matches: boolean;
+  template?: string;
+  parameters?: Record<string, string>;
+} {
   for (const template of templates) {
     const result = matchUriTemplate(template, uri);
     if (result.matches) {
@@ -289,31 +297,31 @@ export function matchesAnyTemplate(
  */
 export function buildUriFromTemplate(
   template: string,
-  parameters: Record<string, string>
+  parameters: Record<string, string>,
 ): string {
   let uri = template;
 
   // Replace simple expansions: {var}
   uri = uri.replace(/\{([A-Za-z0-9_\.]+)\}/g, (_, name) => {
-    const keys = name.split('.');
+    const keys = name.split(".");
     let value: string | undefined = parameters;
     for (const key of keys) {
-      value = value && typeof value === 'object' ? value[key] : undefined;
+      value = value && typeof value === "object" ? value[key] : undefined;
     }
-    return value || '';
+    return value || "";
   });
 
   // Replace path expansions: {/var}
   uri = uri.replace(/\{\/([A-Za-z0-9_\.]+)\}/g, (_, name) => {
     const value = parameters[name];
     // Don't add leading slash if template already has one
-    return value ? value : '';
+    return value ? value : "";
   });
 
   // Replace query expansions: {?var}
   uri = uri.replace(/\{\?([A-Za-z0-9_\.]+)\}/g, (_, name) => {
     const value = parameters[name];
-    return value ? `?${name}=${encodeURIComponent(value)}` : '';
+    return value ? `?${name}=${encodeURIComponent(value)}` : "";
   });
 
   return uri;

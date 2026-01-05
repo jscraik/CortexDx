@@ -2,7 +2,7 @@
  * Metrics tab - System metrics and charts
  */
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage } from "react-intl";
 
 export function MetricsTab() {
   return (
@@ -11,7 +11,9 @@ export function MetricsTab() {
         <FormattedMessage id="metrics.title" />
       </h2>
       <div className="bg-cortex-surface p-6 rounded-xl border border-cortex-border">
-        <p className="text-cortex-muted">Metrics implementation coming soon...</p>
+        <p className="text-cortex-muted">
+          Metrics implementation coming soon...
+        </p>
       </div>
     </div>
   );

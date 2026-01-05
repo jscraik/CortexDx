@@ -150,9 +150,7 @@ async function handleLookup(args: unknown): Promise<McpToolResult> {
 async function handleVersions(): Promise<McpToolResult> {
   const versions = await listMcpDocsVersions();
   return {
-    content: [
-      { type: "text", text: JSON.stringify({ versions }, null, 2) },
-    ],
+    content: [{ type: "text", text: JSON.stringify({ versions }, null, 2) }],
     // Wrap array in object to conform to outputSchema (type: "object")
     structuredContent: { versions },
   };

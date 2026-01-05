@@ -196,14 +196,20 @@ const processConversationalInput = async (
         const dummyContext = {
           endpoint: "cli-interactive-mode",
           logger: (msg: string) => logger.debug(msg),
-          evidence: () => { },
+          evidence: () => {},
           deterministic: true,
-          headers: {} as Record<string, string>
+          headers: {} as Record<string, string>,
         };
-        sessionId = await orchestrator.startDiagnosticSession(dummyContext, "development");
+        sessionId = await orchestrator.startDiagnosticSession(
+          dummyContext,
+          "development",
+        );
       }
 
-      const response = await orchestrator.continueConversation(sessionId, input);
+      const response = await orchestrator.continueConversation(
+        sessionId,
+        input,
+      );
       progress.stop();
       logger.info(formatOutput(`\n${response}`, "info", opts.color));
       return sessionId;
@@ -935,7 +941,8 @@ async function gatherTutorialResearch(
     };
   } catch (error) {
     logger.warn(
-      `[Tutorial] Skipping academic research probe: ${error instanceof Error ? error.message : String(error)
+      `[Tutorial] Skipping academic research probe: ${
+        error instanceof Error ? error.message : String(error)
       }`,
     );
     return null;
@@ -969,7 +976,8 @@ async function gatherDeepContextSnippets(topic: string): Promise<string[]> {
     });
   } catch (error) {
     logger.warn(
-      `[Tutorial] DeepContext search failed: ${error instanceof Error ? error.message : String(error)
+      `[Tutorial] DeepContext search failed: ${
+        error instanceof Error ? error.message : String(error)
       }`,
     );
     return [];
@@ -1034,22 +1042,22 @@ function createTutorialSnippet(lang: string, topic: string): string {
   const body =
     lang === "python"
       ? [
-        "def run_diagnostic(endpoint: str) -> None:",
-        "    from cortexdx import diagnose",
-        "    result = diagnose(endpoint, suites=['protocol', 'security'])",
-        "    for finding in result.findings:",
-        '        print(f"{finding.severity}: {finding.title}")',
-      ]
+          "def run_diagnostic(endpoint: str) -> None:",
+          "    from cortexdx import diagnose",
+          "    result = diagnose(endpoint, suites=['protocol', 'security'])",
+          "    for finding in result.findings:",
+          '        print(f"{finding.severity}: {finding.title}")',
+        ]
       : [
-        "import { runDiagnose } from '@brainwav/cortexdx';",
-        "",
-        "async function runTutorialProbe(endpoint: string) {",
-        "  const result = await runDiagnose({",
-        "    endpoint, suites: 'protocol,security', deterministic: true,",
-        "  });",
-        "  console.log(`Findings for ${endpoint}: ${result}`);",
-        "}",
-      ];
+          "import { runDiagnose } from '@brainwav/cortexdx';",
+          "",
+          "async function runTutorialProbe(endpoint: string) {",
+          "  const result = await runDiagnose({",
+          "    endpoint, suites: 'protocol,security', deterministic: true,",
+          "  });",
+          "  console.log(`Findings for ${endpoint}: ${result}`);",
+          "}",
+        ];
   return `${header}
 // Focus: ${topic}
 ${body.join("\n")}

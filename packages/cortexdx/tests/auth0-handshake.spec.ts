@@ -23,14 +23,12 @@ describe("Auth0 handshake", () => {
   });
 
   it("fetches Auth0 token when configuration is provided via options", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "abc", expires_in: 3600 }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
-      );
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ access_token: "abc", expires_in: 3600 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
 
     const headers = await resolveAuthHeaders({
       auth0Domain: "example.auth0.com",
@@ -41,22 +39,26 @@ describe("Auth0 handshake", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith("https://example.auth0.com/oauth/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: expect.any(String),
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.auth0.com/oauth/token",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: expect.any(String),
+      },
+    );
     expect(headers).toEqual({ authorization: "Bearer abc" });
   });
 
   it("caches Auth0 tokens until expiration", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(
-        new Response(JSON.stringify({ access_token: "cached", expires_in: 3600 }), {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({ access_token: "cached", expires_in: 3600 }),
+        {
           status: 200,
-        }),
-      );
+        },
+      ),
+    );
 
     const opts = {
       auth0Domain: "tenant.auth0.com",
@@ -77,13 +79,14 @@ describe("Auth0 handshake", () => {
     process.env.CORTEXDX_AUTH0_CLIENT_SECRET = "envSecret";
     process.env.CORTEXDX_AUTH0_AUDIENCE = "envAudience";
 
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "envToken", expires_in: 120 }), {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ access_token: "envToken", expires_in: 120 }),
+        {
           status: 200,
-        }),
-      );
+        },
+      ),
+    );
 
     const headers = await resolveAuthHeaders({});
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -131,10 +134,7 @@ describe("Auth0 handshake", () => {
       onDeviceCodePrompt: prompt,
     });
 
-    expect(prompt).toHaveBeenCalledWith(
-      "ABC123",
-      "https://verify.example.com",
-    );
+    expect(prompt).toHaveBeenCalledWith("ABC123", "https://verify.example.com");
     expect(headers).toEqual({ authorization: "Bearer deviceToken" });
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });

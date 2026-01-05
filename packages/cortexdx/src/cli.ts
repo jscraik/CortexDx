@@ -8,7 +8,7 @@ import {
   findClosestCommand,
   formatSuggestions,
   generateSimpleCompletions,
-  shouldUseColor
+  shouldUseColor,
 } from "./cli/index.js";
 
 // Detect TTY status once at startup (prefixed to silence unused warning)
@@ -665,14 +665,20 @@ program
 
 program
   .command("serve")
-  .description("start MCP server in stdio/HTTP/WebSocket mode for local integration")
+  .description(
+    "start MCP server in stdio/HTTP/WebSocket mode for local integration",
+  )
   .option("--port <number>", "port (default: 3000)", "3000")
   .option("--stdio", "use stdio transport instead of HTTP")
   .option("--websocket", "use WebSocket transport")
   .option("--host <string>", "host binding (default: 127.0.0.1)", "127.0.0.1")
   .option("--endpoint <string>", "endpoint path (default: /mcp)", "/mcp")
   .option("--api-key <string>", "API key for authentication")
-  .option("--log-level <string>", "log level (debug, info, warn, error)", "info")
+  .option(
+    "--log-level <string>",
+    "log level (debug, info, warn, error)",
+    "info",
+  )
   .action(async (opts) => {
     const { runServe } = await import("./commands/serve.js");
     const code = await runServe(opts);
@@ -700,14 +706,18 @@ program
 
     // Print installation instructions
     console.log("\n# Installation instructions:");
-    console.log(`# Add to your ~/.${shell === "zsh" ? "zshrc" : shell === "fish" ? "config/fish/config.fish" : "bashrc"}:`);
+    console.log(
+      `# Add to your ~/.${shell === "zsh" ? "zshrc" : shell === "fish" ? "config/fish/config.fish" : "bashrc"}:`,
+    );
     if (shell === "bash") {
-      console.log("# eval \"$(cortexdx completion bash)\"");
+      console.log('# eval "$(cortexdx completion bash)"');
     } else if (shell === "zsh") {
       console.log("# autoload -U compinit && compinit");
-      console.log("# eval \"$(cortexdx completion zsh)\"");
+      console.log('# eval "$(cortexdx completion zsh)"');
     } else {
-      console.log("# cortexdx completion fish > ~/.config/fish/completions/cortexdx.fish");
+      console.log(
+        "# cortexdx completion fish > ~/.config/fish/completions/cortexdx.fish",
+      );
     }
   });
 
@@ -735,10 +745,16 @@ program.parseAsync().catch((e) => {
   if (errorMessage.includes("EACCES") || errorMessage.includes("permission")) {
     errorCode = ErrorCode.E_AUTH;
     exitCode = ExitCode.Policy;
-  } else if (errorMessage.includes("ENOTFOUND") || errorMessage.includes("network")) {
+  } else if (
+    errorMessage.includes("ENOTFOUND") ||
+    errorMessage.includes("network")
+  ) {
     errorCode = ErrorCode.E_NETWORK;
     exitCode = ExitCode.Failure;
-  } else if (errorMessage.includes("ENOENT") || errorMessage.includes("not found")) {
+  } else if (
+    errorMessage.includes("ENOENT") ||
+    errorMessage.includes("not found")
+  ) {
     errorCode = ErrorCode.E_FILE_NOT_FOUND;
     exitCode = ExitCode.Usage;
   }
@@ -751,7 +767,11 @@ program.parseAsync().catch((e) => {
       const suggestion = findClosestCommand(unknownCommand, availableCommands);
       if (suggestion) {
         console.error(`Unknown command: ${unknownCommand}`);
-        console.error(formatSuggestions([{ command: suggestion, input: unknownCommand, distance: 0 }]));
+        console.error(
+          formatSuggestions([
+            { command: suggestion, input: unknownCommand, distance: 0 },
+          ]),
+        );
         console.error(`\nRun 'cortexdx --help' for available commands.`);
         process.exit(ExitCode.Usage);
       }

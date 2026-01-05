@@ -54,17 +54,23 @@ describe("api-key-hash", () => {
     });
 
     it("should reject whitespace-only API key", async () => {
-      await expect(hashApiKey("   ")).rejects.toThrow("API key cannot be empty");
+      await expect(hashApiKey("   ")).rejects.toThrow(
+        "API key cannot be empty",
+      );
     });
 
     it("should reject work factor below minimum", async () => {
       const apiKey = "sk_test_1234567890abcdef";
-      await expect(hashApiKey(apiKey, MIN_BCRYPT_WORK_FACTOR - 1)).rejects.toThrow();
+      await expect(
+        hashApiKey(apiKey, MIN_BCRYPT_WORK_FACTOR - 1),
+      ).rejects.toThrow();
     });
 
     it("should reject work factor above maximum", async () => {
       const apiKey = "sk_test_1234567890abcdef";
-      await expect(hashApiKey(apiKey, MAX_BCRYPT_WORK_FACTOR + 1)).rejects.toThrow();
+      await expect(
+        hashApiKey(apiKey, MAX_BCRYPT_WORK_FACTOR + 1),
+      ).rejects.toThrow();
     });
 
     it("should handle long API keys", async () => {
@@ -360,7 +366,10 @@ describe("api-key-hash", () => {
       const hash1 = await hashApiKey("sk_test_key1");
       const hash2 = await hashApiKey("sk_test_key2");
 
-      const result = await verifyApiKeyAgainstMultiple(wrongKey, [hash1.hash, hash2.hash]);
+      const result = await verifyApiKeyAgainstMultiple(wrongKey, [
+        hash1.hash,
+        hash2.hash,
+      ]);
 
       expect(result.valid).toBe(false);
       expect(result.matchedIndex).toBeUndefined();

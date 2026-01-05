@@ -15,10 +15,22 @@ import type { VectorStorage } from "../storage/vector-storage.js";
 import { type CacheEntry, SpecCacheStore } from "./cache-store.js";
 import { createKnowledgeRag } from "./rag/rag.js";
 import type { KnowledgeRAG, SearchResult } from "./rag/types.js";
-import { HttpTransportAdapter, SseTransportAdapter, WebSocketTransportAdapter } from "./transport/adapters.js";
+import {
+  HttpTransportAdapter,
+  SseTransportAdapter,
+  WebSocketTransportAdapter,
+} from "./transport/adapters.js";
 import { DefaultTransportSelector } from "./transport/selector.js";
-import { type FetchInput, type FetchResult, type TransportAdapter, TransportType } from "./transport/types.js";
-import { SemverVersionManager, type VersionManager } from "./version-manager.js";
+import {
+  type FetchInput,
+  type FetchResult,
+  type TransportAdapter,
+  TransportType,
+} from "./transport/types.js";
+import {
+  SemverVersionManager,
+  type VersionManager,
+} from "./version-manager.js";
 
 interface KnowledgeOrchestratorOptions {
   baseUrl: string;
@@ -51,7 +63,8 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     this.defaultTtl = options.defaultTtlMs ?? 24 * 60 * 60 * 1000;
     this.baseUrl = options.baseUrl;
 
-    const cacheDir = options.cacheDir ?? path.resolve(process.cwd(), ".cortexdx/knowledge");
+    const cacheDir =
+      options.cacheDir ?? path.resolve(process.cwd(), ".cortexdx/knowledge");
     mkdirSync(cacheDir, { recursive: true });
     this.store = new SpecCacheStore(path.join(cacheDir, "cache.db"));
     this.cache = new LRUCache<CacheEntry>({
@@ -61,9 +74,18 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
 
     // Initialize transports
     const timeout = options.fetchTimeoutMs ?? 10_000;
-    this.transports.set(TransportType.HTTP, new HttpTransportAdapter(options.baseUrl, timeout));
-    this.transports.set(TransportType.SSE, new SseTransportAdapter(options.baseUrl, timeout));
-    this.transports.set(TransportType.WEBSOCKET, new WebSocketTransportAdapter(options.baseUrl, timeout));
+    this.transports.set(
+      TransportType.HTTP,
+      new HttpTransportAdapter(options.baseUrl, timeout),
+    );
+    this.transports.set(
+      TransportType.SSE,
+      new SseTransportAdapter(options.baseUrl, timeout),
+    );
+    this.transports.set(
+      TransportType.WEBSOCKET,
+      new WebSocketTransportAdapter(options.baseUrl, timeout),
+    );
 
     // Initialize RAG if configured
     if (options.rag) {
@@ -81,7 +103,7 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
           const result = await httpTransport.fetch({
             url: `${this.baseUrl}/versions.json`,
             section: "versions",
-            version: "meta"
+            version: "meta",
           });
           if (result.content) {
             return JSON.parse(result.content);
@@ -90,12 +112,14 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
       } catch (e) {
         // Ignore error
       }
-      return [{
-        version: this.defaultVersion,
-        releaseDate: new Date().toISOString(),
-        isLatest: true,
-        isDeprecated: false
-      }];
+      return [
+        {
+          version: this.defaultVersion,
+          releaseDate: new Date().toISOString(),
+          isLatest: true,
+          isDeprecated: false,
+        },
+      ];
     });
   }
 
@@ -118,7 +142,11 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     try {
       const entry = await this.fetchOrQueue(cacheKey, request, version, cached);
       if (entry) {
-        return toResponse(entry, cached && entry === cached ? "cache" : "fetch", maxAge);
+        return toResponse(
+          entry,
+          cached && entry === cached ? "cache" : "fetch",
+          maxAge,
+        );
       }
     } catch (error) {
       if (request.fallbackToCache !== false && cached) {
@@ -134,7 +162,10 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     throw new Error(`Unable to load section ${request.section} (${version})`);
   }
 
-  async search(query: string, options?: { limit?: number; minSimilarity?: number }): Promise<KnowledgeSearchResult[]> {
+  async search(
+    query: string,
+    options?: { limit?: number; minSimilarity?: number },
+  ): Promise<KnowledgeSearchResult[]> {
     if (!this.rag) {
       return [];
     }
@@ -142,21 +173,29 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     return results.map((r: SearchResult) => ({
       chunk: r.chunk,
       similarity: r.similarity,
-      rank: r.rank
+      rank: r.rank,
     }));
   }
 
   async prefetch(sections: string[]): Promise<void> {
     await Promise.all(
-      sections.map((section) => this.get({ section, fallbackToCache: true }).catch(() => undefined)),
+      sections.map((section) =>
+        this.get({ section, fallbackToCache: true }).catch(() => undefined),
+      ),
     );
   }
 
   async refresh(sections: string[]): Promise<void> {
     for (const section of sections) {
       // Create a dummy request for refresh
-      const request: KnowledgeRequest = { section, version: this.defaultVersion, fallbackToCache: false };
-      await this.fetchAndPersist(request, this.defaultVersion, null, 0).catch(() => undefined);
+      const request: KnowledgeRequest = {
+        section,
+        version: this.defaultVersion,
+        fallbackToCache: false,
+      };
+      await this.fetchAndPersist(request, this.defaultVersion, null, 0).catch(
+        () => undefined,
+      );
     }
   }
 
@@ -185,7 +224,12 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     if (pending) {
       return pending;
     }
-    const fetchPromise = this.fetchAndPersist(request, version, cached, this.defaultTtl)
+    const fetchPromise = this.fetchAndPersist(
+      request,
+      version,
+      cached,
+      this.defaultTtl,
+    )
       .catch((error) => {
         this.inflight.delete(cacheKey);
         throw error;
@@ -204,9 +248,14 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
   ): Promise<CacheEntry | null> {
     // Detect capabilities (cached internally by selector if needed, or we could cache here)
     // For now, we detect on every fetch or rely on selector optimization
-    const capabilities = await this.transportSelector.detectCapabilities(this.baseUrl);
+    const capabilities = await this.transportSelector.detectCapabilities(
+      this.baseUrl,
+    );
 
-    const selectedTransport = this.transportSelector.selectTransport(request, capabilities);
+    const selectedTransport = this.transportSelector.selectTransport(
+      request,
+      capabilities,
+    );
 
     const fetchInput: FetchInput = {
       section: request.section,
@@ -221,11 +270,20 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
 
     try {
       const adapter = this.transports.get(selectedTransport);
-      if (!adapter) throw new Error(`Transport ${selectedTransport} not initialized`);
+      if (!adapter)
+        throw new Error(`Transport ${selectedTransport} not initialized`);
       fetchResult = await adapter.fetch(fetchInput);
-      this.transportSelector.updateMetrics(selectedTransport, true, Date.now() - startTime);
+      this.transportSelector.updateMetrics(
+        selectedTransport,
+        true,
+        Date.now() - startTime,
+      );
     } catch (e) {
-      this.transportSelector.updateMetrics(selectedTransport, false, Date.now() - startTime);
+      this.transportSelector.updateMetrics(
+        selectedTransport,
+        false,
+        Date.now() - startTime,
+      );
 
       // Fallback to HTTP if we tried something else and it failed
       if (selectedTransport !== TransportType.HTTP) {
@@ -234,9 +292,17 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
         if (httpAdapter) {
           try {
             fetchResult = await httpAdapter.fetch(fetchInput);
-            this.transportSelector.updateMetrics(TransportType.HTTP, true, Date.now() - fallbackStartTime);
+            this.transportSelector.updateMetrics(
+              TransportType.HTTP,
+              true,
+              Date.now() - fallbackStartTime,
+            );
           } catch (fallbackError) {
-            this.transportSelector.updateMetrics(TransportType.HTTP, false, Date.now() - fallbackStartTime);
+            this.transportSelector.updateMetrics(
+              TransportType.HTTP,
+              false,
+              Date.now() - fallbackStartTime,
+            );
             throw fallbackError;
           }
         } else {
@@ -248,7 +314,10 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     }
 
     if (fetchResult.notModified && cached) {
-      const refreshed = { ...cached, metadata: { ...cached.metadata, fetchedAt: Date.now() } };
+      const refreshed = {
+        ...cached,
+        metadata: { ...cached.metadata, fetchedAt: Date.now() },
+      };
       this.save(refreshed);
       return refreshed;
     }
@@ -271,17 +340,22 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
     // Index content in RAG if available
     if (this.rag) {
       // Fire and forget indexing to avoid blocking response
-      this.rag.indexSpec({
-        section: entry.section,
-        version: entry.version,
-        content: entry.content,
-        metadata: entry.metadata
-      }).catch((err: unknown) => {
-        // Log error properly
-        if (process.env.NODE_ENV !== 'test') {
-          console.error(`Failed to index spec section ${entry.section}:`, err);
-        }
-      });
+      this.rag
+        .indexSpec({
+          section: entry.section,
+          version: entry.version,
+          content: entry.content,
+          metadata: entry.metadata,
+        })
+        .catch((err: unknown) => {
+          // Log error properly
+          if (process.env.NODE_ENV !== "test") {
+            console.error(
+              `Failed to index spec section ${entry.section}:`,
+              err,
+            );
+          }
+        });
     }
 
     return entry;
@@ -313,9 +387,15 @@ export function createKnowledgeOrchestrator(
   return new KnowledgeOrchestratorImpl(options);
 }
 
-function toResponse(entry: CacheEntry, source: "cache" | "fetch", maxAge: number, freshOverride?: boolean): KnowledgeResponse {
+function toResponse(
+  entry: CacheEntry,
+  source: "cache" | "fetch",
+  maxAge: number,
+  freshOverride?: boolean,
+): KnowledgeResponse {
   const age = Date.now() - entry.metadata.fetchedAt;
-  const fresh = typeof freshOverride === "boolean" ? freshOverride : age <= maxAge;
+  const fresh =
+    typeof freshOverride === "boolean" ? freshOverride : age <= maxAge;
   const content: SpecContent = {
     section: entry.section,
     version: entry.version,
@@ -342,7 +422,11 @@ function splitKey(key: string): [string, string] {
   return [parts[0], parts[1]];
 }
 
-function buildSpecUrl(section: string, version: string, fallbackVersion: string): string {
+function buildSpecUrl(
+  section: string,
+  version: string,
+  fallbackVersion: string,
+): string {
   const resolvedVersion = version || fallbackVersion;
   return `/specification/${resolvedVersion}/${section}`;
 }

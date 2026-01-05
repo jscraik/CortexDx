@@ -122,7 +122,9 @@ function getCommandNames(program: Command): string[] {
 /**
  * Extract all global flags from a Commander program
  */
-function getGlobalFlags(_program: Command): Array<{ name: string; description: string }> {
+function getGlobalFlags(
+  _program: Command,
+): Array<{ name: string; description: string }> {
   const flags: Array<{ name: string; description: string }> = [];
   // Common global flags that should be in every CLI
   const commonFlags = [
@@ -146,10 +148,12 @@ function getGlobalFlags(_program: Command): Array<{ name: string; description: s
 function generateBashFlagCases(program: Command): string {
   const flags = getGlobalFlags(program);
   return flags
-    .map((flag) => `        ${flag.name})
+    .map(
+      (flag) => `        ${flag.name})
             COMPREPLY=($(compgen -W "" -- "\${cur}"))
             ;;
-`)
+`,
+    )
     .join("\n");
 }
 
@@ -158,7 +162,9 @@ function generateBashFlagCases(program: Command): string {
  */
 function generateZshCommandList(program: Command): string {
   const commands = getCommandNames(program);
-  return commands.map((cmd) => `        '${cmd}:${cmd.replace("-", " ")}'`).join("\n");
+  return commands
+    .map((cmd) => `        '${cmd}:${cmd.replace("-", " ")}'`)
+    .join("\n");
 }
 
 /**
@@ -180,7 +186,10 @@ function generateZshCommandCases(program: Command): string {
 function generateFishCommandCompletions(program: Command): string {
   const commands = getCommandNames(program);
   return commands
-    .map((cmd) => `complete -c ${program.name()} -f -n "__fish_use_subcommand" -a ${cmd}`)
+    .map(
+      (cmd) =>
+        `complete -c ${program.name()} -f -n "__fish_use_subcommand" -a ${cmd}`,
+    )
     .join("\n");
 }
 
@@ -190,7 +199,10 @@ function generateFishCommandCompletions(program: Command): string {
 function generateFishFlagCompletions(program: Command): string {
   const flags = getGlobalFlags(program);
   return flags
-    .map((flag) => `complete -c ${program.name()} -l ${flag.name.replace("--", "")} -d '${flag.description}'`)
+    .map(
+      (flag) =>
+        `complete -c ${program.name()} -l ${flag.name.replace("--", "")} -d '${flag.description}'`,
+    )
     .join("\n");
 }
 

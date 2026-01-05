@@ -69,7 +69,9 @@ export function validateEndpointSecurity(endpoint: string): {
 
     // Only require HTTPS for non-local development endpoints
     if (!isLocalDevelopment && url.protocol !== "https:") {
-      errors.push(`Endpoint must use HTTPS for non-local endpoints, got ${url.protocol}`);
+      errors.push(
+        `Endpoint must use HTTPS for non-local endpoints, got ${url.protocol}`,
+      );
     }
 
     // Check for port validation (no default HTTP ports)
@@ -77,7 +79,9 @@ export function validateEndpointSecurity(endpoint: string): {
       errors.push("HTTP ports should not be used with OAuth");
     }
   } catch (error) {
-    errors.push(`Invalid endpoint URL: ${error instanceof Error ? error.message : "Unknown error"}`);
+    errors.push(
+      `Invalid endpoint URL: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 
   return {
@@ -91,7 +95,10 @@ export function validateEndpointSecurity(endpoint: string): {
  *
  * Prevents token acceptance across different resources/services
  */
-export function validateAudience(tokenAudience: string | undefined, expectedAudience: string): {
+export function validateAudience(
+  tokenAudience: string | undefined,
+  expectedAudience: string,
+): {
   valid: boolean;
   error?: string;
 } {
@@ -115,7 +122,10 @@ export function validateAudience(tokenAudience: string | undefined, expectedAudi
 /**
  * Mask sensitive values for logging
  */
-export function maskSensitiveValue(value: string, visibleChars: number = 4): string {
+export function maskSensitiveValue(
+  value: string,
+  visibleChars: number = 4,
+): string {
   if (value.length <= visibleChars * 2) {
     return "*".repeat(value.length);
   }
@@ -158,7 +168,8 @@ export const pkce = {
    */
   generateCodeVerifier(): string {
     const length = 128;
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
     const random = randomBytes(length);
 
     let result = "";
@@ -219,7 +230,10 @@ export function sanitizeError(error: Error | string): string {
   const noPaths = message.replace(/\/[^\s]+/g, "[path]");
 
   // Remove internal function names
-  const noFunctions = noPaths.replace(/\b[a-zA-Z_$][a-zA-Z0-9_$]*\s*\(/g, "[function](");
+  const noFunctions = noPaths.replace(
+    /\b[a-zA-Z_$][a-zA-Z0-9_$]*\s*\(/g,
+    "[function](",
+  );
 
   // Limit length
   const maxLength = 200;
@@ -242,14 +256,17 @@ export function validateJwtStructure(token: string): {
 
   const parts = token.split(".");
   if (parts.length !== 3) {
-    return { valid: false, error: `Invalid token structure (expected 3 parts, got ${parts.length})` };
+    return {
+      valid: false,
+      error: `Invalid token structure (expected 3 parts, got ${parts.length})`,
+    };
   }
 
   try {
     // Validate each part is valid base64
     for (const part of parts) {
       // Add padding if needed
-      const padded = part + "=".repeat((4 - part.length % 4) % 4);
+      const padded = part + "=".repeat((4 - (part.length % 4)) % 4);
       Buffer.from(padded, "base64");
     }
 
@@ -293,7 +310,9 @@ export class AuthRateLimiter {
     if (attempts.length >= this.maxAttempts) {
       // Calculate when the oldest attempt will expire
       const oldestAttempt = attempts[0];
-      const retryAfter = Math.ceil((oldestAttempt + this.windowMs - now) / 1000);
+      const retryAfter = Math.ceil(
+        (oldestAttempt + this.windowMs - now) / 1000,
+      );
 
       return {
         allowed: false,
@@ -323,7 +342,9 @@ export class AuthRateLimiter {
     const windowStart = now - this.windowMs;
 
     for (const [key, attempts] of this.attempts.entries()) {
-      const validAttempts = attempts.filter((timestamp) => timestamp > windowStart);
+      const validAttempts = attempts.filter(
+        (timestamp) => timestamp > windowStart,
+      );
       if (validAttempts.length === 0) {
         this.attempts.delete(key);
       } else {
@@ -366,13 +387,17 @@ export function auditOAuthSecurity(config: {
     critical.push(...endpointValidation.errors);
   }
 
-  const tokenEndpointValidation = validateEndpointSecurity(config.tokenEndpoint);
+  const tokenEndpointValidation = validateEndpointSecurity(
+    config.tokenEndpoint,
+  );
   if (!tokenEndpointValidation.valid) {
     critical.push(...tokenEndpointValidation.errors);
   }
 
   if (config.deviceCodeEndpoint) {
-    const deviceValidation = validateEndpointSecurity(config.deviceCodeEndpoint);
+    const deviceValidation = validateEndpointSecurity(
+      config.deviceCodeEndpoint,
+    );
     if (!deviceValidation.valid) {
       critical.push(...deviceValidation.errors);
     }
@@ -393,7 +418,9 @@ export function auditOAuthSecurity(config: {
   // Check audience
   if (!config.audience) {
     high.push("No audience specified - tokens could be used for any resource");
-    recommendations.push("Always specify audience parameter for token requests");
+    recommendations.push(
+      "Always specify audience parameter for token requests",
+    );
   }
 
   // Check for TLS

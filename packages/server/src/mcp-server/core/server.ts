@@ -15,10 +15,7 @@ import type {
   ServerPluginHost,
 } from "../plugins/types";
 // import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
-import type {
-  JsonRpcResponse,
-  TransportConfig
-} from "../transports/types";
+import type { JsonRpcResponse, TransportConfig } from "../transports/types";
 import {
   DEFAULT_PROTOCOL_VERSION,
   type ProtocolVersion,

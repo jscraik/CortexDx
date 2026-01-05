@@ -13,7 +13,7 @@
     "codebasePath": "/tmp/repo",
     "state": "not_indexed",
     "summary": "No DeepContext index artifacts detected; status: index cleared; missing /tmp/repo/.codex-context",
-    "updatedAt": "2026-01-05T11:03:38.110Z",
+    "updatedAt": "2026-01-05T17:49:34.855Z",
     "remoteStatusText": "index cleared",
     "codexContextDir": "/tmp/repo/.codex-context",
     "codexContextExists": false,
@@ -38,6 +38,16 @@
     "indexOutput": "🚀 **Background Indexing Started** - Log: `background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log`\n\n**Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Process**: Running in detached background mode\n\n**📋 How to Monitor Progress:**\n- **Check Status**: Use `get_indexing_status` tool to see completion progress\n- **View Live Logs**: `tail -f background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log`\n- **Final Results**: Status tool will show success rate when complete\n\n💡 **Tip**: The log file is saved in your current directory for easy access.\n\n📝 **For AI Assistant**: Please mention that users can monitor progress with: tail -f background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log (include the dash)",
     "codexContextDir": "/Users/jamiecraik/CortexDx/packages/cortexdx/.codex-context",
     "codexContextExists": true,
+    "indexedCodebasesExists": false
+  },
+  "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx",
+    "state": "not_indexed",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2026-01-05T17:49:34.852Z",
+    "remoteStatusText": "status",
+    "codexContextDir": "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextExists": false,
     "indexedCodebasesExists": false
   }
 }

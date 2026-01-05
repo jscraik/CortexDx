@@ -25,7 +25,7 @@ const jsonRpcStub = async <T>(
 function createDevelopmentContext(): DevelopmentContext {
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (() => { }) as (...args: unknown[]) => void,
+    logger: (() => {}) as (...args: unknown[]) => void,
     request: async <T>(
       _input: RequestInfo,
       _init?: RequestInit,

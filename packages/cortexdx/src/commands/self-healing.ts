@@ -48,7 +48,7 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
   });
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (() => { }) as (...args: unknown[]) => void,
+    logger: (() => {}) as (...args: unknown[]) => void,
     request: async <T>(
       _input: RequestInfo,
       _init?: RequestInit,
@@ -237,7 +237,7 @@ export async function runMonitoring(options: {
       });
 
       // Keep alive
-      return new Promise(() => { }); // Never resolve
+      return new Promise(() => {}); // Never resolve
     }
 
     if (options.stop) {
@@ -323,9 +323,9 @@ async function loadMonitoringConfigs(
   const jobs = Array.isArray(parsed)
     ? parsed
     : parsed &&
-      typeof parsed === "object" &&
-      "jobs" in parsed &&
-      Array.isArray((parsed as { jobs: unknown[] }).jobs)
+        typeof parsed === "object" &&
+        "jobs" in parsed &&
+        Array.isArray((parsed as { jobs: unknown[] }).jobs)
       ? (parsed as { jobs: unknown[] }).jobs
       : [];
 

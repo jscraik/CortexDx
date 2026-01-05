@@ -1,6 +1,11 @@
 import path from "node:path";
 import { DeepContextClient } from "../deepcontext/client.js";
-import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "../types.js";
+import type {
+  DevelopmentContext,
+  DiagnosticContext,
+  McpTool,
+  McpToolResult,
+} from "../types.js";
 
 type AnyContext = DevelopmentContext | DiagnosticContext;
 
@@ -14,8 +19,15 @@ export const createDeepContextTools = (): McpTool[] => [
     inputSchema: {
       type: "object",
       properties: {
-        codebasePath: { type: "string", description: "Absolute path to the codebase" },
-        force: { type: "boolean", description: "Force a full reindex", default: false },
+        codebasePath: {
+          type: "string",
+          description: "Absolute path to the codebase",
+        },
+        force: {
+          type: "boolean",
+          description: "Force a full reindex",
+          default: false,
+        },
       },
       required: ["codebasePath"],
     },
@@ -61,7 +73,8 @@ export async function executeDeepContextTool(
   ctx: AnyContext,
 ): Promise<McpToolResult> {
   const client = new DeepContextClient({ logger: ctx.logger });
-  const payload = (typeof args === "object" && args) ? (args as Record<string, unknown>) : {};
+  const payload =
+    typeof args === "object" && args ? (args as Record<string, unknown>) : {};
 
   switch (tool.name) {
     case "cortexdx_deepcontext_index": {
@@ -75,7 +88,8 @@ export async function executeDeepContextTool(
       if (!query) {
         throw new Error("query is required for cortexdx_deepcontext_search");
       }
-      const maxResults = typeof payload.maxResults === "number" ? payload.maxResults : undefined;
+      const maxResults =
+        typeof payload.maxResults === "number" ? payload.maxResults : undefined;
       const result = await client.searchCodebase(codebase, query, maxResults);
       return {
         content: [
@@ -89,12 +103,16 @@ export async function executeDeepContextTool(
       };
     }
     case "cortexdx_deepcontext_status": {
-      const codebase = payload.codebasePath ? ensureCodebasePath(payload) : undefined;
+      const codebase = payload.codebasePath
+        ? ensureCodebasePath(payload)
+        : undefined;
       const text = await client.getIndexingStatus(codebase);
       return textResult(text);
     }
     case "cortexdx_deepcontext_clear": {
-      const codebase = payload.codebasePath ? ensureCodebasePath(payload) : undefined;
+      const codebase = payload.codebasePath
+        ? ensureCodebasePath(payload)
+        : undefined;
       const text = await client.clearIndex(codebase);
       return textResult(text);
     }

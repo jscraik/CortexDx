@@ -77,7 +77,9 @@ export function canPrompt(noInputFlag: boolean): boolean {
  * Error when interactive input is required but --no-input is set
  */
 export class NoInputError extends Error {
-  constructor(message = "Interactive input required but --no-input was specified") {
+  constructor(
+    message = "Interactive input required but --no-input was specified",
+  ) {
     super(message);
     this.name = "NoInputError";
   }
@@ -104,7 +106,10 @@ export function requireInteractive(noInputFlag: boolean): void {
 /**
  * Check if color output should be used
  */
-export function shouldUseColor(forceColor?: boolean, noColorFlag?: boolean): boolean {
+export function shouldUseColor(
+  forceColor?: boolean,
+  noColorFlag?: boolean,
+): boolean {
   if (noColorFlag) return false;
   if (forceColor) return true;
   const tty = detectTty();

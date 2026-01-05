@@ -29,16 +29,13 @@ export default defineConfig({
   banner: { js: "#!/usr/bin/env node" },
   onSuccess: async () => {
     // Copy web assets to dist
-    const webFiles = ['index.html', 'styles.css', 'app.js'];
-    mkdirSync('dist/web', { recursive: true });
+    const webFiles = ["index.html", "styles.css", "app.js"];
+    mkdirSync("dist/web", { recursive: true });
 
     for (const file of webFiles) {
-      copyFileSync(
-        join('src/web', file),
-        join('dist/web', file)
-      );
+      copyFileSync(join("src/web", file), join("dist/web", file));
     }
 
-    console.log('✓ Web assets copied to dist/web');
-  }
+    console.log("✓ Web assets copied to dist/web");
+  },
 });

@@ -22,7 +22,11 @@ import {
   recoverWorkflowCheckpoint,
 } from "../orchestration/workflow-runtime.js";
 import { storeConsolidatedReport } from "../report/consolidated-report.js";
-import { type AcademicResearchReport, runAcademicResearch, selectConfiguredProviders } from "../research/academic-researcher.js";
+import {
+  type AcademicResearchReport,
+  runAcademicResearch,
+  selectConfiguredProviders,
+} from "../research/academic-researcher.js";
 import type {
   DevelopmentContext,
   DiagnosticContext,
@@ -89,8 +93,7 @@ export async function runOrchestrate(
   const restoreEnv = applySseEnvOverrides(opts);
   try {
     const env = await bootstrapEnvironment(endpoint, opts);
-    const sessionId =
-      opts.threadId ?? `orchestrate-${Date.now().toString(36)}`;
+    const sessionId = opts.threadId ?? `orchestrate-${Date.now().toString(36)}`;
     if (env.kind === "list") {
       listAvailableWorkflows(
         env.pluginOrchestrator,
@@ -283,8 +286,8 @@ async function buildExecutionContext(
   const deterministic = Boolean(opts.deterministic);
   const deterministicSeed = deterministic
     ? createDeterministicSeed(
-      `${endpoint}:${opts.workflow ?? opts.plugin ?? opts.parallel ?? ""}`,
-    )
+        `${endpoint}:${opts.workflow ?? opts.plugin ?? opts.parallel ?? ""}`,
+      )
     : undefined;
   const enhancedLlm = await getEnhancedLlmAdapter({ deterministicSeed });
   const diagnosticCtx = createDiagnosticContext({
@@ -330,8 +333,7 @@ async function runParallelExecution(
   const results = await orchestrator.executeParallel(pluginIds, context);
   const flattened = Array.from(results.results.values()).flat();
   printFindings(flattened, outputJson);
-  const code =
-    results.errors.size > 0 ? 1 : computeExitCode(flattened);
+  const code = results.errors.size > 0 ? 1 : computeExitCode(flattened);
   return { findings: flattened, code };
 }
 
@@ -422,7 +424,7 @@ async function maybeRunAcademicResearchProbe(
   if (missing.length) {
     logger.warn(
       `Research: Skipping providers missing env vars: ${missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", ")}`,
-      { missing }
+      { missing },
     );
   }
   if (ready.length === 0) {
@@ -440,22 +442,29 @@ async function maybeRunAcademicResearchProbe(
     });
     logger.info(
       `Research: ${report.summary.providersResponded}/${report.summary.providersRequested} providers responded for ${topic} (${report.summary.totalFindings} findings)`,
-      { topic, providersResponded: report.summary.providersResponded, providersRequested: report.summary.providersRequested, totalFindings: report.summary.totalFindings }
+      {
+        topic,
+        providersResponded: report.summary.providersResponded,
+        providersRequested: report.summary.providersRequested,
+        totalFindings: report.summary.totalFindings,
+      },
     );
     for (const provider of report.providers) {
       logger.info(
         `  - ${provider.providerName}: ${provider.findings.length} findings`,
-        { provider: provider.providerName, findings: provider.findings.length }
+        { provider: provider.providerName, findings: provider.findings.length },
       );
     }
     if (report.artifacts?.dir) {
-      logger.info(`Research: Artifacts written to ${report.artifacts.dir}`, { artifactsDir: report.artifacts.dir });
+      logger.info(`Research: Artifacts written to ${report.artifacts.dir}`, {
+        artifactsDir: report.artifacts.dir,
+      });
     }
     return report;
   } catch (error) {
     logger.warn(
       `Research: Unable to run academic research probe: ${error instanceof Error ? error.message : String(error)}`,
-      { error }
+      { error },
     );
     return null;
   }
@@ -502,7 +511,7 @@ function printFindings(findings: Finding[], asJson?: boolean): void {
   for (const finding of findings) {
     logger.info(
       `[${finding.severity.toUpperCase()}] ${finding.title} :: ${finding.description}`,
-      { severity: finding.severity, title: finding.title }
+      { severity: finding.severity, title: finding.title },
     );
   }
   logger.info(`Total findings: ${findings.length}`, { count: findings.length });
@@ -511,17 +520,17 @@ function printFindings(findings: Finding[], asJson?: boolean): void {
 function logDeviceCodePrompt(userCode: string, verificationUri: string): void {
   logger.info(
     `Auth0 Device Code: Visit ${verificationUri} and enter code ${userCode} to continue authentication.`,
-    { userCode, verificationUri }
+    { userCode, verificationUri },
   );
 }
 
 function summarizeResearch(report: AcademicResearchReport | null):
   | {
-    topic: string;
-    providersResponded: number;
-    totalFindings: number;
-    artifactsDir?: string;
-  }
+      topic: string;
+      providersResponded: number;
+      totalFindings: number;
+      artifactsDir?: string;
+    }
   | undefined {
   if (!report) return undefined;
   return {

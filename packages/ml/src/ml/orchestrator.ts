@@ -312,7 +312,6 @@ export class LlmOrchestrator {
         //   timestamp: Date.now(),
         // };
         // this.performanceMonitor.recordMetric(perfMetric);
-
         // // Check if model should be switched
         // const switchRecommendation = this.performanceMonitor.shouldSwitchModel(
         //   metrics.backend,

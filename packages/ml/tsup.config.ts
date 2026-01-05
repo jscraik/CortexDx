@@ -8,7 +8,7 @@ export default defineConfig({
     "src/ml/ollama-env.ts",
     "src/ml/conversational-adapter.ts",
     "src/adapters/ollama.ts",
-    "src/llm/index.ts"
+    "src/llm/index.ts",
   ],
   format: ["esm"],
   dts: false,
@@ -25,13 +25,13 @@ export default defineConfig({
   ],
   onSuccess: async () => {
     // Generate minimal d.ts files for exports
-    const { writeFile, mkdir } = await import('node:fs/promises');
-    const { join } = await import('node:path');
+    const { writeFile, mkdir } = await import("node:fs/promises");
+    const { join } = await import("node:path");
 
     // Ensure directories exist
-    await mkdir(join('dist', 'ml'), { recursive: true });
-    await mkdir(join('dist', 'adapters'), { recursive: true });
-    await mkdir(join('dist', 'llm'), { recursive: true });
+    await mkdir(join("dist", "ml"), { recursive: true });
+    await mkdir(join("dist", "adapters"), { recursive: true });
+    await mkdir(join("dist", "llm"), { recursive: true });
 
     // Generate index.d.ts with all public exports
     const indexDts = `// Auto-generated minimal type definitions
@@ -58,9 +58,9 @@ export * from './base.js';
 
     // Write all DTS files
     await Promise.all([
-      writeFile('dist/index.d.ts', indexDts),
-      writeFile('dist/ml/index.d.ts', mlIndexDts),
-      writeFile('dist/llm/index.d.ts', llmIndexDts),
+      writeFile("dist/index.d.ts", indexDts),
+      writeFile("dist/ml/index.d.ts", mlIndexDts),
+      writeFile("dist/llm/index.d.ts", llmIndexDts),
     ]);
-  }
+  },
 });

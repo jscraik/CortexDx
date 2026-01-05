@@ -53,7 +53,10 @@ export class HttpMcpClient {
     this.timeoutMs = options.timeoutMs ?? 30000;
   }
 
-  async callTool(name: string, args: Record<string, unknown>): Promise<McpToolResult> {
+  async callTool(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<McpToolResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
@@ -74,7 +77,9 @@ export class HttpMcpClient {
 
       if (!response.ok) {
         const detail = await safeReadText(response);
-        throw new Error(`HTTP ${response.status}: ${detail || response.statusText}`);
+        throw new Error(
+          `HTTP ${response.status}: ${detail || response.statusText}`,
+        );
       }
 
       const payload = (await response.json()) as JsonRpcResponse;
@@ -89,7 +94,10 @@ export class HttpMcpClient {
     }
   }
 
-  async callToolJson<T>(name: string, args: Record<string, unknown>): Promise<T> {
+  async callToolJson<T>(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<T> {
     const result = await this.callTool(name, args);
     return extractJsonPayload<T>(result);
   }
@@ -117,7 +125,9 @@ export function extractJsonPayload<T>(result: McpToolResult): T {
     .join("\n")
     .trim();
   if (!textual) {
-    throw new Error("Remote MCP tool returned no structured or textual JSON payload");
+    throw new Error(
+      "Remote MCP tool returned no structured or textual JSON payload",
+    );
   }
   try {
     return safeParseJson(textual) as T;
@@ -134,7 +144,9 @@ async function safeReadText(response: Response): Promise<string> {
   }
 }
 
-export function sanitizeToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+export function sanitizeToolArgs(
+  args: Record<string, unknown>,
+): Record<string, unknown> {
   const filtered: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(args)) {
     if (value === undefined) continue;

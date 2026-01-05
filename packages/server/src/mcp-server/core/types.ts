@@ -5,12 +5,29 @@
 
 // Re-export JSON-RPC 2.0 types
 export type {
-  JSONRPCError, JSONRPCErrorResponse, JSONRPCMessage, JSONRPCNotification, JSONRPCRequest, JSONRPCResponse, JSONRPCResultResponse, RequestId
+  JSONRPCError,
+  JSONRPCErrorResponse,
+  JSONRPCMessage,
+  JSONRPCNotification,
+  JSONRPCRequest,
+  JSONRPCResponse,
+  JSONRPCResultResponse,
+  RequestId,
 } from "./jsonrpc.js";
 
 export {
-  createJSONRPCErrorResponse, createJSONRPCNotification, createJSONRPCRequest, createJSONRPCResultResponse, isJSONRPCErrorResponse, isJSONRPCNotification, isJSONRPCRequest, isJSONRPCResultResponse, JSONRPCErrorCode, parseJSONRPCMessage,
-  serializeJSONRPCMessage, validateJSONRPCMessage
+  createJSONRPCErrorResponse,
+  createJSONRPCNotification,
+  createJSONRPCRequest,
+  createJSONRPCResultResponse,
+  isJSONRPCErrorResponse,
+  isJSONRPCNotification,
+  isJSONRPCRequest,
+  isJSONRPCResultResponse,
+  JSONRPCErrorCode,
+  parseJSONRPCMessage,
+  serializeJSONRPCMessage,
+  validateJSONRPCMessage,
 } from "./jsonrpc.js";
 
 // Import internal task types for use in MCP types
@@ -408,25 +425,25 @@ export interface ToolCallResponse {
 export type ToolCallContent =
   | { type: "text"; text: string; annotations?: ResourceAnnotations }
   | {
-    type: "image";
-    data: string;
-    mimeType: string;
-    annotations?: ResourceAnnotations;
-  }
+      type: "image";
+      data: string;
+      mimeType: string;
+      annotations?: ResourceAnnotations;
+    }
   | {
-    type: "audio";
-    data: string;
-    mimeType: string;
-    annotations?: ResourceAnnotations;
-  }
+      type: "audio";
+      data: string;
+      mimeType: string;
+      annotations?: ResourceAnnotations;
+    }
   | {
-    type: "resource_link";
-    uri: string;
-    name?: string;
-    description?: string;
-    mimeType?: string;
-    annotations?: ResourceAnnotations;
-  }
+      type: "resource_link";
+      uri: string;
+      name?: string;
+      description?: string;
+      mimeType?: string;
+      annotations?: ResourceAnnotations;
+    }
   | { type: "resource"; resource: EmbeddedResource };
 
 /**
@@ -902,7 +919,14 @@ export type ContentBlock =
   | TextContent
   | ImageContent
   | AudioContent
-  | { type: "resource_link"; uri: string; name?: string; description?: string; mimeType?: string; annotations?: ResourceAnnotations }
+  | {
+      type: "resource_link";
+      uri: string;
+      name?: string;
+      description?: string;
+      mimeType?: string;
+      annotations?: ResourceAnnotations;
+    }
   | { type: "resource"; resource: EmbeddedResource };
 
 export interface ToolResultContent {
@@ -1023,11 +1047,11 @@ export type ProgressToken = string | number;
  * - completed, failed, cancelled are terminal states
  */
 export type MCPTaskStatus =
-  | "working"        // Currently being processed
+  | "working" // Currently being processed
   | "input_required" // Needs input from requestor
-  | "completed"      // Successfully completed
-  | "failed"         // Did not complete successfully
-  | "cancelled";     // Cancelled before completion
+  | "completed" // Successfully completed
+  | "failed" // Did not complete successfully
+  | "cancelled"; // Cancelled before completion
 
 /**
  * Base parameters for task-augmented requests
@@ -1179,7 +1203,7 @@ export type {
   TaskAugmentation,
   TaskMetadata,
   TaskRecord,
-  TaskStatus
+  TaskStatus,
 } from "../../tasks/types.js";
 
 /**
@@ -1379,10 +1403,10 @@ export interface ClientRegistrationRequest {
    * Token endpoint authentication method
    */
   token_endpoint_auth_method?:
-  | "none"
-  | "client_secret_basic"
-  | "client_secret_post"
-  | "private_key_jwt";
+    | "none"
+    | "client_secret_basic"
+    | "client_secret_post"
+    | "private_key_jwt";
   /**
    * Grant types the client will use
    */
@@ -1535,14 +1559,14 @@ export interface OAuthErrorResponse {
    * Error code
    */
   error:
-  | "invalid_request"
-  | "invalid_client"
-  | "invalid_grant"
-  | "unauthorized_client"
-  | "unsupported_grant_type"
-  | "invalid_scope"
-  | "access_denied"
-  | "server_error";
+    | "invalid_request"
+    | "invalid_client"
+    | "invalid_grant"
+    | "unauthorized_client"
+    | "unsupported_grant_type"
+    | "invalid_scope"
+    | "access_denied"
+    | "server_error";
   /**
    * Human-readable error description
    */
@@ -1812,15 +1836,13 @@ export class UserError extends Error {
  * Helper to create image content from URL, path, or buffer
  * Based on FastMCP imageContent pattern
  */
-export async function createImageContent(
-  options: {
-    url?: string;
-    path?: string;
-    buffer?: Buffer;
-    mimeType?: string;
-    annotations?: ResourceAnnotations;
-  }
-): Promise<ImageContent> {
+export async function createImageContent(options: {
+  url?: string;
+  path?: string;
+  buffer?: Buffer;
+  mimeType?: string;
+  annotations?: ResourceAnnotations;
+}): Promise<ImageContent> {
   const { url, path, buffer, mimeType, annotations } = options;
 
   let data: string;
@@ -1831,7 +1853,8 @@ export async function createImageContent(
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     data = Buffer.from(arrayBuffer).toString("base64");
-    detectedMimeType = mimeType || response.headers.get("content-type") || "image/png";
+    detectedMimeType =
+      mimeType || response.headers.get("content-type") || "image/png";
   } else if (path) {
     // Read from file system
     const fs = await import("node:fs/promises");
@@ -1840,7 +1863,12 @@ export async function createImageContent(
     // Detect MIME type from extension if not provided
     if (!detectedMimeType) {
       const ext = path.split(".").pop()?.toLowerCase();
-      detectedMimeType = ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
+      detectedMimeType =
+        ext === "png"
+          ? "image/png"
+          : ext === "jpg" || ext === "jpeg"
+            ? "image/jpeg"
+            : "image/png";
     }
   } else if (buffer) {
     data = buffer.toString("base64");
@@ -1861,15 +1889,13 @@ export async function createImageContent(
  * Helper to create audio content from URL, path, or buffer
  * Based on FastMCP audioContent pattern
  */
-export async function createAudioContent(
-  options: {
-    url?: string;
-    path?: string;
-    buffer?: Buffer;
-    mimeType?: string;
-    annotations?: ResourceAnnotations;
-  }
-): Promise<AudioContent> {
+export async function createAudioContent(options: {
+  url?: string;
+  path?: string;
+  buffer?: Buffer;
+  mimeType?: string;
+  annotations?: ResourceAnnotations;
+}): Promise<AudioContent> {
   const { url, path, buffer, mimeType, annotations } = options;
 
   let data: string;
@@ -1879,14 +1905,20 @@ export async function createAudioContent(
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     data = Buffer.from(arrayBuffer).toString("base64");
-    detectedMimeType = mimeType || response.headers.get("content-type") || "audio/mpeg";
+    detectedMimeType =
+      mimeType || response.headers.get("content-type") || "audio/mpeg";
   } else if (path) {
     const fs = await import("node:fs/promises");
     const fileBuffer = await fs.readFile(path);
     data = fileBuffer.toString("base64");
     if (!detectedMimeType) {
       const ext = path.split(".").pop()?.toLowerCase();
-      detectedMimeType = ext === "mp3" ? "audio/mpeg" : ext === "wav" ? "audio/wav" : "audio/mpeg";
+      detectedMimeType =
+        ext === "mp3"
+          ? "audio/mpeg"
+          : ext === "wav"
+            ? "audio/wav"
+            : "audio/mpeg";
     }
   } else if (buffer) {
     data = buffer.toString("base64");

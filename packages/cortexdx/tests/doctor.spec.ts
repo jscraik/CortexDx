@@ -29,7 +29,7 @@ describe("runDoctor", () => {
       missing: [],
     });
 
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const { runDoctor } = await import("../src/commands/doctor.js");
 
     const exitCode = await runDoctor({
@@ -92,7 +92,7 @@ describe("runDoctor", () => {
       .spyOn(researchModule, "runAcademicResearch")
       .mockResolvedValue(mockReport as unknown as typeof mockReport);
 
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const { runDoctor } = await import("../src/commands/doctor.js");
 
     const exitCode = await runDoctor({});

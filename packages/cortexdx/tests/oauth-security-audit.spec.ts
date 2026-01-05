@@ -30,7 +30,9 @@ describe("oauth-security-audit", () => {
     });
 
     it("should have reasonable token lifetime limit", () => {
-      expect(OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME).toBeLessThanOrEqual(3600);
+      expect(OAUTH_SECURITY_CONFIG.MAX_TOKEN_LIFETIME).toBeLessThanOrEqual(
+        3600,
+      );
     });
 
     it("should have minimum TLS version of 1.2", () => {
@@ -51,30 +53,40 @@ describe("oauth-security-audit", () => {
 
   describe("validateEndpointSecurity", () => {
     it("should accept HTTPS endpoints", () => {
-      const result = validateEndpointSecurity("https://auth.example.com/oauth/token");
+      const result = validateEndpointSecurity(
+        "https://auth.example.com/oauth/token",
+      );
       expect(result.valid).toBe(true);
       expect(result.errors).toEqual([]);
     });
 
     it("should reject HTTP endpoints for non-local", () => {
-      const result = validateEndpointSecurity("http://auth.example.com/oauth/token");
+      const result = validateEndpointSecurity(
+        "http://auth.example.com/oauth/token",
+      );
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.errors.some((e) => e.includes("HTTPS"))).toBe(true);
     });
 
     it("should accept localhost HTTP for development", () => {
-      const result = validateEndpointSecurity("http://localhost:8000/oauth/token");
+      const result = validateEndpointSecurity(
+        "http://localhost:8000/oauth/token",
+      );
       expect(result.valid).toBe(true);
     });
 
     it("should accept 127.0.0.1 HTTP for development", () => {
-      const result = validateEndpointSecurity("http://127.0.0.1:8000/oauth/token");
+      const result = validateEndpointSecurity(
+        "http://127.0.0.1:8000/oauth/token",
+      );
       expect(result.valid).toBe(true);
     });
 
     it("should accept private network HTTP", () => {
-      const result1 = validateEndpointSecurity("http://192.168.1.1/oauth/token");
+      const result1 = validateEndpointSecurity(
+        "http://192.168.1.1/oauth/token",
+      );
       expect(result1.valid).toBe(true);
 
       const result2 = validateEndpointSecurity("http://10.0.0.1/oauth/token");
@@ -82,18 +94,26 @@ describe("oauth-security-audit", () => {
     });
 
     it("should reject HTTP ports", () => {
-      const result1 = validateEndpointSecurity("https://example.com:80/oauth/token");
+      const result1 = validateEndpointSecurity(
+        "https://example.com:80/oauth/token",
+      );
       expect(result1.valid).toBe(false);
-      expect(result1.errors).toContain("HTTP ports should not be used with OAuth");
+      expect(result1.errors).toContain(
+        "HTTP ports should not be used with OAuth",
+      );
 
-      const result2 = validateEndpointSecurity("https://example.com:8080/oauth/token");
+      const result2 = validateEndpointSecurity(
+        "https://example.com:8080/oauth/token",
+      );
       expect(result2.valid).toBe(false);
     });
 
     it("should reject invalid URLs", () => {
       const result = validateEndpointSecurity("not-a-url");
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes("Invalid endpoint URL"))).toBe(true);
+      expect(
+        result.errors.some((e) => e.includes("Invalid endpoint URL")),
+      ).toBe(true);
     });
   });
 
@@ -332,9 +352,12 @@ describe("oauth-security-audit", () => {
     });
 
     it("should accept valid base64 encoded parts", () => {
-      const jwt = Buffer.from("header").toString("base64") + "." +
-                   Buffer.from("payload").toString("base64") + "." +
-                   Buffer.from("signature").toString("base64");
+      const jwt =
+        Buffer.from("header").toString("base64") +
+        "." +
+        Buffer.from("payload").toString("base64") +
+        "." +
+        Buffer.from("signature").toString("base64");
       expect(validateJwtStructure(jwt).valid).toBe(true);
     });
   });
@@ -423,8 +446,12 @@ describe("oauth-security-audit", () => {
       });
 
       expect(result.valid).toBe(false);
-      expect(result.critical).toContain("PKCE not enabled - required for OAuth 2.1 public clients");
-      expect(result.recommendations).toContain("Enable PKCE for device code flow (RFC 7636)");
+      expect(result.critical).toContain(
+        "PKCE not enabled - required for OAuth 2.1 public clients",
+      );
+      expect(result.recommendations).toContain(
+        "Enable PKCE for device code flow (RFC 7636)",
+      );
     });
 
     it("should detect insecure HTTP endpoints", () => {
@@ -447,7 +474,9 @@ describe("oauth-security-audit", () => {
         usePkce: true,
       });
 
-      expect(result.high).toContain("No audience specified - tokens could be used for any resource");
+      expect(result.high).toContain(
+        "No audience specified - tokens could be used for any resource",
+      );
     });
 
     it("should detect invalid client ID", () => {
@@ -458,7 +487,9 @@ describe("oauth-security-audit", () => {
         usePkce: true,
       });
 
-      expect(result.high.some((e) => e.includes("Invalid client ID"))).toBe(true);
+      expect(result.high.some((e) => e.includes("Invalid client ID"))).toBe(
+        true,
+      );
     });
 
     it("should provide security recommendations", () => {
@@ -471,7 +502,9 @@ describe("oauth-security-audit", () => {
       });
 
       expect(result.recommendations.length).toBeGreaterThan(0);
-      expect(result.recommendations).toContain("Implement token binding with JWT cnf claim");
+      expect(result.recommendations).toContain(
+        "Implement token binding with JWT cnf claim",
+      );
       expect(result.recommendations).toContain("Add refresh token rotation");
       expect(result.recommendations).toContain("Mask sensitive values in logs");
     });

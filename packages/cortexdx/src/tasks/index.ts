@@ -7,12 +7,12 @@
  * @see https://modelcontextprotocol.io/specification/draft/basic/utilities/tasks
  */
 
-export { TaskStore } from './task-store.js';
-export { TaskExecutor } from './task-executor.js';
+export { TaskStore } from "./task-store.js";
+export { TaskExecutor } from "./task-executor.js";
 export type {
   TaskStatus,
   TaskRecord,
   TaskMetadata,
   CreateTaskParams,
-  TaskAugmentation
-} from './types.js';
+  TaskAugmentation,
+} from "./types.js";

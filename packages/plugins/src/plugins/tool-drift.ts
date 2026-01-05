@@ -14,11 +14,12 @@ export const ToolDriftPlugin: DiagnosticPlugin = {
         area: "security",
         severity: "major",
         title: "Mutable tool surface detected",
-        description: "Tools change within a single session without version bump.",
+        description:
+          "Tools change within a single session without version bump.",
         evidence: [{ type: "url", ref: ctx.endpoint }],
-        tags: ["tool-poisoning", "drift"]
+        tags: ["tool-poisoning", "drift"],
       });
     }
     return findings;
-  }
+  },
 };

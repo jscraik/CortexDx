@@ -9,9 +9,17 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({ count = 3, height = 60, className = '' }: LoadingStateProps) {
+export function LoadingState({
+  count = 3,
+  height = 60,
+  className = "",
+}: LoadingStateProps) {
   return (
-    <div className={`space-y-4 ${className}`} role="status" aria-label="Loading">
+    <div
+      className={`space-y-4 ${className}`}
+      role="status"
+      aria-label="Loading"
+    >
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}

@@ -8,9 +8,7 @@ import { SelfImprovementPlugin } from "../src/plugins/development/self-improveme
 import { InspectorAdapter } from "../src/adapters/inspector-adapter.js";
 import * as mlRouter from "../src/ml/router.js";
 import * as academicResearcher from "../src/research/academic-researcher.js";
-import type {
-  AcademicResearchReport,
-} from "../src/research/academic-researcher.js";
+import type { AcademicResearchReport } from "../src/research/academic-researcher.js";
 import type { DevelopmentContext } from "../src/types.js";
 import { createMockLlmAdapter } from "./utils/mock-llm-adapter.js";
 
@@ -72,7 +70,6 @@ afterEach(() => {
 });
 
 describe("Self-Improvement Plugin", () => {
-
   it("flags missing handshake instrumentation files", async () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
@@ -87,9 +84,9 @@ describe("Self-Improvement Plugin", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    expect(findings.some((f) => f.id === "self_improvement.handshake_gaps")).toBe(
-      true,
-    );
+    expect(
+      findings.some((f) => f.id === "self_improvement.handshake_gaps"),
+    ).toBe(true);
   });
 
   it("summarizes inspector signals and captures health check details", async () => {
@@ -113,8 +110,16 @@ describe("Self-Improvement Plugin", () => {
       ...baseContext(),
       request: requestMock,
       conversationHistory: [
-        { role: "user", content: "SSE endpoint not streaming", timestamp: Date.now() },
-        { role: "user", content: "Batch response is not an array", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "SSE endpoint not streaming",
+          timestamp: Date.now(),
+        },
+        {
+          role: "user",
+          content: "Batch response is not an array",
+          timestamp: Date.now(),
+        },
       ],
       transport: {
         sessionId: "session-xyz",
@@ -153,9 +158,13 @@ describe("Self-Improvement Plugin", () => {
 
     const findings = await SelfImprovementPlugin.run(ctx);
     expect(requestMock).toHaveBeenCalledTimes(2);
-    expect(findings.some((f) => f.id === "self_improvement.signal_digest")).toBe(true);
+    expect(
+      findings.some((f) => f.id === "self_improvement.signal_digest"),
+    ).toBe(true);
     expect(findings.some((f) => f.id === "self_improvement.health")).toBe(true);
-    expect(findings.some((f) => f.id === "self_improvement.transport_transcript")).toBe(true);
+    expect(
+      findings.some((f) => f.id === "self_improvement.transport_transcript"),
+    ).toBe(true);
   });
 });
 
@@ -231,7 +240,9 @@ describe("Self-Improvement LLM analysis optimizations", () => {
 
     const findings = await SelfImprovementPlugin.run(ctx);
 
-    const duplicateFindings = findings.filter((finding) => finding.id === "inspector_dup");
+    const duplicateFindings = findings.filter(
+      (finding) => finding.id === "inspector_dup",
+    );
     expect(duplicateFindings).toHaveLength(2);
     expect(duplicateFindings[0]?.llmAnalysis).toBe(
       duplicateFindings[1]?.llmAnalysis,
@@ -258,7 +269,9 @@ describe("Academic insight integration", () => {
     expect(academicResearcher.runAcademicResearch).toHaveBeenCalledWith(
       expect.objectContaining({ topic: expect.stringContaining("cortexdx") }),
     );
-    expect(findings.some((finding) => finding.tags?.includes("academic"))).toBe(true);
+    expect(findings.some((finding) => finding.tags?.includes("academic"))).toBe(
+      true,
+    );
   });
 
   it("emits a fallback finding when academic research fails", async () => {
@@ -323,7 +336,10 @@ describe("Memory leak guard", () => {
   it("reports healthy usage when under the threshold", async () => {
     const requestMock = vi.fn().mockImplementation((input: string) => {
       if (input.includes("/debug/memory")) {
-        return Promise.resolve({ heapUsed: 32 * 1024 * 1024, rss: 96 * 1024 * 1024 });
+        return Promise.resolve({
+          heapUsed: 32 * 1024 * 1024,
+          rss: 96 * 1024 * 1024,
+        });
       }
       return Promise.resolve({ status: "healthy" });
     });
@@ -349,7 +365,10 @@ describe("Memory leak guard", () => {
   it("raises a major finding when usage exceeds the threshold", async () => {
     const requestMock = vi.fn().mockImplementation((input: string) => {
       if (input.includes("/debug/memory")) {
-        return Promise.resolve({ heapUsed: 256 * 1024 * 1024, rss: 512 * 1024 * 1024 });
+        return Promise.resolve({
+          heapUsed: 256 * 1024 * 1024,
+          rss: 512 * 1024 * 1024,
+        });
       }
       return Promise.resolve({ status: "healthy" });
     });
@@ -408,7 +427,9 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const handshakeFinding = findings.find((f) => f.id === "self_improvement.handshake_gaps");
+    const handshakeFinding = findings.find(
+      (f) => f.id === "self_improvement.handshake_gaps",
+    );
 
     expect(handshakeFinding).toBeDefined();
     expect(handshakeFinding?.severity).toBe("major");
@@ -431,7 +452,9 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const handshakeFinding = findings.find((f) => f.id === "self_improvement.handshake_gaps");
+    const handshakeFinding = findings.find(
+      (f) => f.id === "self_improvement.handshake_gaps",
+    );
 
     expect(handshakeFinding).toBeDefined();
     expect(handshakeFinding?.description).toContain("sse.ts");
@@ -451,7 +474,9 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const handshakeFinding = findings.find((f) => f.id === "self_improvement.handshake_gaps");
+    const handshakeFinding = findings.find(
+      (f) => f.id === "self_improvement.handshake_gaps",
+    );
 
     expect(handshakeFinding).toBeDefined();
     expect(handshakeFinding?.description).toContain("jsonrpc.ts");
@@ -476,7 +501,9 @@ describe("Handshake Instrumentation Analysis (Req 15.1)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const handshakeFinding = findings.find((f) => f.id === "self_improvement.handshake_gaps");
+    const handshakeFinding = findings.find(
+      (f) => f.id === "self_improvement.handshake_gaps",
+    );
 
     expect(handshakeFinding).toBeUndefined();
   });
@@ -501,12 +528,16 @@ describe("Dependency Validation (Req 15.2)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const depFinding = findings.find((f) => f.id === "self_improvement.dependency_gaps");
+    const depFinding = findings.find(
+      (f) => f.id === "self_improvement.dependency_gaps",
+    );
 
     expect(depFinding).toBeDefined();
     expect(depFinding?.severity).toBe("minor");
     expect(depFinding?.description).toContain("@modelcontextprotocol/sdk");
-    expect(depFinding?.recommendation).toContain("Install the missing packages");
+    expect(depFinding?.recommendation).toContain(
+      "Install the missing packages",
+    );
   });
 
   it("detects missing eventsource-parser dependency", async () => {
@@ -526,7 +557,9 @@ describe("Dependency Validation (Req 15.2)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const depFinding = findings.find((f) => f.id === "self_improvement.dependency_gaps");
+    const depFinding = findings.find(
+      (f) => f.id === "self_improvement.dependency_gaps",
+    );
 
     expect(depFinding).toBeDefined();
     expect(depFinding?.description).toContain("eventsource-parser");
@@ -549,7 +582,9 @@ describe("Dependency Validation (Req 15.2)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const depFinding = findings.find((f) => f.id === "self_improvement.dependency_gaps");
+    const depFinding = findings.find(
+      (f) => f.id === "self_improvement.dependency_gaps",
+    );
 
     expect(depFinding).toBeDefined();
     expect(depFinding?.description).toContain("@modelcontextprotocol/sdk");
@@ -563,7 +598,11 @@ describe("Dependency Validation (Req 15.2)", () => {
         name: "cortexdx",
         type: "mcp-client",
         language: "typescript",
-        dependencies: ["@modelcontextprotocol/sdk", "eventsource-parser", "vitest"],
+        dependencies: [
+          "@modelcontextprotocol/sdk",
+          "eventsource-parser",
+          "vitest",
+        ],
         configFiles: ["pnpm-lock.yaml"],
         sourceFiles: [
           "packages/cortexdx/src/adapters/jsonrpc.ts",
@@ -573,7 +612,9 @@ describe("Dependency Validation (Req 15.2)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const depFinding = findings.find((f) => f.id === "self_improvement.dependency_gaps");
+    const depFinding = findings.find(
+      (f) => f.id === "self_improvement.dependency_gaps",
+    );
 
     expect(depFinding).toBeUndefined();
   });
@@ -585,9 +626,21 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       conversationHistory: [
-        { role: "user", content: "SSE endpoint not streaming", timestamp: Date.now() },
-        { role: "user", content: "SSE connection drops", timestamp: Date.now() },
-        { role: "user", content: "SSE events not received", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "SSE endpoint not streaming",
+          timestamp: Date.now(),
+        },
+        {
+          role: "user",
+          content: "SSE connection drops",
+          timestamp: Date.now(),
+        },
+        {
+          role: "user",
+          content: "SSE events not received",
+          timestamp: Date.now(),
+        },
       ],
       projectContext: {
         name: "cortexdx",
@@ -603,7 +656,9 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const signalFinding = findings.find((f) => f.id === "self_improvement.signal_digest");
+    const signalFinding = findings.find(
+      (f) => f.id === "self_improvement.signal_digest",
+    );
 
     expect(signalFinding).toBeDefined();
     expect(signalFinding?.severity).toBe("info");
@@ -615,8 +670,16 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       conversationHistory: [
-        { role: "user", content: "Batch response is not an array", timestamp: Date.now() },
-        { role: "user", content: "Batch request failed", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "Batch response is not an array",
+          timestamp: Date.now(),
+        },
+        {
+          role: "user",
+          content: "Batch request failed",
+          timestamp: Date.now(),
+        },
       ],
       projectContext: {
         name: "cortexdx",
@@ -632,7 +695,9 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const signalFinding = findings.find((f) => f.id === "self_improvement.signal_digest");
+    const signalFinding = findings.find(
+      (f) => f.id === "self_improvement.signal_digest",
+    );
 
     expect(signalFinding).toBeDefined();
     expect(signalFinding?.description).toContain("JSON-RPC batch issues");
@@ -660,7 +725,9 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const signalFinding = findings.find((f) => f.id === "self_improvement.signal_digest");
+    const signalFinding = findings.find(
+      (f) => f.id === "self_improvement.signal_digest",
+    );
 
     expect(signalFinding).toBeDefined();
     expect(signalFinding?.description).toContain("Handshake gaps");
@@ -671,10 +738,22 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       conversationHistory: [
-        { role: "user", content: "SSE endpoint not streaming", timestamp: Date.now() },
-        { role: "user", content: "Batch response is not an array", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "SSE endpoint not streaming",
+          timestamp: Date.now(),
+        },
+        {
+          role: "user",
+          content: "Batch response is not an array",
+          timestamp: Date.now(),
+        },
         { role: "user", content: "Handshake failed", timestamp: Date.now() },
-        { role: "user", content: "SSE connection drops", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "SSE connection drops",
+          timestamp: Date.now(),
+        },
       ],
       projectContext: {
         name: "cortexdx",
@@ -690,7 +769,9 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const signalFinding = findings.find((f) => f.id === "self_improvement.signal_digest");
+    const signalFinding = findings.find(
+      (f) => f.id === "self_improvement.signal_digest",
+    );
 
     expect(signalFinding).toBeDefined();
     expect(signalFinding?.description).toContain("SSE");
@@ -702,7 +783,11 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     const ctx: DevelopmentContext = {
       ...baseContext(),
       conversationHistory: [
-        { role: "user", content: "Everything works fine", timestamp: Date.now() },
+        {
+          role: "user",
+          content: "Everything works fine",
+          timestamp: Date.now(),
+        },
         { role: "user", content: "No issues detected", timestamp: Date.now() },
       ],
       projectContext: {
@@ -719,7 +804,9 @@ describe("Conversation Signal Analysis (Req 15.3)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const signalFinding = findings.find((f) => f.id === "self_improvement.signal_digest");
+    const signalFinding = findings.find(
+      (f) => f.id === "self_improvement.signal_digest",
+    );
 
     expect(signalFinding).toBeUndefined();
   });
@@ -751,7 +838,9 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const healthFinding = findings.find((f) => f.id === "self_improvement.health");
+    const healthFinding = findings.find(
+      (f) => f.id === "self_improvement.health",
+    );
 
     expect(healthFinding).toBeDefined();
     expect(healthFinding?.severity).toBe("info");
@@ -759,14 +848,15 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
     expect(healthFinding?.description).toContain("1.0.0");
     expect(healthFinding?.evidence[0].type).toBe("url");
     expect(healthFinding?.evidence[0].ref).toContain("/health");
-    expect(requestMock).toHaveBeenCalledWith(
-      "http://localhost:5001/health",
-      { method: "GET" }
-    );
+    expect(requestMock).toHaveBeenCalledWith("http://localhost:5001/health", {
+      method: "GET",
+    });
   });
 
   it("handles health endpoint failure gracefully", async () => {
-    const requestMock = vi.fn().mockRejectedValue(new Error("Connection refused"));
+    const requestMock = vi
+      .fn()
+      .mockRejectedValue(new Error("Connection refused"));
 
     const ctx: DevelopmentContext = {
       ...baseContext(),
@@ -785,7 +875,9 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
     };
 
     const findings = await SelfImprovementPlugin.run(ctx);
-    const healthFinding = findings.find((f) => f.id === "self_improvement.health_unreachable");
+    const healthFinding = findings.find(
+      (f) => f.id === "self_improvement.health_unreachable",
+    );
 
     expect(healthFinding).toBeDefined();
     expect(healthFinding?.severity).toBe("minor");
@@ -815,10 +907,9 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
 
     const findings = await SelfImprovementPlugin.run(ctx);
 
-    expect(requestMock).toHaveBeenCalledWith(
-      "http://localhost:5001/health",
-      { method: "GET" }
-    );
+    expect(requestMock).toHaveBeenCalledWith("http://localhost:5001/health", {
+      method: "GET",
+    });
   });
   // Integration test covering all requirements
   describe("Full Integration (All Requirements)", () => {
@@ -832,8 +923,16 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
         ...baseContext(),
         request: requestMock,
         conversationHistory: [
-          { role: "user", content: "SSE endpoint not streaming", timestamp: Date.now() },
-          { role: "user", content: "Batch response is not an array", timestamp: Date.now() },
+          {
+            role: "user",
+            content: "SSE endpoint not streaming",
+            timestamp: Date.now(),
+          },
+          {
+            role: "user",
+            content: "Batch response is not an array",
+            timestamp: Date.now(),
+          },
         ],
         transport: {
           sessionId: "session-xyz",
@@ -875,19 +974,29 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       expect(findings.length).toBeGreaterThan(0);
 
       // Handshake gap (Req 15.1)
-      expect(findings.some((f) => f.id === "self_improvement.handshake_gaps")).toBe(true);
+      expect(
+        findings.some((f) => f.id === "self_improvement.handshake_gaps"),
+      ).toBe(true);
 
       // Dependency gap (Req 15.2)
-      expect(findings.some((f) => f.id === "self_improvement.dependency_gaps")).toBe(true);
+      expect(
+        findings.some((f) => f.id === "self_improvement.dependency_gaps"),
+      ).toBe(true);
 
       // Signal digest (Req 15.3)
-      expect(findings.some((f) => f.id === "self_improvement.signal_digest")).toBe(true);
+      expect(
+        findings.some((f) => f.id === "self_improvement.signal_digest"),
+      ).toBe(true);
 
       // Health probe (Req 15.4)
-      expect(findings.some((f) => f.id === "self_improvement.health")).toBe(true);
+      expect(findings.some((f) => f.id === "self_improvement.health")).toBe(
+        true,
+      );
 
       // Transport transcript
-      expect(findings.some((f) => f.id === "self_improvement.transport_transcript")).toBe(true);
+      expect(
+        findings.some((f) => f.id === "self_improvement.transport_transcript"),
+      ).toBe(true);
     });
   });
 
@@ -955,7 +1064,9 @@ describe("Health Endpoint Probing (Req 15.4)", () => {
       const findings = await SelfImprovementPlugin.run(ctx);
 
       // Verify findings have the structure for LLM enhancement
-      const handshakeFinding = findings.find((f) => f.id === "self_improvement.handshake_gaps");
+      const handshakeFinding = findings.find(
+        (f) => f.id === "self_improvement.handshake_gaps",
+      );
       expect(handshakeFinding).toBeDefined();
 
       // Check that finding has fields that can be enhanced by LLM

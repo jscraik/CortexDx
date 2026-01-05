@@ -126,7 +126,11 @@ export function formatSuggestions(suggestions: SuggestionResult[]): string {
 /**
  * Check if input is similar to available command
  */
-export function isSimilarCommand(input: string, available: string[], threshold = 2): boolean {
+export function isSimilarCommand(
+  input: string,
+  available: string[],
+  threshold = 2,
+): boolean {
   const closest = findClosestCommand(input, available, threshold);
   return closest !== null;
 }
