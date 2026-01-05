@@ -68,9 +68,9 @@ mcpServer.addTool({
     parameters: z.object({
         limit: z.number().optional().default(100).describe('Number of logs to return'),
         since: z.string().optional().describe('Filter logs since timestamp (ISO 8601)'),
-    }) as any,
-    execute: async (args: any) => {
-        return getLogs(args.limit, args.since);
+    }),
+    execute: async (args: Record<string, unknown>) => {
+        return getLogs((args.limit as number | undefined), (args.since as string | undefined));
     },
 });
 
@@ -79,16 +79,16 @@ mcpServer.addTool({
     description: 'Get system traces',
     parameters: z.object({
         limit: z.number().optional().default(50).describe('Number of traces to return'),
-    }) as any,
-    execute: async (args: any) => {
-        return getTraces(args.limit);
+    }),
+    execute: async (args: Record<string, unknown>) => {
+        return getTraces((args.limit as number | undefined));
     },
 });
 
 mcpServer.addTool({
     name: 'get_runs',
     description: 'Get agent runs',
-    parameters: z.object({}) as any,
+    parameters: z.object({}),
     execute: async () => {
         return getAgentRuns();
     },
@@ -100,9 +100,9 @@ mcpServer.addTool({
     parameters: z.object({
         action: z.enum(['pause', 'resume', 'cancel', 'drain', 'retry']).describe('Action to execute'),
         targetId: z.string().optional().describe('Target ID for the action (e.g., run ID)'),
-    }) as any,
-    execute: async (args: any) => {
-        return executeControl(args);
+    }),
+    execute: async (args: Record<string, unknown>) => {
+        return executeControl(args as Record<string, unknown>);
     },
 });
 
@@ -114,9 +114,9 @@ mcpServer.addTool({
         maxLogEntries: z.number().optional(),
         maxTraceSpans: z.number().optional(),
         theme: z.enum(['light', 'dark', 'system']).optional(),
-    }) as any,
-    execute: async (args: any) => {
-        return updateConfig(args);
+    }),
+    execute: async (args: Record<string, unknown>) => {
+        return updateConfig(args as Record<string, unknown>);
     },
 });
 
@@ -126,8 +126,8 @@ mcpServer.addTool({
     parameters: z.object({
         endpoint: z.string().describe('Target endpoint'),
         workflow: z.string().describe('Workflow name'),
-    }) as any,
-    execute: async (args: any) => {
-        return startTestFlow(args.endpoint, args.workflow);
+    }),
+    execute: async (args: Record<string, unknown>) => {
+        return startTestFlow((args.endpoint as string), (args.workflow as string));
     },
 });

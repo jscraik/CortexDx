@@ -16,6 +16,10 @@
  * - halfOpenMaxCalls: Max calls allowed in half-open state
  */
 
+import { createLogger } from "../logging/logger";
+
+const logger = createLogger("CircuitBreaker");
+
 export type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
 export interface CircuitBreakerConfig {
@@ -70,7 +74,7 @@ export class CircuitBreakerError extends Error {
   ) {
     super(
       message ||
-        `Circuit breaker is ${state}. Try again after ${nextAttemptTime ? new Date(nextAttemptTime).toISOString() : "unknown"}.`,
+      `Circuit breaker is ${state}. Try again after ${nextAttemptTime ? new Date(nextAttemptTime).toISOString() : "unknown"}.`,
     );
     this.name = "CircuitBreakerError";
   }
@@ -203,7 +207,7 @@ export class CircuitBreaker {
    */
   private transitionToClosed(): void {
     if (this.config.name) {
-      console.log(`[CircuitBreaker:${this.config.name}] Transitioning to CLOSED`);
+      logger.debug(`[${this.config.name}] Transitioning to CLOSED`);
     }
     this.state = "CLOSED";
     this.failureCount = 0;
@@ -217,8 +221,8 @@ export class CircuitBreaker {
    */
   private transitionToOpen(): void {
     if (this.config.name) {
-      console.warn(
-        `[CircuitBreaker:${this.config.name}] Transitioning to OPEN after ${this.failureCount} failures`,
+      logger.warn(
+        `[${this.config.name}] Transitioning to OPEN after ${this.failureCount} failures`,
       );
     }
     this.state = "OPEN";
@@ -232,7 +236,7 @@ export class CircuitBreaker {
    */
   private transitionToHalfOpen(): void {
     if (this.config.name) {
-      console.log(`[CircuitBreaker:${this.config.name}] Transitioning to HALF_OPEN`);
+      logger.debug(`[${this.config.name}] Transitioning to HALF_OPEN`);
     }
     this.state = "HALF_OPEN";
     this.successCount = 0;
@@ -270,7 +274,7 @@ export class CircuitBreaker {
    */
   reset(): void {
     if (this.config.name) {
-      console.log(`[CircuitBreaker:${this.config.name}] Manual reset to CLOSED`);
+      logger.debug(`[${this.config.name}] Manual reset to CLOSED`);
     }
     this.transitionToClosed();
     this.lastFailureTime = undefined;
@@ -286,7 +290,7 @@ export class CircuitBreaker {
    */
   forceOpen(): void {
     if (this.config.name) {
-      console.log(`[CircuitBreaker:${this.config.name}] Forced to OPEN`);
+      logger.debug(`[${this.config.name}] Forced to OPEN`);
     }
     this.transitionToOpen();
   }
@@ -300,7 +304,7 @@ export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private breakers = new Map<string, CircuitBreaker>();
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): CircuitBreakerRegistry {
     if (!CircuitBreakerRegistry.instance) {

@@ -33,7 +33,7 @@ export interface JSONRPCRequest {
     jsonrpc: "2.0";
     id: RequestId;
     method: string;
-    params?: { [key: string]: any };
+    params?: Record<string, unknown>;
 }
 
 /**
@@ -42,13 +42,13 @@ export interface JSONRPCRequest {
 export interface JSONRPCNotification {
     jsonrpc: "2.0";
     method: string;
-    params?: { [key: string]: any };
+    params?: Record<string, unknown>;
 }
 
 /**
  * A successful (non-error) response to a request
  */
-export interface JSONRPCResultResponse<T = any> {
+export interface JSONRPCResultResponse<T = unknown> {
     jsonrpc: "2.0";
     id: RequestId;
     result: T;
@@ -66,7 +66,7 @@ export interface JSONRPCErrorResponse {
 /**
  * Union of possible response types
  */
-export type JSONRPCResponse<T = any> = JSONRPCResultResponse<T> | JSONRPCErrorResponse;
+export type JSONRPCResponse<T = unknown> = JSONRPCResultResponse<T> | JSONRPCErrorResponse;
 
 /**
  * Refers to any valid JSON-RPC object that can be decoded off the wire, or encoded to be sent
@@ -110,7 +110,7 @@ export function isJSONRPCErrorResponse(response: JSONRPCResponse): response is J
 /**
  * Type guard to check if a response is successful
  */
-export function isJSONRPCResultResponse<T = any>(response: JSONRPCResponse): response is JSONRPCResultResponse<T> {
+export function isJSONRPCResultResponse<T = unknown>(response: JSONRPCResponse): response is JSONRPCResultResponse<T> {
     return 'result' in response;
 }
 
@@ -119,7 +119,7 @@ export function isJSONRPCResultResponse<T = any>(response: JSONRPCResponse): res
  */
 export function createJSONRPCRequest(
     method: string,
-    params?: { [key: string]: any },
+    params?: Record<string, unknown>,
     id: RequestId = generateRequestId()
 ): JSONRPCRequest {
     const request: JSONRPCRequest = {
@@ -138,7 +138,7 @@ export function createJSONRPCRequest(
  */
 export function createJSONRPCNotification(
     method: string,
-    params?: { [key: string]: any }
+    params?: Record<string, unknown>
 ): JSONRPCNotification {
     const notification: JSONRPCNotification = {
         jsonrpc: "2.0",
@@ -153,7 +153,7 @@ export function createJSONRPCNotification(
 /**
  * Create a JSON-RPC success response
  */
-export function createJSONRPCResultResponse<T = any>(
+export function createJSONRPCResultResponse<T = unknown>(
     id: RequestId,
     result: T
 ): JSONRPCResultResponse<T> {
@@ -197,7 +197,7 @@ export function validateJSONRPCMessage(message: unknown): JSONRPCMessage {
         throw new Error('JSON-RPC message must be an object');
     }
 
-    const msg = message as Record<string, any>;
+    const msg = message as Record<string, unknown>;
 
     // Validate jsonrpc version
     if (msg.jsonrpc !== '2.0') {
@@ -276,7 +276,7 @@ export function parseJSONRPCMessage(data: string): JSONRPCMessage {
     } catch (error) {
         throw createJSONRPCErrorResponse(
             JSONRPCErrorCode.InvalidRequest,
-            'Invalid Request: ' + String(error),
+            `Invalid Request: ${String(error)}`,
             null
         );
     }

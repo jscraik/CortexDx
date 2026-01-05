@@ -5,7 +5,10 @@
 
 import Database from "better-sqlite3";
 import { join } from "node:path";
-import type { DiagnosticReport } from "./report-generator";
+import { createLogger } from "../logging/logger.js";
+import type { DiagnosticReport } from "./report-generator.js";
+
+const logger = createLogger("ReportStore");
 
 export interface StoredReport {
     id: string;
@@ -288,10 +291,10 @@ export class ReportStore {
             try {
                 const cleaned = this.cleanupExpiredReports();
                 if (cleaned > 0) {
-                    console.log(`[ReportStore] Cleaned up ${cleaned} expired reports`);
+                    logger.debug(`Cleaned up ${cleaned} expired reports`);
                 }
             } catch (err) {
-                console.error("[ReportStore] Error during cleanup:", err);
+                logger.error("Error during cleanup:", err);
             }
         }, 24 * 60 * 60 * 1000);
     }

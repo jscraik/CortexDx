@@ -1,6 +1,6 @@
-import { ingestMcpDocsSnapshot } from "../library/mcp-docs-ingestion";
-import type { McpDocsIngestResult } from "../library/mcp-docs-ingestion";
-import { createCliLogger } from "../logging/logger";
+import type { McpDocsIngestResult } from "../library/mcp-docs-ingestion.js";
+import { ingestMcpDocsSnapshot } from "../library/mcp-docs-ingestion.js";
+import { createCliLogger } from "../logging/logger.js";
 
 const logger = createCliLogger("library");
 

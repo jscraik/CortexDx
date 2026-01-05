@@ -3,7 +3,10 @@
  * Helpers for creating and polling async tasks from the CLI
  */
 
+import { createLogger } from '../logging/logger.js';
 import type { TaskMetadata, TaskStatus } from '../tasks/types.js';
+
+const logger = createLogger("AsyncTask");
 
 /**
  * Options for executing a diagnostic as an async task
@@ -121,11 +124,10 @@ export async function executeDiagnoseAsync(options: ExecuteDiagnoseOptions): Pro
 async function createDiagnosticTask(options: ExecuteDiagnoseOptions): Promise<TaskMetadata> {
   const { endpoint, diagnosticArgs, taskTtl, pollInterval, headers } = options;
 
-  console.log('🚀 Creating async diagnostic task...');
-  console.log(`   Endpoint: ${diagnosticArgs.endpoint || endpoint}`);
-  console.log(`   TTL: ${formatDuration(taskTtl)}`);
-  console.log(`   Poll interval: ${formatDuration(pollInterval)}`);
-  console.log('');
+  logger.info('Creating async diagnostic task...');
+  logger.debug(`Endpoint: ${diagnosticArgs.endpoint || endpoint}`);
+  logger.debug(`TTL: ${formatDuration(taskTtl)}`);
+  logger.debug(`Poll interval: ${formatDuration(pollInterval)}`);
 
   // Create task
   const createResponse = await callMcpMethod<{ task: TaskMetadata }>(
@@ -142,10 +144,9 @@ async function createDiagnosticTask(options: ExecuteDiagnoseOptions): Promise<Ta
   const taskMetadata = createResponse.task;
   const { taskId, status, pollInterval: serverPollInterval } = taskMetadata;
 
-  console.log(`✓ Task created: ${taskId}`);
-  console.log(`  Status: ${formatTaskStatus(status, options.noColor)}`);
-  console.log(`  Server suggests polling every ${formatDuration(serverPollInterval)}`);
-  console.log('');
+  logger.info(`Task created: ${taskId}`);
+  logger.debug(`Status: ${formatTaskStatus(status, options.noColor)}`);
+  logger.debug(`Server suggests polling every ${formatDuration(serverPollInterval)}`);
 
   return taskMetadata;
 }
@@ -177,7 +178,7 @@ async function pollTaskUntilComplete(
   // Poll for completion with timeout
   for (let i = 0; i < maxPolls; i++) {
     await waitAndCheckTimeout(absoluteTimeout, startTime, actualPollInterval, taskTtl);
-    
+
     pollCount++;
 
     const currentStatus = await checkTaskStatus(
@@ -200,7 +201,7 @@ async function pollTaskUntilComplete(
       startTime,
       pollCount
     );
-    
+
     if (result !== null) {
       return result;
     }

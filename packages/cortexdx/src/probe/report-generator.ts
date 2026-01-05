@@ -3,8 +3,8 @@
  * Generates diagnostic reports in multiple formats (Markdown, JSON, ArcTDD)
  */
 
-import type { Finding } from "../types";
-import type { ProbeMetadata, DiagnosticSummary } from "./mcp-probe-engine";
+import type { Finding } from "../types.js";
+import type { DiagnosticSummary, ProbeMetadata } from "./mcp-probe-engine.js";
 
 export interface DiagnosticReport {
     id: string;

@@ -5,6 +5,9 @@
 
 import { McpServer } from "@brainwav/cortexdx-server/mcp-server/index.js";
 import { z } from "zod";
+import { createLogger } from "../logging/logger.js";
+
+const logger = createLogger("Serve");
 
 export interface ServeOptions {
   port?: string;
@@ -20,16 +23,15 @@ export interface ServeOptions {
  * Run the MCP server
  */
 export async function runServe(opts: ServeOptions = {}): Promise<number> {
-  const port = opts.port ? parseInt(opts.port, 10) : 3000;
+  const port = opts.port ? Number.parseInt(opts.port, 10) : 3000;
   const useStdio = opts.stdio === true;
   const useWebSocket = opts.websocket === true;
   const host = opts.host || "127.0.0.1";
   const endpointPath = opts.endpoint || "/mcp";
   const apiKey = opts.apiKey;
-  const logLevel = opts.logLevel || "info";
 
   // Create server configuration
-  const serverConfig: any = {
+  const serverConfig: Record<string, unknown> = {
     name: "cortexdx",
     version: "1.0.0",
     instructions: `
@@ -61,42 +63,42 @@ Documentation: https://docs.brainwav.ai/cortexdx
     // Optional authentication
     authenticate: apiKey
       ? async (req: Request) => {
-          const providedKey = req.headers.get("x-api-key");
-          if (!providedKey) {
-            throw new Response("Missing API key", { status: 401 });
-          }
-          if (providedKey === apiKey) {
-            return {
-              userId: "api-user",
-              role: "admin",
-            };
-          }
-          throw new Response("Invalid API key", { status: 401 });
+        const providedKey = req.headers.get("x-api-key");
+        if (!providedKey) {
+          throw new Response("Missing API key", { status: 401 });
         }
+        if (providedKey === apiKey) {
+          return {
+            userId: "api-user",
+            role: "admin",
+          };
+        }
+        throw new Response("Invalid API key", { status: 401 });
+      }
       : undefined,
     // Transport configuration
     transport: useStdio
       ? {
-          type: "stdio",
-        }
+        type: "stdio",
+      }
       : useWebSocket
         ? {
-            type: "websocket",
-            websocket: {
-              port,
-              host,
-              path: endpointPath,
-            },
-          }
-        : {
-            type: "httpStreamable",
-            httpStreamable: {
-              port,
-              host,
-              endpoint: endpointPath,
-              stateless: false,
-            },
+          type: "websocket",
+          websocket: {
+            port,
+            host,
+            path: endpointPath,
           },
+        }
+        : {
+          type: "httpStreamable",
+          httpStreamable: {
+            port,
+            host,
+            endpoint: endpointPath,
+            stateless: false,
+          },
+        },
   };
 
   // Create server
@@ -260,21 +262,21 @@ Documentation: https://docs.brainwav.ai/cortexdx
 
   if (useStdio) {
     // stdio mode - running in foreground
-    console.error(`[CortexDx] MCP server running in stdio mode`);
+    logger.info("MCP server running in stdio mode");
   } else if (useWebSocket) {
     // WebSocket mode
-    console.error(`[CortexDx] MCP server running on ws://${host}:${port}${endpointPath}`);
-    console.error(`[CortexDx] Press Ctrl+C to stop`);
+    logger.info(`MCP server running on ws://${host}:${port}${endpointPath}`);
+    logger.info("Press Ctrl+C to stop");
   } else {
     // HTTP mode
-    console.error(`[CortexDx] MCP server running on http://${host}:${port}${endpointPath}`);
-    console.error(`[CortexDx] Press Ctrl+C to stop`);
+    logger.info(`MCP server running on http://${host}:${port}${endpointPath}`);
+    logger.info("Press Ctrl+C to stop");
   }
 
   // Handle graceful shutdown
   return new Promise((resolve) => {
     process.on("SIGINT", async () => {
-      console.error("\n[CortexDx] Shutting down...");
+      logger.info("Shutting down...");
       await server.stop();
       resolve(0);
     });
