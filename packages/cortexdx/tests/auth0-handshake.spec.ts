@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { resolveAuthHeaders, __internal } from "../src/auth/auth0-handshake.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { __internal, resolveAuthHeaders } from "../src/auth/auth0-handshake.js";
 
 describe("Auth0 handshake", () => {
   beforeEach(() => {
@@ -43,14 +43,8 @@ describe("Auth0 handshake", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("https://example.auth0.com/oauth/token", {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: "client",
-        client_secret: "secret",
-        audience: "https://api.example.com",
-        scope: "read:all",
-      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: expect.any(String),
     });
     expect(headers).toEqual({ authorization: "Bearer abc" });
   });

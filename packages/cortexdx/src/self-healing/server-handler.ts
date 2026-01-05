@@ -56,11 +56,11 @@ export async function handleSelfHealingAPI(
       const query = new URL(url, "http://localhost").searchParams;
       const area = query.get("area") ?? undefined;
       const severity = query.get("severity") ?? undefined;
-    const templates = area
-      ? getTemplatesByArea(area)
-      : severity
-        ? getTemplatesBySeverity(severity)
-        : getTemplatesByArea("") ?? [];
+      const templates = area
+        ? getTemplatesByArea(area)
+        : severity
+          ? getTemplatesBySeverity(severity)
+          : getTemplatesByArea("") ?? [];
       return json(res, 200, {
         success: true,
         templates,
@@ -169,5 +169,3 @@ export async function handleSelfHealingAPI(
     });
   }
 }
-
-export default handleSelfHealingAPI;

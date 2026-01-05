@@ -1,6 +1,6 @@
-import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "../types";
-import { DeepContextClient } from "../deepcontext/client";
 import path from "node:path";
+import { DeepContextClient } from "../deepcontext/client.js";
+import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "../types.js";
 
 type AnyContext = DevelopmentContext | DiagnosticContext;
 

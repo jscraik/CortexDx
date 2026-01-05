@@ -1,4 +1,4 @@
-import type { Story } from "../story/story-schema";
+import type { Story } from "../story/story-schema.js";
 
 const formatSummary = (story: Story): string => {
   const timestamp = new Date(story.timestamp).toUTCString();

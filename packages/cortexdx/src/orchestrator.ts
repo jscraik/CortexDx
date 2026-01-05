@@ -1,13 +1,16 @@
+import {
+  type SandboxBudgets,
+  buildArcTddPlan,
+  buildFilePlan,
+  buildJsonReport,
+  buildMarkdownReport,
+  resolveAuthHeaders,
+  runPlugins,
+  storeConsolidatedReport,
+} from "@brainwav/cortexdx-plugins";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Finding } from "../../core/src/types.ts";
-import { resolveAuthHeaders } from "../../plugins/src/auth/auth0-handshake.ts";
-import { type SandboxBudgets, runPlugins } from "@brainwav/cortexdx-plugins";
-import { buildArcTddPlan } from "../../plugins/src/report/arctdd.ts";
-import { buildFilePlan } from "../../plugins/src/report/fileplan.ts";
-import { buildJsonReport } from "../../plugins/src/report/json.ts";
-import { buildMarkdownReport } from "../../plugins/src/report/markdown.ts";
-import { storeConsolidatedReport } from "../../plugins/src/report/consolidated-report.ts";
+import type { Finding } from "../../core/src/types.js";
 
 interface DiagnoseOptions {
   out?: string;

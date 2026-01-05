@@ -57,9 +57,9 @@ export interface RequestContext {
     session?: unknown;
     sessionId?: string;
     requestId?: string;
-    log?: any;
-    reportProgress?: (progress: any) => Promise<void>;
-    streamContent?: (content: any) => Promise<void>;
+    log?: (...args: unknown[]) => void;
+    reportProgress?: (progress: { progress: number; total?: number }) => Promise<void>;
+    streamContent?: (content: { type: string; text?: string; data?: unknown }) => Promise<void>;
   };
 }
 

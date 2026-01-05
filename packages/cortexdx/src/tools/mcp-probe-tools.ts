@@ -3,10 +3,10 @@
  * Exposes the MCP-to-MCP probe engine as MCP tools
  */
 
-import type { McpTool, McpToolResult, DevelopmentContext } from "../types";
-import { probeMcpServer, type Auth0Config } from "../probe/mcp-probe-engine";
-import { generateReport } from "../probe/report-generator";
-import { getReportStore } from "../probe/report-store";
+import { type Auth0Config, probeMcpServer } from "../probe/mcp-probe-engine.js";
+import { generateReport } from "../probe/report-generator.js";
+import { getReportStore } from "../probe/report-store.js";
+import type { DevelopmentContext, McpTool, McpToolResult } from "../types.js";
 
 export const mcpProbeTools: McpTool[] = [
     {

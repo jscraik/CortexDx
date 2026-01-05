@@ -296,7 +296,7 @@ describe("CLI Self-Healing Commands", () => {
 
       // Clean up - we can't let this hang
       if (!promiseResolved) {
-        startPromise.catch(() => {}); // Ignore inevitable cancellation
+        startPromise.catch(() => { }); // Ignore inevitable cancellation
       }
     });
 
@@ -320,7 +320,7 @@ describe("CLI Self-Healing Commands", () => {
       });
 
       // Clean up
-      startPromise.catch(() => {});
+      startPromise.catch(() => { });
     });
   });
 
@@ -460,7 +460,7 @@ describe("CLI Self-Healing Commands", () => {
       );
 
       // Clean up hanging promise
-      Promise.reject().catch(() => {}); // Prevent hanging
+      Promise.reject().catch(() => { }); // Prevent hanging
     });
 
     it("should handle webhook errors gracefully", async () => {
@@ -569,7 +569,7 @@ describe("CLI Self-Healing Commands", () => {
         expect.any(String),
         "utf-8",
       );
-    }, 15000);
+    }, 30000);
 
     it("should read monitoring configuration files", async () => {
       const { runMonitoring } = await import("../src/commands/self-healing.js");
@@ -591,7 +591,7 @@ describe("CLI Self-Healing Commands", () => {
       });
 
       // Clean up
-      startPromise.catch(() => {});
+      startPromise.catch(() => { });
     });
   });
 

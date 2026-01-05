@@ -4,9 +4,9 @@
  * Requirements: 3.1, 5.1, 6.1
  */
 
-import { isStoryFeatureEnabled } from "../story/feature-flag";
-import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-server/mcp-server/core/protocol";
-import type { McpTool } from "../types";
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
+import { isStoryFeatureEnabled } from "../story/feature-flag.js";
+import type { McpTool } from "../types.js";
 
 const baseDiagnosticTools: McpTool[] = [
   {

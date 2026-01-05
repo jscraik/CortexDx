@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
-import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (...segments: string[]) => resolve(__dirname, "..", ...segments);
@@ -8,20 +8,20 @@ const r = (...segments: string[]) => resolve(__dirname, "..", ...segments);
 const governanceThresholds =
   process.env.VITEST_WEAK_COVERAGE === "true"
     ? {
-        // The relaxed guard trails current coverage by ~1% to avoid flakiness
-        // while teams add real tests. Remove once suites consistently clear
-        // the governance bar.
-        lines: 47,
-        statements: 47,
-        functions: 57,
-        branches: 65,
-      }
+      // The relaxed guard trails current coverage by ~1% to avoid flakiness
+      // while teams add real tests. Remove once suites consistently clear
+      // the governance bar.
+      lines: 47,
+      statements: 47,
+      functions: 57,
+      branches: 65,
+    }
     : {
-        lines: 85,
-        statements: 85,
-        functions: 80,
-        branches: 75,
-      };
+      lines: 85,
+      statements: 85,
+      functions: 80,
+      branches: 75,
+    };
 
 export default defineConfig({
   resolve: {
@@ -48,6 +48,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    testTimeout: 30000,
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

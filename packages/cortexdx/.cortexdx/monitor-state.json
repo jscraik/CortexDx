@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-01-05T11:03:38.608Z",
+  "generatedAt": "2026-01-05T10:45:51.292Z",
   "status": {
     "running": false,
     "activeJobs": 0,
-    "lastCheck": "2025-11-29T13:51:01.786Z",
+    "lastCheck": "2026-01-05T10:14:05.571Z",
     "nextCheck": "No scheduled jobs"
   },
   "jobs": [

@@ -89,7 +89,7 @@ describe("Commercial Licensing Plugin", () => {
             key: "CORTEXDX-PRO-12345",
             tier: "professional",
             valid: true,
-            expiresAt: new Date("2025-12-31")
+            expiresAt: new Date("2027-12-31")
         };
 
         expect(license.valid).toBe(true);

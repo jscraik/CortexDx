@@ -1,8 +1,8 @@
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { type IncomingMessage, type ServerResponse, createServer } from "node:http";
 import { parse as parseUrl } from "node:url";
 import { promisify } from "node:util";
 import { gzip } from "node:zlib";
-import type { ReportFormat, ReportManager } from "../storage/report-manager";
+import type { ReportFormat, ReportManager } from "../storage/report-manager.js";
 
 const gzipAsync = promisify(gzip);
 

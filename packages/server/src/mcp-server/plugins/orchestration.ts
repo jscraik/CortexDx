@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RequestContext, ServerPlugin, ServerPluginHost } from './types.js';
+import type { PluginContext, RequestContext, ServerPlugin, ServerPluginHost } from './types.js';
 
 export interface OrchestrationPluginConfig {
     defaultModel?: string;
@@ -37,7 +37,7 @@ export const orchestrationTools = {
         parameters: z.object({
             model: z.string().describe('Model ID to switch to (e.g., gpt-4o, claude-3-5-sonnet)'),
         }),
-        execute: async (args: { model: string }, ctx: any) => {
+        execute: async (args: { model: string }, ctx: PluginContext) => {
             return {
                 status: 'success',
                 message: `Active model set to ${args.model}`,
@@ -55,7 +55,7 @@ export const orchestrationTools = {
             })).describe('Chat messages'),
             temperature: z.number().optional().describe('Sampling temperature'),
         }),
-        execute: async (args: { messages: any[], temperature?: number }, ctx: any) => {
+        execute: async (args: { messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>; temperature?: number }, ctx: PluginContext) => {
             // Simulate LLM response
             await new Promise(resolve => setTimeout(resolve, 1500));
 

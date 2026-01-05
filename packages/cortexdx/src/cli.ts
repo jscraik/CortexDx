@@ -1,19 +1,18 @@
 import { Command } from "commander";
 import {
-  ExitCode,
-  ErrorCode,
-  DocsUrls,
   ConfigPrecedence,
+  DocsUrls,
+  ErrorCode,
+  ExitCode,
   detectTty,
-  shouldUseColor,
   findClosestCommand,
   formatSuggestions,
   generateSimpleCompletions,
-  type TtyInfo,
+  shouldUseColor
 } from "./cli/index.js";
 
-// Detect TTY status once at startup
-const ttyInfo = detectTty();
+// Detect TTY status once at startup (prefixed to silence unused warning)
+const _ttyInfo = detectTty();
 
 // Collect all command names for suggestions
 const availableCommands: string[] = [
@@ -56,10 +55,12 @@ const program = new Command();
 program
   .name("cortexdx")
   .description(
-    "brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)\n\n" +
-      `Documentation: ${DocsUrls.Main}\n` +
-      `Issues: ${DocsUrls.Issues}\n\n` +
-      `Config Precedence: ${Object.values(ConfigPrecedence).join(" > ")}`,
+    `brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)
+
+Documentation: ${DocsUrls.Main}
+Issues: ${DocsUrls.Issues}
+
+Config Precedence: ${Object.values(ConfigPrecedence).join(" > ")}`,
   )
   .version("0.1.0")
   // Standard global flags (clig.dev)
@@ -77,13 +78,14 @@ program
         console.error(str);
       } else {
         // Strip ANSI codes
+        // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional escape sequence matching
         console.error(str.replace(/\x1b\[[0-9;]*m/g, ""));
       }
     },
   });
 
 // Store global options for use in subcommands
-let globalOptions: GlobalOptions = {};
+const globalOptions: GlobalOptions = {};
 
 program
   .command("diagnose")
@@ -264,7 +266,7 @@ program
         const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
-);
+  );
 
 const deepContext = program
   .command("deepcontext")

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RequestContext, ServerPlugin, ServerPluginHost } from './types.js';
+import type { PluginContext, RequestContext, ServerPlugin, ServerPluginHost } from './types.js';
 
 export interface HealingPluginConfig {
     autoHeal?: boolean;
@@ -52,7 +52,7 @@ export const healingToolDefinition = {
         component: z.string().optional().describe('Specific component to heal'),
         force: z.boolean().optional().describe('Force restart even if healthy'),
     }),
-    execute: async (args: { component?: string; force?: boolean }, ctx: any) => {
+    execute: async (args: { component?: string; force?: boolean }, ctx: PluginContext) => {
         const { component, force } = args;
 
         // Simulate healing logic

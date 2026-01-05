@@ -6,21 +6,16 @@
  * Now split into focused, maintainable modules.
  */
 
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
-import type { PerformanceSummary } from "@brainwav/cortexdx-core";
+import type { DiagnosticContext, DiagnosticPlugin, Finding, PerformanceSummary } from "@brainwav/cortexdx-core";
+import { buildHttpFindings, measureHttp } from "./measurements/http.js";
+import { buildSseFindings, measureSse } from "./measurements/sse.js";
+import { buildWebSocketFindings, measureWebSocket } from "./measurements/websocket.js";
 import { createHarness } from "./utils.js";
-import { measureHttp, buildHttpFindings } from "./measurements/http.js";
-import { measureSse, buildSseFindings } from "./measurements/sse.js";
-import { measureWebSocket, buildWebSocketFindings } from "./measurements/websocket.js";
 
 // Re-export types for backward compatibility
 export type {
-  HttpMetrics,
-  SseMetrics,
-  WebSocketMetrics,
-  PerformanceSummary,
-  PerformanceMeasurementOptions,
-  PerformanceHarness,
+  HttpMetrics, PerformanceHarness, PerformanceMeasurementOptions, PerformanceSummary, SseMetrics,
+  WebSocketMetrics
 } from "@brainwav/cortexdx-core";
 
 /**
@@ -159,10 +154,6 @@ export const EnhancedPerformanceProfilerPlugin: DiagnosticPlugin = {
 
 // Re-export advanced profiler plugins from plugins/ subdirectory
 export { ClinicJsPerformanceProfilerPlugin } from "./plugins/clinic.js";
-export { PySpyPerformanceProfilerPlugin } from "./plugins/pyspy.js";
 export { UnifiedFlameGraphPlugin } from "./plugins/flamegraph.js";
+export { PySpyPerformanceProfilerPlugin } from "./plugins/pyspy.js";
 
-/**
- * Default export for backward compatibility
- */
-export default PerformancePlugin;

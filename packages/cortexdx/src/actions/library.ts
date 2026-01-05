@@ -1,4 +1,4 @@
-import { isStoryFeatureEnabled } from "../story/feature-flag";
+import { isStoryFeatureEnabled } from "../story/feature-flag.js";
 
 export type StoryAction = "reprobe";
 

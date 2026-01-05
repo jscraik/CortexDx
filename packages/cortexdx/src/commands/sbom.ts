@@ -1,14 +1,14 @@
-import { safeParseJson } from "../utils/json";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
-import type { SBOM } from "../security/sbom-generator";
-import { SBOMGenerator, type PackageManifest } from "../security/sbom-generator";
+import { join, resolve } from "node:path";
+import { createCliLogger } from "../logging/logger.js";
 import {
-  DependencyTrackIntegration,
   type DependencyTrackConfig,
-} from "../security/dependency-track-integration";
-import { createCliLogger } from "../logging/logger";
+  DependencyTrackIntegration,
+} from "../security/dependency-track-integration.js";
+import type { SBOM } from "../security/sbom-generator.js";
+import { type PackageManifest, SBOMGenerator } from "../security/sbom-generator.js";
+import { safeParseJson } from "../utils/json.js";
 
 const logger = createCliLogger("sbom");
 

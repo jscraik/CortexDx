@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const scanTargets = [
@@ -22,6 +22,9 @@ const bannedPattern = new RegExp(bannedTerm, "i");
 
 const collectFiles = (target: string): string[] => {
   const absolute = join(repoRoot, target);
+  if (!existsSync(absolute)) {
+    return [];
+  }
   const stats = statSync(absolute);
   if (stats.isDirectory()) {
     return readdirSync(absolute)

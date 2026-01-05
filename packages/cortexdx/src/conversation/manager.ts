@@ -5,15 +5,15 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { createLogger } from "../logging/logger.js";
+import type { ConversationExport } from "../storage/conversation-storage.js";
+import { ConversationStorage } from "../storage/conversation-storage.js";
 import type {
     ChatMessage,
     ConversationResponse,
     ConversationSession,
     DevelopmentContext
-} from "../types";
-import { ConversationStorage } from "../storage/conversation-storage";
-import type { ConversationExport } from "../storage/conversation-storage";
-import { createLogger } from "../logging/logger";
+} from "../types.js";
 
 const logger = createLogger("conversation-manager");
 
@@ -170,11 +170,11 @@ export class ConversationManager {
         return `${greeting}\n\nI understand you want to: ${intent}\n\nTo get started, could you tell me more about:\n1. What type of MCP component you're building (server, client, or connector)?\n2. What programming language you prefer?\n3. Any specific requirements or constraints you have?`;
     }
 
-  private generateRequirementsResponse(_userInput: string, _expertiseLevel: string): string {
+    private generateRequirementsResponse(_userInput: string, _expertiseLevel: string): string {
         return `Thanks for that information! Based on what you've told me, I can help you create a solution.\n\nLet me clarify a few more details:\n1. What data sources or services will your MCP component interact with?\n2. Do you have any authentication requirements?\n3. Are there any performance or scalability considerations?\n\nOnce I understand these requirements, I can suggest the best approach and help you implement it.`;
     }
 
-  private generateSolutionResponse(_userInput: string, expertiseLevel: string): string {
+    private generateSolutionResponse(_userInput: string, expertiseLevel: string): string {
         const technical = expertiseLevel === "expert"
             ? "I'll provide detailed technical implementation guidance."
             : "I'll walk you through the implementation with clear explanations.";
@@ -182,11 +182,11 @@ export class ConversationManager {
         return `Perfect! Based on your requirements, here's what I recommend:\n\n1. **Architecture**: I suggest using a modular approach with separate handlers for each capability\n2. **Implementation**: We'll start with the core MCP protocol implementation and then add your specific features\n3. **Testing**: I'll help you set up proper testing to ensure everything works correctly\n\n${technical}\n\nShall we start with the basic project structure, or do you have questions about the approach?`;
     }
 
-  private generateImplementationResponse(_userInput: string, _expertiseLevel: string): string {
+    private generateImplementationResponse(_userInput: string, _expertiseLevel: string): string {
         return `Great! I'll help you implement this step by step. Let me generate the initial code structure for you.\n\nI'll create:\n1. The main server/client files\n2. Configuration setup\n3. Basic tool implementations\n4. Testing framework\n\nWould you like me to start with the code generation, or do you have any final questions about the implementation?`;
     }
 
-  private generateActions(session: ConversationSession, _userInput: string) {
+    private generateActions(session: ConversationSession, _userInput: string) {
         const { phase } = session.state;
 
         if (phase === "implementation") {

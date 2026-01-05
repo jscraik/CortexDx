@@ -1,7 +1,7 @@
-import { loadProjectContext } from "../context/project-context";
-import { AutoHealer } from "../healing/auto-healer";
-import { createCliLogger } from "../logging/logger";
-import type { DevelopmentContext } from "../types";
+import { loadProjectContext } from "../context/project-context.js";
+import { AutoHealer } from "../healing/auto-healer.js";
+import { createCliLogger } from "../logging/logger.js";
+import type { DevelopmentContext } from "../types.js";
 
 const logger = createCliLogger("health");
 
@@ -30,7 +30,7 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
   const projectContext = await loadProjectContext().catch(() => undefined);
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (() => {}) as (...args: unknown[]) => void,
+    logger: (() => { }) as (...args: unknown[]) => void,
     request: async <T>(
       _input: RequestInfo,
       _init?: RequestInit,

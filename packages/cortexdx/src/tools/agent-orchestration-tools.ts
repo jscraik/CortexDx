@@ -1,13 +1,13 @@
-import { createDevelopmentContext } from "../context/development-context";
-import { getAgentOrchestrator } from "../orchestration/agent-orchestrator";
-import { ensureDefaultAgentWorkflows, ensureDefaultPluginWorkflows } from "../orchestration/default-workflows";
-import { normalizeExecutionMode, normalizeExpertiseLevel, type ExecutionMode } from "../orchestration/orchestrate-options";
-import { getOrchestrationStateManager } from "../orchestration/state-manager-factory";
-import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator";
-import { createInitialWorkflowState, recoverWorkflowCheckpoint } from "../orchestration/workflow-runtime";
-import type { StateManager } from "../orchestration/state-manager";
-import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "../types";
-import { createDeterministicSeed } from "../utils/deterministic";
+import { createDevelopmentContext } from "../context/development-context.js";
+import { getAgentOrchestrator } from "../orchestration/agent-orchestrator.js";
+import { ensureDefaultAgentWorkflows, ensureDefaultPluginWorkflows } from "../orchestration/default-workflows.js";
+import { type ExecutionMode, normalizeExecutionMode, normalizeExpertiseLevel } from "../orchestration/orchestrate-options.js";
+import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator.js";
+import { getOrchestrationStateManager } from "../orchestration/state-manager-factory.js";
+import type { StateManager } from "../orchestration/state-manager.js";
+import { createInitialWorkflowState, recoverWorkflowCheckpoint } from "../orchestration/workflow-runtime.js";
+import type { DevelopmentContext, DiagnosticContext, McpTool, McpToolResult } from "../types.js";
+import { createDeterministicSeed } from "../utils/deterministic.js";
 
 interface AgentWorkflowArgs {
     workflowId: string;

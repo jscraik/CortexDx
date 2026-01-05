@@ -4,9 +4,9 @@
  * Requirements: 17.1, 17.5
  */
 
-import { ensureDefaultPluginWorkflows } from "../orchestration/default-workflows";
-import { getPluginOrchestrator, type PluginWorkflow, type WorkflowStage } from "../orchestration/plugin-orchestrator";
-import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolResult } from "../types";
+import { ensureDefaultPluginWorkflows } from "../orchestration/default-workflows.js";
+import { type PluginWorkflow, type WorkflowStage, getPluginOrchestrator } from "../orchestration/plugin-orchestrator.js";
+import type { DevelopmentContext, DiagnosticContext, Finding, McpTool, McpToolResult } from "../types.js";
 
 /**
  * Create MCP tools for plugin orchestration
@@ -501,43 +501,43 @@ async function executeWorkflow(
 
         const results = await orchestrator.executeSequential(workflow, executionContext);
 
-    // Convert Maps to objects for JSON serialization
-    const stageResultsObj: Record<string, Finding[]> = {};
-    for (const [key, value] of results.stageResults.entries()) {
-        stageResultsObj[key] = value;
-    }
+        // Convert Maps to objects for JSON serialization
+        const stageResultsObj: Record<string, Finding[]> = {};
+        for (const [key, value] of results.stageResults.entries()) {
+            stageResultsObj[key] = value;
+        }
 
-    const stageTimingsObj: Record<string, number> = {};
-    for (const [key, value] of results.stageTimings.entries()) {
-        stageTimingsObj[key] = value;
-    }
+        const stageTimingsObj: Record<string, number> = {};
+        for (const [key, value] of results.stageTimings.entries()) {
+            stageTimingsObj[key] = value;
+        }
 
-    const errorsObj: Record<string, string> = {};
-    for (const [key, value] of results.errors.entries()) {
-        errorsObj[key] = value.message;
-    }
+        const errorsObj: Record<string, string> = {};
+        for (const [key, value] of results.errors.entries()) {
+            errorsObj[key] = value.message;
+        }
 
-    return {
-        content: [
-            {
-                type: "text",
-                text: JSON.stringify(
-                    {
-                        workflowId: results.workflowId,
-                        success: results.success,
-                        stageResults: stageResultsObj,
-                        stageTimings: stageTimingsObj,
-                        skippedStages: results.skippedStages,
-                        errors: errorsObj,
-                        totalExecutionTime: results.totalExecutionTime,
-                        totalFindings: Object.values(stageResultsObj).flat().length,
-                    },
-                    null,
-                    2,
-                ),
-            },
-        ],
-    };
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(
+                        {
+                            workflowId: results.workflowId,
+                            success: results.success,
+                            stageResults: stageResultsObj,
+                            stageTimings: stageTimingsObj,
+                            skippedStages: results.skippedStages,
+                            errors: errorsObj,
+                            totalExecutionTime: results.totalExecutionTime,
+                            totalFindings: Object.values(stageResultsObj).flat().length,
+                        },
+                        null,
+                        2,
+                    ),
+                },
+            ],
+        };
     } catch (error) {
         const { workflowId, endpoint } = args as { workflowId?: string; endpoint?: string };
         const message = error instanceof Error ? error.message : String(error);

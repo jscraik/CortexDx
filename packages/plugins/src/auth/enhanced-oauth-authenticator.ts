@@ -12,10 +12,8 @@
 
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import type {
-  DeviceCodeResult,
   OAuth2Config,
   OAuth2Session,
-  TokenResult,
   TokenValidation,
 } from "../adapters/oauth-authenticator";
 import {
@@ -80,8 +78,17 @@ function getRateLimiter(endpoint: string): AuthRateLimiter {
 
 /**
  * PKCE-enabled device code flow result
+ * Extends DeviceCodeResult with PKCE-specific fields
  */
-export interface PKCEDeviceCodeResult extends DeviceCodeResult {
+export interface PKCEDeviceCodeResult {
+  // Base DeviceCodeResult properties
+  deviceCode: string;
+  userCode: string;
+  verificationUri: string;
+  verificationUriComplete?: string;
+  expiresIn: number;
+  interval: number;
+  // PKCE-specific properties
   codeVerifier: string;
   codeChallenge: string;
   codeChallengeMethod: string;
@@ -106,12 +113,17 @@ export interface EnhancedOAuth2Session extends OAuth2Session {
 
 /**
  * Enhanced token result with validation
+ * Extends TokenResult with additional metadata
  */
-export interface EnhancedTokenResult extends TokenResult {
-  audience?: string;
+export interface EnhancedTokenResult {
+  // Base TokenResult properties
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn: number;
+  tokenType: string;
   scope?: string[];
-  expiresIn?: number;
-  tokenType?: string;
+  // Enhanced properties
+  audience?: string;
 }
 
 /**

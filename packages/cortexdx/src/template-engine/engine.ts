@@ -1,14 +1,16 @@
-import type { DevelopmentContext, Finding } from "../types";
-import { getTemplate } from "../templates/fix-templates";
-import type { FixTemplate } from "../templates/fix-templates";
-import { runChecklist, formatChecklistResult } from "../templates/checklists";
-import type { ChecklistResult } from "../templates/checklists";
-import { renderCodePattern, getCodePattern } from "../templates/code-patterns";
-import { runValidationRules, formatValidationResults } from "../templates/validation-rules";
-import type { ValidationResult } from "../templates/validation-rules";
 import { promises as fs } from "node:fs";
-import { resolve, join } from "node:path";
+import { join, resolve } from "node:path";
+import { createLogger } from "../logging/logger.js";
+import type { ChecklistResult } from "../templates/checklists.js";
+import { formatChecklistResult, runChecklist } from "../templates/checklists.js";
+import { getCodePattern, renderCodePattern } from "../templates/code-patterns.js";
+import type { FixTemplate } from "../templates/fix-templates.js";
+import { getTemplate } from "../templates/fix-templates.js";
+import type { ValidationResult } from "../templates/validation-rules.js";
+import { formatValidationResults, runValidationRules } from "../templates/validation-rules.js";
+import type { DevelopmentContext, Finding } from "../types.js";
 
+const logger = createLogger("TemplateEngine");
 const isTestEnv = (): boolean => process.env.VITEST === "true" || process.env.NODE_ENV === "test";
 
 export interface FixResult {
@@ -389,9 +391,9 @@ export class TemplateEngine {
         const fullPath = resolve(this.workspaceRoot, change.path);
         await fs.writeFile(fullPath, backupContent);
 
-        console.log(`[TemplateEngine] Rolled back: ${change.path}`);
+        logger.info(`Rolled back: ${change.path}`);
       } catch (error) {
-        console.error(`[TemplateEngine] Failed to rollback ${change.path}:`, error);
+        logger.error(`Failed to rollback ${change.path}:`, error);
         allSuccessful = false;
       }
     }

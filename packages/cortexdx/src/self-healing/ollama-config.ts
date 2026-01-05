@@ -1,7 +1,6 @@
-import { safeParseJson } from "../utils/json";
 import fs from "node:fs";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { safeParseJson } from "../utils/json.js";
 
 interface ChatModelEntry {
   ollama_model?: string;

@@ -3,9 +3,10 @@
  * Implements MCP specification 2025-06-18 + Draft requirements
  */
 
-// Re-export from core to maintain backward compatibility
-// The canonical source is now in @brainwav/cortexdx-core/mcp-protocol
-export { PROTOCOL_VERSIONS, DEFAULT_PROTOCOL_VERSION, type ProtocolVersion } from "@brainwav/cortexdx-core/mcp-protocol.js";
+// Import and re-export from core to maintain backward compatibility
+// The canonical source is now in @brainwav/cortexdx-core
+import { DEFAULT_PROTOCOL_VERSION, PROTOCOL_VERSIONS, type ProtocolVersion } from "@brainwav/cortexdx-core";
+export { DEFAULT_PROTOCOL_VERSION, PROTOCOL_VERSIONS, type ProtocolVersion };
 
 /**
  * Protocol capabilities for server initialization

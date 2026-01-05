@@ -4,9 +4,9 @@
  * Requirements: 14.1, 14.2, 14.3
  */
 
-import type { OAuth2Config } from "../adapters/oauth-authenticator";
-import { oauthIntegration } from "../adapters/oauth-integration";
-import { createCliLogger } from "../logging/logger";
+import type { OAuth2Config } from "../adapters/oauth-authenticator.js";
+import { oauthIntegration } from "../adapters/oauth-integration.js";
+import { createCliLogger } from "../logging/logger.js";
 
 const defaultLogger = createCliLogger("oauth-auth");
 

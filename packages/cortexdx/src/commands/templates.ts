@@ -1,12 +1,12 @@
-import { createCliLogger } from "../logging/logger";
-import { TemplateEngine } from "../template-engine/engine";
+import { createCliLogger } from "../logging/logger.js";
+import { TemplateEngine } from "../template-engine/engine.js";
 import {
   getAllCodePatterns,
   renderCodePattern,
-} from "../templates/code-patterns";
-import type { FixTemplate } from "../templates/fix-templates";
-import { getAllTemplates, getTemplate } from "../templates/fix-templates";
-import type { DevelopmentContext } from "../types";
+} from "../templates/code-patterns.js";
+import type { FixTemplate } from "../templates/fix-templates.js";
+import { getAllTemplates, getTemplate } from "../templates/fix-templates.js";
+import type { DevelopmentContext } from "../types.js";
 
 const logger = createCliLogger("templates");
 
@@ -25,7 +25,7 @@ const jsonRpcStub = async <T>(
 function createDevelopmentContext(): DevelopmentContext {
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (() => {}) as (...args: unknown[]) => void,
+    logger: (() => { }) as (...args: unknown[]) => void,
     request: async <T>(
       _input: RequestInfo,
       _init?: RequestInit,

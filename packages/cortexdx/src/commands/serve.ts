@@ -3,7 +3,7 @@
  * Starts CortexDx as an MCP server for local integration
  */
 
-import { McpServer } from "@brainwav/cortexdx-server/mcp-server/index.js";
+import { McpServer } from "@brainwav/cortexdx-server";
 import { z } from "zod";
 import { createLogger } from "../logging/logger.js";
 

@@ -1,34 +1,34 @@
-import { resolveAuthHeaders } from "../auth/auth0-handshake";
-import { createDiagnosticContext } from "../context/context-factory";
-import { createDevelopmentContext } from "../context/development-context";
-import { getEnhancedLlmAdapter } from "../ml/router";
-import { createCliLogger } from "../logging/logger";
-import type { WorkflowState } from "../orchestration/agent-orchestrator";
-import { getAgentOrchestrator } from "../orchestration/agent-orchestrator";
+import { resolveAuthHeaders } from "../auth/auth0-handshake.js";
+import { createDiagnosticContext } from "../context/context-factory.js";
+import { createDevelopmentContext } from "../context/development-context.js";
+import { createCliLogger } from "../logging/logger.js";
+import { getEnhancedLlmAdapter } from "../ml/router.js";
+import type { WorkflowState } from "../orchestration/agent-orchestrator.js";
+import { getAgentOrchestrator } from "../orchestration/agent-orchestrator.js";
 import {
   ensureDefaultAgentWorkflows,
   ensureDefaultPluginWorkflows,
-} from "../orchestration/default-workflows";
+} from "../orchestration/default-workflows.js";
 import {
   type ExecutionMode,
   normalizeExecutionMode,
   normalizeExpertiseLevel,
-} from "../orchestration/orchestrate-options";
-import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator";
-import { getOrchestrationStateManager } from "../orchestration/state-manager-factory";
-import type { StateManager } from "../orchestration/state-manager";
+} from "../orchestration/orchestrate-options.js";
+import { getPluginOrchestrator } from "../orchestration/plugin-orchestrator.js";
+import { getOrchestrationStateManager } from "../orchestration/state-manager-factory.js";
+import type { StateManager } from "../orchestration/state-manager.js";
 import {
   createInitialWorkflowState,
   recoverWorkflowCheckpoint,
-} from "../orchestration/workflow-runtime";
+} from "../orchestration/workflow-runtime.js";
+import { storeConsolidatedReport } from "../report/consolidated-report.js";
+import { type AcademicResearchReport, runAcademicResearch, selectConfiguredProviders } from "../research/academic-researcher.js";
 import type {
   DevelopmentContext,
   DiagnosticContext,
   Finding,
-} from "../types";
-import { createDeterministicSeed } from "../utils/deterministic";
-import { runAcademicResearch, selectConfiguredProviders, type AcademicResearchReport } from "../research/academic-researcher";
-import { storeConsolidatedReport } from "../report/consolidated-report";
+} from "../types.js";
+import { createDeterministicSeed } from "../utils/deterministic.js";
 
 const logger = createCliLogger("orchestrate");
 
@@ -283,8 +283,8 @@ async function buildExecutionContext(
   const deterministic = Boolean(opts.deterministic);
   const deterministicSeed = deterministic
     ? createDeterministicSeed(
-        `${endpoint}:${opts.workflow ?? opts.plugin ?? opts.parallel ?? ""}`,
-      )
+      `${endpoint}:${opts.workflow ?? opts.plugin ?? opts.parallel ?? ""}`,
+    )
     : undefined;
   const enhancedLlm = await getEnhancedLlmAdapter({ deterministicSeed });
   const diagnosticCtx = createDiagnosticContext({
@@ -517,11 +517,11 @@ function logDeviceCodePrompt(userCode: string, verificationUri: string): void {
 
 function summarizeResearch(report: AcademicResearchReport | null):
   | {
-      topic: string;
-      providersResponded: number;
-      totalFindings: number;
-      artifactsDir?: string;
-    }
+    topic: string;
+    providersResponded: number;
+    totalFindings: number;
+    artifactsDir?: string;
+  }
   | undefined {
   if (!report) return undefined;
   return {

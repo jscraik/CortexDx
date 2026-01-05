@@ -612,8 +612,8 @@ Respond with ONLY valid JSON matching this schema.`;
   }
 
   private async pullModel(modelId: string): Promise<void> {
-    // This would implement model pulling, but for now we'll assume models are available
-    console.log(`Would pull model: ${modelId}`);
+    // Model pulling is not yet implemented - models must be pre-installed
+    // TODO: Implement model pulling via Ollama API
   }
 
   private selectModelForContext(context: ConversationContext): string {

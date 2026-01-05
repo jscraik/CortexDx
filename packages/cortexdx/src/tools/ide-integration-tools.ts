@@ -4,7 +4,7 @@
  * Requirements: 1.3, 4.1, 9.2
  */
 
-import type { McpTool } from "../types";
+import type { McpTool } from "../types.js";
 
 export const ideValidateCodeTool: McpTool = {
     name: "ide_validate_code",

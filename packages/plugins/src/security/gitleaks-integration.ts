@@ -5,6 +5,8 @@
  */
 
 import type { DiagnosticContext } from "@brainwav/cortexdx-core";
+import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 export interface Secret {
     type: string; // e.g., "AWS Access Key", "GitHub Token"
@@ -53,20 +55,53 @@ export class GitleaksIntegration {
      */
     async scanRepository(repoPath: string): Promise<SecretFindings> {
         try {
-            // Note: This requires gitleaks CLI to be installed
-            // For now, return placeholder results
-            // TODO: Implement actual gitleaks execution when CLI is available
+            // Fallback to manual scanning if CLI is not available
+            // For now, we'll just implement the manual scanning as the primary method
+            // since we don't have the CLI integration yet.
+
+            const files = await this.getAllFiles(repoPath);
+            const secrets: Secret[] = [];
+
+            for (const file of files) {
+                const fileSecrets = await this.scanFile(file);
+                secrets.push(...fileSecrets);
+            }
+
+            const byType: Record<string, number> = {};
+            for (const secret of secrets) {
+                byType[secret.type] = (byType[secret.type] || 0) + 1;
+            }
 
             return {
-                secrets: [],
-                totalFound: 0,
-                byType: {},
-                executionTime: 0,
+                secrets,
+                totalFound: secrets.length,
+                byType,
+                executionTime: 0, // TODO: Measure time
             };
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             throw new Error(`Failed to scan repository at ${repoPath}: ${message}`);
         }
+    }
+
+    private async getAllFiles(dir: string): Promise<string[]> {
+        let files: string[] = [];
+        try {
+            const entries = await readdir(dir, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    if (entry.name === "node_modules" || entry.name === ".git") continue;
+                    files = files.concat(await this.getAllFiles(fullPath));
+                } else {
+                    files.push(fullPath);
+                }
+            }
+        } catch (error) {
+            // Ignore errors for now (e.g. permission denied)
+        }
+        return files;
     }
 
     /**
@@ -103,11 +138,28 @@ export class GitleaksIntegration {
      */
     private async scanFile(filePath: string): Promise<Secret[]> {
         try {
-            // Placeholder implementation
-            // TODO: Implement actual file scanning
-            return [];
+            const content = await readFile(filePath, "utf-8");
+            const secrets: Secret[] = [];
+
+            for (const rule of this.defaultRules) {
+                const regex = new RegExp(rule.regex, "gi");
+                const matches = Array.from(content.matchAll(regex));
+
+                for (const match of matches) {
+                    secrets.push({
+                        type: rule.description,
+                        match: this.redactSecret(match[0]),
+                        file: filePath,
+                        line: this.getLineNumber(content, match.index || 0),
+                    });
+                }
+            }
+
+            return secrets;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+            // Don't throw, just return empty or log? The original code threw.
+            // I'll throw to be consistent.
             throw new Error(`Failed to scan file ${filePath}: ${message}`);
         }
     }

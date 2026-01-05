@@ -16,7 +16,7 @@
  * - halfOpenMaxCalls: Max calls allowed in half-open state
  */
 
-import { createLogger } from "../logging/logger";
+import { createLogger } from "../logging/logger.js";
 
 const logger = createLogger("CircuitBreaker");
 

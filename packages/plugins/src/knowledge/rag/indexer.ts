@@ -1,4 +1,5 @@
 import type { SpecContent } from "@brainwav/cortexdx-core";
+import { createHash } from "node:crypto";
 import type { EmbeddingAdapter } from "../../adapters/embedding.js";
 import { type VectorStorage, createReferenceDocument } from "../../storage/vector-storage.js";
 import type { SearchResult, SpecChunker, SpecIndexer } from "./types.js";
@@ -33,7 +34,7 @@ export class DefaultSpecIndexer implements SpecIndexer {
                 url: `/specification/${chunk.version}/${chunk.section}`,
                 sourceId: chunk.section,
                 order: i,
-                sha256: "", // TODO: Calculate hash if needed
+                sha256: createHash("sha256").update(chunk.content).digest("hex"),
                 title: chunk.metadata.header,
                 metadata: chunk.metadata as Record<string, unknown>
             }, embedding);

@@ -10,7 +10,7 @@ import type {
     DiagnosticContext,
     DiagnosticPlugin,
     Finding,
-} from "../types";
+} from "../types.js";
 
 export interface PluginMetadata {
     id: string;

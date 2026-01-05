@@ -94,14 +94,14 @@ export async function hashApiKey(
       .update(apiKey)
       .update(salt)
       .digest()
-    ;
+      ;
 
     // For proper key derivation, use PBKDF2
     const { pbkdf2 } = require("node:crypto");
     pbkdf2(
       apiKey,
       salt,
-      Math.pow(2, workFactor),
+      2 ** workFactor,
       64,
       "sha256",
       (err: Error | null, derivedKey: Buffer) => {
@@ -148,7 +148,7 @@ export async function verifyApiKey(
 
     const [saltHex, storedHashHex, workFactorStr] = parts;
     const salt = Buffer.from(saltHex, "hex");
-    const workFactor = parseInt(workFactorStr, 10);
+    const workFactor = Number.parseInt(workFactorStr, 10);
 
     // Derive the hash from the provided API key
     const { pbkdf2 } = require("node:crypto");
@@ -156,7 +156,7 @@ export async function verifyApiKey(
       pbkdf2(
         apiKey,
         salt,
-        Math.pow(2, workFactor),
+        2 ** workFactor,
         64,
         "sha256",
         (err: Error | null, derivedKey: Buffer) => {
@@ -194,7 +194,7 @@ function generateKeyId(): string {
 /**
  * Parse creation time from hash (approximate)
  */
-function parseCreatedAt(hashedApiKey: string): number {
+function parseCreatedAt(_hashedApiKey: string): number {
   // This is a rough estimate - in production, store createdAt separately
   // For now, return a timestamp that's at least as old as the hash
   return Date.now();
@@ -206,7 +206,7 @@ function parseCreatedAt(hashedApiKey: string): number {
  * For generating new API keys (not hashing existing ones).
  * Use this when creating new keys for users.
  */
-export function generateApiKey(prefix: string = "ck"): string {
+export function generateApiKey(prefix = "ck"): string {
   const randomBytes = require("node:crypto").randomBytes;
   const bytes = randomBytes(32);
   const key = bytes.toString("base64url").replace(/=/g, "");
@@ -252,7 +252,7 @@ export function validateApiKeyFormat(apiKey: string): {
  *
  * Shows first few and last few characters with asterisks in between.
  */
-export function maskApiKey(apiKey: string, visibleChars: number = 4): string {
+export function maskApiKey(apiKey: string, visibleChars = 4): string {
   if (!apiKey || apiKey.length <= visibleChars * 2) {
     return "*".repeat(apiKey?.length || 0);
   }

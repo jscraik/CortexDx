@@ -1,16 +1,16 @@
 import { join } from "node:path";
-import { InspectorAdapter } from "../adapters/inspector-adapter";
-import { loadProjectContext } from "../context/project-context";
-import type { FixAttempt, HealingReport } from "../healing/auto-healer";
-import { AutoHealer } from "../healing/auto-healer";
+import { InspectorAdapter } from "../adapters/inspector-adapter.js";
+import { loadProjectContext } from "../context/project-context.js";
+import type { FixAttempt, HealingReport } from "../healing/auto-healer.js";
+import { AutoHealer } from "../healing/auto-healer.js";
 import {
   type MonitoringConfig,
   MonitoringScheduler,
-} from "../healing/scheduler";
-import { createCliLogger } from "../logging/logger";
-import type { DevelopmentContext, Finding } from "../types";
-import { fileSystem as fs } from "../utils/file-system";
-import { safeParseJson } from "../utils/json";
+} from "../healing/scheduler.js";
+import { createCliLogger } from "../logging/logger.js";
+import type { DevelopmentContext, Finding } from "../types.js";
+import { fileSystem as fs } from "../utils/file-system.js";
+import { safeParseJson } from "../utils/json.js";
 
 type SeverityThreshold = "blocker" | "major" | "minor" | "info";
 
@@ -48,7 +48,7 @@ async function createDevelopmentContext(): Promise<DevelopmentContext> {
   });
   return {
     endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
-    logger: (() => {}) as (...args: unknown[]) => void,
+    logger: (() => { }) as (...args: unknown[]) => void,
     request: async <T>(
       _input: RequestInfo,
       _init?: RequestInit,
@@ -237,7 +237,7 @@ export async function runMonitoring(options: {
       });
 
       // Keep alive
-      return new Promise(() => {}); // Never resolve
+      return new Promise(() => { }); // Never resolve
     }
 
     if (options.stop) {
@@ -323,9 +323,9 @@ async function loadMonitoringConfigs(
   const jobs = Array.isArray(parsed)
     ? parsed
     : parsed &&
-        typeof parsed === "object" &&
-        "jobs" in parsed &&
-        Array.isArray((parsed as { jobs: unknown[] }).jobs)
+      typeof parsed === "object" &&
+      "jobs" in parsed &&
+      Array.isArray((parsed as { jobs: unknown[] }).jobs)
       ? (parsed as { jobs: unknown[] }).jobs
       : [];
 

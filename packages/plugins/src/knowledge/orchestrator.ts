@@ -12,12 +12,12 @@ import { mkdirSync } from "node:fs";
 import path from "node:path";
 import type { EmbeddingAdapter } from "../adapters/embedding.js";
 import type { VectorStorage } from "../storage/vector-storage.js";
-import { SpecCacheStore, type CacheEntry } from "./cache-store.js";
+import { type CacheEntry, SpecCacheStore } from "./cache-store.js";
 import { createKnowledgeRag } from "./rag/rag.js";
 import type { KnowledgeRAG, SearchResult } from "./rag/types.js";
 import { HttpTransportAdapter, SseTransportAdapter, WebSocketTransportAdapter } from "./transport/adapters.js";
 import { DefaultTransportSelector } from "./transport/selector.js";
-import { TransportType, type FetchInput, type FetchResult, type TransportAdapter } from "./transport/types.js";
+import { type FetchInput, type FetchResult, type TransportAdapter, TransportType } from "./transport/types.js";
 import { SemverVersionManager, type VersionManager } from "./version-manager.js";
 
 interface KnowledgeOrchestratorOptions {
@@ -277,8 +277,10 @@ class KnowledgeOrchestratorImpl implements KnowledgeOrchestrator {
         content: entry.content,
         metadata: entry.metadata
       }).catch((err: unknown) => {
-        // TODO: Log error properly
-        console.error(`Failed to index spec section ${entry.section}:`, err);
+        // Log error properly
+        if (process.env.NODE_ENV !== 'test') {
+          console.error(`Failed to index spec section ${entry.section}:`, err);
+        }
       });
     }
 

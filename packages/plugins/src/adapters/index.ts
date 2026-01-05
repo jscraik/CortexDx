@@ -5,12 +5,11 @@
 export type { EnhancedLlmAdapter } from "@brainwav/cortexdx-core";
 export { httpAdapter } from "./http.js";
 export {
-  createIdeAdapter,
-  IdeAdapter,
-  type IdeAdapterConfig,
-  type IdeCapabilities,
+  IdeAdapter, createIdeAdapter, type IdeAdapterConfig,
+  type IdeCapabilities
 } from "./ide-adapter.js";
-export { createOllamaAdapter, type OllamaConfig } from "./ollama.js";
+// Re-export OllamaAdapter from ml package (canonical implementation)
+export { OllamaAdapter, createOllamaAdapter, type OllamaConfig } from "@brainwav/cortexdx-ml";
 
 // Embedding adapters
 export { cosineSimilarity, normalizeVector } from "./embedding.js";
@@ -19,12 +18,10 @@ export type {
   EmbeddingBatchRequest,
   EmbeddingModelInfo,
   EmbeddingRequest,
-  EmbeddingVector,
+  EmbeddingVector
 } from "./embedding.js";
 export {
-  createOllamaEmbeddingAdapter,
-  OllamaEmbeddingAdapter,
-  type OllamaEmbeddingConfig,
+  OllamaEmbeddingAdapter, createOllamaEmbeddingAdapter, type OllamaEmbeddingConfig
 } from "./ollama-embedding.js";
 
 // OAuth authenticator
@@ -35,24 +32,20 @@ export {
   type OAuth2Config,
   type OAuth2Session,
   type TokenResult,
-  type TokenValidation,
+  type TokenValidation
 } from "./oauth-authenticator.js";
 
 // Credential manager
 export {
   CredentialManager,
-  credentialManager,
-  type Credentials,
-  type CredentialStorage,
+  credentialManager, type CredentialStorage, type Credentials
 } from "./credential-manager.js";
 
 // OAuth integration
 export {
-  createAuthenticatedContext,
-  OAuthIntegration,
-  oauthIntegration,
+  OAuthIntegration, createAuthenticatedContext, oauthIntegration,
   type AuthDetectionResult,
-  type AuthenticatedRequestOptions,
+  type AuthenticatedRequestOptions
 } from "./oauth-integration.js";
 
 // Clinic.js adapter for Node.js performance profiling
@@ -61,7 +54,7 @@ export {
   type ClinicBubbleprofResult,
   type ClinicDoctorResult,
   type ClinicFlameResult,
-  type ClinicProfile,
+  type ClinicProfile
 } from "./clinic-adapter.js";
 
 // py-spy adapter for Python performance profiling
@@ -69,7 +62,7 @@ export {
   PySpyAdapter,
   type PySpyFlameGraphData,
   type PySpyOptions,
-  type PySpyProfile,
+  type PySpyProfile
 } from "./pyspy-adapter.js";
 
 // Cloud storage adapter for diagnostic reports
@@ -78,5 +71,6 @@ export {
   createCloudStorageFromEnv,
   type CloudStorageConfig,
   type ObjectMetadata,
-  type UploadResult,
+  type UploadResult
 } from "./cloud-storage-adapter.js";
+

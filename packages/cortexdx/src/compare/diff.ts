@@ -1,4 +1,4 @@
-import type { Finding } from "../types";
+import type { Finding } from "../types.js";
 
 const keyOf = (finding: Finding) => `${finding.id}:${finding.title}`;
 

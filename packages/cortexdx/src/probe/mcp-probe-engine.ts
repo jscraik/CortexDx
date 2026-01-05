@@ -12,13 +12,13 @@
  * 7. Generate Report - Create hosted diagnostic report
  */
 
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
 import { randomUUID } from "node:crypto";
-import { createLogger } from "../logging/logger";
-import { runPlugins } from "../plugin-host";
-import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-server/mcp-server/core/protocol";
-import type { HttpMcpClient } from "../providers/academic/http-mcp-client";
-import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client";
-import type { Finding, McpToolResult } from "../types";
+import { createLogger } from "../logging/logger.js";
+import { runPlugins } from "../plugin-host.js";
+import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
+import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
+import type { Finding, McpToolResult } from "../types.js";
 import { calculateComplianceScore } from "./compliance-scoring.js";
 
 export interface Auth0Config {
@@ -225,10 +225,10 @@ async function enumerateCapabilities(
 
     const initResultTyped = initResult as
       | {
-          serverInfo?: Record<string, unknown>;
-          protocolVersion?: string;
-          capabilities?: Record<string, unknown>;
-        }
+        serverInfo?: Record<string, unknown>;
+        protocolVersion?: string;
+        capabilities?: Record<string, unknown>;
+      }
       | null;
     if (initResultTyped) {
       metadata.serverInfo = initResultTyped.serverInfo ?? {};

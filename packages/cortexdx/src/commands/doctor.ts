@@ -1,12 +1,12 @@
 import { execSync } from "node:child_process";
+import { ErrorCode, type JsonOutput, SchemaVersion } from "../cli/index.js";
+import { createCliLogger } from "../logging/logger.js";
 import {
-  runAcademicResearch,
-  DEFAULT_PROVIDERS,
   ACADEMIC_PROVIDER_ENV_REQUIREMENTS,
+  DEFAULT_PROVIDERS,
+  runAcademicResearch,
   selectConfiguredProviders,
-} from "../research/academic-researcher";
-import { createCliLogger } from "../logging/logger";
-import { SchemaVersion, ErrorCode, type JsonOutput } from "../cli/index.js";
+} from "../research/academic-researcher.js";
 
 const logger = createCliLogger("doctor");
 
@@ -79,16 +79,16 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
       errors:
         report.research?.error || report.providers?.some((p) => p.status === "missing")
           ? [
-              {
-                code:
-                  report.research?.error && !report.providers?.some((p) => p.status === "missing")
-                    ? ErrorCode.E_INTERNAL
-                    : ErrorCode.E_VALIDATION,
-                message:
-                  report.research?.error ??
-                  "Some providers are missing required environment variables",
-              },
-            ]
+            {
+              code:
+                report.research?.error && !report.providers?.some((p) => p.status === "missing")
+                  ? ErrorCode.E_INTERNAL
+                  : ErrorCode.E_VALIDATION,
+              message:
+                report.research?.error ??
+                "Some providers are missing required environment variables",
+            },
+          ]
           : undefined,
       metadata: {
         timestamp: new Date().toISOString(),

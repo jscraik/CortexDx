@@ -3,34 +3,34 @@
  * Exports all MCP tool definitions for the CortexDx diagnostic system
  */
 
-export { createAcademicIntegrationTools, executeAcademicIntegrationTool } from "./academic-integration-tools";
-export { createAgentOrchestrationTools, executeAgentOrchestrationTool } from "./agent-orchestration-tools";
-export { createCommercialFeatureTools } from "./commercial-feature-tools";
-export { createDeepContextTools, executeDeepContextTool } from "./deepcontext-tools";
-export { createDevelopmentAssistanceTools } from "./development-assistance-tools";
-export { createDevelopmentTools } from "./development-tools";
-export { createDiagnosticTools } from "./diagnostic-tools";
-export { ideIntegrationTools } from "./ide-integration-tools";
-export { createLicenseValidationTools } from "./license-validation-tools";
-export { createPluginOrchestrationTools, executePluginOrchestrationTool } from "./plugin-orchestration-tools";
-export { createMcpDocsTools, executeMcpDocsTool } from "./mcp-docs-tools";
-export { reportTools, handleGetLatest, handleGetByRun, type ReportRef, type GetLatestParams, type GetByRunParams } from "./report-tools";
-export { mcpProbeTools, executeMcpProbeTool } from "./mcp-probe-tools";
+export { createAcademicIntegrationTools, executeAcademicIntegrationTool } from "./academic-integration-tools.js";
+export { createAgentOrchestrationTools, executeAgentOrchestrationTool } from "./agent-orchestration-tools.js";
+export { createCommercialFeatureTools } from "./commercial-feature-tools.js";
+export { createDeepContextTools, executeDeepContextTool } from "./deepcontext-tools.js";
+export { createDevelopmentAssistanceTools } from "./development-assistance-tools.js";
+export { createDevelopmentTools } from "./development-tools.js";
+export { createDiagnosticTools } from "./diagnostic-tools.js";
+export { ideIntegrationTools } from "./ide-integration-tools.js";
+export { createLicenseValidationTools } from "./license-validation-tools.js";
+export { createMcpDocsTools, executeMcpDocsTool } from "./mcp-docs-tools.js";
+export { executeMcpProbeTool, mcpProbeTools } from "./mcp-probe-tools.js";
+export { createPluginOrchestrationTools, executePluginOrchestrationTool } from "./plugin-orchestration-tools.js";
+export { handleGetByRun, handleGetLatest, reportTools, type GetByRunParams, type GetLatestParams, type ReportRef } from "./report-tools.js";
 
-import type { McpTool } from "../types";
-import { createAcademicIntegrationTools } from "./academic-integration-tools";
-import { createAgentOrchestrationTools } from "./agent-orchestration-tools";
-import { createCommercialFeatureTools } from "./commercial-feature-tools";
-import { createDeepContextTools } from "./deepcontext-tools";
-import { createDevelopmentAssistanceTools } from "./development-assistance-tools";
-import { createDevelopmentTools } from "./development-tools";
-import { createDiagnosticTools } from "./diagnostic-tools";
-import { ideIntegrationTools } from "./ide-integration-tools";
-import { createLicenseValidationTools } from "./license-validation-tools";
-import { createPluginOrchestrationTools } from "./plugin-orchestration-tools";
-import { createMcpDocsTools } from "./mcp-docs-tools";
-import { reportTools } from "./report-tools";
-import { mcpProbeTools } from "./mcp-probe-tools";
+import type { McpTool } from "../types.js";
+import { createAcademicIntegrationTools } from "./academic-integration-tools.js";
+import { createAgentOrchestrationTools } from "./agent-orchestration-tools.js";
+import { createCommercialFeatureTools } from "./commercial-feature-tools.js";
+import { createDeepContextTools } from "./deepcontext-tools.js";
+import { createDevelopmentAssistanceTools } from "./development-assistance-tools.js";
+import { createDevelopmentTools } from "./development-tools.js";
+import { createDiagnosticTools } from "./diagnostic-tools.js";
+import { ideIntegrationTools } from "./ide-integration-tools.js";
+import { createLicenseValidationTools } from "./license-validation-tools.js";
+import { createMcpDocsTools } from "./mcp-docs-tools.js";
+import { mcpProbeTools } from "./mcp-probe-tools.js";
+import { createPluginOrchestrationTools } from "./plugin-orchestration-tools.js";
+import { reportTools } from "./report-tools.js";
 
 /**
  * Get all MCP tools organized by category

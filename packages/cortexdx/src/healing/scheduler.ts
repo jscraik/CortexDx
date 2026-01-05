@@ -1,9 +1,9 @@
-import { safeParseJson } from "../utils/json";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { DevelopmentContext } from "../types";
-import type { HealingReport } from "./auto-healer";
-import { AutoHealer } from "./auto-healer";
+import type { DevelopmentContext } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
+import type { HealingReport } from "./auto-healer.js";
+import { AutoHealer } from "./auto-healer.js";
 
 export interface MonitoringConfig {
   endpoint: string;

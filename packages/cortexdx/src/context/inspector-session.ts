@@ -1,15 +1,14 @@
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
 import { randomUUID } from "node:crypto";
 import { sseProbe } from "../adapters/sse.js";
-import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-server/mcp-server/core/protocol";
 import type {
   SseProbeOptions,
   SseResult,
   TransportExchange,
   TransportState,
-  TransportTranscript,
-  DiagnosticContext,
+  TransportTranscript
 } from "../types.js";
-import { safeParseJson } from "../utils/json";
+import { safeParseJson } from "../utils/json.js";
 
 export interface SharedSessionState {
   sessionId?: string;
