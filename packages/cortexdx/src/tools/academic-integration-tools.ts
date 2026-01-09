@@ -518,7 +518,7 @@ const academicExecutors: Record<string, AcademicExecutor> = {
       topic: requireString(raw, "implementation", "check_citation_compliance"),
       question: stringifyInput(raw, "expectedCitations"),
       providers: ["research-quality"],
-      includeLicense: extractBoolean(raw, "validateCitationFormat", true),
+      includeLicense: false,
     }),
 
   generate_research_report: async (raw) =>
