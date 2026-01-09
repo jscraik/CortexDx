@@ -10,7 +10,9 @@ export interface ResearchResource {
 const MAX_RECORDS = 10;
 const researchResources: ResearchResource[] = [];
 
-export function recordResearchReport(report: AcademicResearchReport): ResearchResource {
+export function recordResearchReport(
+  report: AcademicResearchReport,
+): ResearchResource {
   const id = generateResourceId(report);
   const resource: ResearchResource = { id, createdAt: Date.now(), report };
   researchResources.unshift(resource);

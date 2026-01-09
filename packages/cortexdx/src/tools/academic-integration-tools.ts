@@ -455,53 +455,190 @@ export const createAcademicIntegrationTools = (): McpTool[] => [
 ];
 
 export async function executeAcademicIntegrationTool(tool: McpTool, args: unknown): Promise<McpToolResult> {
-  if (tool.name !== "cortexdx_academic_research") {
-    throw new Error(`Unknown academic integration tool: ${tool.name}`);
+  if (academicExecutors[tool.name]) {
+    return await academicExecutors[tool.name](args);
   }
 
-  const {
-    topic,
-    question,
-    providers,
-    limit,
-    includeLicense,
-    deterministic,
-    credentials,
-    headers,
-  } = args as {
-    topic?: string;
-    question?: string;
-    providers?: string[];
-    limit?: number;
-    includeLicense?: boolean;
-    deterministic?: boolean;
-    credentials?: Record<string, string>;
-    headers?: Record<string, string>;
-  };
+  throw new Error(`Unknown academic integration tool: ${tool.name}`);
+}
 
-  if (!topic || topic.trim().length === 0) {
-    throw new Error("topic is required for cortexdx_academic_research");
-  }
+type AcademicExecutor = (args: unknown) => Promise<McpToolResult>;
 
+const academicExecutors: Record<string, AcademicExecutor> = {
+  validate_architecture_academic: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "architectureSpec", "validate_architecture_academic"),
+      question: buildArchitectureQuestion(raw as { endpoint?: string; researchDomains?: string[] }),
+      providers: ["context7", "research-quality"],
+      includeLicense: extractBoolean(raw, "includeLicenseValidation", true),
+    }),
+
+  validate_research_methodology: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "implementation", "validate_research_methodology"),
+      question: (raw as { methodology?: string }).methodology,
+      providers: ["semantic-scholar", "research-quality"],
+      includeLicense: extractBoolean(raw, "validateIntellectualProperty", true),
+    }),
+
+  analyze_research_trends: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "topic", "analyze_research_trends"),
+      question: (raw as { implementation?: string }).implementation,
+      providers: ["openalex"],
+      includeLicense: extractBoolean(raw, "validateLicenseCompatibility", true),
+    }),
+
+  validate_knowledge_graph: async (raw) =>
+    executeResearchRun({
+      topic: stringifyInput(raw, "entities"),
+      question: stringifyInput(raw, "relationships"),
+      providers: ["wikidata"],
+      includeLicense: false,
+    }),
+
+  analyze_preprint_research: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "query", "analyze_preprint_research"),
+      providers: ["arxiv"],
+      limit: extractNumber(raw, "maxResults"),
+      includeLicense: extractBoolean(raw, "validateLicenseCompliance", true),
+    }),
+
+  search_academic_validation: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "query", "search_academic_validation"),
+      question: requireString(raw, "validationTarget", "search_academic_validation"),
+      providers: ["exa"],
+      includeLicense: false,
+    }),
+
+  check_citation_compliance: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "implementation", "check_citation_compliance"),
+      question: stringifyInput(raw, "expectedCitations"),
+      providers: ["research-quality"],
+      includeLicense: false,
+    }),
+
+  generate_research_report: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "target", "generate_research_report"),
+      question: (raw as { includeRecommendations?: boolean }).includeRecommendations
+        ? "Include recommendations"
+        : undefined,
+      providers: (raw as { providers?: string[] }).providers,
+      includeLicense: extractBoolean(raw, "includeLicenseSummary", true),
+    }),
+
+  validate_concept_implementation: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "concept", "validate_concept_implementation"),
+      question: requireString(raw, "implementation", "validate_concept_implementation"),
+      providers: ["research-quality", "semantic-scholar"],
+      includeLicense: extractBoolean(raw, "validateCorrectness", true),
+    }),
+
+  track_research_provenance: async () =>
+    deprecatedResult(
+      "track_research_provenance",
+      "Use generate_research_report with research-quality providers for provenance summaries.",
+    ),
+
+  cortexdx_academic_research: async (raw) =>
+    executeResearchRun({
+      topic: requireString(raw, "topic", "cortexdx_academic_research"),
+      question: (raw as { question?: string }).question,
+      providers: (raw as { providers?: string[] }).providers,
+      limit: extractNumber(raw, "limit"),
+      includeLicense: extractBoolean(raw, "includeLicense"),
+      deterministic: extractBoolean(raw, "deterministic"),
+      credentials: (raw as { credentials?: Record<string, string> }).credentials,
+      headers: (raw as { headers?: Record<string, string> }).headers,
+    }),
+};
+
+async function executeResearchRun(params: {
+  topic: string;
+  question?: string;
+  providers?: string[];
+  limit?: number;
+  includeLicense?: boolean;
+  deterministic?: boolean;
+  credentials?: Record<string, string>;
+  headers?: Record<string, string>;
+}): Promise<McpToolResult> {
   const report = await runAcademicResearch({
-    topic: topic.trim(),
-    question,
-    providers,
-    limit,
-    includeLicense,
-    deterministic,
-    credentials,
-    headers,
+    topic: params.topic.trim(),
+    question: params.question,
+    providers: params.providers,
+    limit: params.limit,
+    includeLicense: params.includeLicense,
+    deterministic: params.deterministic,
+    credentials: params.credentials,
+    headers: params.headers,
   });
 
   const resource = recordResearchReport(report);
-  const resourceUri = `cortexdx://research/${resource.id}`;
-
   return {
     content: [
       {
         type: "text",
-        text: JSON.stringify({ resourceUri, report }, null, 2),
+        text: JSON.stringify(
+          { resourceUri: `cortexdx://research/${resource.id}`, report },
+          null,
+          2,
+        ),
+      },
+    ],
+  };
+}
+
+function requireString(input: unknown, key: string, toolName?: string): string {
+  const value = (input as Record<string, unknown> | undefined)?.[key];
+  if (typeof value !== "string" || value.trim().length === 0) {
+    const target = toolName ?? key;
+    throw new Error(`${key} is required for ${target}`);
+  }
+  return value;
+}
+
+function stringifyInput(input: unknown, key: string): string | undefined {
+  const value = (input as Record<string, unknown> | undefined)?.[key];
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function extractBoolean(input: unknown, key: string, fallback?: boolean): boolean | undefined {
+  const value = (input as Record<string, unknown> | undefined)?.[key];
+  if (typeof value === "boolean") return value;
+  return fallback;
+}
+
+function extractNumber(input: unknown, key: string): number | undefined {
+  const value = (input as Record<string, unknown> | undefined)?.[key];
+  if (typeof value === "number") return value;
+  return undefined;
+}
+
+function buildArchitectureQuestion(input: { endpoint?: string; researchDomains?: string[] }): string | undefined {
+  const parts: string[] = [];
+  if (input.endpoint) parts.push(`Endpoint: ${input.endpoint}`);
+  if (input.researchDomains?.length) parts.push(`Domains: ${input.researchDomains.join(", ")}`);
+  return parts.length > 0 ? parts.join(" | ") : undefined;
+}
+
+function deprecatedResult(toolName: string, message: string): McpToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text: `Tool '${toolName}' is deprecated: ${message}`,
       },
     ],
   };

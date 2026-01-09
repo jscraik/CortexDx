@@ -470,8 +470,7 @@ export const cortexVibeCapabilities = {
   prompts: [
     {
       name: "agent_self_check",
-      description:
-        "Trigger a metacognitive self-check during complex tasks",
+      description: "Trigger a metacognitive self-check during complex tasks",
       arguments: [
         {
           name: "task_description",

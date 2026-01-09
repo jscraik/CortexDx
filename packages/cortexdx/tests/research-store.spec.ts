@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { AcademicResearchReport } from "../src/research/academic-researcher.js";
-import { getResearchResource, listResearchResources, recordResearchReport } from "../src/resources/research-store.js";
+import {
+  getResearchResource,
+  listResearchResources,
+  recordResearchReport,
+} from "../src/resources/research-store.js";
 
 const baseReport: AcademicResearchReport = {
   topic: "MCP baseline",
@@ -26,7 +30,11 @@ describe("research-store", () => {
 
   it("enforces the record limit", () => {
     for (let i = 0; i < 12; i += 1) {
-      recordResearchReport({ ...baseReport, topic: `Topic ${i}`, timestamp: new Date(Date.now() + i).toISOString() });
+      recordResearchReport({
+        ...baseReport,
+        topic: `Topic ${i}`,
+        timestamp: new Date(Date.now() + i).toISOString(),
+      });
     }
     expect(listResearchResources().length).toBeLessThanOrEqual(10);
   });

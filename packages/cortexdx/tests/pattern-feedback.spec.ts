@@ -41,7 +41,10 @@ describe("pattern feedback loop", () => {
       },
     ];
 
-    await recordFindingsForLearning({ endpoint: "https://example.com/mcp", findings });
+    await recordFindingsForLearning({
+      endpoint: "https://example.com/mcp",
+      findings,
+    });
     const storage = getPatternStorage();
     const patterns = await storage.loadAllPatterns();
 
@@ -57,15 +60,21 @@ describe("pattern feedback loop", () => {
       area: "security",
       severity: "major",
       title: "Leak",
-      description: "Observed https://private.internal/api with token bearer abc123",
+      description:
+        "Observed https://private.internal/api with token bearer abc123",
       evidence: [{ type: "log", ref: "sensitive" }],
       source: "security",
     };
 
-    await recordFindingsForLearning({ endpoint: "https://private.internal/mcp", findings: [finding] });
+    await recordFindingsForLearning({
+      endpoint: "https://private.internal/mcp",
+      findings: [finding],
+    });
     const storage = getPatternStorage();
     const patterns = await storage.loadAllPatterns();
-    const stored = patterns.find((pattern) => pattern.solution.id === `solution-${finding.id}`);
+    const stored = patterns.find(
+      (pattern) => pattern.solution.id === `solution-${finding.id}`,
+    );
 
     expect(stored).toBeTruthy();
     expect(stored?.problemSignature).not.toContain("private.internal");
@@ -84,10 +93,15 @@ describe("pattern feedback loop", () => {
       source: "discovery",
     };
 
-    await recordFindingsForLearning({ endpoint: "https://example.com/mcp", findings: [finding] });
+    await recordFindingsForLearning({
+      endpoint: "https://example.com/mcp",
+      findings: [finding],
+    });
     const storage = getPatternStorage();
     const patterns = await storage.loadAllPatterns();
-    const stored = patterns.find((pattern) => pattern.solution.id === `solution-${finding.id}`);
+    const stored = patterns.find(
+      (pattern) => pattern.solution.id === `solution-${finding.id}`,
+    );
 
     expect(stored).toBeTruthy();
     expect(stored?.confidence).toBeCloseTo(0.9, 2);
@@ -104,17 +118,25 @@ describe("pattern feedback loop", () => {
       source: "ratelimit",
     };
 
-    await recordFindingsForLearning({ endpoint: "https://example.com/mcp", findings: [finding] });
+    await recordFindingsForLearning({
+      endpoint: "https://example.com/mcp",
+      findings: [finding],
+    });
     const storage = getPatternStorage();
     const first = await storage.loadAllPatterns();
-    const stored = first.find((pattern) => pattern.solution.id === `solution-${finding.id}`);
+    const stored = first.find(
+      (pattern) => pattern.solution.id === `solution-${finding.id}`,
+    );
     expect(stored).toBeTruthy();
     if (!stored) return;
 
     stored.confidence = 0.21;
     await storage.savePattern(stored);
 
-    await recordFindingsForLearning({ endpoint: "https://example.com/mcp", findings: [finding] });
+    await recordFindingsForLearning({
+      endpoint: "https://example.com/mcp",
+      findings: [finding],
+    });
     const updated = await storage.loadPattern(stored.id);
     expect(updated?.confidence).toBeCloseTo(0.21, 5);
   });
@@ -131,7 +153,10 @@ describe("pattern feedback loop", () => {
       tags: ["tools", "headers"],
     };
 
-    await recordFindingsForLearning({ endpoint: "https://example.com/mcp", findings: [finding] });
+    await recordFindingsForLearning({
+      endpoint: "https://example.com/mcp",
+      findings: [finding],
+    });
     const storage = getPatternStorage();
     const patterns = await storage.loadAllPatterns();
     const matcher = new EnhancedPatternMatcher();
@@ -153,7 +178,9 @@ describe("pattern feedback loop", () => {
 
     const matches = await matcher.findMatches(problem, patterns, 0);
     expect(matches.length).toBeGreaterThan(0);
-    const match = matches.find((m) => m.pattern.solution.id === `solution-${finding.id}`);
+    const match = matches.find(
+      (m) => m.pattern.solution.id === `solution-${finding.id}`,
+    );
     expect(match).toBeTruthy();
     expect(match?.confidence ?? 0).toBeGreaterThanOrEqual(0);
   });

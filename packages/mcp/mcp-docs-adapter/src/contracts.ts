@@ -135,7 +135,7 @@ export const DocManifestSchema = z.object({
       title: z.string(),
       sha256: z.string(),
       anchors: z.array(z.string()),
-    })
+    }),
   ),
 });
 

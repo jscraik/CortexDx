@@ -9,7 +9,7 @@ import {
   checkRoleAccess,
   trackAuthUsage,
   validateAuth0Token,
-} from "../plugins/auth";
+} from "../plugins/auth.js";
 import {
   exportBillingData,
   generateAdminDashboard,
@@ -17,7 +17,7 @@ import {
   generateBillingComplianceFindings,
   generateUsageReport,
   recordSubscriptionChange,
-} from "../plugins/billing-analytics";
+} from "../plugins/billing-analytics.js";
 import {
   type LicenseKey,
   type UsageMetrics,
@@ -25,8 +25,8 @@ import {
   generateComplianceReport,
   trackUsage,
   validateCommercialLicense,
-} from "../plugins/commercial-licensing";
-import type { McpToolResult } from "../types";
+} from "../plugins/commercial-licensing.js";
+import type { McpToolResult } from "../types.js";
 
 // In-memory storage for demo purposes
 // In production, these would be backed by a database

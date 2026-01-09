@@ -1,18 +1,42 @@
+# Dependencies
 node_modules
+package-lock.json
+
+# Build outputs
+dist
+build
+coverage
+.nx/
+
+# Reports and artifacts
 reports
 artifacts
-dist
-coverage
+*.log
+
+# Documentation reports
+*-report.json
+*-report.md
+
+# OS files
 .DS_Store
-.nx/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+.tmp-tests/
+tmp/
 
 # Generated diagnostic artifacts
 fixed-inspector-report.json
 working-inspector-report.json
 server-running-report.json
 studio-wrapper-test.json
-cortex-test-report.json
-docs-maintenance-report.json
-docs-validation-report.json
-packages/cortexdx/server.log
-*.log

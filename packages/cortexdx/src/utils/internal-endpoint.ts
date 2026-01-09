@@ -29,7 +29,10 @@ export function parseHeaderList(input?: string): HeaderMap {
 
 export function resolveInternalHeaders(): HeaderMap {
   const headers: HeaderMap = {};
-  Object.assign(headers, parseHeaderList(process.env.CORTEXDX_INTERNAL_HEADERS));
+  Object.assign(
+    headers,
+    parseHeaderList(process.env.CORTEXDX_INTERNAL_HEADERS),
+  );
 
   const authHeader = parseHeaderPair(
     process.env.CORTEXDX_INTERNAL_AUTH_HEADER ?? "",
@@ -77,4 +80,3 @@ export function formatHeadersForCli(headers: HeaderMap): string[] {
     `${key}: ${value}`,
   ]);
 }
-

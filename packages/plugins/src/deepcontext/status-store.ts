@@ -34,12 +34,16 @@ export async function readDeepContextStatus(
   return map[normalizeCodebase(codebasePath)];
 }
 
-export async function readAllDeepContextStatuses(): Promise<DeepContextStatusRecord[]> {
+export async function readAllDeepContextStatuses(): Promise<
+  DeepContextStatusRecord[]
+> {
   const map = await readStatusMap();
   return Object.values(map);
 }
 
-export async function persistDeepContextStatus(record: DeepContextStatusRecord): Promise<void> {
+export async function persistDeepContextStatus(
+  record: DeepContextStatusRecord,
+): Promise<void> {
   const map = await readStatusMap();
   map[normalizeCodebase(record.codebasePath)] = record;
   await writeStatusMap(map);
@@ -53,7 +57,8 @@ export async function buildStatusRecord(params: {
 }): Promise<DeepContextStatusRecord> {
   const { codebasePath, remoteStatusText, indexOutput, inferredState } = params;
   const artifacts = await inspectCodexArtifacts(codebasePath);
-  const state = inferredState ?? inferState(remoteStatusText, indexOutput, artifacts);
+  const state =
+    inferredState ?? inferState(remoteStatusText, indexOutput, artifacts);
   const summary = buildSummary(state, remoteStatusText, artifacts);
 
   return {
@@ -78,7 +83,9 @@ export function resolveCodexContextDir(codebasePath?: string): string {
     codebasePath ? path.join(codebasePath, ".codex-context") : undefined,
     path.join(process.cwd(), ".codex-context"),
     path.join(homedir(), ".codex-context"),
-  ].filter((candidate): candidate is string => Boolean(candidate && candidate.trim().length > 0));
+  ].filter((candidate): candidate is string =>
+    Boolean(candidate && candidate.trim().length > 0),
+  );
 
   return path.resolve(candidates[0] ?? path.join(homedir(), ".codex-context"));
 }
@@ -117,7 +124,10 @@ async function inspectCodexArtifacts(codebasePath: string): Promise<{
   const resolvedCodebase = normalizeCodebase(codebasePath);
   const codexContextDir = resolveCodexContextDir(resolvedCodebase);
   const codexContextExists = await pathExists(codexContextDir);
-  const indexedCodebasesPath = path.join(codexContextDir, "indexed-codebases.json");
+  const indexedCodebasesPath = path.join(
+    codexContextDir,
+    "indexed-codebases.json",
+  );
   const indexedCodebasesExists = await pathExists(indexedCodebasesPath);
   let indexedCodebasesSnapshot: string | undefined;
   let indexContainsCodebase = false;
@@ -126,7 +136,9 @@ async function inspectCodexArtifacts(codebasePath: string): Promise<{
     try {
       const raw = await readFile(indexedCodebasesPath, "utf8");
       indexedCodebasesSnapshot = raw.slice(0, 2000);
-      indexContainsCodebase = raw.toLowerCase().includes(resolvedCodebase.toLowerCase());
+      indexContainsCodebase = raw
+        .toLowerCase()
+        .includes(resolvedCodebase.toLowerCase());
     } catch {
       indexContainsCodebase = false;
     }
@@ -136,7 +148,9 @@ async function inspectCodexArtifacts(codebasePath: string): Promise<{
     codebasePath: resolvedCodebase,
     codexContextDir,
     codexContextExists,
-    indexedCodebasesPath: indexedCodebasesExists ? indexedCodebasesPath : undefined,
+    indexedCodebasesPath: indexedCodebasesExists
+      ? indexedCodebasesPath
+      : undefined,
     indexedCodebasesExists,
     indexedCodebasesSnapshot,
     indexContainsCodebase,
@@ -152,11 +166,16 @@ function inferState(
     indexContainsCodebase: boolean;
   },
 ): DeepContextIndexState {
-  const combined = `${remoteStatusText ?? ""} ${indexOutput ?? ""}`.toLowerCase();
+  const combined =
+    `${remoteStatusText ?? ""} ${indexOutput ?? ""}`.toLowerCase();
   if (combined.includes("error") || combined.includes("fail")) {
     return "error";
   }
-  if (combined.includes("ready") || combined.includes("complete") || combined.includes("indexed")) {
+  if (
+    combined.includes("ready") ||
+    combined.includes("complete") ||
+    combined.includes("indexed")
+  ) {
     return "ready";
   }
   if (combined.includes("in progress") || combined.includes("indexing")) {
@@ -169,7 +188,10 @@ function inferState(
   if (artifacts?.indexContainsCodebase) {
     return "ready";
   }
-  if (artifacts && (!artifacts.codexContextExists || !artifacts.indexedCodebasesExists)) {
+  if (
+    artifacts &&
+    (!artifacts.codexContextExists || !artifacts.indexedCodebasesExists)
+  ) {
     return "not_indexed";
   }
   return "unknown";

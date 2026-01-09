@@ -18,7 +18,8 @@ const ASVS_CONTROL_MAPPINGS: ControlMetadata[] = [
     framework: "ASVS",
     title: "Authentication Strength",
     severity: "high",
-    description: "Verify passwords and credentials follow strong policy requirements.",
+    description:
+      "Verify passwords and credentials follow strong policy requirements.",
     matchTags: ["authentication", "broken-auth", "V2.1.1", "asvs"],
   },
   {
@@ -34,7 +35,8 @@ const ASVS_CONTROL_MAPPINGS: ControlMetadata[] = [
     framework: "ASVS",
     title: "Input Validation",
     severity: "high",
-    description: "Verify inputs are validated and sanitized to prevent injection.",
+    description:
+      "Verify inputs are validated and sanitized to prevent injection.",
     matchTags: ["injection", "input-validation", "V5.3.2"],
   },
   {
@@ -53,7 +55,8 @@ const ATLAS_CONTROL_MAPPINGS: ControlMetadata[] = [
     framework: "ATLAS",
     title: "LLM Prompt Injection",
     severity: "high",
-    description: "Detect and mitigate malicious prompt behavior targeting LLMs.",
+    description:
+      "Detect and mitigate malicious prompt behavior targeting LLMs.",
     matchTags: ["AML.T0051", "ai-ml-security", "prompt-injection", "atlas"],
   },
   {
@@ -61,7 +64,8 @@ const ATLAS_CONTROL_MAPPINGS: ControlMetadata[] = [
     framework: "ATLAS",
     title: "Poison Training Data",
     severity: "high",
-    description: "Detect adversarial data injections during training workflows.",
+    description:
+      "Detect adversarial data injections during training workflows.",
     matchTags: ["AML.T0020", "pattern_store", "learn_feedback", "atlas"],
   },
   {
@@ -146,10 +150,7 @@ export function buildCoverageGapDescription(
   missing: ControlMetadata[],
 ): string {
   return missing
-    .map(
-      (control) =>
-        `• ${control.framework} ${control.id} — ${control.title}`,
-    )
+    .map((control) => `• ${control.framework} ${control.id} — ${control.title}`)
     .join("\n");
 }
 

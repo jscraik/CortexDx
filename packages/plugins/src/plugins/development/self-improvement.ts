@@ -26,7 +26,11 @@ const REQUIRED_DEPENDENCIES = [
 const SIGNAL_KEYWORDS = [
   { key: "sse", pattern: /sse/i, label: "SSE streaming issues" },
   { key: "batch", pattern: /batch/i, label: "JSON-RPC batch issues" },
-  { key: "handshake", pattern: /handshake|initialize/i, label: "Handshake gaps" },
+  {
+    key: "handshake",
+    pattern: /handshake|initialize/i,
+    label: "Handshake gaps",
+  },
 ];
 
 const LLM_SYSTEM_PROMPT = `You are Meta-Mentor, an experienced feedback provider for AI agents. Your job is to understand the agent's intent and current situation, spot helpful and unhelpful patterns, and respond in whatever way best moves the work toward the stated goal.
@@ -107,7 +111,10 @@ function evaluateHandshake(project?: ProjectContext): Finding | null {
   };
 }
 
-function determineAdapterBase(files: string[], project?: ProjectContext): string {
+function determineAdapterBase(
+  files: string[],
+  project?: ProjectContext,
+): string {
   for (const file of files) {
     const adapterIndex = file.indexOf("/src/adapters/");
     if (adapterIndex !== -1) {
@@ -140,7 +147,8 @@ function evaluateDependencies(project?: ProjectContext): Finding | null {
     title: "Missing inspector dependencies",
     description: `Recommended packages not detected: ${missing.join(", ")}`,
     evidence: [{ type: "log", ref: JSON.stringify(deps.slice(0, 10)) }],
-    recommendation: "Install the missing packages to enable protocol replay hooks.",
+    recommendation:
+      "Install the missing packages to enable protocol replay hooks.",
     tags: ["self-improvement", "dependencies"],
   };
 }
@@ -159,7 +167,8 @@ function summarizeSignals(history: ChatMessage[]): Finding | null {
   if (flagged.length === 0) return null;
   const summary = flagged
     .map(([key, count]) => {
-      const label = SIGNAL_KEYWORDS.find((item) => item.key === key)?.label ?? key;
+      const label =
+        SIGNAL_KEYWORDS.find((item) => item.key === key)?.label ?? key;
       return `${label}: ${count}`;
     })
     .join("; ");
@@ -177,9 +186,7 @@ function summarizeSignals(history: ChatMessage[]): Finding | null {
   };
 }
 
-async function probeHealth(
-  ctx: DevelopmentContext,
-): Promise<Finding | null> {
+async function probeHealth(ctx: DevelopmentContext): Promise<Finding | null> {
   if (!ctx.endpoint) return null;
   const base = ctx.endpoint.replace(/\/$/, "");
   const targets = ["/health", "/mcp/health"].map((path) => `${base}${path}`);
@@ -218,7 +225,7 @@ async function probeHealth(
 
 export async function analyzeWithLLM(
   findings: Finding[],
-  ctx: DevelopmentContext
+  ctx: DevelopmentContext,
 ): Promise<Finding[]> {
   const startTime = Date.now();
   const adapter = await resolveLlmAdapter({
@@ -226,21 +233,27 @@ export async function analyzeWithLLM(
   });
 
   if (!adapter) {
-    ctx.logger?.("[Self-Improvement] LLM not available, returning raw findings");
+    ctx.logger?.(
+      "[Self-Improvement] LLM not available, returning raw findings",
+    );
     return findings;
   }
 
   const analyzedFindings: Finding[] = [];
-  const analysisCache = new Map<string, Pick<Finding,
-    | "llmAnalysis"
-    | "rootCause"
-    | "filesToModify"
-    | "codeChanges"
-    | "validationSteps"
-    | "riskLevel"
-    | "templateId"
-    | "canAutoFix"
-  >>();
+  const analysisCache = new Map<
+    string,
+    Pick<
+      Finding,
+      | "llmAnalysis"
+      | "rootCause"
+      | "filesToModify"
+      | "codeChanges"
+      | "validationSteps"
+      | "riskLevel"
+      | "templateId"
+      | "canAutoFix"
+    >
+  >();
 
   for (const finding of findings) {
     const findingStartTime = Date.now();
@@ -259,7 +272,9 @@ export async function analyzeWithLLM(
         continue;
       }
 
-      ctx.logger?.(`[Self-Improvement] Analyzing finding with LLM: ${finding.id}`);
+      ctx.logger?.(
+        `[Self-Improvement] Analyzing finding with LLM: ${finding.id}`,
+      );
 
       const trimmedEvidence = (finding.evidence ?? []).slice(0, 3);
       const promptPayload = {
@@ -296,9 +311,14 @@ export async function analyzeWithLLM(
           throw new Error("Missing required field: quick_read");
         }
 
-        ctx.logger?.(`[Self-Improvement] Successfully parsed LLM analysis for ${finding.id} in ${findingDuration}ms`);
+        ctx.logger?.(
+          `[Self-Improvement] Successfully parsed LLM analysis for ${finding.id} in ${findingDuration}ms`,
+        );
       } catch (parseError) {
-        ctx.logger?.(`[Self-Improvement] Failed to parse LLM response as JSON for ${finding.id}:`, parseError);
+        ctx.logger?.(
+          `[Self-Improvement] Failed to parse LLM response as JSON for ${finding.id}:`,
+          parseError,
+        );
 
         // Fallback: extract what we can from text
         analysisData = {
@@ -315,7 +335,9 @@ export async function analyzeWithLLM(
         rootCause: analysisData.quick_read || finding.rootCause,
         filesToModify: finding.filesToModify ?? [],
         codeChanges:
-          (analysisData.what_i_notice ?? []).join("\n") || finding.codeChanges || "",
+          (analysisData.what_i_notice ?? []).join("\n") ||
+          finding.codeChanges ||
+          "",
         validationSteps:
           (analysisData.suggested_next_moves?.length
             ? analysisData.suggested_next_moves
@@ -338,23 +360,31 @@ export async function analyzeWithLLM(
       });
 
       analyzedFindings.push(enhancedFinding);
-      ctx.logger?.(`[Self-Improvement] Enhanced finding ${finding.id} with LLM analysis (${findingDuration}ms)`);
-
+      ctx.logger?.(
+        `[Self-Improvement] Enhanced finding ${finding.id} with LLM analysis (${findingDuration}ms)`,
+      );
     } catch (error) {
       const findingDuration = Date.now() - findingStartTime;
-      ctx.logger?.(`[Self-Improvement] LLM analysis failed for ${finding.id} after ${findingDuration}ms:`, error);
+      ctx.logger?.(
+        `[Self-Improvement] LLM analysis failed for ${finding.id} after ${findingDuration}ms:`,
+        error,
+      );
       // Return original finding if analysis fails
       analyzedFindings.push(finding);
     }
   }
 
   const totalDuration = Date.now() - startTime;
-  ctx.logger?.(`[Self-Improvement] Completed LLM analysis of ${findings.length} findings in ${totalDuration}ms`);
+  ctx.logger?.(
+    `[Self-Improvement] Completed LLM analysis of ${findings.length} findings in ${totalDuration}ms`,
+  );
 
   // Verify performance requirement: <15s per finding (Req 15.5)
   const avgDuration = totalDuration / findings.length;
   if (avgDuration > 15000) {
-    ctx.logger?.(`[Self-Improvement] WARNING: Average LLM analysis time (${avgDuration}ms) exceeds 15s requirement`);
+    ctx.logger?.(
+      `[Self-Improvement] WARNING: Average LLM analysis time (${avgDuration}ms) exceeds 15s requirement`,
+    );
   }
 
   return analyzedFindings;
@@ -447,7 +477,9 @@ async function createInspectorAdapter(
   return new InspectorAdapter(ctx);
 }
 
-async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding[]> {
+async function runInspectorDiagnostics(
+  ctx: DevelopmentContext,
+): Promise<Finding[]> {
   const inspector = await createInspectorAdapter(ctx);
 
   try {
@@ -457,21 +489,24 @@ async function runInspectorDiagnostics(ctx: DevelopmentContext): Promise<Finding
     // Convert Inspector findings to CortexDx format
     const cortexdxFindings = inspector.convertFindings(report.findings);
 
-    ctx.logger?.(`[Self-Improvement] Inspector found ${cortexdxFindings.length} issues`);
+    ctx.logger?.(
+      `[Self-Improvement] Inspector found ${cortexdxFindings.length} issues`,
+    );
     return cortexdxFindings;
-
   } catch (error) {
     ctx.logger?.("[Self-Improvement] Inspector self-diagnosis failed:", error);
 
-    return [{
-      id: "self_improvement.inspector_failed",
-      area: "development",
-      severity: "minor",
-      title: "Inspector self-diagnosis unavailable",
-      description: `MCP Inspector integration failed: ${String(error)}`,
-      evidence: [{ type: "log" as const, ref: String(error) }],
-      tags: ["self-improvement", "inspector-failed"],
-    }];
+    return [
+      {
+        id: "self_improvement.inspector_failed",
+        area: "development",
+        severity: "minor",
+        title: "Inspector self-diagnosis unavailable",
+        description: `MCP Inspector integration failed: ${String(error)}`,
+        evidence: [{ type: "log" as const, ref: String(error) }],
+        tags: ["self-improvement", "inspector-failed"],
+      },
+    ];
   }
 }
 
@@ -595,7 +630,12 @@ function formatAcademicReport(
   ctx: DevelopmentContext,
 ): Finding[] {
   if (report.findings.length === 0) {
-    return [createAcademicFallbackFinding(report, ctx.requireAcademicInsights !== false)];
+    return [
+      createAcademicFallbackFinding(
+        report,
+        ctx.requireAcademicInsights !== false,
+      ),
+    ];
   }
   return report.findings.map((finding, index) => ({
     ...finding,
@@ -687,7 +727,9 @@ function summarizeTransport(ctx: DevelopmentContext): Finding | null {
         ref: JSON.stringify(
           {
             sessionId: transcript.sessionId,
-            initialize: (transcript.initialize?.response as { result?: unknown })?.result ?? null,
+            initialize:
+              (transcript.initialize?.response as { result?: unknown })
+                ?.result ?? null,
             exchanges: transcript.exchanges.slice(-3),
           },
           null,
@@ -736,7 +778,9 @@ function normalizeMemoryMetrics(payload: unknown): MemoryMetrics {
   }
   const data = payload as Record<string, unknown>;
   return {
-    heapUsedMb: extractMegabytes(data.heapUsed ?? data.heapUsedBytes ?? data.heap_used),
+    heapUsedMb: extractMegabytes(
+      data.heapUsed ?? data.heapUsedBytes ?? data.heap_used,
+    ),
     rssMb: extractMegabytes(data.rss ?? data.rssBytes ?? data.rss_bytes),
     raw: payload,
   };

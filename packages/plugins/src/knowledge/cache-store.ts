@@ -89,12 +89,21 @@ export class SpecCacheStore {
     return result.changes ?? 0;
   }
 
-  stats(): { entries: number; avgAge: number; sections: Array<{ key: string; age: number }> } {
+  stats(): {
+    entries: number;
+    avgAge: number;
+    sections: Array<{ key: string; age: number }>;
+  } {
     const rows = this.db
       .prepare(
         "SELECT section, version, fetched_at as fetchedAt, ttl FROM spec_cache",
       )
-      .all() as Array<{ section: string; version: string; fetchedAt: number; ttl: number }>;
+      .all() as Array<{
+      section: string;
+      version: string;
+      fetchedAt: number;
+      ttl: number;
+    }>;
     if (rows.length === 0) {
       return { entries: 0, avgAge: 0, sections: [] };
     }

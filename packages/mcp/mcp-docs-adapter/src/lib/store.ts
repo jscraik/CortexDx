@@ -15,11 +15,11 @@ export class DocsStore {
       const message = err instanceof Error ? err.message : String(err);
       throw new Error(
         `Failed to open SQLite database at path "${dbPath}".\n` +
-        `Error: ${message}\n` +
-        `Troubleshooting steps:\n` +
-        `- Ensure the path exists and is correct.\n` +
-        `- Check file and directory permissions.\n` +
-        `- Ensure the file system is writable.\n`
+          `Error: ${message}\n` +
+          `Troubleshooting steps:\n` +
+          `- Ensure the path exists and is correct.\n` +
+          `- Check file and directory permissions.\n` +
+          `- Ensure the file system is writable.\n`,
       );
     }
     this.initializeSchema();
@@ -146,14 +146,14 @@ export class DocsStore {
 
     const row = stmt.get(id) as
       | {
-        id: string;
-        pageId: string;
-        url: string;
-        title: string;
-        text: string;
-        anchor: string | null;
-        headings: string;
-      }
+          id: string;
+          pageId: string;
+          url: string;
+          title: string;
+          text: string;
+          anchor: string | null;
+          headings: string;
+        }
       | undefined;
 
     if (!row) return null;

@@ -5,10 +5,10 @@ import {
   START,
   StateGraph,
 } from "@langchain/langgraph";
-import { type SandboxBudgets, runPlugins } from "../plugin-host";
-import type { DevelopmentContext, Finding } from "../types";
-import type { NormalizedFinding } from "./findings";
-import { normalizeFindings } from "./findings";
+import { type SandboxBudgets, runPlugins } from "../plugin-host.js";
+import type { DevelopmentContext, Finding } from "../types.js";
+import type { NormalizedFinding } from "./findings.js";
+import { normalizeFindings } from "./findings.js";
 
 export interface GraphInput {
   plugins: string[];

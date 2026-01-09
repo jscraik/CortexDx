@@ -1,7 +1,6 @@
-import { safeParseJson } from "../utils/json";
 import fs from "node:fs";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { safeParseJson } from "../utils/json.js";
 
 interface ChatModelEntry {
   ollama_model?: string;
@@ -39,15 +38,25 @@ export function getOllamaEndpoint(): string {
   return config.endpoint ?? "http://127.0.0.1:11434";
 }
 
-export function resolveModelTag(modelId?: string): { alias: string; tag: string } {
+export function resolveModelTag(modelId?: string): {
+  alias: string;
+  tag: string;
+} {
   const config = loadConfig();
-  const alias = modelId ?? config.default_models?.self_healing ?? config.default_models?.reasoning ?? "gpt-oss-safeguard";
+  const alias =
+    modelId ??
+    config.default_models?.self_healing ??
+    config.default_models?.reasoning ??
+    "gpt-oss-safeguard";
   const candidate = lookupChatModel(config, alias);
   const tag = candidate?.ollama_model ?? candidate?.model_tag ?? alias;
   return { alias, tag };
 }
 
-function lookupChatModel(config: OllamaModelsConfig, candidate: string): ChatModelEntry | undefined {
+function lookupChatModel(
+  config: OllamaModelsConfig,
+  candidate: string,
+): ChatModelEntry | undefined {
   if (!config.chat_models) return undefined;
   if (config.chat_models[candidate]) return config.chat_models[candidate];
   const shortName = candidate.split(":")[0] ?? candidate;

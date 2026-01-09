@@ -24,7 +24,7 @@ import {
   type VectorStorage,
   createPatternDocument,
   createProblemDocument,
-  createSolutionDocument
+  createSolutionDocument,
 } from "../storage/vector-storage.js";
 import type { PatternMatcher } from "./pattern-recognition.js";
 

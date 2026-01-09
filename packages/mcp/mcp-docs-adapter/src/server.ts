@@ -34,9 +34,7 @@ export class McpDocsAdapter {
   constructor(dataRoot?: string) {
     // Find workspace root: use environment variable or process.cwd() as fallback
     // You can set MCP_DOCS_WORKSPACE_ROOT to override the default workspace root
-    const workspaceRoot =
-      process.env.MCP_DOCS_WORKSPACE_ROOT ??
-      __dirname;
+    const workspaceRoot = process.env.MCP_DOCS_WORKSPACE_ROOT ?? __dirname;
     this.dataRoot =
       dataRoot ?? path.join(workspaceRoot, "data/knowledge/mcp-docs");
     this.activeVersion = process.env.MCP_DOCS_VERSION ?? "v2025-06-18";
@@ -134,9 +132,13 @@ export class McpDocsAdapter {
     const chunk = this.store.lookup(parsed.id);
 
     if (!chunk) {
-      throw new McpDocsError(ErrorCode.NOT_FOUND, `Chunk not found: ${parsed.id}`, {
-        id: parsed.id,
-      });
+      throw new McpDocsError(
+        ErrorCode.NOT_FOUND,
+        `Chunk not found: ${parsed.id}`,
+        {
+          id: parsed.id,
+        },
+      );
     }
 
     return {
