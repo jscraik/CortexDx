@@ -20,9 +20,19 @@ interface CapturedTool {
 
 const registeredTools: CapturedTool[] = [];
 
-vi.mock("fastmcp", () => {
+const mockWebsocketStart = vi.fn().mockResolvedValue(undefined);
+const mockWebsocketStop = vi.fn().mockResolvedValue(undefined);
+const mockWebsocketSetEvents = vi.fn();
+const mockWebsocketSetProtocolVersion = vi.fn();
+const mockWebsocketIsRunning = vi.fn(() => true);
+
+vi.mock('fastmcp', () => {
   class MockFastMCP {
     public tools = registeredTools;
+    public start = vi.fn();
+    public stop = vi.fn();
+    public on = vi.fn();
+    public server?: { handleRequest?: (req: any) => Promise<JsonRpcResponse> };
 
     addTool(tool: CapturedTool) {
       this.tools.push(tool);
@@ -30,6 +40,21 @@ vi.mock("fastmcp", () => {
   }
 
   return { FastMCP: MockFastMCP };
+});
+
+vi.mock('../transports/websocket', () => {
+  const transport = {
+    start: mockWebsocketStart,
+    stop: mockWebsocketStop,
+    setEvents: mockWebsocketSetEvents,
+    setProtocolVersion: mockWebsocketSetProtocolVersion,
+    isRunning: mockWebsocketIsRunning,
+  };
+
+  return {
+    createWebSocketTransport: vi.fn(() => transport),
+    WebSocketTransport: vi.fn(() => transport),
+  };
 });
 
 const createServer = () =>
@@ -41,6 +66,7 @@ const createServer = () =>
 
 afterEach(() => {
   registeredTools.length = 0;
+  vi.clearAllMocks();
 });
 
 describe("McpServer addTool plugin hooks", () => {
@@ -175,5 +201,23 @@ describe("McpServer addTool plugin hooks", () => {
     await Promise.all(Array.from({ length: 25 }, () => tool.execute({}, {})));
 
     expect(ids.size).toBe(25);
+  });
+});
+
+describe('McpServer transports', () => {
+  it('starts and stops the websocket transport without errors', async () => {
+    const server = new McpServer({
+      name: 'ws-server',
+      version: '1.0.0',
+      transport: { type: 'websocket', websocket: { port: 0 } },
+    });
+
+    await expect(server.start()).resolves.not.toThrow();
+    await expect(server.stop()).resolves.not.toThrow();
+
+    expect(mockWebsocketSetProtocolVersion).toHaveBeenCalled();
+    expect(mockWebsocketSetEvents).toHaveBeenCalled();
+    expect(mockWebsocketStart).toHaveBeenCalled();
+    expect(mockWebsocketStop).toHaveBeenCalled();
   });
 });

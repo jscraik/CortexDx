@@ -20,9 +20,22 @@ import {
   DEFAULT_PROTOCOL_VERSION,
   type ProtocolVersion,
   type ServerCapabilities,
-} from "./protocol";
-import type { IconMetadata } from "./types";
-import { validateUriTemplate } from "./uri-template.js";
+} from './protocol';
+// import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
+import type {
+  TransportConfig,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  WebSocketConfig,
+} from '../transports/types';
+import { createWebSocketTransport } from '../transports/websocket.js';
+import type {
+  ServerPlugin,
+  ServerPluginHost,
+  RequestContext,
+  PluginLogger,
+} from '../plugins/types';
+import type { IconMetadata } from './types';
 
 const logger = createLogger({ component: "mcp-server" });
 
@@ -238,6 +251,7 @@ export class McpServer {
   private mcp: FastMCP;
   private plugins = new PluginRegistry();
   private toolNames: string[] = [];
+  private websocketTransport?: ReturnType<typeof createWebSocketTransport>;
   private resources: McpResource[] = [];
   private resourceTemplates: McpResourceTemplate[] = [];
   private prompts: McpPrompt[] = [];
@@ -570,7 +584,7 @@ export class McpServer {
     });
 
     // Start transport based on config
-    const { type, httpStreamable } = this.config.transport;
+    const { type, httpStreamable, websocket } = this.config.transport;
 
     switch (type) {
       case "httpStreamable":
@@ -601,6 +615,61 @@ export class McpServer {
         await this.mcp.start({ transportType: "stdio" });
         logger.info("STDIO transport started");
         break;
+
+      case 'websocket': {
+        if (!websocket) {
+          throw new Error('websocket config required');
+        }
+
+        const websocketConfig: WebSocketConfig = {
+          port: websocket.port,
+          host: websocket.host || '127.0.0.1',
+          path: websocket.path || '/mcp',
+        };
+
+        this.websocketTransport = createWebSocketTransport(websocketConfig);
+        this.websocketTransport.setProtocolVersion(this.protocolVersion);
+        this.websocketTransport.setEvents({
+          onConnect: (clientId) =>
+            logger.info({ clientId }, 'WebSocket client connected'),
+          onDisconnect: (clientId) =>
+            logger.info({ clientId }, 'WebSocket client disconnected'),
+          onError: (error) => logger.error({ error }, 'WebSocket transport error'),
+        });
+
+        await this.websocketTransport.start(async (request) => {
+          // WARNING: Accessing FastMCP's internal server.handleRequest is undocumented and fragile.
+          // This workaround is required because FastMCP does not expose a public request handler API.
+          // If FastMCP adds a public API, replace this with the official method.
+          const mcpServer = (this.mcp as unknown as { server?: { handleRequest?: Function } }).server;
+          if (mcpServer && typeof mcpServer.handleRequest === 'function') {
+            const response = mcpServer.handleRequest(request);
+            if (response) {
+              return (await response) as JsonRpcResponse;
+            }
+          } else {
+            logger.error(
+              { hasServer: !!mcpServer, hasHandleRequest: !!(mcpServer && mcpServer.handleRequest) },
+              'FastMCP internal server.handleRequest is unavailable. This may break with FastMCP version updates.'
+            );
+          }
+          return {
+            jsonrpc: '2.0',
+            id: request.id ?? null,
+            error: { code: -32603, message: 'Request handler unavailable' },
+          } satisfies JsonRpcResponse;
+        });
+
+        logger.info(
+          {
+            port: websocketConfig.port,
+            host: websocketConfig.host,
+            path: websocketConfig.path,
+          },
+          'WebSocket transport started'
+        );
+        break;
+      }
 
       default:
         throw new Error(`Unknown transport type: ${type}`);
@@ -634,6 +703,11 @@ export class McpServer {
         await plugin.onUnload(host);
         logger.debug({ plugin: plugin.name }, "Plugin unloaded");
       }
+    }
+
+    if (this.websocketTransport?.isRunning()) {
+      await this.websocketTransport.stop();
+      this.websocketTransport = undefined;
     }
 
     await this.mcp.stop();
