@@ -1,4 +1,7 @@
-import type { DevelopmentContext, DiagnosticContext } from "@brainwav/cortexdx-core";
+import type {
+  DevelopmentContext,
+  DiagnosticContext,
+} from "@brainwav/cortexdx-core";
 import type { WorkflowState } from "./agent-orchestrator.js";
 import type { StateCheckpoint, StateManager } from "./state-manager.js";
 

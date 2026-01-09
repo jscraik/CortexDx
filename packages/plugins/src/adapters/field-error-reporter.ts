@@ -247,7 +247,10 @@ async function initializeDocUrlCache(): Promise<void> {
     docUrlCache = cache;
   } catch (err) {
     // Log the error for debugging; will use fallback URLs
-    console.error("[initializeDocUrlCache] Failed to initialize documentation URL cache:", err);
+    console.error(
+      "[initializeDocUrlCache] Failed to initialize documentation URL cache:",
+      err,
+    );
   }
 }
 

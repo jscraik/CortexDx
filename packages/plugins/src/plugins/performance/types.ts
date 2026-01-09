@@ -2,7 +2,10 @@
  * Type definitions for performance measurement and profiling
  */
 
-import type { DiagnosticContext, TransportTranscript } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  TransportTranscript,
+} from "@brainwav/cortexdx-core";
 
 export interface HttpMetrics {
   latencyMs: number;

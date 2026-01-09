@@ -12,13 +12,26 @@ function concatChunks(chunks: Uint8Array[]): Uint8Array {
 }
 
 async function readHead(url: string, headers?: Record<string, string>) {
-  const res = await fetch(url, { headers: { accept: "text/event-stream", ...(headers ?? {}) } });
+  const res = await fetch(url, {
+    headers: { accept: "text/event-stream", ...(headers ?? {}) },
+  });
   const contentType = res.headers.get("content-type") || "";
   if (!res.ok || !contentType.includes("text/event-stream")) {
-    return { ok: false as const, text: "", status: res.status, ct: contentType };
+    return {
+      ok: false as const,
+      text: "",
+      status: res.status,
+      ct: contentType,
+    };
   }
   const reader = res.body?.getReader();
-  if (!reader) return { ok: false as const, text: "", status: res.status, ct: contentType };
+  if (!reader)
+    return {
+      ok: false as const,
+      text: "",
+      status: res.status,
+      ct: contentType,
+    };
   const chunks: Uint8Array[] = [];
   let total = 0;
   while (total < 2048) {
@@ -50,8 +63,8 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
           severity: "minor",
           title: "Reconnect check skipped (SSE not reachable)",
           description: `status=${first.status} ct=${first.ct}`,
-          evidence: [{ type: "url", ref: url }]
-        }
+          evidence: [{ type: "url", ref: url }],
+        },
       ];
     }
 
@@ -61,8 +74,9 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
         area: "streaming",
         severity: "minor",
         title: "No retry: directive seen in stream head",
-        description: "Consider emitting 'retry: <ms>' to hint reconnection backoff.",
-        evidence: [{ type: "log", ref: first.text.slice(0, 200) }]
+        description:
+          "Consider emitting 'retry: <ms>' to hint reconnection backoff.",
+        evidence: [{ type: "log", ref: first.text.slice(0, 200) }],
       });
     }
 
@@ -72,12 +86,16 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
         area: "streaming",
         severity: "minor",
         title: "No id: field observed",
-        description: "Providing event ids enables resumable streams via Last-Event-ID.",
-        evidence: [{ type: "log", ref: first.text.slice(0, 200) }]
+        description:
+          "Providing event ids enables resumable streams via Last-Event-ID.",
+        evidence: [{ type: "log", ref: first.text.slice(0, 200) }],
       });
     }
 
-    const again = await readHead(url, { ...sessionHeaders, "Last-Event-ID": "1" });
+    const again = await readHead(url, {
+      ...sessionHeaders,
+      "Last-Event-ID": "1",
+    });
     if (!again.ok) {
       findings.push({
         id: "sse.last_event_id.unhandled",
@@ -85,7 +103,7 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
         severity: "minor",
         title: "Server did not accept Last-Event-ID",
         description: `status=${again.status} ct=${again.ct}`,
-        evidence: [{ type: "url", ref: url }]
+        evidence: [{ type: "url", ref: url }],
       });
     }
 
@@ -95,10 +113,11 @@ export const SseReconnectPlugin: DiagnosticPlugin = {
         area: "streaming",
         severity: "info",
         title: "Reconnect metadata present",
-        description: "retry: and id: hints observed; Last-Event-ID path responded.",
-        evidence: [{ type: "url", ref: url }]
+        description:
+          "retry: and id: hints observed; Last-Event-ID path responded.",
+        evidence: [{ type: "url", ref: url }],
       });
     }
     return findings;
-  }
+  },
 };

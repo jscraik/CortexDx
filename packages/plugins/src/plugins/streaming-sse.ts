@@ -48,7 +48,7 @@ export const StreamingSsePlugin: DiagnosticPlugin = {
         evidence: [
           { type: "url", ref: result.resolvedUrl ?? url },
           { type: "log", ref: `headers=${JSON.stringify(ctx.headers ?? {})}` },
-        ]
+        ],
       });
     } else {
       findings.push({
@@ -57,9 +57,9 @@ export const StreamingSsePlugin: DiagnosticPlugin = {
         severity: "info",
         title: "SSE responded",
         description: `firstEventMs=${result.firstEventMs ?? -1}; resolved=${result.resolvedUrl ?? url}`,
-        evidence: [{ type: "url", ref: result.resolvedUrl ?? url }]
+        evidence: [{ type: "url", ref: result.resolvedUrl ?? url }],
       });
     }
     return findings;
-  }
+  },
 };

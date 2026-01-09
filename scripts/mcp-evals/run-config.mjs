@@ -6,7 +6,9 @@ const { runAllEvals } = await import("mcp-evals");
 async function main() {
   const [configPath, serverPath] = process.argv.slice(2);
   if (!configPath || !serverPath) {
-    console.error("Usage: node scripts/mcp-evals/run-config.mjs <config> <server.ts>");
+    console.error(
+      "Usage: node scripts/mcp-evals/run-config.mjs <config> <server.ts>",
+    );
     process.exit(1);
   }
 
@@ -16,7 +18,9 @@ async function main() {
   const module = await import(resolvedConfig);
   const config = module.default;
   if (!config || !config.evals) {
-    throw new Error("Eval config must export default EvalConfig with 'evals' array");
+    throw new Error(
+      "Eval config must export default EvalConfig with 'evals' array",
+    );
   }
 
   const results = await runAllEvals(config, resolvedServer);

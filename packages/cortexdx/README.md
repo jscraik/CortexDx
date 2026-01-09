@@ -198,7 +198,7 @@ cortexdx diagnose <endpoint> [options]
 # Output Control
 --a11y                   # Screen-reader friendly output
 --no-color              # Disable ANSI colors
---deterministic         # Stable timestamps and seeds for CI/CD
+--deterministic         # Stable timestamps and seeds for CI/CD (research artifacts use seeded timestamps)
 
 # Advanced
 --simulate-external     # Probe as remote client

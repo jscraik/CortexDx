@@ -12,12 +12,14 @@
  * 7. Generate Report - Create hosted diagnostic report
  */
 
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
 import { randomUUID } from "node:crypto";
-import { createLogger } from "../logging/logger";
-import { runPlugins } from "../plugin-host";
-import type { HttpMcpClient } from "../providers/academic/http-mcp-client";
-import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client";
-import type { Finding, McpToolResult } from "../types";
+import { createLogger } from "../logging/logger.js";
+import { runPlugins } from "../plugin-host.js";
+import type { HttpMcpClient } from "../providers/academic/http-mcp-client.js";
+import { createDiagnosticMcpClient } from "../providers/diagnostic-mcp-client.js";
+import type { Finding, McpToolResult } from "../types.js";
+import { calculateComplianceScore } from "./compliance-scoring.js";
 
 export interface Auth0Config {
   domain: string;
@@ -212,7 +214,7 @@ async function enumerateCapabilities(
     // Get server info via initialize
     const initResult = await client
       .callTool("initialize", {
-        protocolVersion: "2024-11-05",
+        protocolVersion: PROTOCOL_VERSIONS.CURRENT,
         capabilities: {},
         clientInfo: {
           name: "cortexdx-probe",
@@ -221,13 +223,11 @@ async function enumerateCapabilities(
       })
       .catch(() => null);
 
-    const initResultTyped = initResult as
-      | {
-          serverInfo?: Record<string, unknown>;
-          protocolVersion?: string;
-          capabilities?: Record<string, unknown>;
-        }
-      | null;
+    const initResultTyped = initResult as {
+      serverInfo?: Record<string, unknown>;
+      protocolVersion?: string;
+      capabilities?: Record<string, unknown>;
+    } | null;
     if (initResultTyped) {
       metadata.serverInfo = initResultTyped.serverInfo ?? {};
       metadata.protocolVersion = initResultTyped.protocolVersion ?? "unknown";
@@ -280,26 +280,13 @@ async function runDiagnosticPlugins(
  * Generate diagnostic summary from findings
  */
 function generateSummary(findings: Finding[]): DiagnosticSummary {
-  const criticalFindings = findings.filter(
-    (f) => f.severity === "blocker",
-  ).length;
-  const majorFindings = findings.filter((f) => f.severity === "major").length;
-
-  // Calculate compliance score (0-100)
-  // No blockers = base 60, reduce by major/minor issues
-  let score = 100;
-  score -= criticalFindings * 30;
-  score -= majorFindings * 10;
-  score -= findings.filter((f) => f.severity === "minor").length * 2;
-  score = Math.max(0, Math.min(100, score));
-
-  const compliant = criticalFindings === 0 && majorFindings <= 2;
+  const scoringResult = calculateComplianceScore(findings);
 
   return {
-    compliant,
-    score,
-    totalFindings: findings.length,
-    criticalFindings,
+    compliant: scoringResult.compliant,
+    score: scoringResult.score,
+    totalFindings: scoringResult.totalFindings,
+    criticalFindings: scoringResult.counts.blocker,
     findings: findings.map((f) => ({
       severity: f.severity,
       area: f.area,

@@ -1,7 +1,0 @@
-@@ server/sse.ts @@
--  // TODO
-+  res.setHeader('Content-Type','text/event-stream');
-+  res.setHeader('Cache-Control','no-cache');
-+  res.flushHeaders();
-+  const keepAlive=setInterval(()=>res.write(':\n\n'),15000);
-+  req.on('close',()=>clearInterval(keepAlive));

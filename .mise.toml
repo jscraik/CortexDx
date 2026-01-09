@@ -1,4 +1,5 @@
 [tools]
+kube-linter = "latest"
 node = "20.11.1"
 pnpm = "9.12.2"
 

@@ -1,4 +1,4 @@
-import type { EvidencePointer, Finding } from "../types";
+import type { EvidencePointer, Finding } from "../types.js";
 
 export function buildSampleSecurityFindings(): Finding[] {
   const evidence: EvidencePointer = {
@@ -14,10 +14,12 @@ export function buildSampleSecurityFindings(): Finding[] {
       source: "security-scanner",
       severity: "blocker",
       title: "User-supplied SQL string is concatenated without sanitisation",
-      description: "Detected concatenation of req.query.id into SQL statement without parameterisation.",
+      description:
+        "Detected concatenation of req.query.id into SQL statement without parameterisation.",
       evidence: [evidence],
       tags: ["sql-injection", "owasp-a01"],
-      recommendation: "Use prepared statements or query builders to bind values instead of concatenation.",
+      recommendation:
+        "Use prepared statements or query builders to bind values instead of concatenation.",
     },
     {
       id: "security-002",
@@ -25,7 +27,8 @@ export function buildSampleSecurityFindings(): Finding[] {
       source: "security-scanner",
       severity: "major",
       title: "Overly permissive CORS policy",
-      description: "CORS analyser found Access-Control-Allow-Origin set to wildcard in production",
+      description:
+        "CORS analyser found Access-Control-Allow-Origin set to wildcard in production",
       evidence: [{ type: "log", ref: "diagnostics/cors.log" }],
       tags: ["cors", "owasp-a05"],
       recommendation: "Restrict allowed origins to trusted domains only",

@@ -33,7 +33,9 @@ describe("normalizeFindings", () => {
         ...baseFinding,
         id: "finding-2",
         severity: "blocker",
-        evidence: [{ type: "file", ref: "server/security.ts", lines: [10, 15] }],
+        evidence: [
+          { type: "file", ref: "server/security.ts", lines: [10, 15] },
+        ],
         tags: ["tls", "compliance"],
         recommendation: undefined,
       },

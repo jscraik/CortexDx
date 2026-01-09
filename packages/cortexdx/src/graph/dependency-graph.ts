@@ -22,7 +22,11 @@ export type DepGraph = {
 export type ManifestLike = {
   name?: string;
   server?: { name?: string };
-  tools?: Array<{ name: string; depends_on?: string[]; metadata?: Record<string, unknown> }>;
+  tools?: Array<{
+    name: string;
+    depends_on?: string[];
+    metadata?: Record<string, unknown>;
+  }>;
   connectors?: Array<{ id: string; target?: string; depends_on?: string[] }>;
   resources?: Array<{ name: string; depends_on?: string[] }>;
 };
@@ -53,7 +57,10 @@ export function buildDependencyGraph(
 
   const addEdge = (edge: Edge) => {
     const exists = edges.some(
-      (item) => item.from === edge.from && item.to === edge.to && item.relation === edge.relation,
+      (item) =>
+        item.from === edge.from &&
+        item.to === edge.to &&
+        item.relation === edge.relation,
     );
     if (!exists) {
       edges.push(edge);
@@ -90,7 +97,11 @@ const registerManifest = (
       addEdge({ from: connector.id, to: target, relation: "calls" });
     }
     if (connector.target) {
-      addEdge({ from: connector.id, to: connector.target, relation: "streams" });
+      addEdge({
+        from: connector.id,
+        to: connector.target,
+        relation: "streams",
+      });
     }
   }
 
@@ -141,14 +152,17 @@ export function longestPath(graph: DepGraph, start: string): string[] {
       return [...path, current];
     }
 
-    return nextNodes.reduce<string[]>((best, next) => {
-      if (path.includes(next)) {
-        return best;
-      }
+    return nextNodes.reduce<string[]>(
+      (best, next) => {
+        if (path.includes(next)) {
+          return best;
+        }
 
-      const candidate = visit(next, [...path, current]);
-      return candidate.length > best.length ? candidate : best;
-    }, [...path, current]);
+        const candidate = visit(next, [...path, current]);
+        return candidate.length > best.length ? candidate : best;
+      },
+      [...path, current],
+    );
   };
 
   if (!graph.nodes.some((node) => node.id === start)) {

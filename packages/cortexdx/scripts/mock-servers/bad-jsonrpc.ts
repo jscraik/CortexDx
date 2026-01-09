@@ -11,7 +11,9 @@ const server = http.createServer((req, res) => {
         const parsed = JSON.parse(body);
         if (Array.isArray(parsed)) {
           res.setHeader("content-type", "application/json");
-          res.end(JSON.stringify({ jsonrpc: "2.0", id: "oops", result: "not-array" }));
+          res.end(
+            JSON.stringify({ jsonrpc: "2.0", id: "oops", result: "not-array" }),
+          );
           return;
         }
       } catch {

@@ -1,68 +1,75 @@
 import type { KnowledgeRequest } from "@brainwav/cortexdx-core";
 
 export enum TransportType {
-    HTTP = "http",           // Standard request/response
-    SSE = "sse",            // Server-Sent Events (streaming)
-    WEBSOCKET = "websocket" // Bi-directional streaming
+  HTTP = "http", // Standard request/response
+  SSE = "sse", // Server-Sent Events (streaming)
+  WEBSOCKET = "websocket", // Bi-directional streaming
 }
 
 export interface ServerCapabilities {
-    http: boolean;
-    sse: boolean;
-    websocket: boolean;
-    http2: boolean;
-    http3: boolean;
+  http: boolean;
+  sse: boolean;
+  websocket: boolean;
+  http2: boolean;
+  http3: boolean;
 }
 
 export interface TransportMetrics {
-    requestCount: number;
-    successCount: number;
-    errorCount: number;
-    totalLatencyMs: number;
-    avgLatencyMs: number;
-    lastFailure?: number;
-    consecutiveFailures: number;
+  requestCount: number;
+  successCount: number;
+  errorCount: number;
+  totalLatencyMs: number;
+  avgLatencyMs: number;
+  lastFailure?: number;
+  consecutiveFailures: number;
 }
 
 export interface TransportSelector {
-    /**
-     * Select optimal transport for a fetch request
-     * @param request - Knowledge fetch request
-     * @param capabilities - Server transport capabilities
-     * @returns Selected transport type
-     */
-    selectTransport(request: KnowledgeRequest, capabilities: ServerCapabilities): TransportType;
+  /**
+   * Select optimal transport for a fetch request
+   * @param request - Knowledge fetch request
+   * @param capabilities - Server transport capabilities
+   * @returns Selected transport type
+   */
+  selectTransport(
+    request: KnowledgeRequest,
+    capabilities: ServerCapabilities,
+  ): TransportType;
 
-    /**
-     * Detect server transport capabilities
-     * @param endpoint - Server endpoint
-     * @returns Available transports
-     */
-    detectCapabilities(endpoint: string): Promise<ServerCapabilities>;
+  /**
+   * Detect server transport capabilities
+   * @param endpoint - Server endpoint
+   * @returns Available transports
+   */
+  detectCapabilities(endpoint: string): Promise<ServerCapabilities>;
 
-    updateMetrics(transport: TransportType, success: boolean, latencyMs: number): void;
-    getMetrics(transport: TransportType): TransportMetrics;
+  updateMetrics(
+    transport: TransportType,
+    success: boolean,
+    latencyMs: number,
+  ): void;
+  getMetrics(transport: TransportType): TransportMetrics;
 }
 
 export interface FetchInput {
-    section: string;
-    version: string;
-    url: string;
-    etag?: string;
-    lastModified?: string;
+  section: string;
+  version: string;
+  url: string;
+  etag?: string;
+  lastModified?: string;
 }
 
 export interface FetchResult {
-    content?: string;
-    metadata?: {
-        url: string;
-        fetchedAt: number;
-        etag?: string;
-        lastModified?: string;
-    };
-    notModified?: boolean;
+  content?: string;
+  metadata?: {
+    url: string;
+    fetchedAt: number;
+    etag?: string;
+    lastModified?: string;
+  };
+  notModified?: boolean;
 }
 
 export interface TransportAdapter {
-    fetch(input: FetchInput): Promise<FetchResult>;
+  fetch(input: FetchInput): Promise<FetchResult>;
 }

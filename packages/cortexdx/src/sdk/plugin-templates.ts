@@ -7,77 +7,77 @@
 import type { PluginMetadata } from "./plugin-sdk";
 
 export interface TemplateOptions {
-    metadata: PluginMetadata;
-    includeTests?: boolean;
-    includeDocumentation?: boolean;
-    language?: "typescript" | "javascript";
+  metadata: PluginMetadata;
+  includeTests?: boolean;
+  includeDocumentation?: boolean;
+  language?: "typescript" | "javascript";
 }
 
 export interface GeneratedTemplate {
-    pluginFile: {
-        path: string;
-        content: string;
-    };
-    testFile?: {
-        path: string;
-        content: string;
-    };
-    documentationFile?: {
-        path: string;
-        content: string;
-    };
+  pluginFile: {
+    path: string;
+    content: string;
+  };
+  testFile?: {
+    path: string;
+    content: string;
+  };
+  documentationFile?: {
+    path: string;
+    content: string;
+  };
 }
 
 export function generatePluginTemplate(
-    options: TemplateOptions,
+  options: TemplateOptions,
 ): GeneratedTemplate {
-    const { metadata, includeTests, includeDocumentation, language } = options;
-    const isTypeScript = language !== "javascript";
-    const ext = isTypeScript ? "ts" : "js";
+  const { metadata, includeTests, includeDocumentation, language } = options;
+  const isTypeScript = language !== "javascript";
+  const ext = isTypeScript ? "ts" : "js";
 
-    const pluginContent = generatePluginCode(metadata, isTypeScript);
-    const testContent = includeTests
-        ? generateTestCode(metadata, isTypeScript)
-        : undefined;
-    const docContent = includeDocumentation
-        ? generateDocumentation(metadata)
-        : undefined;
+  const pluginContent = generatePluginCode(metadata, isTypeScript);
+  const testContent = includeTests
+    ? generateTestCode(metadata, isTypeScript)
+    : undefined;
+  const docContent = includeDocumentation
+    ? generateDocumentation(metadata)
+    : undefined;
 
-    return {
-        pluginFile: {
-            path: `src/plugins/${metadata.id}.${ext}`,
-            content: pluginContent,
-        },
-        testFile: testContent
-            ? {
-                path: `tests/${metadata.id}.spec.${ext}`,
-                content: testContent,
-            }
-            : undefined,
-        documentationFile: docContent
-            ? {
-                path: `docs/${metadata.id}.md`,
-                content: docContent,
-            }
-            : undefined,
-    };
+  return {
+    pluginFile: {
+      path: `src/plugins/${metadata.id}.${ext}`,
+      content: pluginContent,
+    },
+    testFile: testContent
+      ? {
+          path: `tests/${metadata.id}.spec.${ext}`,
+          content: testContent,
+        }
+      : undefined,
+    documentationFile: docContent
+      ? {
+          path: `docs/${metadata.id}.md`,
+          content: docContent,
+        }
+      : undefined,
+  };
 }
 
 function generatePluginCode(
-    metadata: PluginMetadata,
-    isTypeScript: boolean,
+  metadata: PluginMetadata,
+  isTypeScript: boolean,
 ): string {
-    const typeAnnotations = isTypeScript
-        ? `: ${metadata.category === "development" ? "DevelopmentPlugin" : "DiagnosticPlugin"}`
-        : "";
-    const typeImports = isTypeScript
-        ? `import type {
+  const typeAnnotations = isTypeScript
+    ? `: ${metadata.category === "development" ? "DevelopmentPlugin" : "DiagnosticPlugin"}`
+    : "";
+  const typeImports = isTypeScript
+    ? `import type {
   ${metadata.category === "development" ? "DevelopmentContext,\n  DevelopmentPlugin" : "DiagnosticContext,\n  DiagnosticPlugin"},
   Finding,
 } from "../types";`
-        : "";
+    : "";
 
-    return `/**
+  return `/**
  * ${metadata.title}
  * ${metadata.description}
  * 
@@ -128,14 +128,14 @@ export const ${toPascalCase(metadata.id)}Plugin${typeAnnotations} = {
 }
 
 function generateTestCode(
-    metadata: PluginMetadata,
-    isTypeScript: boolean,
+  metadata: PluginMetadata,
+  isTypeScript: boolean,
 ): string {
-    const typeImports = isTypeScript
-        ? `import type { ${metadata.category === "development" ? "DevelopmentContext" : "DiagnosticContext"} } from "../src/types";`
-        : "";
+  const typeImports = isTypeScript
+    ? `import type { ${metadata.category === "development" ? "DevelopmentContext" : "DiagnosticContext"} } from "../src/types";`
+    : "";
 
-    return `/**
+  return `/**
  * Tests for ${metadata.title}
  */
 
@@ -199,7 +199,7 @@ describe("${metadata.title}", () => {
 }
 
 function generateDocumentation(metadata: PluginMetadata): string {
-    return `# ${metadata.title}
+  return `# ${metadata.title}
 
 ${metadata.description}
 
@@ -254,72 +254,72 @@ TODO: Add license information
 }
 
 function toPascalCase(str: string): string {
-    return str
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("");
+  return str
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join("");
 }
 
 export interface PluginScaffolder {
-    scaffold: (options: TemplateOptions) => Promise<void>;
-    listTemplates: () => string[];
-    getTemplate: (name: string) => TemplateOptions | null;
+  scaffold: (options: TemplateOptions) => Promise<void>;
+  listTemplates: () => string[];
+  getTemplate: (name: string) => TemplateOptions | null;
 }
 
 export function createPluginScaffolder(): PluginScaffolder {
-    const templates = new Map<string, TemplateOptions>();
+  const templates = new Map<string, TemplateOptions>();
 
-    // Register built-in templates
-    templates.set("diagnostic-basic", {
-        metadata: {
-            id: "my-diagnostic",
-            title: "My Diagnostic Plugin",
-            description: "A basic diagnostic plugin template",
-            version: "1.0.0",
-            author: "Your Name",
-            category: "diagnostic",
-        },
-        includeTests: true,
-        includeDocumentation: true,
-        language: "typescript",
-    });
+  // Register built-in templates
+  templates.set("diagnostic-basic", {
+    metadata: {
+      id: "my-diagnostic",
+      title: "My Diagnostic Plugin",
+      description: "A basic diagnostic plugin template",
+      version: "1.0.0",
+      author: "Your Name",
+      category: "diagnostic",
+    },
+    includeTests: true,
+    includeDocumentation: true,
+    language: "typescript",
+  });
 
-    templates.set("development-basic", {
-        metadata: {
-            id: "my-development",
-            title: "My Development Plugin",
-            description: "A basic development plugin template",
-            version: "1.0.0",
-            author: "Your Name",
-            category: "development",
-            requiresLlm: true,
-        },
-        includeTests: true,
-        includeDocumentation: true,
-        language: "typescript",
-    });
+  templates.set("development-basic", {
+    metadata: {
+      id: "my-development",
+      title: "My Development Plugin",
+      description: "A basic development plugin template",
+      version: "1.0.0",
+      author: "Your Name",
+      category: "development",
+      requiresLlm: true,
+    },
+    includeTests: true,
+    includeDocumentation: true,
+    language: "typescript",
+  });
 
-    return {
-        async scaffold(options: TemplateOptions): Promise<void> {
-            const template = generatePluginTemplate(options);
+  return {
+    async scaffold(options: TemplateOptions): Promise<void> {
+      const template = generatePluginTemplate(options);
 
-            // In a real implementation, this would write files to disk
-            console.log("Generated plugin template:");
-            console.log(`- ${template.pluginFile.path}`);
-            if (template.testFile) {
-                console.log(`- ${template.testFile.path}`);
-            }
-            if (template.documentationFile) {
-                console.log(`- ${template.documentationFile.path}`);
-            }
-        },
+      // In a real implementation, this would write files to disk
+      console.log("Generated plugin template:");
+      console.log(`- ${template.pluginFile.path}`);
+      if (template.testFile) {
+        console.log(`- ${template.testFile.path}`);
+      }
+      if (template.documentationFile) {
+        console.log(`- ${template.documentationFile.path}`);
+      }
+    },
 
-        listTemplates(): string[] {
-            return Array.from(templates.keys());
-        },
+    listTemplates(): string[] {
+      return Array.from(templates.keys());
+    },
 
-        getTemplate(name: string): TemplateOptions | null {
-            return templates.get(name) || null;
-        },
-    };
+    getTemplate(name: string): TemplateOptions | null {
+      return templates.get(name) || null;
+    },
+  };
 }

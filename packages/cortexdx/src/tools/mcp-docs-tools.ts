@@ -1,13 +1,13 @@
-import type { DevelopmentContext, McpTool, McpToolResult } from "../types";
 import {
   listMcpDocsVersions,
   lookupMcpDoc,
   searchMcpDocs,
-} from "../library/mcp-docs-service";
+} from "../library/mcp-docs-service.js";
 import {
   recordMcpDocsChunkResource,
   recordMcpDocsSearchResource,
-} from "../resources/mcp-docs-store";
+} from "../resources/mcp-docs-store.js";
+import type { DevelopmentContext, McpTool, McpToolResult } from "../types.js";
 
 export const createMcpDocsTools = (): McpTool[] => [
   {
@@ -120,7 +120,8 @@ async function handleSearch(args: unknown): Promise<McpToolResult> {
         text: JSON.stringify({ resourceUri, matches: result.matches }, null, 2),
       },
     ],
-    structuredContent: result.matches,
+    // Wrap array in object to conform to outputSchema (type: "object")
+    structuredContent: { resourceUri, matches: result.matches },
   };
 }
 
@@ -141,16 +142,16 @@ async function handleLookup(args: unknown): Promise<McpToolResult> {
         text: JSON.stringify({ resourceUri, chunk: match }, null, 2),
       },
     ],
-    structuredContent: [match],
+    // Wrap single result in object to conform to outputSchema (type: "object")
+    structuredContent: { resourceUri, chunk: match },
   };
 }
 
 async function handleVersions(): Promise<McpToolResult> {
   const versions = await listMcpDocsVersions();
   return {
-    content: [
-      { type: "text", text: JSON.stringify({ versions }, null, 2) },
-    ],
-    structuredContent: versions,
+    content: [{ type: "text", text: JSON.stringify({ versions }, null, 2) }],
+    // Wrap array in object to conform to outputSchema (type: "object")
+    structuredContent: { versions },
   };
 }

@@ -21,9 +21,7 @@ describe("Security control mappings", () => {
     const matched = annotateControlEvidence(finding);
 
     expect(matched).toContain("V5.3.2");
-    expect(
-      finding.evidence?.some((e) => e.ref?.includes("V5.3.2")),
-    ).toBe(true);
+    expect(finding.evidence?.some((e) => e.ref?.includes("V5.3.2"))).toBe(true);
   });
 
   it("identifies missing high-severity controls", () => {

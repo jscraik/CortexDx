@@ -1,16 +1,16 @@
 import { join } from "node:path";
-import { InspectorAdapter } from "../adapters/inspector-adapter";
-import { loadProjectContext } from "../context/project-context";
-import type { FixAttempt, HealingReport } from "../healing/auto-healer";
-import { AutoHealer } from "../healing/auto-healer";
+import { InspectorAdapter } from "../adapters/inspector-adapter.js";
+import { loadProjectContext } from "../context/project-context.js";
+import type { FixAttempt, HealingReport } from "../healing/auto-healer.js";
+import { AutoHealer } from "../healing/auto-healer.js";
 import {
   type MonitoringConfig,
   MonitoringScheduler,
-} from "../healing/scheduler";
-import { createCliLogger } from "../logging/logger";
-import type { DevelopmentContext, Finding } from "../types";
-import { fileSystem as fs } from "../utils/file-system";
-import { safeParseJson } from "../utils/json";
+} from "../healing/scheduler.js";
+import { createCliLogger } from "../logging/logger.js";
+import type { DevelopmentContext, Finding } from "../types.js";
+import { fileSystem as fs } from "../utils/file-system.js";
+import { safeParseJson } from "../utils/json.js";
 
 type SeverityThreshold = "blocker" | "major" | "minor" | "info";
 
@@ -202,6 +202,8 @@ export async function runMonitoring(options: {
   export?: string;
   stateFile?: string;
 }): Promise<number> {
+  // Redundant file read removed; config will be loaded in loadMonitoringConfigs()
+
   const ctx = await createDevelopmentContext();
   const scheduler = new MonitoringScheduler(ctx);
   const stateFile =
@@ -213,10 +215,6 @@ export async function runMonitoring(options: {
   try {
     if (options.start) {
       logger.info("[Monitoring] Starting background monitoring...");
-
-      if (options.config) {
-        await fs.readFile(options.config, "utf-8").catch(() => undefined);
-      }
 
       const configs = await loadMonitoringConfigs(ctx, options);
 

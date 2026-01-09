@@ -19,9 +19,9 @@ export const GovernancePlugin: DiagnosticPlugin = {
 
     // Strategy 1: Try MCP JSON-RPC method for governance metadata
     try {
-      const govResponse = await ctx.jsonrpc<{ governance?: GovernanceMetadata }>(
-        "governance/info"
-      ).catch(() => null);
+      const govResponse = await ctx
+        .jsonrpc<{ governance?: GovernanceMetadata }>("governance/info")
+        .catch(() => null);
 
       if (govResponse?.governance) {
         governanceFound = true;
@@ -33,7 +33,7 @@ export const GovernancePlugin: DiagnosticPlugin = {
           title: `Governance framework: ${gov.framework || "unknown"}`,
           description: buildGovernanceDescription(gov, "JSON-RPC"),
           evidence: [{ type: "url", ref: ctx.endpoint }],
-          tags: ["governance", "compliance"]
+          tags: ["governance", "compliance"],
         });
       }
     } catch (error) {
@@ -56,7 +56,7 @@ export const GovernancePlugin: DiagnosticPlugin = {
             title: `Governance via .well-known: ${wellKnown.framework || "detected"}`,
             description: buildGovernanceDescription(wellKnown, ".well-known"),
             evidence: [{ type: "url", ref: wellKnownUrl }],
-            tags: ["governance", "compliance"]
+            tags: ["governance", "compliance"],
           });
         }
       } catch (error) {
@@ -70,12 +70,14 @@ export const GovernancePlugin: DiagnosticPlugin = {
       const packLocations = [
         { path: "/.cortex/manifest.json", name: "Cortex" },
         { path: "/.cortexdx/manifest.json", name: "CortexDx" },
-        { path: "/governance/manifest.json", name: "Generic" }
+        { path: "/governance/manifest.json", name: "Generic" },
       ];
 
       for (const location of packLocations) {
         try {
-          const manifest = await ctx.request<GovernanceMetadata>(`${baseUrl}${location.path}`);
+          const manifest = await ctx.request<GovernanceMetadata>(
+            `${baseUrl}${location.path}`,
+          );
           if (manifest && (manifest.framework || manifest.version)) {
             governanceFound = true;
             findings.push({
@@ -85,12 +87,14 @@ export const GovernancePlugin: DiagnosticPlugin = {
               title: `${location.name} governance pack detected`,
               description: buildGovernanceDescription(manifest, location.name),
               evidence: [{ type: "url", ref: `${baseUrl}${location.path}` }],
-              tags: ["governance", "compliance"]
+              tags: ["governance", "compliance"],
             });
             break;
           }
         } catch (error) {
-          ctx.logger(`[governance] ${location.name} probe failed: ${String(error)}`);
+          ctx.logger(
+            `[governance] ${location.name} probe failed: ${String(error)}`,
+          );
         }
       }
     }
@@ -102,18 +106,23 @@ export const GovernancePlugin: DiagnosticPlugin = {
         area: "governance",
         severity: "info",
         title: "No governance metadata exposed",
-        description: "Server does not expose governance metadata via standard methods (JSON-RPC governance/info, .well-known/mcp-governance.json, or common pack locations). This is optional for MCP servers but recommended for enterprise deployments.",
+        description:
+          "Server does not expose governance metadata via standard methods (JSON-RPC governance/info, .well-known/mcp-governance.json, or common pack locations). This is optional for MCP servers but recommended for enterprise deployments.",
         evidence: [{ type: "url", ref: ctx.endpoint }],
         tags: ["governance"],
-        recommendation: "Consider exposing governance metadata via JSON-RPC 'governance/info' method or .well-known/mcp-governance.json for transparency and compliance tracking."
+        recommendation:
+          "Consider exposing governance metadata via JSON-RPC 'governance/info' method or .well-known/mcp-governance.json for transparency and compliance tracking.",
       });
     }
 
     return findings;
-  }
+  },
 };
 
-function buildGovernanceDescription(gov: GovernanceMetadata, source: string): string {
+function buildGovernanceDescription(
+  gov: GovernanceMetadata,
+  source: string,
+): string {
   const parts: string[] = [`Source: ${source}`];
 
   if (gov.version) parts.push(`Version: ${gov.version}`);

@@ -44,11 +44,11 @@ export interface LoadedModel {
 
 export interface ModelSelectionCriteria {
   taskType:
-  | "development"
-  | "debugging"
-  | "code-analysis"
-  | "documentation"
-  | "conversation";
+    | "development"
+    | "debugging"
+    | "code-analysis"
+    | "documentation"
+    | "conversation";
   availableMemoryMb: number;
   responseTimeRequirement: number;
   preferredCapabilities: string[];
@@ -99,7 +99,8 @@ export class ModelManager implements DiagnosticPlugin {
           description: "No local LLM backend (Ollama) is available",
           evidence: [{ type: "log", ref: "model-manager-backends-check" }],
           confidence: 1.0,
-          recommendation: "Install and start Ollama to enable local LLM features",
+          recommendation:
+            "Install and start Ollama to enable local LLM features",
         });
         return findings;
       }
@@ -173,10 +174,7 @@ export class ModelManager implements DiagnosticPlugin {
   }
 
   // Model loading and unloading
-  async loadModel(
-    modelId: string,
-    backend?: "ollama",
-  ): Promise<LoadedModel> {
+  async loadModel(modelId: string, backend?: "ollama"): Promise<LoadedModel> {
     // Check if already loaded
     const existingModel = this.loadedModels.get(modelId);
     if (existingModel) {
@@ -352,16 +350,13 @@ export class ModelManager implements DiagnosticPlugin {
     } catch (error) {
       console.warn("Failed to initialize Ollama adapter:", error);
     }
-
   }
 
   private async getAvailableBackends(): Promise<string[]> {
     return Array.from(this.adapters.keys());
   }
 
-  private async selectBackendForModel(
-    modelId: string,
-  ): Promise<"ollama"> {
+  private async selectBackendForModel(modelId: string): Promise<"ollama"> {
     if (!this.adapters.has("ollama")) {
       throw new Error("Ollama backend is not available");
     }
