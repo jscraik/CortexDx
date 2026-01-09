@@ -508,7 +508,7 @@ const academicExecutors: Record<string, AcademicExecutor> = {
   search_academic_validation: async (raw) =>
     executeResearchRun({
       topic: requireString(raw, "query", "search_academic_validation"),
-      question: (raw as { validationTarget?: string }).validationTarget,
+      question: requireString(raw, "validationTarget", "search_academic_validation"),
       providers: ["exa"],
       includeLicense: false,
     }),
