@@ -39,6 +39,13 @@ export async function runResearch(
     return computeExitCode(report.findings);
   }
 
+  if (opts.license === false) {
+    const notice =
+      "License metadata omitted (--no-license): provider license fields are stripped from results and artifacts.";
+    console.log(notice);
+    logger.info(notice);
+  }
+
   printReport(report);
   return computeExitCode(report.findings);
 }
