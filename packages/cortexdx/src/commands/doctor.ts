@@ -1,11 +1,12 @@
 import { execSync } from "node:child_process";
+import { ErrorCode, type JsonOutput, SchemaVersion } from "../cli/index.js";
+import { createCliLogger } from "../logging/logger.js";
 import {
-  runAcademicResearch,
-  DEFAULT_PROVIDERS,
   ACADEMIC_PROVIDER_ENV_REQUIREMENTS,
+  DEFAULT_PROVIDERS,
+  runAcademicResearch,
   selectConfiguredProviders,
-} from "../research/academic-researcher";
-import { createCliLogger } from "../logging/logger";
+} from "../research/academic-researcher.js";
 
 const logger = createCliLogger("doctor");
 
@@ -66,8 +67,40 @@ export async function runDoctor(opts: DoctorOptions = {}): Promise<number> {
   }
 
   if (opts.json) {
-    const payload = JSON.stringify(report, null, 2);
-    console.log(payload);
+    // Use schema-versioned JSON output
+    const jsonOutput: JsonOutput<DoctorReport> = {
+      schema: SchemaVersion.Doctor,
+      data: report,
+      success: !(
+        (report.providers?.some(
+          (provider) =>
+            provider.status === "missing" && provider.missingEnv?.length,
+        ) ??
+          false) ||
+        report.research?.error
+      ),
+      errors:
+        report.research?.error ||
+        report.providers?.some((p) => p.status === "missing")
+          ? [
+              {
+                code:
+                  report.research?.error &&
+                  !report.providers?.some((p) => p.status === "missing")
+                    ? ErrorCode.E_INTERNAL
+                    : ErrorCode.E_VALIDATION,
+                message:
+                  report.research?.error ??
+                  "Some providers are missing required environment variables",
+              },
+            ]
+          : undefined,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        version: "0.1.0",
+      },
+    };
+    console.log(JSON.stringify(jsonOutput, null, 2));
   } else {
     printDoctorReport(report);
   }
@@ -94,7 +127,7 @@ function readPnpmVersion(): string | undefined {
   } catch (error) {
     logger.warn(
       `Unable to read pnpm version: ${error instanceof Error ? error.message : error}`,
-      { error }
+      { error },
     );
     return undefined;
   }
@@ -138,14 +171,14 @@ async function runDoctorResearch(
   if (missing.length && !silent) {
     logger.warn(
       `Skipping providers with missing env vars: ${missing.map(({ id, vars }) => `${id}:${vars.join("/")}`).join(", ")}`,
-      { missing }
+      { missing },
     );
   }
 
   if (ready.length === 0) {
     if (!silent) {
       logger.warn(
-        "Academic research probe disabled (no configured providers)."
+        "Academic research probe disabled (no configured providers).",
       );
     }
     return null;
@@ -196,24 +229,35 @@ async function runDoctorResearch(
 
 function printDoctorReport(report: DoctorReport): void {
   logger.info("Runtime");
-  logger.info(`  Node.js: ${report.runtime.node}`, { nodeVersion: report.runtime.node });
+  logger.info(`  Node.js: ${report.runtime.node}`, {
+    nodeVersion: report.runtime.node,
+  });
   if (report.runtime.pnpm) {
-    logger.info(`  pnpm: ${report.runtime.pnpm}`, { pnpmVersion: report.runtime.pnpm });
+    logger.info(`  pnpm: ${report.runtime.pnpm}`, {
+      pnpmVersion: report.runtime.pnpm,
+    });
   }
   logger.info(
     `  Platform: ${report.runtime.platform} (${report.runtime.arch})`,
-    { platform: report.runtime.platform, arch: report.runtime.arch }
+    { platform: report.runtime.platform, arch: report.runtime.arch },
   );
 
   if (report.providers?.length) {
     logger.info("\nAcademic Providers");
     for (const provider of report.providers) {
       if (provider.status === "ready") {
-        logger.info(`  ✓ ${provider.name} — ready`, { provider: provider.name, status: "ready" });
+        logger.info(`  ✓ ${provider.name} — ready`, {
+          provider: provider.name,
+          status: "ready",
+        });
       } else {
         logger.warn(
           `  ⚠ ${provider.name} — missing ${provider.missingEnv?.join(", ")}`,
-          { provider: provider.name, status: "missing", missingEnv: provider.missingEnv }
+          {
+            provider: provider.name,
+            status: "missing",
+            missingEnv: provider.missingEnv,
+          },
         );
       }
     }
@@ -222,22 +266,33 @@ function printDoctorReport(report: DoctorReport): void {
   if (report.research) {
     logger.info("\nResearch Probe");
     if (report.research.error) {
-      logger.error(`  ✗ Failed to run research: ${report.research.error}`, { error: report.research.error });
+      logger.error(`  ✗ Failed to run research: ${report.research.error}`, {
+        error: report.research.error,
+      });
     } else {
       logger.info(
         `  Topic: ${report.research.topic} (${report.research.totalFindings} findings)`,
-        { topic: report.research.topic, totalFindings: report.research.totalFindings }
+        {
+          topic: report.research.topic,
+          totalFindings: report.research.totalFindings,
+        },
       );
       for (const [providerId, summary] of Object.entries(
         report.research.providers,
       )) {
         logger.info(
           `  • ${providerId}: ${summary.findings} findings${summary.lastTitle ? ` (${summary.lastTitle})` : ""}`,
-          { providerId, findings: summary.findings, lastTitle: summary.lastTitle }
+          {
+            providerId,
+            findings: summary.findings,
+            lastTitle: summary.lastTitle,
+          },
         );
       }
       if (report.research.artifactsDir) {
-        logger.info(`  Artifacts: ${report.research.artifactsDir}`, { artifactsDir: report.research.artifactsDir });
+        logger.info(`  Artifacts: ${report.research.artifactsDir}`, {
+          artifactsDir: report.research.artifactsDir,
+        });
       }
     }
   }

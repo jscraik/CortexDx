@@ -8,7 +8,12 @@ export const program = new Command();
 program
   .name("cortexdx")
   .description(
-    "brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)",
+    `brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)
+
+Documentation: ${DocsUrls.Main}
+Issues: ${DocsUrls.Issues}
+
+Config Precedence: ${Object.values(ConfigPrecedence).join(" > ")}`,
   )
   .version(packageVersion);
 
@@ -191,7 +196,7 @@ program
         const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
-);
+  );
 
 const deepContext = program
   .command("deepcontext")
@@ -586,6 +591,64 @@ program
     const { runHealthCheck } = await import("./commands/health.js");
     const code = await runHealthCheck(opts);
     process.exitCode = code;
+  });
+
+program
+  .command("serve")
+  .description(
+    "start MCP server in stdio/HTTP/WebSocket mode for local integration",
+  )
+  .option("--port <number>", "port (default: 3000)", "3000")
+  .option("--stdio", "use stdio transport instead of HTTP")
+  .option("--websocket", "use WebSocket transport")
+  .option("--host <string>", "host binding (default: 127.0.0.1)", "127.0.0.1")
+  .option("--endpoint <string>", "endpoint path (default: /mcp)", "/mcp")
+  .option("--api-key <string>", "API key for authentication")
+  .option(
+    "--log-level <string>",
+    "log level (debug, info, warn, error)",
+    "info",
+  )
+  .action(async (opts) => {
+    const { runServe } = await import("./commands/serve.js");
+    const code = await runServe(opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("completion")
+  .description("generate shell completion script")
+  .argument("[shell]", "shell type (bash, zsh, fish)")
+  .action(async (shell = "bash") => {
+    const validShells = ["bash", "zsh", "fish"];
+    if (!validShells.includes(shell)) {
+      console.error(`Invalid shell: ${shell}`);
+      console.error(`Valid shells: ${validShells.join(", ")}`);
+      process.exit(ExitCode.Usage);
+    }
+
+    const completionScript = generateSimpleCompletions({
+      name: "cortexdx",
+      description: "Diagnostic Meta-Inspector for MCP servers",
+    });
+
+    console.log(completionScript);
+
+    // Print installation instructions
+    console.log("\n# Installation instructions:");
+    console.log(
+      `# Add to your ~/.${shell === "zsh" ? "zshrc" : shell === "fish" ? "config/fish/config.fish" : "bashrc"}:`,
+    );
+    if (shell === "bash") {
+      console.log('# eval "$(cortexdx completion bash)"');
+    } else if (shell === "zsh") {
+      console.log("# autoload -U compinit && compinit");
+      console.log('# eval "$(cortexdx completion zsh)"');
+    } else {
+      console.log(
+        "# cortexdx completion fish > ~/.config/fish/completions/cortexdx.fish",
+      );
+    }
   });
 
 async function loadInteractiveCli() {

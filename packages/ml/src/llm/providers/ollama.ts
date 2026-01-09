@@ -24,7 +24,10 @@ function normalizeEnvValue(raw?: string | null): string | undefined {
 }
 
 function resolveEndpoint(env: NodeJS.ProcessEnv): string | undefined {
-  return normalizeEnvValue(env.OLLAMA_LOCAL_ENDPOINT) || normalizeEnvValue(env.OLLAMA_CLOUD_ENDPOINT);
+  return (
+    normalizeEnvValue(env.OLLAMA_LOCAL_ENDPOINT) ||
+    normalizeEnvValue(env.OLLAMA_CLOUD_ENDPOINT)
+  );
 }
 
 function buildHeaders(env: NodeJS.ProcessEnv): Record<string, string> {
@@ -35,14 +38,22 @@ function buildHeaders(env: NodeJS.ProcessEnv): Record<string, string> {
   };
 }
 
-function buildRequestBody(request: LLMGenerateRequest, model: string, options: LLMGenerateRequest["options"]): Record<string, unknown> {
+function buildRequestBody(
+  request: LLMGenerateRequest,
+  model: string,
+  options: LLMGenerateRequest["options"],
+): Record<string, unknown> {
   return {
     model,
     prompt: request.prompt,
     stream: false,
     options: {
-      ...(options?.temperature !== undefined && { temperature: options.temperature }),
-      ...(options?.maxTokens !== undefined && { num_predict: options.maxTokens }),
+      ...(options?.temperature !== undefined && {
+        temperature: options.temperature,
+      }),
+      ...(options?.maxTokens !== undefined && {
+        num_predict: options.maxTokens,
+      }),
     },
   };
 }
@@ -50,7 +61,11 @@ function buildRequestBody(request: LLMGenerateRequest, model: string, options: L
 function toUsage(data: OllamaResponse): ProviderResponse["usage"] {
   const promptTokens = data.prompt_eval_count || 0;
   const completionTokens = data.eval_count || 0;
-  return { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens };
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens: promptTokens + completionTokens,
+  };
 }
 
 export class OllamaPlugin implements LLMProviderPlugin {
@@ -73,8 +88,12 @@ export class OllamaPlugin implements LLMProviderPlugin {
   async initialize(context: LLMPluginContext): Promise<void> {
     if (!this.supports(context)) return;
     const endpoint = resolveEndpoint(context.env) ?? DEFAULT_ENDPOINT;
-    const response = await fetch(`${endpoint}/api/version`, { signal: AbortSignal.timeout(5000) });
-    context.logger.info("OllamaPlugin", "Initialization complete", { healthy: response.ok });
+    const response = await fetch(`${endpoint}/api/version`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    context.logger.info("OllamaPlugin", "Initialization complete", {
+      healthy: response.ok,
+    });
   }
 
   async generate(

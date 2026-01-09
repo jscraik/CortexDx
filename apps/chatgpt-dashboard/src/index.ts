@@ -1,17 +1,17 @@
 /**
  * CortexDx ChatGPT Control Panel
- * 
+ *
  * A WCAG 2.2 AA accessible dashboard for monitoring health, logs, traces,
  * metrics and controlling agents within ChatGPT using MCP v2025-03-26.
- * 
+ *
  * Supports dual-mode transport:
  * - Streamable HTTP (SSE) for real-time updates
  * - WebSocket for bidirectional communication
- * 
+ *
  * @packageDocumentation
  */
 
-export { startDashboardServer, broadcastSSE, broadcastWS } from './server.js';
+export { startDashboardServer, broadcastSSE, broadcastWS } from "./server.js";
 
 export {
   getHealth,
@@ -26,7 +26,7 @@ export {
   getSessions,
   startTestFlow,
   addLog,
-} from './api/handler.js';
+} from "./api/handler.js";
 
 export type {
   HealthStatus,
@@ -44,4 +44,4 @@ export type {
   DashboardAPI,
   DashboardTab,
   A11yAnnouncement,
-} from './types/index.js';
+} from "./types/index.js";

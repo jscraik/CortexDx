@@ -1,7 +1,7 @@
-import { loadProjectContext } from "../context/project-context";
-import { AutoHealer } from "../healing/auto-healer";
-import { createCliLogger } from "../logging/logger";
-import type { DevelopmentContext } from "../types";
+import { loadProjectContext } from "../context/project-context.js";
+import { AutoHealer } from "../healing/auto-healer.js";
+import { createCliLogger } from "../logging/logger.js";
+import type { DevelopmentContext } from "../types.js";
 
 const logger = createCliLogger("health");
 

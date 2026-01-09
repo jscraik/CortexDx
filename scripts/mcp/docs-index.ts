@@ -1,6 +1,14 @@
 /// <reference lib="dom" />
 
-import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -42,7 +50,6 @@ type SourceConfig = {
   gitRepos?: GitRepoSource[];
 };
 
-
 const CONFIG_PATH = path.resolve("config/mcp-docs-sources.json");
 const OUTPUT_ROOT = path.resolve(".cortexdx/library/mcp-docs");
 const STAGING_ROOT = path.join(OUTPUT_ROOT, "_staging");
@@ -61,7 +68,8 @@ async function main(): Promise<void> {
 
   const config: SourceConfig = JSON.parse(await readFile(CONFIG_PATH, "utf8"));
   const cliArgs = parseArgs(process.argv.slice(2));
-  const version = cliArgs.version ?? config.spec?.defaultVersion ?? timestampVersion();
+  const version =
+    cliArgs.version ?? config.spec?.defaultVersion ?? timestampVersion();
   const stageDir = path.join(STAGING_ROOT, version);
 
   await prepareDir(stageDir);
@@ -108,7 +116,11 @@ async function main(): Promise<void> {
   manifest.chunkCount = chunks.length;
   const chunksPath = path.join(stageDir, "chunks.jsonl");
   const manifestPath = path.join(stageDir, "manifest.json");
-  await writeFile(chunksPath, chunks.map((chunk) => JSON.stringify(chunk)).join("\n") + "\n", "utf8");
+  await writeFile(
+    chunksPath,
+    chunks.map((chunk) => JSON.stringify(chunk)).join("\n") + "\n",
+    "utf8",
+  );
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
 
   console.log(`✅ MCP docs snapshot complete for version ${version}`);
@@ -195,7 +207,10 @@ async function processSpec(
   };
 }
 
-async function discoverSpecSlugs(config: SpecConfig, version: string): Promise<string[]> {
+async function discoverSpecSlugs(
+  config: SpecConfig,
+  version: string,
+): Promise<string[]> {
   const fallbackSlugs = new Set(config.initialSlugs ?? []);
   const probeUrl = `${trimTrailingSlash(config.baseUrl)}/specification/${version}/basic`;
   try {
@@ -206,7 +221,9 @@ async function discoverSpecSlugs(config: SpecConfig, version: string): Promise<s
       fallbackSlugs.add(match[1]);
     }
   } catch (error) {
-    console.warn(`⚠️  Unable to crawl spec navigation (${String(error)}) – using configured slugs only.`);
+    console.warn(
+      `⚠️  Unable to crawl spec navigation (${String(error)}) – using configured slugs only.`,
+    );
   }
 
   if (!fallbackSlugs.has("basic")) {
@@ -240,7 +257,12 @@ async function processRepo(
       repo.url,
       tmpDir,
     ]);
-    const { stdout: commitStdout } = await execFileAsync("git", ["-C", tmpDir, "rev-parse", "HEAD"]);
+    const { stdout: commitStdout } = await execFileAsync("git", [
+      "-C",
+      tmpDir,
+      "rev-parse",
+      "HEAD",
+    ]);
     const commit = commitStdout.trim();
 
     const repoChunks: ChunkRecord[] = [];
@@ -374,7 +396,11 @@ function overlapTail(blocks: string[], targetLength: number): string[] {
   return reversed;
 }
 
-function makeChunkRecord(options: ChunkOptions, order: number, text: string): ChunkRecord {
+function makeChunkRecord(
+  options: ChunkOptions,
+  order: number,
+  text: string,
+): ChunkRecord {
   const chunkId = `${slugify(options.sourceId)}-${order.toString().padStart(4, "0")}`;
   return {
     id: chunkId,
@@ -388,7 +414,9 @@ function makeChunkRecord(options: ChunkOptions, order: number, text: string): Ch
   };
 }
 
-async function fetchText(url: string): Promise<{ html: string; sha256: string }> {
+async function fetchText(
+  url: string,
+): Promise<{ html: string; sha256: string }> {
   const res = await fetch(url, {
     headers: {
       "user-agent": "CortexDx-MCP-Indexer/1.0",
@@ -406,7 +434,8 @@ function htmlToMarkdown(html: string): { markdown: string; title?: string } {
   const vc = new VirtualConsole();
   vc.on("error", () => undefined);
   const dom = new JSDOM(html, { virtualConsole: vc });
-  const title = dom.window.document.querySelector("title")?.textContent ?? undefined;
+  const title =
+    dom.window.document.querySelector("title")?.textContent ?? undefined;
   const markdown = turndown.turndown(dom.window.document.body.innerHTML);
   return { markdown: markdown.trim(), title: title?.trim() };
 }

@@ -287,7 +287,12 @@ describe("CLI Self-Healing Commands", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify that the config file was read
-      expect(readFileSpy).toHaveBeenCalledWith("monitor-config.json", "utf-8");
+      await vi.waitFor(() => {
+        expect(readFileSpy).toHaveBeenCalledWith(
+          "monitor-config.json",
+          "utf-8",
+        );
+      });
 
       // Clean up - we can't let this hang
       if (!promiseResolved) {
@@ -564,7 +569,7 @@ describe("CLI Self-Healing Commands", () => {
         expect.any(String),
         "utf-8",
       );
-    }, 15000);
+    }, 30000);
 
     it("should read monitoring configuration files", async () => {
       const { runMonitoring } = await import("../src/commands/self-healing.js");

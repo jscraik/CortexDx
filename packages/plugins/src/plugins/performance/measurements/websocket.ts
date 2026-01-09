@@ -2,7 +2,11 @@
  * WebSocket performance measurement
  */
 
-import type { Finding, PerformanceHarness, WebSocketMetrics } from "@brainwav/cortexdx-core";
+import type {
+  Finding,
+  PerformanceHarness,
+  WebSocketMetrics,
+} from "@brainwav/cortexdx-core";
 
 /**
  * Measure WebSocket performance from transcript

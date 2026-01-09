@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { diffFindings } from "../compare/diff";
-import type { Finding } from "../types";
-import { safeParseJson } from "../utils/json";
+import { diffFindings } from "../compare/diff.js";
+import type { Finding } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
 
 export async function runCompare(
   oldFile: string,

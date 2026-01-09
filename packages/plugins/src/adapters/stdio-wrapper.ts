@@ -10,18 +10,18 @@ import { safeParseJson } from "@brainwav/cortexdx-core/utils/json";
  * MCP Inspector stdio ←→ JSON-RPC 2.0 ←→ HTTP requests to MCP server
  */
 
-import { createRequire } from 'node:module';
+import { createRequire } from "node:module";
 
 // JSON-RPC 2.0 type definitions
 interface JsonRpcRequest {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id?: string | number | null;
   method: string;
   params?: unknown;
 }
 
 interface JsonRpcResponse {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id?: string | number | null;
   result?: unknown;
   error?: JsonRpcError;
@@ -51,8 +51,8 @@ class StudioWrapper {
     this.config = {
       timeout: 30000,
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'CortexDx-Studio-Wrapper/1.0.0',
+        "Content-Type": "application/json",
+        "User-Agent": "CortexDx-Studio-Wrapper/1.0.0",
       },
       verbose: false,
       ...config,
@@ -64,21 +64,24 @@ class StudioWrapper {
    */
   async start(): Promise<void> {
     if (this.config.verbose) {
-      this.logger.debug({ endpoint: this.config.endpoint }, "Starting stdio wrapper");
+      this.logger.debug(
+        { endpoint: this.config.endpoint },
+        "Starting stdio wrapper",
+      );
     }
 
     // Set up stdin handling
-    process.stdin.setEncoding('utf8');
+    process.stdin.setEncoding("utf8");
     process.stdin.resume();
 
-    let buffer = '';
+    let buffer = "";
 
-    process.stdin.on('data', (chunk: string) => {
+    process.stdin.on("data", (chunk: string) => {
       buffer += chunk;
 
       // Try to parse complete JSON-RPC messages
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // Keep incomplete line in buffer
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || ""; // Keep incomplete line in buffer
 
       for (const line of lines) {
         if (line.trim()) {
@@ -87,7 +90,7 @@ class StudioWrapper {
       }
     });
 
-    process.stdin.on('end', () => {
+    process.stdin.on("end", () => {
       if (buffer.trim()) {
         this.handleMessage(buffer.trim());
       }
@@ -96,7 +99,7 @@ class StudioWrapper {
       }
     });
 
-    process.on('SIGINT', () => {
+    process.on("SIGINT", () => {
       if (this.config.verbose) {
         this.logger.debug("Received SIGINT, exiting gracefully");
       }
@@ -109,7 +112,7 @@ class StudioWrapper {
    */
   private async handleMessage(line: string): Promise<void> {
     try {
-      if (!line || (line[0] !== '{' && line[0] !== '[')) {
+      if (!line || (line[0] !== "{" && line[0] !== "[")) {
         if (this.config.verbose) {
           this.logger.debug({ line }, "Ignoring non-JSON line");
         }
@@ -133,14 +136,13 @@ class StudioWrapper {
 
       // Write response to stdout
       process.stdout.write(`${JSON.stringify(response)}\n`);
-
     } catch (error) {
       const errorResponse: JsonRpcResponse = {
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: null,
         error: {
           code: -32700,
-          message: 'Parse error',
+          message: "Parse error",
           data: error instanceof Error ? error.message : String(error),
         },
       };
@@ -156,9 +158,11 @@ class StudioWrapper {
   /**
    * Process JSON-RPC request by making HTTP call to MCP server
    */
-  private async processRequest(request: JsonRpcRequest): Promise<JsonRpcResponse> {
+  private async processRequest(
+    request: JsonRpcRequest,
+  ): Promise<JsonRpcResponse> {
     const response: JsonRpcResponse = {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id: request.id,
     };
 
@@ -173,7 +177,10 @@ class StudioWrapper {
 
       // Make HTTP request with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        this.config.timeout,
+      );
 
       const fetchOptions: RequestInit = {
         method: httpMethod,
@@ -184,7 +191,7 @@ class StudioWrapper {
       };
 
       // Add body for POST requests
-      if (httpMethod === 'POST' && request.params) {
+      if (httpMethod === "POST" && request.params) {
         fetchOptions.body = JSON.stringify(request.params);
       }
 
@@ -192,43 +199,41 @@ class StudioWrapper {
       clearTimeout(timeoutId);
 
       if (!httpResponse.ok) {
-        throw new Error(`HTTP ${httpResponse.status}: ${httpResponse.statusText}`);
+        throw new Error(
+          `HTTP ${httpResponse.status}: ${httpResponse.statusText}`,
+        );
       }
 
       // Parse response
-      const contentType = httpResponse.headers.get('content-type');
+      const contentType = httpResponse.headers.get("content-type");
       let result: unknown;
 
-      if (contentType?.includes('application/json')) {
+      if (contentType?.includes("application/json")) {
         result = await httpResponse.json();
       } else {
         const text = await httpResponse.text();
         try {
-          result = safeParseJson<unknown>(
-            text,
-            "stdio wrapper HTTP response",
-          );
+          result = safeParseJson<unknown>(text, "stdio wrapper HTTP response");
         } catch {
           result = text;
         }
       }
 
       response.result = result;
-
     } catch (error) {
       let errorCode = -32603; // Internal error
-      let errorMessage = 'Internal error';
+      let errorMessage = "Internal error";
 
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           errorCode = -32603;
-          errorMessage = 'Request timeout';
-        } else if (error.message.includes('HTTP 404')) {
+          errorMessage = "Request timeout";
+        } else if (error.message.includes("HTTP 404")) {
           errorCode = -32601; // Method not found
-          errorMessage = 'Method not found';
-        } else if (error.message.includes('HTTP 400')) {
+          errorMessage = "Method not found";
+        } else if (error.message.includes("HTTP 400")) {
           errorCode = -32602; // Invalid params
-          errorMessage = 'Invalid params';
+          errorMessage = "Invalid params";
         } else {
           errorMessage = error.message;
         }
@@ -254,21 +259,21 @@ class StudioWrapper {
   private mapMethodToHttp(method: string): string {
     // Common MCP methods
     switch (method) {
-      case 'initialize':
-      case 'tools/call':
-      case 'tools/list':
-        return 'POST';
+      case "initialize":
+      case "tools/call":
+      case "tools/list":
+        return "POST";
 
-      case 'tools/get':
-      case 'resources/list':
-      case 'resources/read':
-      case 'prompts/list':
-      case 'prompts/get':
-        return 'GET';
+      case "tools/get":
+      case "resources/list":
+      case "resources/read":
+      case "prompts/list":
+      case "prompts/get":
+        return "GET";
 
       default:
         // Default to POST for unknown methods
-        return 'POST';
+        return "POST";
     }
   }
 
@@ -276,18 +281,18 @@ class StudioWrapper {
    * Build URL from JSON-RPC method
    */
   private buildUrl(method: string): string {
-    const baseUrl = this.config.endpoint.replace(/\/$/, '');
+    const baseUrl = this.config.endpoint.replace(/\/$/, "");
 
     // Map common MCP methods to REST endpoints
     const methodMap: Record<string, string> = {
-      'initialize': '/mcp/initialize',
-      'tools/list': '/mcp/tools',
-      'tools/call': '/mcp/tools/call',
-      'tools/get': '/mcp/tools',
-      'resources/list': '/mcp/resources',
-      'resources/read': '/mcp/resources',
-      'prompts/list': '/mcp/prompts',
-      'prompts/get': '/mcp/prompts',
+      initialize: "/mcp/initialize",
+      "tools/list": "/mcp/tools",
+      "tools/call": "/mcp/tools/call",
+      "tools/get": "/mcp/tools",
+      "resources/list": "/mcp/resources",
+      "resources/read": "/mcp/resources",
+      "prompts/list": "/mcp/prompts",
+      "prompts/get": "/mcp/prompts",
     };
 
     // Check for direct mapping
@@ -296,18 +301,18 @@ class StudioWrapper {
     }
 
     // Handle dynamic method patterns
-    if (method.startsWith('tools/call/')) {
-      const toolName = method.replace('tools/call/', '');
+    if (method.startsWith("tools/call/")) {
+      const toolName = method.replace("tools/call/", "");
       return `${baseUrl}/mcp/tools/${toolName}/call`;
     }
 
-    if (method.startsWith('tools/get/')) {
-      const toolName = method.replace('tools/get/', '');
+    if (method.startsWith("tools/get/")) {
+      const toolName = method.replace("tools/get/", "");
       return `${baseUrl}/mcp/tools/${toolName}`;
     }
 
-    if (method.startsWith('resources/read/')) {
-      const resourceUri = method.replace('resources/read/', '');
+    if (method.startsWith("resources/read/")) {
+      const resourceUri = method.replace("resources/read/", "");
       return `${baseUrl}/mcp/resources?uri=${encodeURIComponent(resourceUri)}`;
     }
 
@@ -323,15 +328,15 @@ function parseArgs(): StdioWrapperConfig {
   const args = process.argv.slice(2);
 
   const config: StdioWrapperConfig = {
-    endpoint: 'http://127.0.0.1:5001/mcp',
+    endpoint: "http://127.0.0.1:5001/mcp",
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     switch (arg) {
-      case '--endpoint':
-      case '-e': {
+      case "--endpoint":
+      case "-e": {
         const endpoint = args[++i];
         if (endpoint) {
           config.endpoint = endpoint;
@@ -339,8 +344,8 @@ function parseArgs(): StdioWrapperConfig {
         break;
       }
 
-      case '--timeout':
-      case '-t': {
+      case "--timeout":
+      case "-t": {
         const timeoutArg = args[++i];
         if (timeoutArg) {
           const timeoutSec = +timeoutArg;
@@ -348,22 +353,25 @@ function parseArgs(): StdioWrapperConfig {
             config.timeout = timeoutSec * 1000;
           } else {
             const logger = logging.createLogger("stdio-wrapper");
-            logger.warn({ value: timeoutArg }, "Invalid timeout value - must be a positive integer");
+            logger.warn(
+              { value: timeoutArg },
+              "Invalid timeout value - must be a positive integer",
+            );
           }
         }
         break;
       }
 
-      case '--verbose':
-      case '-v':
+      case "--verbose":
+      case "-v":
         config.verbose = true;
         break;
 
-      case '--header':
-      case '-H': {
+      case "--header":
+      case "-H": {
         const headerArg = args[++i];
         if (headerArg) {
-          const headerParts = headerArg.split(':', 2);
+          const headerParts = headerArg.split(":", 2);
           if (headerParts.length === 2 && headerParts[0] && headerParts[1]) {
             config.headers = config.headers || {};
             config.headers[headerParts[0].trim()] = headerParts[1].trim();
@@ -372,8 +380,8 @@ function parseArgs(): StdioWrapperConfig {
         break;
       }
 
-      case '--help':
-      case '-h':
+      case "--help":
+      case "-h":
         console.log(`
 Studio Wrapper - stdio transport bridge for MCP Inspector
 
@@ -396,7 +404,7 @@ specified MCP server, and writes responses to stdout in JSON-RPC 2.0 format.
         process.exit(0);
 
       default:
-        if (arg && (arg.startsWith('http://') || arg.startsWith('https://'))) {
+        if (arg && (arg.startsWith("http://") || arg.startsWith("https://"))) {
           config.endpoint = arg;
         } else {
           const logger = logging.createLogger("stdio-wrapper");

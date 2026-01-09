@@ -5,7 +5,7 @@ import type {
   DiagnosticContext,
   DiagnosticPlugin,
   Finding,
-  TransportTranscript
+  TransportTranscript,
 } from "@brainwav/cortexdx-core";
 import { createDeterministicSeed } from "@brainwav/cortexdx-core/utils/deterministic";
 import { getLlmAdapter } from "@brainwav/cortexdx-ml";
@@ -14,9 +14,16 @@ import { fileURLToPath } from "node:url";
 import { Worker } from "node:worker_threads";
 import { loadArtifactsFromEnv } from "./context/artifacts.js";
 import { createDiagnosticContext } from "./context/context-factory.js";
-import { createInspectorSession, type SharedSessionState } from "./context/inspector-session.js";
+import {
+  createInspectorSession,
+  type SharedSessionState,
+} from "./context/inspector-session.js";
 import { recordFindingsForLearning } from "./learning/pattern-feedback-loop.js";
-import { BUILTIN_PLUGINS, DEVELOPMENT_PLUGINS, getPluginById } from "./plugins/index.js";
+import {
+  BUILTIN_PLUGINS,
+  DEVELOPMENT_PLUGINS,
+  getPluginById,
+} from "./plugins/index.js";
 
 export interface SandboxBudgets {
   timeMs: number;
@@ -29,7 +36,7 @@ export async function runPlugins({
   suites,
   full,
   deterministic,
-  budgets
+  budgets,
 }: {
   endpoint: string;
   headers?: Record<string, string>;
@@ -49,7 +56,9 @@ export async function runPlugins({
 
   await bootstrapSession(endpoint, authHeaders, sharedSession);
 
-  const deterministicSeed = deterministic ? createDeterministicSeed(`${endpoint}:${suites.join(",")}`) : undefined;
+  const deterministicSeed = deterministic
+    ? createDeterministicSeed(`${endpoint}:${suites.join(",")}`)
+    : undefined;
   const llmAdapter = await getLlmAdapter({ deterministicSeed });
 
   const fallbackCtx = createDiagnosticContext({
@@ -103,7 +112,7 @@ export async function runDevelopmentPlugins({
   full,
   deterministic,
   budgets,
-  developmentContext
+  developmentContext,
 }: {
   endpoint: string;
   suites: string[];
@@ -117,7 +126,11 @@ export async function runDevelopmentPlugins({
 
   for (const plugin of plugins) {
     try {
-      const results = await runDevelopmentPlugin(plugin, developmentContext, budgets);
+      const results = await runDevelopmentPlugin(
+        plugin,
+        developmentContext,
+        budgets,
+      );
       const annotated = results.map((finding) => ({
         ...finding,
         source: finding.source ?? plugin.id,
@@ -141,16 +154,25 @@ export async function runDevelopmentPlugins({
 function pickPlugins(suites: string[], full: boolean): DiagnosticPlugin[] {
   if (full) return [...BUILTIN_PLUGINS];
   if (suites.length === 0) {
-    return BUILTIN_PLUGINS.filter((p) => ["devtool", "discovery", "protocol", "streaming"].includes(p.id));
+    return BUILTIN_PLUGINS.filter((p) =>
+      ["devtool", "discovery", "protocol", "streaming"].includes(p.id),
+    );
   }
   const wanted = new Set(suites);
   return BUILTIN_PLUGINS.filter((p) => wanted.has(p.id));
 }
 
-function pickDevelopmentPlugins(suites: string[], full: boolean): DevelopmentPlugin[] {
+function pickDevelopmentPlugins(
+  suites: string[],
+  full: boolean,
+): DevelopmentPlugin[] {
   if (full) return [...DEVELOPMENT_PLUGINS];
   if (suites.length === 0) {
-    return DEVELOPMENT_PLUGINS.filter((p) => ["conversational", "code-generation", "license-validation"].includes(p.id));
+    return DEVELOPMENT_PLUGINS.filter((p) =>
+      ["conversational", "code-generation", "license-validation"].includes(
+        p.id,
+      ),
+    );
   }
   const wanted = new Set(suites);
   return DEVELOPMENT_PLUGINS.filter((p) => wanted.has(p.id));
@@ -171,7 +193,9 @@ async function bootstrapSession(
   const transcript = bootstrap.transport?.transcript();
   if (transcript?.sessionId) {
     sharedSession.sessionId = transcript.sessionId;
-    sharedSession.initialize = transcript.initialize ? { ...transcript.initialize } : undefined;
+    sharedSession.initialize = transcript.initialize
+      ? { ...transcript.initialize }
+      : undefined;
     sharedSession.initialized = true;
     headers["mcp-session-id"] = transcript.sessionId;
   }
@@ -188,7 +212,9 @@ async function runWithSandbox(
 ): Promise<Finding[]> {
   const workerUrl = resolveWorkerUrl("sandbox");
   try {
-    const workerExecArgv = workerUrl.pathname.endsWith(".ts") ? ["--import", "tsx"] : [];
+    const workerExecArgv = workerUrl.pathname.endsWith(".ts")
+      ? ["--import", "tsx"]
+      : [];
 
     return await launchWorker(
       pluginId,
@@ -206,7 +232,9 @@ async function runWithSandbox(
     if (!plugin) throw new Error(`Unknown plugin: ${pluginId}`);
     const findings = await plugin.run(fallbackCtx);
     const transcript = fallbackCtx.transport?.transcript();
-    return transcript ? [...findings, buildTransportFinding(pluginId, transcript)] : findings;
+    return transcript
+      ? [...findings, buildTransportFinding(pluginId, transcript)]
+      : findings;
   }
 }
 
@@ -230,15 +258,23 @@ function launchWorker(
           headers,
           preinitialized: sharedSession.initialized,
           sessionState: sharedSession.initialized
-            ? { sessionId: sharedSession.sessionId, initialize: sharedSession.initialize }
+            ? {
+                sessionId: sharedSession.sessionId,
+                initialize: sharedSession.initialize,
+              }
             : undefined,
         },
       },
       execArgv: execArgv.length > 0 ? execArgv : undefined,
-      resourceLimits: { maxOldGenerationSizeMb: Math.max(32, Math.floor(budgets.memMb)) }
+      resourceLimits: {
+        maxOldGenerationSizeMb: Math.max(32, Math.floor(budgets.memMb)),
+      },
     });
 
-    const state: { settled: boolean; findings: Finding[] } = { settled: false, findings: [] };
+    const state: { settled: boolean; findings: Finding[] } = {
+      settled: false,
+      findings: [],
+    };
     const finish = (error?: Error) => {
       if (state.settled) return;
       state.settled = true;
@@ -247,14 +283,27 @@ function launchWorker(
       else resolve(state.findings);
     };
 
-    const timer = setTimeout(() => {
-      worker
-        .terminate()
-        .then(() => finish(new Error(`sandbox timeout for plugin ${pluginId} after ${budgets.timeMs}ms`)))
-        .catch((err) => finish(err instanceof Error ? err : new Error(String(err))));
-    }, Math.max(100, budgets.timeMs));
+    const timer = setTimeout(
+      () => {
+        worker
+          .terminate()
+          .then(() =>
+            finish(
+              new Error(
+                `sandbox timeout for plugin ${pluginId} after ${budgets.timeMs}ms`,
+              ),
+            ),
+          )
+          .catch((err) =>
+            finish(err instanceof Error ? err : new Error(String(err))),
+          );
+      },
+      Math.max(100, budgets.timeMs),
+    );
 
-    worker.on("message", (msg) => handleWorkerMessage(msg, state, worker, finish));
+    worker.on("message", (msg) =>
+      handleWorkerMessage(msg, state, worker, finish),
+    );
     worker.on("error", (err) => finish(err as Error));
     worker.on("exit", (code) => {
       if (code === 0) finish();
@@ -273,7 +322,7 @@ function handleWorkerMessage(
   raw: unknown,
   state: { settled: boolean; findings: Finding[] },
   worker: Worker,
-  finish: (error?: Error) => void
+  finish: (error?: Error) => void,
 ) {
   if (!isWorkerMessage(raw)) return;
   const msg = raw;
@@ -293,7 +342,9 @@ function handleWorkerMessage(
     worker
       .terminate()
       .then(() => finish(new Error(String(msg.error))))
-      .catch((err) => finish(err instanceof Error ? err : new Error(String(err))));
+      .catch((err) =>
+        finish(err instanceof Error ? err : new Error(String(err))),
+      );
   }
 }
 
@@ -311,23 +362,25 @@ function isWorkerMessage(value: unknown): value is WorkerMessage {
     candidate.type === "error"
   );
 }
-function buildTransportFinding(pluginId: string, transcript: TransportTranscript): Finding {
+function buildTransportFinding(
+  pluginId: string,
+  transcript: TransportTranscript,
+): Finding {
   return {
     id: `transport.session.${pluginId}`,
     area: "framework",
     severity: "info",
     title: `Transport session (${pluginId})`,
-    description: `session=${transcript.sessionId ?? "n/a"} exchanges=${transcript.exchanges.length
-      }`,
+    description: `session=${transcript.sessionId ?? "n/a"} exchanges=${
+      transcript.exchanges.length
+    }`,
     evidence: [
       {
         type: "log",
-        ref: JSON.stringify(
-          {
-            initialize: transcript.initialize?.response ?? null,
-            recent: transcript.exchanges.slice(-2),
-          },
-        ).slice(0, 600),
+        ref: JSON.stringify({
+          initialize: transcript.initialize?.response ?? null,
+          recent: transcript.exchanges.slice(-2),
+        }).slice(0, 600),
       },
     ],
     tags: ["transport", "evidence"],
@@ -336,7 +389,7 @@ function buildTransportFinding(pluginId: string, transcript: TransportTranscript
 async function runDevelopmentPlugin(
   plugin: DevelopmentPlugin,
   ctx: DevelopmentContext,
-  budgets: SandboxBudgets
+  budgets: SandboxBudgets,
 ): Promise<Finding[]> {
   // For development plugins, we run them directly without sandbox for now
   // In production, we'd want to sandbox these as well
@@ -351,12 +404,16 @@ export function getAllDevelopmentPlugins(): DevelopmentPlugin[] {
   return [...DEVELOPMENT_PLUGINS];
 }
 
-export function getDevelopmentPluginsByCategory(category: "diagnostic" | "development" | "conversational"): DevelopmentPlugin[] {
-  return DEVELOPMENT_PLUGINS.filter(p => p.category === category);
+export function getDevelopmentPluginsByCategory(
+  category: "diagnostic" | "development" | "conversational",
+): DevelopmentPlugin[] {
+  return DEVELOPMENT_PLUGINS.filter((p) => p.category === category);
 }
 
 export function getConversationalPlugins(): ConversationalPlugin[] {
-  return DEVELOPMENT_PLUGINS.filter(p => p.category === "conversational") as ConversationalPlugin[];
+  return DEVELOPMENT_PLUGINS.filter(
+    (p) => p.category === "conversational",
+  ) as ConversationalPlugin[];
 }
 
 function resolveWorkerUrl(name: string): URL {

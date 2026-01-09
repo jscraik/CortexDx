@@ -7,7 +7,11 @@ import {
   readDeepContextStatus,
   type DeepContextStatusRecord,
 } from "./status-store.js";
-import type { ChatMessage, DevelopmentContext, Finding } from "@brainwav/cortexdx-core";
+import type {
+  ChatMessage,
+  DevelopmentContext,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 const MAX_EVIDENCE = 5;
 const DEFAULT_QUERY = "mcp diagnostics handshake sse batching";
@@ -17,11 +21,15 @@ const SIGNAL_HINTS = [
   { label: "batch", pattern: /batch|jsonrpc/i },
 ];
 
-export async function collectDeepContextFindings(ctx: DevelopmentContext): Promise<Finding[]> {
+export async function collectDeepContextFindings(
+  ctx: DevelopmentContext,
+): Promise<Finding[]> {
   if (!shouldInvokeDeepContext()) return [];
   const codebasePath = resolveCodebaseRoot(ctx);
   if (!codebasePath) {
-    ctx.logger?.("[Self-Improvement] DeepContext skipped (no project root detected)");
+    ctx.logger?.(
+      "[Self-Improvement] DeepContext skipped (no project root detected)",
+    );
     return [];
   }
 
@@ -41,7 +49,9 @@ export async function collectDeepContextFindings(ctx: DevelopmentContext): Promi
   const search = await runSearch(client, codebasePath, query);
   if (search) findings.push(search);
 
-  const synced = await syncDeepContextStatus(client, codebasePath, { indexOutput: indexing.output });
+  const synced = await syncDeepContextStatus(client, codebasePath, {
+    indexOutput: indexing.output,
+  });
   if (synced) {
     const statusFinding = statusRecordToFinding(synced, "current");
     if (statusFinding) findings.push(statusFinding);
@@ -131,12 +141,15 @@ function buildSearchFinding(
   codebasePath: string,
   summaryText: string,
 ): Finding | null {
-  const evidence = matches
-    .slice(0, MAX_EVIDENCE)
-    .map((match) => ({
-      type: "file" as const,
-      ref: formatMatchRef(codebasePath, match.file_path, match.start_line, match.end_line),
-    }));
+  const evidence = matches.slice(0, MAX_EVIDENCE).map((match) => ({
+    type: "file" as const,
+    ref: formatMatchRef(
+      codebasePath,
+      match.file_path,
+      match.start_line,
+      match.end_line,
+    ),
+  }));
   const severity = matches.length > 0 ? "info" : "minor";
   return {
     id: "self_improvement.deepcontext_search",
@@ -156,7 +169,12 @@ function buildSearchFinding(
   };
 }
 
-function formatMatchRef(root: string, filePath: string, start: number, end: number): string {
+function formatMatchRef(
+  root: string,
+  filePath: string,
+  start: number,
+  end: number,
+): string {
   const relative = path.relative(root, filePath);
   if (!relative || relative.startsWith("..")) return filePath;
   return `${relative}:${start}-${end}`;
@@ -167,10 +185,7 @@ function buildQuery(history: ChatMessage[], ctx: DevelopmentContext): string {
   const language = ctx.projectContext?.language ?? "typescript";
   const projectType = ctx.projectContext?.type ?? "mcp";
   const parts = [`${projectType} ${language}`, DEFAULT_QUERY, ...hints];
-  return parts
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
 function collectSignalHints(history: ChatMessage[]): string[] {
@@ -230,7 +245,9 @@ function statusRecordToFinding(
   };
 }
 
-function mapStateToSeverity(state: DeepContextStatusRecord["state"]): Finding["severity"] | null {
+function mapStateToSeverity(
+  state: DeepContextStatusRecord["state"],
+): Finding["severity"] | null {
   switch (state) {
     case "ready":
       return "info";
@@ -244,7 +261,9 @@ function mapStateToSeverity(state: DeepContextStatusRecord["state"]): Finding["s
   }
 }
 
-function buildStatusEvidence(record: DeepContextStatusRecord): Finding["evidence"] {
+function buildStatusEvidence(
+  record: DeepContextStatusRecord,
+): Finding["evidence"] {
   const evidence: Finding["evidence"] = [];
   evidence.push({ type: "file", ref: record.codebasePath });
   evidence.push({ type: "file", ref: record.codexContextDir });

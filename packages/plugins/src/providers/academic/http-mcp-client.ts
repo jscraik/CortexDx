@@ -53,7 +53,10 @@ export class HttpMcpClient {
     this.timeoutMs = options.timeoutMs ?? 30000;
   }
 
-  async callTool(name: string, args: Record<string, unknown>): Promise<McpToolResult> {
+  async callTool(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<McpToolResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
@@ -74,7 +77,9 @@ export class HttpMcpClient {
 
       if (!response.ok) {
         const detail = await safeReadText(response);
-        throw new Error(`HTTP ${response.status}: ${detail || response.statusText}`);
+        throw new Error(
+          `HTTP ${response.status}: ${detail || response.statusText}`,
+        );
       }
 
       const payload = (await response.json()) as JsonRpcResponse;
@@ -89,16 +94,30 @@ export class HttpMcpClient {
     }
   }
 
-  async callToolJson<T>(name: string, args: Record<string, unknown>): Promise<T> {
+  async callToolJson<T>(
+    name: string,
+    args: Record<string, unknown>,
+  ): Promise<T> {
     const result = await this.callTool(name, args);
     return extractJsonPayload<T>(result);
   }
 }
 
 export function extractJsonPayload<T>(result: McpToolResult): T {
-  if (Array.isArray(result.structuredContent) && result.structuredContent.length > 0) {
-    return result.structuredContent[0] as T;
+  // Handle structured content (new pattern: object, old pattern: array for compatibility)
+  if (result.structuredContent) {
+    // New pattern: structuredContent is an object matching outputSchema
+    if (Array.isArray(result.structuredContent)) {
+      // Old pattern: structuredContent is an array (external MCP servers)
+      if (result.structuredContent.length > 0) {
+        return result.structuredContent[0] as T;
+      }
+    } else {
+      // New pattern: structuredContent is already an object
+      return result.structuredContent as T;
+    }
   }
+  // Fallback to parsing text content
   const textual = (result.content ?? [])
     .filter((item) => item.type === "text" && typeof item.text === "string")
     .map((item) => item.text?.trim())
@@ -106,7 +125,9 @@ export function extractJsonPayload<T>(result: McpToolResult): T {
     .join("\n")
     .trim();
   if (!textual) {
-    throw new Error("Remote MCP tool returned no structured or textual JSON payload");
+    throw new Error(
+      "Remote MCP tool returned no structured or textual JSON payload",
+    );
   }
   try {
     return safeParseJson(textual) as T;
@@ -123,7 +144,9 @@ async function safeReadText(response: Response): Promise<string> {
   }
 }
 
-export function sanitizeToolArgs(args: Record<string, unknown>): Record<string, unknown> {
+export function sanitizeToolArgs(
+  args: Record<string, unknown>,
+): Record<string, unknown> {
   const filtered: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(args)) {
     if (value === undefined) continue;

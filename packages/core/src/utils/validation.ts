@@ -3,8 +3,8 @@
  * Validates tool inputs against JSON Schema for enhanced error handling (SEP-1303)
  */
 
-import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv';
-import ajvFormatsModule from 'ajv-formats';
+import { Ajv, type ErrorObject, type ValidateFunction } from "ajv";
+import ajvFormatsModule from "ajv-formats";
 
 const ajv = new Ajv({
   allErrors: true,
@@ -36,10 +36,10 @@ export interface ValidationResult {
  */
 function getOrCompileSchema(
   schema: Record<string, unknown>,
-  schemaKey: string
+  schemaKey: string,
 ): { validate: ValidateFunction | null; error?: string } {
   let validate = schemaCache.get(schemaKey);
-  
+
   if (!validate) {
     try {
       validate = ajv.compile(schema);
@@ -47,11 +47,14 @@ function getOrCompileSchema(
     } catch (compileError) {
       return {
         validate: null,
-        error: compileError instanceof Error ? compileError.message : 'Schema compilation failed'
+        error:
+          compileError instanceof Error
+            ? compileError.message
+            : "Schema compilation failed",
       };
     }
   }
-  
+
   return { validate: validate || null };
 }
 
@@ -59,12 +62,12 @@ function getOrCompileSchema(
  * Convert Ajv errors to validation result details
  */
 function convertAjvErrors(
-  errors: ErrorObject[]
+  errors: ErrorObject[],
 ): Array<{ path: string; message: string; params?: Record<string, unknown> }> {
-  return errors.map(error => ({
-    path: error.instancePath || 'input',
+  return errors.map((error) => ({
+    path: error.instancePath || "input",
     message: formatErrorMessage(error),
-    params: error.params as Record<string, unknown>
+    params: error.params as Record<string, unknown>,
   }));
 }
 
@@ -79,7 +82,7 @@ function convertAjvErrors(
  */
 export function validateToolInput(
   schema: Record<string, unknown>,
-  input: unknown
+  input: unknown,
 ): ValidationResult {
   // Use schema as cache key (Critical #4: avoid recompiling same schema)
   const schemaKey = JSON.stringify(schema);
@@ -89,8 +92,10 @@ export function validateToolInput(
     // Schema compilation error - this is a server issue
     return {
       valid: false,
-      errors: ['Invalid tool schema configuration'],
-      details: [{ path: 'schema', message: error || 'Schema compilation failed' }]
+      errors: ["Invalid tool schema configuration"],
+      details: [
+        { path: "schema", message: error || "Schema compilation failed" },
+      ],
     };
   }
 
@@ -102,7 +107,7 @@ export function validateToolInput(
 
   // Convert Ajv errors to human-readable format
   const details = convertAjvErrors(validate.errors || []);
-  const errors = details.map(d => `${d.path}: ${d.message}`);
+  const errors = details.map((d) => `${d.path}: ${d.message}`);
 
   return { valid: false, errors, details };
 }
@@ -114,25 +119,25 @@ function formatErrorMessage(error: ErrorObject): string {
   const { keyword, message, params } = error;
 
   switch (keyword) {
-    case 'required':
+    case "required":
       return `missing required property '${params.missingProperty}'`;
-    case 'type':
+    case "type":
       return `should be ${params.type}`;
-    case 'enum':
-      return `should be one of: ${params.allowedValues.join(', ')}`;
-    case 'minimum':
+    case "enum":
+      return `should be one of: ${params.allowedValues.join(", ")}`;
+    case "minimum":
       return `should be >= ${params.limit}`;
-    case 'maximum':
+    case "maximum":
       return `should be <= ${params.limit}`;
-    case 'minLength':
+    case "minLength":
       return `should be at least ${params.limit} characters`;
-    case 'maxLength':
+    case "maxLength":
       return `should be at most ${params.limit} characters`;
-    case 'pattern':
+    case "pattern":
       return `should match pattern ${params.pattern}`;
-    case 'format':
+    case "format":
       return `should match format "${params.format}"`;
-    case 'additionalProperties':
+    case "additionalProperties":
       return `should not have additional property '${params.additionalProperty}'`;
     default:
       return message || `validation failed (${keyword})`;
@@ -147,8 +152,8 @@ export function createValidationErrorResult(validation: ValidationResult) {
   return {
     content: [
       {
-        type: 'text',
-        text: `Input validation failed:\n${validation.errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}`,
+        type: "text",
+        text: `Input validation failed:\n${validation.errors.map((e, i) => `${i + 1}. ${e}`).join("\n")}`,
       },
     ],
     isError: true,
@@ -165,7 +170,7 @@ export function createExecutionErrorResult(error: Error | unknown) {
   return {
     content: [
       {
-        type: 'text',
+        type: "text",
         text: `Tool execution failed: ${message}`,
       },
     ],

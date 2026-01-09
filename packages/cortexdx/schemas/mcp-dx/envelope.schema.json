@@ -106,7 +106,14 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": ["log", "trace", "http", "screenshot", "diff", "artifact"],
+                        "enum": [
+                          "log",
+                          "trace",
+                          "http",
+                          "screenshot",
+                          "diff",
+                          "artifact"
+                        ],
                         "description": "Type of evidence artifact"
                       },
                       "url": {

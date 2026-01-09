@@ -34,9 +34,16 @@ describe("DeepContext status store", () => {
     const codebasePath = path.join(workspaceDir, "repo");
     await mkdir(codexDir, { recursive: true });
     const snapshot = JSON.stringify([{ path: codebasePath }]);
-    await writeFile(path.join(codexDir, "indexed-codebases.json"), snapshot, "utf8");
+    await writeFile(
+      path.join(codexDir, "indexed-codebases.json"),
+      snapshot,
+      "utf8",
+    );
 
-    const record = await buildStatusRecord({ codebasePath, remoteStatusText: "ready" });
+    const record = await buildStatusRecord({
+      codebasePath,
+      remoteStatusText: "ready",
+    });
     expect(record.state).toBe("ready");
     await persistDeepContextStatus(record);
 
@@ -47,7 +54,10 @@ describe("DeepContext status store", () => {
 
   it("detects missing artifacts as not indexed", async () => {
     const codebasePath = path.join(workspaceDir, "repo");
-    const record = await buildStatusRecord({ codebasePath, remoteStatusText: "no index present" });
+    const record = await buildStatusRecord({
+      codebasePath,
+      remoteStatusText: "no index present",
+    });
     expect(record.state).toBe("not_indexed");
   });
 });

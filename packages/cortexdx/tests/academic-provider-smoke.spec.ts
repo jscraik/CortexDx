@@ -16,10 +16,12 @@ describeIntegration("Academic Provider Smoke Tests", () => {
   }
 
   const requestedProviders =
-    process.env.CORTEXDX_RESEARCH_SMOKE_PROVIDERS?.split(",").map((value) => value.trim().toLowerCase()).filter(Boolean) ??
-    DEFAULT_SMOKE_PROVIDERS;
+    process.env.CORTEXDX_RESEARCH_SMOKE_PROVIDERS?.split(",")
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean) ?? DEFAULT_SMOKE_PROVIDERS;
 
-  const { availableProviders, missingProviders } = partitionProviders(requestedProviders);
+  const { availableProviders, missingProviders } =
+    partitionProviders(requestedProviders);
 
   if (availableProviders.length === 0) {
     const missingSummary =
@@ -41,25 +43,21 @@ describeIntegration("Academic Provider Smoke Tests", () => {
     );
   }
 
-  it(
-    "collects live findings from configured providers",
-    async () => {
-      const report = await runAcademicResearch({
-        topic:
-          process.env.CORTEXDX_RESEARCH_SMOKE_TOPIC ||
-          "Model Context Protocol diagnostics",
-        question: process.env.CORTEXDX_RESEARCH_SMOKE_QUESTION,
-        providers: availableProviders,
-        limit: 2,
-        includeLicense: true,
-        deterministic: false,
-      });
+  it("collects live findings from configured providers", async () => {
+    const report = await runAcademicResearch({
+      topic:
+        process.env.CORTEXDX_RESEARCH_SMOKE_TOPIC ||
+        "Model Context Protocol diagnostics",
+      question: process.env.CORTEXDX_RESEARCH_SMOKE_QUESTION,
+      providers: availableProviders,
+      limit: 2,
+      includeLicense: true,
+      deterministic: false,
+    });
 
-      expect(report.providers.length).toBeGreaterThan(0);
-      expect(report.summary.totalFindings).toBeGreaterThan(0);
-    },
-    120_000,
-  );
+    expect(report.providers.length).toBeGreaterThan(0);
+    expect(report.summary.totalFindings).toBeGreaterThan(0);
+  }, 120_000);
 });
 
 function partitionProviders(providerIds: string[]): {

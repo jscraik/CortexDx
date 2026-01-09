@@ -6,8 +6,8 @@ import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import type { Finding } from "@brainwav/cortexdx-core";
 import {
-	CloudStorageAdapter,
-	createCloudStorageFromEnv,
+  CloudStorageAdapter,
+  createCloudStorageFromEnv,
 } from "../adapters/cloud-storage-adapter.js";
 
 export type ReportFormat = "json" | "markdown" | "html";
