@@ -202,9 +202,7 @@ export async function runMonitoring(options: {
   export?: string;
   stateFile?: string;
 }): Promise<number> {
-  if (options.config) {
-    // Redundant file read removed; config will be loaded in loadMonitoringConfigs()
-  }
+  // Redundant file read removed; config will be loaded in loadMonitoringConfigs()
 
   const ctx = await createDevelopmentContext();
   const scheduler = new MonitoringScheduler(ctx);
