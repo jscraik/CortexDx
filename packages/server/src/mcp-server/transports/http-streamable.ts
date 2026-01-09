@@ -3,25 +3,17 @@
  * Implements MCP over HTTP with streaming support
  */
 
-import type { EventEmitter } from "node:events";
+import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import { createLogger } from '../../logging/logger';
+import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
+import { MCP_ERRORS, formatJsonRpcError, McpError } from '../core/errors';
 import {
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-  createServer,
-} from "node:http";
-import { createLogger } from "../../logging/logger.js";
-import { MCP_ERRORS, McpError, formatJsonRpcError } from "../core/errors";
-import { DEFAULT_PROTOCOL_VERSION } from "../core/protocol";
-import { DEFAULT_CORS_CONFIG, MCP_HEADERS } from "./types";
-import type {
-  CorsConfig,
-  HttpStreamableConfig,
-  RequestHandler,
-  Transport,
-  TransportEvents,
-  HttpStreamableConfig,
-  CorsConfig,
+  DEFAULT_CORS_CONFIG,
+  type CorsConfig,
+  type HttpStreamableConfig,
+  type RequestHandler,
+  type Transport,
+  type TransportEvents,
 } from './types';
 import { DEFAULT_CORS_CONFIG } from './types';
 
@@ -46,9 +38,9 @@ export class HttpStreamableTransport implements Transport {
     const { port, host = '127.0.0.1', cors, strictOriginCheck = true } = this.config;
     const corsConfig = cors ?? DEFAULT_CORS_CONFIG;
 
-    this.server = createServer(async (req, res) =>
-      this.handleRequest(req, res, handler, corsConfig, strictOriginCheck)
-    );
+    this.server = createServer(async (req, res) => {
+      // Handle CORS
+      const corsConfig = cors ?? DEFAULT_CORS_CONFIG;
 
     return new Promise((resolve, reject) => {
       this.server?.listen(port, host, () => {
