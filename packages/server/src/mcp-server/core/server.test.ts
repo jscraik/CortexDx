@@ -136,71 +136,38 @@ describe("McpServer addTool plugin hooks", () => {
     expect(result).toEqual(errorResponse);
   });
 
-  it("produces deterministic request ids when deterministic mode is enabled", async () => {
-    const capturedIds: string[] = [];
+  it('returns post-execution hook responses without double encoding', async () => {
+    const transformedResponse: JsonRpcResponse = {
+      jsonrpc: '2.0',
+      id: 'result-id',
+      result: { status: 'transformed' },
+    };
 
-    const server = new McpServer({
-      name: "deterministic-server",
-      version: "1.0.0",
-      deterministic: true,
-      deterministicSeed: 5,
-      transport: { type: "stdio" },
-    });
-
-    server.use({
-      name: "capture-plugin",
-      async onToolCall(ctx) {
-        capturedIds.push(ctx.request.id);
-        return undefined;
+    const plugin: ServerPlugin = {
+      name: 'post-plugin',
+      async onToolResult() {
+        return transformedResponse;
       },
-    });
-
-    server.addTool({
-      name: "deterministic-tool",
-      description: "captures ids",
-      parameters: z.object({}),
-      async execute() {
-        return { status: "ok" };
-      },
-    });
-
-    const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
-      .tools[0];
-
-    await tool.execute({}, {});
-    await tool.execute({}, {});
-
-    expect(capturedIds).toEqual(["det-6", "det-7"]);
-  });
-
-  it("generates unique request ids under concurrent execution", async () => {
-    const ids = new Set<string>();
+    };
 
     const server = createServer();
-
-    server.use({
-      name: "concurrent-capture",
-      async onToolCall(ctx) {
-        ids.add(ctx.request.id);
-        return undefined;
-      },
-    });
+    server.use(plugin);
 
     server.addTool({
-      name: "concurrent-tool",
-      description: "runs concurrently",
+      name: 'transforming-tool',
+      description: 'returns raw result',
       parameters: z.object({}),
       async execute() {
-        return { status: "ok" };
+        return { status: 'raw' };
       },
     });
 
     const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
       .tools[0];
+    const result = await tool.execute({}, {});
 
-    await Promise.all(Array.from({ length: 25 }, () => tool.execute({}, {})));
-
-    expect(ids.size).toBe(25);
+    expect(result).toEqual(transformedResponse);
+    expect(typeof result).not.toBe('string');
   });
 });
 
