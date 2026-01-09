@@ -68,6 +68,35 @@ describe("cortexdx_academic_research tool", () => {
   });
 });
 
+describe("analyze_preprint_research tool", () => {
+  it("routes requests to arxiv provider", async () => {
+    const tool: McpTool = {
+      name: "analyze_preprint_research",
+      description: "",
+      inputSchema: { type: "object", properties: {} },
+    };
+
+    const result = await executeAcademicIntegrationTool(tool, {
+      query: "retrieval augmented generation",
+      maxResults: 3,
+    });
+
+    const runAcademicResearch = vi.mocked(
+      (await import("../src/research/academic-researcher.js")).runAcademicResearch as RunAcademicResearch,
+    );
+
+    expect(runAcademicResearch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        topic: "retrieval augmented generation",
+        providers: ["arxiv"],
+        limit: 3,
+      }),
+    );
+
+    const payload = JSON.parse(result.content?.[0]?.text ?? "{}") as { report?: AcademicResearchReport };
+  });
+});
+
 function buildResearchTool(): McpTool {
   return {
     name: "cortexdx_academic_research",
