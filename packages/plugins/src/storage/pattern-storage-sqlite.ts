@@ -64,7 +64,9 @@ type PatternStatsRow = {
   avg_confidence: number | null;
 };
 
-const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<[RegExp, string | ((...args: string[]) => string)]> = [
+const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<
+  [RegExp, string | ((...args: string[]) => string)]
+> = [
   [/https?:\/\/[^\s]+/gi, "https://example.com/mcp"],
   [/bearer\s+[A-Za-z0-9._-]+/gi, "bearer [TOKEN_REMOVED]"],
   [/\b(sk|pk|api)_[a-z]+_[A-Za-z0-9]{20,}\b/gi, "[API_KEY_REMOVED]"],
@@ -74,7 +76,10 @@ const SENSITIVE_SIGNATURE_REPLACEMENTS: Array<[RegExp, string | ((...args: strin
   [
     /((?:password|pwd|pass|secret|token|key)[:=])\s*([^\s;]+)/gi,
     (_match: string, prefix: string, value: string) => {
-      if (value.includes("[API_KEY_REMOVED]") || value.includes("[TOKEN_REMOVED]")) {
+      if (
+        value.includes("[API_KEY_REMOVED]") ||
+        value.includes("[TOKEN_REMOVED]")
+      ) {
         return `${prefix}${value}`;
       }
       return `${prefix}[REDACTED]`;

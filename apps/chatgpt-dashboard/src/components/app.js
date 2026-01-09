@@ -1,6 +1,6 @@
 /**
  * CortexDx ChatGPT Control Panel - Client Application
- * 
+ *
  * WCAG 2.2 AA compliant dashboard client with:
  * - Keyboard navigation
  * - Screen reader announcements
@@ -32,8 +32,8 @@ class DashboardClient {
     /** @type {number|null} */
     this.autoRefreshTimer = null;
     /** @type {DashboardTab} */
-    this.currentTab = 'health';
-    
+    this.currentTab = "health";
+
     this.init();
   }
 
@@ -48,16 +48,18 @@ class DashboardClient {
 
   /**
    * Announce message to screen readers
-   * @param {string} message 
-   * @param {'polite'|'assertive'} priority 
+   * @param {string} message
+   * @param {'polite'|'assertive'} priority
    */
-  announce(message, priority = 'polite') {
-    const announcer = document.getElementById('announcer');
+  announce(message, priority = "polite") {
+    const announcer = document.getElementById("announcer");
     if (announcer) {
-      announcer.setAttribute('aria-live', priority);
+      announcer.setAttribute("aria-live", priority);
       announcer.textContent = message;
       // Clear after announcement
-      setTimeout(() => { announcer.textContent = ''; }, 1000);
+      setTimeout(() => {
+        announcer.textContent = "";
+      }, 1000);
     }
   }
 
@@ -68,38 +70,42 @@ class DashboardClient {
     const tabs = document.querySelectorAll('[role="tab"]');
 
     for (const tab of tabs) {
-      tab.addEventListener('click', () => this.selectTab(tab.id.replace('tab-', '')));
-      
+      tab.addEventListener("click", () =>
+        this.selectTab(tab.id.replace("tab-", "")),
+      );
+
       // Keyboard navigation
-      tab.addEventListener('keydown', (e) => {
+      tab.addEventListener("keydown", (e) => {
         const tabsArray = Array.from(tabs);
         const index = tabsArray.indexOf(tab);
-        
+
         switch (e.key) {
-          case 'ArrowLeft':
-          case 'ArrowUp': {
+          case "ArrowLeft":
+          case "ArrowUp": {
             e.preventDefault();
             const prevIndex = index === 0 ? tabsArray.length - 1 : index - 1;
-            this.selectTab(tabsArray[prevIndex].id.replace('tab-', ''));
+            this.selectTab(tabsArray[prevIndex].id.replace("tab-", ""));
             tabsArray[prevIndex].focus();
             break;
           }
-          case 'ArrowRight':
-          case 'ArrowDown': {
+          case "ArrowRight":
+          case "ArrowDown": {
             e.preventDefault();
             const nextIndex = index === tabsArray.length - 1 ? 0 : index + 1;
-            this.selectTab(tabsArray[nextIndex].id.replace('tab-', ''));
+            this.selectTab(tabsArray[nextIndex].id.replace("tab-", ""));
             tabsArray[nextIndex].focus();
             break;
           }
-          case 'Home':
+          case "Home":
             e.preventDefault();
-            this.selectTab(tabsArray[0].id.replace('tab-', ''));
+            this.selectTab(tabsArray[0].id.replace("tab-", ""));
             tabsArray[0].focus();
             break;
-          case 'End':
+          case "End":
             e.preventDefault();
-            this.selectTab(tabsArray[tabsArray.length - 1].id.replace('tab-', ''));
+            this.selectTab(
+              tabsArray[tabsArray.length - 1].id.replace("tab-", ""),
+            );
             tabsArray[tabsArray.length - 1].focus();
             break;
         }
@@ -109,58 +115,58 @@ class DashboardClient {
 
   /**
    * Select a tab and show its panel
-   * @param {DashboardTab} tabId 
+   * @param {DashboardTab} tabId
    */
   selectTab(tabId) {
     this.currentTab = tabId;
-    
+
     // Update tab states
     for (const tab of document.querySelectorAll('[role="tab"]')) {
       const isSelected = tab.id === `tab-${tabId}`;
-      tab.setAttribute('aria-selected', isSelected.toString());
-      tab.setAttribute('tabindex', isSelected ? '0' : '-1');
+      tab.setAttribute("aria-selected", isSelected.toString());
+      tab.setAttribute("tabindex", isSelected ? "0" : "-1");
     }
-    
+
     // Update panel visibility
     for (const panel of document.querySelectorAll('[role="tabpanel"]')) {
       const isActive = panel.id === `panel-${tabId}`;
       panel.hidden = !isActive;
-      panel.classList.toggle('active', isActive);
+      panel.classList.toggle("active", isActive);
     }
-    
+
     // Announce tab change
     const tabNames = {
-      health: 'System Health',
-      logs: 'System Logs',
-      traces: 'Distributed Traces',
-      metrics: 'System Metrics',
-      controls: 'Agent Controls'
+      health: "System Health",
+      logs: "System Logs",
+      traces: "Distributed Traces",
+      metrics: "System Metrics",
+      controls: "Agent Controls",
     };
     this.announce(`${tabNames[tabId]} panel is now active`);
-    
+
     // Load tab-specific data
     this.loadTabData(tabId);
   }
 
   /**
    * Load data for the selected tab
-   * @param {DashboardTab} tabId 
+   * @param {DashboardTab} tabId
    */
   async loadTabData(tabId) {
     switch (tabId) {
-      case 'health':
+      case "health":
         await this.loadHealth();
         break;
-      case 'logs':
+      case "logs":
         await this.loadLogs();
         break;
-      case 'traces':
+      case "traces":
         await this.loadTraces();
         break;
-      case 'metrics':
+      case "metrics":
         await this.loadMetrics();
         break;
-      case 'controls':
+      case "controls":
         await this.loadAgentRuns();
         break;
     }
@@ -170,22 +176,22 @@ class DashboardClient {
    * Connect to server using best available transport
    */
   async connectTransport() {
-    this.updateConnectionStatus('connecting', 'Connecting...');
-    
+    this.updateConnectionStatus("connecting", "Connecting...");
+
     // Try WebSocket first (bidirectional, real-time)
     try {
       await this.connectWebSocket();
       return;
     } catch {
-      console.log('WebSocket unavailable, falling back to SSE');
+      console.log("WebSocket unavailable, falling back to SSE");
     }
-    
+
     // Fallback to SSE (Streamable HTTP)
     try {
       await this.connectSSE();
     } catch (error) {
-      console.error('Both transports failed:', error);
-      this.updateConnectionStatus('disconnected', 'Connection failed');
+      console.error("Both transports failed:", error);
+      this.updateConnectionStatus("disconnected", "Connection failed");
       this.scheduleReconnect();
     }
   }
@@ -195,47 +201,47 @@ class DashboardClient {
    */
   async connectWebSocket() {
     return new Promise((resolve, reject) => {
-      const wsUrl = `${this.baseUrl.replace('http', 'ws')}/mcp`;
+      const wsUrl = `${this.baseUrl.replace("http", "ws")}/mcp`;
       this.ws = new WebSocket(wsUrl);
-      
+
       this.ws.onopen = () => {
         this.useWebSocket = true;
-        this.updateConnectionStatus('connected', 'Connected (WebSocket)');
-        this.announce('Connected to server via WebSocket');
-        
+        this.updateConnectionStatus("connected", "Connected (WebSocket)");
+        this.announce("Connected to server via WebSocket");
+
         // Send initialize message
         this.sendMessage({
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: 1,
-          method: 'initialize',
+          method: "initialize",
           params: {
-            protocolVersion: '2025-03-26',
+            protocolVersion: "2025-03-26",
             clientInfo: {
-              name: 'CortexDx Dashboard',
-              version: '0.1.0'
-            }
-          }
+              name: "CortexDx Dashboard",
+              version: "0.1.0",
+            },
+          },
         });
-        
+
         resolve();
       };
-      
+
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           this.handleServerMessage(data);
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
-      
+
       this.ws.onerror = (error) => {
         reject(error);
       };
-      
+
       this.ws.onclose = () => {
-        this.updateConnectionStatus('disconnected', 'Disconnected');
-        this.announce('Disconnected from server');
+        this.updateConnectionStatus("disconnected", "Disconnected");
+        this.announce("Disconnected from server");
         this.scheduleReconnect();
       };
     });
@@ -247,53 +253,53 @@ class DashboardClient {
   async connectSSE() {
     return new Promise((resolve, reject) => {
       this.eventSource = new EventSource(`${this.baseUrl}/events`);
-      
+
       this.eventSource.onopen = () => {
         this.useWebSocket = false;
-        this.updateConnectionStatus('connected', 'Connected (SSE)');
-        this.announce('Connected to server via SSE');
+        this.updateConnectionStatus("connected", "Connected (SSE)");
+        this.announce("Connected to server via SSE");
         resolve();
       };
-      
+
       this.eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           this.handleServerMessage(data);
         } catch (error) {
-          console.error('Failed to parse SSE message:', error);
+          console.error("Failed to parse SSE message:", error);
         }
       };
-      
+
       this.eventSource.onerror = () => {
         this.eventSource?.close();
-        this.updateConnectionStatus('disconnected', 'Disconnected');
+        this.updateConnectionStatus("disconnected", "Disconnected");
         this.scheduleReconnect();
-        reject(new Error('SSE connection failed'));
+        reject(new Error("SSE connection failed"));
       };
     });
   }
 
   /**
    * Handle incoming server message
-   * @param {object} data 
+   * @param {object} data
    */
   handleServerMessage(data) {
-    if (data.type === 'health') {
+    if (data.type === "health") {
       this.updateHealthDisplay(data.payload);
-    } else if (data.type === 'log') {
+    } else if (data.type === "log") {
       this.appendLogEntry(data.payload);
-    } else if (data.type === 'metric') {
+    } else if (data.type === "metric") {
       this.updateMetricDisplay(data.payload);
-    } else if (data.type === 'trace') {
+    } else if (data.type === "trace") {
       this.appendTraceSpan(data.payload);
-    } else if (data.type === 'run-update') {
+    } else if (data.type === "run-update") {
       this.updateRunDisplay(data.payload);
     }
   }
 
   /**
    * Send message to server
-   * @param {object} message 
+   * @param {object} message
    */
   async sendMessage(message) {
     if (this.useWebSocket && this.ws?.readyState === WebSocket.OPEN) {
@@ -301,26 +307,26 @@ class DashboardClient {
     } else {
       // Fallback to HTTP POST
       await fetch(`${this.baseUrl}/mcp`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'MCP-Protocol-Version': '2025-03-26',
-          'Mcp-Session-Id': this.sessionId
+          "Content-Type": "application/json",
+          "MCP-Protocol-Version": "2025-03-26",
+          "Mcp-Session-Id": this.sessionId,
         },
-        body: JSON.stringify(message)
+        body: JSON.stringify(message),
       });
     }
   }
 
   /**
    * Update connection status UI
-   * @param {'connected'|'disconnected'|'connecting'} status 
-   * @param {string} text 
+   * @param {'connected'|'disconnected'|'connecting'} status
+   * @param {string} text
    */
   updateConnectionStatus(status, text) {
-    const indicator = document.getElementById('connection-indicator');
-    const textEl = document.getElementById('connection-text');
-    
+    const indicator = document.getElementById("connection-indicator");
+    const textEl = document.getElementById("connection-text");
+
     if (indicator) {
       indicator.className = `status-dot ${status}`;
     }
@@ -352,50 +358,51 @@ class DashboardClient {
       const data = await response.json();
       this.updateHealthDisplay(data);
     } catch (error) {
-      console.error('Failed to load health:', error);
+      console.error("Failed to load health:", error);
     }
   }
 
   /**
    * Update health display
-   * @param {HealthStatus} health 
+   * @param {HealthStatus} health
    */
   updateHealthDisplay(health) {
-    const statusEl = document.getElementById('overall-status');
+    const statusEl = document.getElementById("overall-status");
     if (statusEl) {
       statusEl.className = `status-badge ${health.status}`;
-      statusEl.textContent = health.status.charAt(0).toUpperCase() + health.status.slice(1);
+      statusEl.textContent =
+        health.status.charAt(0).toUpperCase() + health.status.slice(1);
     }
-    
-    const uptimeEl = document.getElementById('uptime-value');
+
+    const uptimeEl = document.getElementById("uptime-value");
     if (uptimeEl) {
       uptimeEl.textContent = this.formatUptime(health.uptime);
     }
-    
-    const versionEl = document.getElementById('version-value');
+
+    const versionEl = document.getElementById("version-value");
     if (versionEl) {
-      versionEl.textContent = health.version || '--';
+      versionEl.textContent = health.version || "--";
     }
-    
-    const protocolEl = document.getElementById('protocol-value');
+
+    const protocolEl = document.getElementById("protocol-value");
     if (protocolEl) {
-      protocolEl.textContent = `MCP v${health.protocolVersion || '2025-03-26'}`;
+      protocolEl.textContent = `MCP v${health.protocolVersion || "2025-03-26"}`;
     }
-    
+
     this.updateComponentsTable(health.components || []);
   }
 
   /**
    * Format uptime seconds to human readable
-   * @param {number} seconds 
+   * @param {number} seconds
    * @returns {string}
    */
   formatUptime(seconds) {
-    if (!seconds) return '--';
+    if (!seconds) return "--";
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
@@ -403,18 +410,21 @@ class DashboardClient {
 
   /**
    * Update components health table
-   * @param {Array} components 
+   * @param {Array} components
    */
   updateComponentsTable(components) {
-    const tbody = document.getElementById('components-body');
+    const tbody = document.getElementById("components-body");
     if (!tbody) return;
-    
+
     if (components.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4">No components registered</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="4">No components registered</td></tr>';
       return;
     }
-    
-    tbody.innerHTML = components.map(comp => `
+
+    tbody.innerHTML = components
+      .map(
+        (comp) => `
       <tr>
         <td>${this.escapeHtml(comp.name)}</td>
         <td>
@@ -423,9 +433,11 @@ class DashboardClient {
           </span>
         </td>
         <td>${this.formatTimestamp(comp.lastCheck)}</td>
-        <td>${this.escapeHtml(comp.message || '')}</td>
+        <td>${this.escapeHtml(comp.message || "")}</td>
       </tr>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   /**
@@ -433,55 +445,61 @@ class DashboardClient {
    */
   async loadLogs() {
     try {
-      const response = await fetch(`${this.baseUrl}/dashboard/api/logs?limit=100`);
+      const response = await fetch(
+        `${this.baseUrl}/dashboard/api/logs?limit=100`,
+      );
       const logs = await response.json();
       this.renderLogs(logs);
     } catch (error) {
-      console.error('Failed to load logs:', error);
+      console.error("Failed to load logs:", error);
     }
   }
 
   /**
    * Render logs
-   * @param {LogEntry[]} logs 
+   * @param {LogEntry[]} logs
    */
   renderLogs(logs) {
-    const container = document.getElementById('logs-container');
+    const container = document.getElementById("logs-container");
     if (!container) return;
-    
+
     if (!logs || logs.length === 0) {
-      container.innerHTML = '<p>No log entries</p>';
+      container.innerHTML = "<p>No log entries</p>";
       return;
     }
-    
-    container.innerHTML = logs.map(log => `
+
+    container.innerHTML = logs
+      .map(
+        (log) => `
       <div class="log-entry" role="listitem">
         <span class="log-level ${log.level}">${log.level}</span>
         <span class="log-timestamp">${this.formatTimestamp(log.timestamp)}</span>
         <span class="log-message">${this.escapeHtml(log.message)}</span>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   /**
    * Append log entry
-   * @param {LogEntry} log 
+   * @param {LogEntry} log
    */
   appendLogEntry(log) {
-    const container = document.getElementById('logs-container');
+    const container = document.getElementById("logs-container");
     if (!container) return;
-    
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.setAttribute('role', 'listitem');
+
+    const entry = document.createElement("div");
+    entry.className = "log-entry";
+    entry.setAttribute("role", "listitem");
     entry.innerHTML = `
       <span class="log-level ${log.level}">${log.level}</span>
       <span class="log-timestamp">${this.formatTimestamp(log.timestamp)}</span>
       <span class="log-message">${this.escapeHtml(log.message)}</span>
     `;
-    
+
     container.insertBefore(entry, container.firstChild);
-    
+
     // Limit displayed entries
     while (container.children.length > 500) {
       container.removeChild(container.lastChild);
@@ -493,63 +511,69 @@ class DashboardClient {
    */
   async loadTraces() {
     try {
-      const response = await fetch(`${this.baseUrl}/dashboard/api/traces?limit=50`);
+      const response = await fetch(
+        `${this.baseUrl}/dashboard/api/traces?limit=50`,
+      );
       const traces = await response.json();
       this.renderTraces(traces);
     } catch (error) {
-      console.error('Failed to load traces:', error);
+      console.error("Failed to load traces:", error);
     }
   }
 
   /**
    * Render traces
-   * @param {TraceSpan[]} traces 
+   * @param {TraceSpan[]} traces
    */
   renderTraces(traces) {
-    const container = document.getElementById('traces-container');
+    const container = document.getElementById("traces-container");
     if (!container) return;
-    
+
     if (!traces || traces.length === 0) {
-      container.innerHTML = '<p>No trace spans</p>';
+      container.innerHTML = "<p>No trace spans</p>";
       return;
     }
-    
-    container.innerHTML = traces.map(span => `
+
+    container.innerHTML = traces
+      .map(
+        (span) => `
       <div class="trace-span" role="listitem">
         <div class="trace-header">
           <span class="trace-name">${this.escapeHtml(span.name)}</span>
-          <span class="trace-duration">${span.duration ? `${span.duration}ms` : 'running'}</span>
+          <span class="trace-duration">${span.duration ? `${span.duration}ms` : "running"}</span>
         </div>
         <div class="trace-ids">
           <span>Trace: ${span.traceId.slice(0, 8)}...</span>
           <span>Span: ${span.spanId.slice(0, 8)}...</span>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   /**
    * Append trace span
-   * @param {TraceSpan} span 
+   * @param {TraceSpan} span
    */
   appendTraceSpan(span) {
-    const container = document.getElementById('traces-container');
+    const container = document.getElementById("traces-container");
     if (!container) return;
-    
-    const entry = document.createElement('div');
-    entry.className = 'trace-span';
-    entry.setAttribute('role', 'listitem');
+
+    const entry = document.createElement("div");
+    entry.className = "trace-span";
+    entry.setAttribute("role", "listitem");
     entry.innerHTML = `
       <div class="trace-header">
         <span class="trace-name">${this.escapeHtml(span.name)}</span>
-        <span class="trace-duration">${span.duration ? `${span.duration}ms` : 'running'}</span>
+        <span class="trace-duration">${span.duration ? `${span.duration}ms` : "running"}</span>
       </div>
       <div class="trace-ids">
         <span>Trace: ${span.traceId.slice(0, 8)}...</span>
         <span>Span: ${span.spanId.slice(0, 8)}...</span>
       </div>
     `;
-    
+
     container.insertBefore(entry, container.firstChild);
   }
 
@@ -562,24 +586,26 @@ class DashboardClient {
       const data = await response.json();
       this.renderMetrics(data);
     } catch (error) {
-      console.error('Failed to load metrics:', error);
+      console.error("Failed to load metrics:", error);
     }
   }
 
   /**
    * Render metrics
-   * @param {MetricsSnapshot} data 
+   * @param {MetricsSnapshot} data
    */
   renderMetrics(data) {
-    const container = document.getElementById('metrics-container');
+    const container = document.getElementById("metrics-container");
     if (!container) return;
-    
+
     if (!data.metrics || data.metrics.length === 0) {
-      container.innerHTML = '<p>No metrics available</p>';
+      container.innerHTML = "<p>No metrics available</p>";
       return;
     }
-    
-    container.innerHTML = data.metrics.map(metric => `
+
+    container.innerHTML = data.metrics
+      .map(
+        (metric) => `
       <div class="metric-card">
         <h4>${this.escapeHtml(metric.name)}</h4>
         <div class="metric-value">
@@ -587,26 +613,28 @@ class DashboardClient {
           <span class="metric-unit">${this.escapeHtml(metric.unit)}</span>
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
   }
 
   /**
    * Update metric display
-   * @param {object} metric 
+   * @param {object} metric
    */
   updateMetricDisplay(metric) {
     // Find and update existing metric card or append new one
-    const container = document.getElementById('metrics-container');
+    const container = document.getElementById("metrics-container");
     if (!container) return;
-    
+
     let card = container.querySelector(`[data-metric="${metric.name}"]`);
     if (!card) {
-      card = document.createElement('div');
-      card.className = 'metric-card';
-      card.setAttribute('data-metric', metric.name);
+      card = document.createElement("div");
+      card.className = "metric-card";
+      card.setAttribute("data-metric", metric.name);
       container.appendChild(card);
     }
-    
+
     card.innerHTML = `
       <h4>${this.escapeHtml(metric.name)}</h4>
       <div class="metric-value">
@@ -618,11 +646,11 @@ class DashboardClient {
 
   /**
    * Format metric value
-   * @param {number} value 
+   * @param {number} value
    * @returns {string}
    */
   formatMetricValue(value) {
-    if (typeof value !== 'number') return String(value);
+    if (typeof value !== "number") return String(value);
     if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(2)}K`;
     return value.toFixed(2);
@@ -637,24 +665,26 @@ class DashboardClient {
       const runs = await response.json();
       this.renderAgentRuns(runs);
     } catch (error) {
-      console.error('Failed to load runs:', error);
+      console.error("Failed to load runs:", error);
     }
   }
 
   /**
    * Render agent runs
-   * @param {AgentRun[]} runs 
+   * @param {AgentRun[]} runs
    */
   renderAgentRuns(runs) {
-    const tbody = document.getElementById('runs-body');
+    const tbody = document.getElementById("runs-body");
     if (!tbody) return;
-    
+
     if (!runs || runs.length === 0) {
       tbody.innerHTML = '<tr><td colspan="6">No active runs</td></tr>';
       return;
     }
-    
-    tbody.innerHTML = runs.map(run => `
+
+    tbody.innerHTML = runs
+      .map(
+        (run) => `
       <tr>
         <td>${run.id.slice(0, 8)}...</td>
         <td>${this.escapeHtml(run.workflow)}</td>
@@ -666,41 +696,53 @@ class DashboardClient {
           </div>
         </td>
         <td>
-          ${run.status === 'running' ? `
+          ${
+            run.status === "running"
+              ? `
             <button type="button" class="action-btn" data-run-id="${run.id}" data-action="pause" aria-label="Pause run ${run.id}">
               Pause
             </button>
-          ` : ''}
-          ${run.status === 'paused' ? `
+          `
+              : ""
+          }
+          ${
+            run.status === "paused"
+              ? `
             <button type="button" class="action-btn success" data-run-id="${run.id}" data-action="resume" aria-label="Resume run ${run.id}">
               Resume
             </button>
-          ` : ''}
+          `
+              : ""
+          }
           <button type="button" class="action-btn warning" data-run-id="${run.id}" data-action="cancel" aria-label="Cancel run ${run.id}">
             Cancel
           </button>
         </td>
       </tr>
-    `).join('');
+    `,
+      )
+      .join("");
 
     // Attach event listeners to action buttons
-    const actionButtons = tbody.querySelectorAll('button[data-run-id][data-action]');
-    actionButtons.forEach(btn => {
-      const runId = btn.getAttribute('data-run-id');
-      const action = btn.getAttribute('data-action');
-      if (action === 'pause') {
-        btn.addEventListener('click', () => this.pauseRun(runId));
-      } else if (action === 'resume') {
-        btn.addEventListener('click', () => this.resumeRun(runId));
-      } else if (action === 'cancel') {
-        btn.addEventListener('click', () => this.cancelRun(runId));
+    const actionButtons = tbody.querySelectorAll(
+      "button[data-run-id][data-action]",
+    );
+    actionButtons.forEach((btn) => {
+      const runId = btn.getAttribute("data-run-id");
+      const action = btn.getAttribute("data-action");
+      if (action === "pause") {
+        btn.addEventListener("click", () => this.pauseRun(runId));
+      } else if (action === "resume") {
+        btn.addEventListener("click", () => this.resumeRun(runId));
+      } else if (action === "cancel") {
+        btn.addEventListener("click", () => this.cancelRun(runId));
       }
     });
   }
 
   /**
    * Update run display
-   * @param {AgentRun} _run 
+   * @param {AgentRun} _run
    */
   updateRunDisplay(_run) {
     // Refresh the runs table
@@ -711,155 +753,178 @@ class DashboardClient {
    * Setup control buttons
    */
   setupControls() {
-    document.getElementById('action-pause-all')?.addEventListener('click', () => this.executeAction('pause'));
-    document.getElementById('action-resume-all')?.addEventListener('click', () => this.executeAction('resume'));
-    document.getElementById('action-drain')?.addEventListener('click', () => this.executeAction('drain'));
-    
-    document.getElementById('refresh-logs')?.addEventListener('click', () => this.loadLogs());
-    document.getElementById('refresh-traces')?.addEventListener('click', () => this.loadTraces());
-    document.getElementById('refresh-metrics')?.addEventListener('click', () => this.loadMetrics());
+    document
+      .getElementById("action-pause-all")
+      ?.addEventListener("click", () => this.executeAction("pause"));
+    document
+      .getElementById("action-resume-all")
+      ?.addEventListener("click", () => this.executeAction("resume"));
+    document
+      .getElementById("action-drain")
+      ?.addEventListener("click", () => this.executeAction("drain"));
+
+    document
+      .getElementById("refresh-logs")
+      ?.addEventListener("click", () => this.loadLogs());
+    document
+      .getElementById("refresh-traces")
+      ?.addEventListener("click", () => this.loadTraces());
+    document
+      .getElementById("refresh-metrics")
+      ?.addEventListener("click", () => this.loadMetrics());
   }
 
   /**
    * Execute control action
-   * @param {'pause'|'resume'|'drain'} action 
-   * @param {string} [targetId] 
+   * @param {'pause'|'resume'|'drain'} action
+   * @param {string} [targetId]
    */
   async executeAction(action, targetId) {
     try {
       const response = await fetch(`${this.baseUrl}/dashboard/api/control`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Mcp-Session-Id': this.sessionId
+          "Content-Type": "application/json",
+          "Mcp-Session-Id": this.sessionId,
         },
-        body: JSON.stringify({ action, targetId })
+        body: JSON.stringify({ action, targetId }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        this.announce(`Action ${action} executed successfully`, 'polite');
+        this.announce(`Action ${action} executed successfully`, "polite");
       } else {
-        this.announce(`Action ${action} failed: ${result.message}`, 'assertive');
+        this.announce(
+          `Action ${action} failed: ${result.message}`,
+          "assertive",
+        );
       }
-      
+
       // Refresh data
       this.loadAgentRuns();
     } catch (error) {
-      this.announce(`Failed to execute action: ${error.message}`, 'assertive');
+      this.announce(`Failed to execute action: ${error.message}`, "assertive");
     }
   }
 
   /**
    * Pause a specific run
-   * @param {string} runId 
+   * @param {string} runId
    */
   async pauseRun(runId) {
-    await this.executeAction('pause', runId);
+    await this.executeAction("pause", runId);
   }
 
   /**
    * Resume a specific run
-   * @param {string} runId 
+   * @param {string} runId
    */
   async resumeRun(runId) {
-    await this.executeAction('resume', runId);
+    await this.executeAction("resume", runId);
   }
 
   /**
    * Cancel a specific run
-   * @param {string} runId 
+   * @param {string} runId
    */
   async cancelRun(runId) {
-    await this.executeAction('cancel', runId);
+    await this.executeAction("cancel", runId);
   }
 
   /**
    * Setup forms
    */
   setupForms() {
-    const testFlowForm = document.getElementById('test-flow-form');
-    testFlowForm?.addEventListener('submit', async (e) => {
+    const testFlowForm = document.getElementById("test-flow-form");
+    testFlowForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
-      
-      const endpoint = document.getElementById('test-endpoint')?.value;
-      const workflow = document.getElementById('test-workflow')?.value;
-      
+
+      const endpoint = document.getElementById("test-endpoint")?.value;
+      const workflow = document.getElementById("test-workflow")?.value;
+
       if (!endpoint || !workflow) return;
-      
+
       await this.runTestFlow(endpoint, workflow);
     });
-    
+
     // Log level filter
-    document.getElementById('log-level-filter')?.addEventListener('change', (e) => {
-      this.filterLogs(e.target.value);
-    });
-    
+    document
+      .getElementById("log-level-filter")
+      ?.addEventListener("change", (e) => {
+        this.filterLogs(e.target.value);
+      });
+
     // Log search
-    document.getElementById('log-search')?.addEventListener('input', (e) => {
+    document.getElementById("log-search")?.addEventListener("input", (e) => {
       this.searchLogs(e.target.value);
     });
   }
 
   /**
    * Run test flow
-   * @param {string} endpoint 
-   * @param {string} workflow 
+   * @param {string} endpoint
+   * @param {string} workflow
    */
   async runTestFlow(endpoint, workflow) {
     try {
-      this.announce(`Starting ${workflow} test flow...`, 'polite');
-      
+      this.announce(`Starting ${workflow} test flow...`, "polite");
+
       const response = await fetch(`${this.baseUrl}/dashboard/api/test-flow`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Mcp-Session-Id': this.sessionId
+          "Content-Type": "application/json",
+          "Mcp-Session-Id": this.sessionId,
         },
-        body: JSON.stringify({ endpoint, workflow })
+        body: JSON.stringify({ endpoint, workflow }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        this.announce(`Test flow started: ${result.runId}`, 'polite');
+        this.announce(`Test flow started: ${result.runId}`, "polite");
         this.loadAgentRuns();
       } else {
-        this.announce(`Failed to start test flow: ${result.message}`, 'assertive');
+        this.announce(
+          `Failed to start test flow: ${result.message}`,
+          "assertive",
+        );
       }
     } catch (error) {
-      this.announce(`Error: ${error.message}`, 'assertive');
+      this.announce(`Error: ${error.message}`, "assertive");
     }
   }
 
   /**
    * Filter logs by level
-   * @param {string} level 
+   * @param {string} level
    */
   filterLogs(level) {
-    const entries = document.querySelectorAll('#logs-container .log-entry');
+    const entries = document.querySelectorAll("#logs-container .log-entry");
     for (const entry of entries) {
-      if (level === 'all') {
-        entry.style.display = '';
+      if (level === "all") {
+        entry.style.display = "";
       } else {
-        const entryLevel = entry.querySelector('.log-level')?.textContent.trim();
-        entry.style.display = entryLevel === level ? '' : 'none';
+        const entryLevel = entry
+          .querySelector(".log-level")
+          ?.textContent.trim();
+        entry.style.display = entryLevel === level ? "" : "none";
       }
     }
   }
 
   /**
    * Search logs
-   * @param {string} query 
+   * @param {string} query
    */
   searchLogs(query) {
-    const entries = document.querySelectorAll('#logs-container .log-entry');
+    const entries = document.querySelectorAll("#logs-container .log-entry");
     const lowerQuery = query.toLowerCase();
-    
+
     for (const entry of entries) {
-      const message = entry.querySelector('.log-message')?.textContent.toLowerCase() || '';
-      entry.style.display = message.includes(lowerQuery) ? '' : 'none';
+      const message =
+        entry.querySelector(".log-message")?.textContent.toLowerCase() || "";
+      entry.style.display = message.includes(lowerQuery) ? "" : "none";
     }
   }
 
@@ -867,15 +932,15 @@ class DashboardClient {
    * Setup auto-refresh
    */
   setupAutoRefresh() {
-    const checkbox = document.getElementById('auto-refresh');
-    checkbox?.addEventListener('change', (e) => {
+    const checkbox = document.getElementById("auto-refresh");
+    checkbox?.addEventListener("change", (e) => {
       if (e.target.checked) {
         this.startAutoRefresh();
       } else {
         this.stopAutoRefresh();
       }
     });
-    
+
     // Start auto-refresh by default
     this.startAutoRefresh();
   }
@@ -902,56 +967,57 @@ class DashboardClient {
 
   /**
    * Format timestamp
-   * @param {string} timestamp 
+   * @param {string} timestamp
    * @returns {string}
    */
   formatTimestamp(timestamp) {
-    if (!timestamp) return '--';
+    if (!timestamp) return "--";
     const date = new Date(timestamp);
     return date.toLocaleTimeString();
   }
 
   /**
    * Escape HTML to prevent XSS
-   * @param {string} str 
+   * @param {string} str
    * @returns {string}
    */
   escapeHtml(str) {
-    if (!str) return '';
+    if (!str) return "";
     return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
+      .replace(/\//g, "&#x2F;");
   }
 }
 
 // Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   try {
     window.dashboard = new DashboardClient();
   } catch (error) {
-    console.error('Failed to initialize dashboard:', error);
+    console.error("Failed to initialize dashboard:", error);
     // Show error in the UI
-    const container = document.querySelector('.dashboard-container');
+    const container = document.querySelector(".dashboard-container");
     if (container) {
       // Remove previous content
-      container.textContent = '';
+      container.textContent = "";
       // Create error block
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'dashboard-error'; // Update to match styles.css
-      errorDiv.style.margin = '20px';
-      errorDiv.style.padding = '20px';
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "dashboard-error"; // Update to match styles.css
+      errorDiv.style.margin = "20px";
+      errorDiv.style.padding = "20px";
 
-      const titleDiv = document.createElement('div');
-      titleDiv.className = 'dashboard-error-title'; // Update to match styles.css
-      titleDiv.textContent = '[ERROR] Dashboard Initialization Failed';
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "dashboard-error-title"; // Update to match styles.css
+      titleDiv.textContent = "[ERROR] Dashboard Initialization Failed";
 
-      const descDiv = document.createElement('div');
-      descDiv.className = 'dashboard-error-description'; // Update to match styles.css
-      descDiv.textContent = 'Unable to initialize the dashboard. Please refresh the page or check the console for details.';
+      const descDiv = document.createElement("div");
+      descDiv.className = "dashboard-error-description"; // Update to match styles.css
+      descDiv.textContent =
+        "Unable to initialize the dashboard. Please refresh the page or check the console for details.";
 
       errorDiv.appendChild(titleDiv);
       errorDiv.appendChild(descDiv);

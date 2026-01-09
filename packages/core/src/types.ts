@@ -53,7 +53,7 @@ export interface Finding {
   filesToModify?: string[];
   codeChanges?: string;
   validationSteps?: string[];
-  riskLevel?: 'low' | 'medium' | 'high';
+  riskLevel?: "low" | "medium" | "high";
   templateId?: string;
   canAutoFix?: boolean;
   inspectorData?: unknown; // Raw Inspector data for reference
@@ -108,7 +108,7 @@ export interface LlmAdapter {
 
 // Enhanced LLM adapter interface with multi-backend support
 export interface EnhancedLlmAdapter extends LlmAdapter {
-  backend: 'ollama';
+  backend: "ollama";
   loadModel: (modelId: string) => Promise<void>;
   unloadModel: (modelId: string) => Promise<void>;
   getSupportedModels: () => Promise<string[]>;
@@ -116,12 +116,18 @@ export interface EnhancedLlmAdapter extends LlmAdapter {
 
   // Conversational capabilities for development assistance
   startConversation: (context: ConversationContext) => Promise<ConversationId>;
-  continueConversation: (id: ConversationId, message: string) => Promise<string>;
+  continueConversation: (
+    id: ConversationId,
+    message: string,
+  ) => Promise<string>;
   endConversation: (id: ConversationId) => Promise<void>;
 
   // Specialized completion methods for different tasks
   analyzeCode: (code: string, context: string) => Promise<CodeAnalysis>;
-  generateSolution: (problem: Problem, constraints: Constraints) => Promise<Solution>;
+  generateSolution: (
+    problem: Problem,
+    constraints: Constraints,
+  ) => Promise<Solution>;
   explainError: (error: Error, context: Context) => Promise<Explanation>;
 }
 
@@ -129,7 +135,7 @@ export type ConversationId = string;
 
 export interface ConversationContext {
   userId?: string;
-  sessionType: 'development' | 'debugging' | 'learning';
+  sessionType: "development" | "debugging" | "learning";
   mcpContext?: MCPContext;
   codeContext?: string;
   problemContext?: Problem;
@@ -151,7 +157,7 @@ export interface CodeAnalysis {
 }
 
 export interface CodeIssue {
-  type: 'error' | 'warning' | 'info';
+  type: "error" | "warning" | "info";
   message: string;
   line?: number;
   column?: number;
@@ -159,7 +165,7 @@ export interface CodeIssue {
 }
 
 export interface CodeSuggestion {
-  type: 'refactor' | 'optimize' | 'fix' | 'enhance';
+  type: "refactor" | "optimize" | "fix" | "enhance";
   description: string;
   code?: string;
   confidence: number;
@@ -183,19 +189,19 @@ export interface Problem {
   affectedComponents: string[];
   suggestedSolutions: RankedSolution[];
   conversationHistory?: ConversationEntry[];
-  userLevel: 'beginner' | 'intermediate' | 'expert';
+  userLevel: "beginner" | "intermediate" | "expert";
 }
 
 export type ProblemType =
-  | 'protocol'
-  | 'configuration'
-  | 'security'
-  | 'performance'
-  | 'integration'
-  | 'development'
-  | 'connection'
-  | 'authentication'
-  | 'code';
+  | "protocol"
+  | "configuration"
+  | "security"
+  | "performance"
+  | "integration"
+  | "development"
+  | "connection"
+  | "authentication"
+  | "code";
 
 export interface ProblemContext {
   mcpVersion: string;
@@ -214,7 +220,7 @@ export interface MultipleInputs {
   logFiles?: LogFile[];
   configurationFiles?: ConfigFile[];
   codeSnippets?: CodeSnippet[];
-  format: 'json' | 'text' | 'yaml' | 'mixed';
+  format: "json" | "text" | "yaml" | "mixed";
 }
 
 export interface LogFile {
@@ -226,7 +232,7 @@ export interface LogFile {
 export interface ConfigFile {
   name: string;
   content: string;
-  format: 'json' | 'yaml' | 'toml' | 'ini';
+  format: "json" | "yaml" | "toml" | "ini";
 }
 
 export interface CodeSnippet {
@@ -239,13 +245,13 @@ export interface SessionContext {
   sessionId: string;
   startTime: number;
   lastActivity: number;
-  userExpertiseLevel: 'beginner' | 'intermediate' | 'expert';
+  userExpertiseLevel: "beginner" | "intermediate" | "expert";
   preferences: UserPreferences;
 }
 
 export interface UserPreferences {
-  verbosity: 'minimal' | 'normal' | 'detailed';
-  explanationStyle: 'technical' | 'conversational' | 'step-by-step';
+  verbosity: "minimal" | "normal" | "detailed";
+  explanationStyle: "technical" | "conversational" | "step-by-step";
   autoApplyFixes: boolean;
   preferredLanguage: string;
 }
@@ -259,7 +265,7 @@ export interface ResolutionAttempt {
 }
 
 export interface Evidence {
-  type: 'log' | 'metric' | 'configuration' | 'code' | 'network';
+  type: "log" | "metric" | "configuration" | "code" | "network";
   source: string;
   data: unknown;
   timestamp: number;
@@ -270,7 +276,7 @@ export interface RankedSolution {
   solution: Solution;
   confidence: number;
   successLikelihood: number;
-  implementationComplexity: 'low' | 'medium' | 'high';
+  implementationComplexity: "low" | "medium" | "high";
   estimatedTime: string;
   prerequisites: string[];
 }
@@ -290,7 +296,12 @@ export interface Solution {
   licenseCompliance?: LicenseCompliance;
 }
 
-export type SolutionType = 'automated' | 'guided' | 'manual' | 'configuration' | 'code_generation';
+export type SolutionType =
+  | "automated"
+  | "guided"
+  | "manual"
+  | "configuration"
+  | "code_generation";
 
 export interface SolutionStep {
   order: number;
@@ -304,14 +315,14 @@ export interface SolutionStep {
 }
 
 export interface Action {
-  type: 'code' | 'config' | 'command' | 'validation' | 'restart';
+  type: "code" | "config" | "command" | "validation" | "restart";
   target: string;
   operation: string;
   parameters: Record<string, unknown>;
 }
 
 export interface ValidationCriteria {
-  type: 'test' | 'metric' | 'manual' | 'automated';
+  type: "test" | "metric" | "manual" | "automated";
   description: string;
   expectedResult: string;
   timeout?: number;
@@ -319,7 +330,7 @@ export interface ValidationCriteria {
 
 export interface CodeChange {
   file: string;
-  operation: 'create' | 'update' | 'delete';
+  operation: "create" | "update" | "delete";
   description?: string;
   content?: string;
   patch?: string;
@@ -335,7 +346,7 @@ export interface ConfigChange {
 }
 
 export interface TestingStrategy {
-  type: 'unit' | 'integration' | 'e2e' | 'manual';
+  type: "unit" | "integration" | "e2e" | "manual";
   tests: TestCase[];
   coverage: number;
   automated: boolean;
@@ -353,7 +364,7 @@ export interface RollbackPlan {
   steps: RollbackStep[];
   automated: boolean;
   backupRequired: boolean;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
 }
 
 export interface RollbackStep {
@@ -366,7 +377,7 @@ export interface RollbackStep {
 export interface AutomatedFix {
   canApplyAutomatically: boolean;
   requiresUserConfirmation: boolean;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: "low" | "medium" | "high";
   backupRequired: boolean;
   validationTests: ValidationTest[];
 }
@@ -383,12 +394,12 @@ export interface LicenseCompliance {
   approvedLicenses: string[];
   proprietaryContent: boolean;
   approvalRequired: boolean;
-  complianceStatus: 'compliant' | 'requires_approval' | 'non_compliant';
+  complianceStatus: "compliant" | "requires_approval" | "non_compliant";
 }
 
 export interface ConversationEntry {
   timestamp: number;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   message: string;
   context?: Record<string, unknown>;
 }
@@ -396,7 +407,7 @@ export interface ConversationEntry {
 export interface Constraints {
   timeLimit?: number;
   memoryLimit?: number;
-  complexity: 'low' | 'medium' | 'high';
+  complexity: "low" | "medium" | "high";
   compatibility: string[];
   security: SecurityConstraints;
   performance: PerformanceConstraints;
@@ -417,7 +428,7 @@ export interface PerformanceConstraints {
 }
 
 export interface Context {
-  type: 'development' | 'debugging' | 'analysis' | 'generation';
+  type: "development" | "debugging" | "analysis" | "generation";
   environment: string;
   tools: string[];
   history: ContextEntry[];
@@ -497,7 +508,10 @@ export interface KnowledgeOrchestrator {
   prefetch?: (sections: string[]) => Promise<void>;
   status?: () => Promise<CacheStatus>;
   refresh?: (sections: string[]) => Promise<void>;
-  search?: (query: string, options?: { limit?: number; minSimilarity?: number }) => Promise<KnowledgeSearchResult[]>;
+  search?: (
+    query: string,
+    options?: { limit?: number; minSimilarity?: number },
+  ) => Promise<KnowledgeSearchResult[]>;
   getVersions?: () => Promise<VersionInfo[]>;
 }
 
@@ -537,7 +551,10 @@ export interface DiagnosticPlugin {
 // Enhanced LLM interfaces for conversational development
 export interface ConversationalLlmAdapter extends LlmAdapter {
   chat: (messages: ChatMessage[], options?: ChatOptions) => Promise<string>;
-  stream: (messages: ChatMessage[], options?: ChatOptions) => AsyncIterable<string>;
+  stream: (
+    messages: ChatMessage[],
+    options?: ChatOptions,
+  ) => AsyncIterable<string>;
   getModelInfo: () => Promise<ModelInfo>;
 }
 
@@ -601,8 +618,14 @@ export interface DevelopmentPlugin {
 
 export interface ConversationalPlugin extends DevelopmentPlugin {
   category: "conversational";
-  initiateConversation: (ctx: DevelopmentContext, intent: string) => Promise<ConversationSession>;
-  continueConversation: (session: ConversationSession, userInput: string) => Promise<ConversationResponse>;
+  initiateConversation: (
+    ctx: DevelopmentContext,
+    intent: string,
+  ) => Promise<ConversationSession>;
+  continueConversation: (
+    session: ConversationSession,
+    userInput: string,
+  ) => Promise<ConversationResponse>;
 }
 
 export interface ConversationSession {
@@ -758,7 +781,11 @@ export interface PerformanceHarness {
   transcript: () => TransportTranscript | null;
   headers: () => Record<string, string>;
   measure?: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
-  recordMetric?: (name: string, value: number, tags?: Record<string, string>) => void;
+  recordMetric?: (
+    name: string,
+    value: number,
+    tags?: Record<string, string>,
+  ) => void;
   startTimer?: (name: string) => () => number;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -900,4 +927,3 @@ export interface DxEnvelope {
   /** Aggregated statistics for all assertions */
   summary: RunSummary;
 }
-

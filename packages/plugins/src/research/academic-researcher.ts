@@ -6,7 +6,11 @@ import type {
   ProviderInstance,
   ProviderRegistration,
 } from "../registry/providers/academic.js";
-import type { DiagnosticContext, EvidencePointer, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  EvidencePointer,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 export const DEFAULT_PROVIDERS = [
   "context7",
@@ -131,7 +135,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       | { results?: Array<Record<string, unknown>> };
     const works = Array.isArray(worksResponse)
       ? worksResponse
-      : worksResponse?.results ?? [];
+      : (worksResponse?.results ?? []);
     const findings = works.map((work, index) => {
       const title = String(work.title ?? `OpenAlex work ${index + 1}`);
       const summary = String(
@@ -225,13 +229,17 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     };
   },
   "research-quality": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool("research_quality_assess_quality", {
-      text: ctx.topic,
-      title: ctx.topic,
-      criteria: ["methodology", "completeness", "accuracy"],
-    });
+    const assessment = await instance.executeTool(
+      "research_quality_assess_quality",
+      {
+        text: ctx.topic,
+        title: ctx.topic,
+        criteria: ["methodology", "completeness", "accuracy"],
+      },
+    );
     const score = Number(
-      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics
+        ?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,
@@ -252,16 +260,14 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     };
   },
   "vibe-check": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool(
-      "vibe_check_assess_quality",
-      {
-        target: ctx.topic,
-        criteria: ["methodology", "completeness", "accuracy"],
-        depth: "thorough",
-      },
-    );
+    const assessment = await instance.executeTool("vibe_check_assess_quality", {
+      target: ctx.topic,
+      criteria: ["methodology", "completeness", "accuracy"],
+      depth: "thorough",
+    });
     const score = Number(
-      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics
+        ?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,

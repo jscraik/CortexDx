@@ -12,19 +12,19 @@ const MIN_INSPECTOR_RUNTIME_MS = 1000;
 
 export interface InspectorProbeConfig {
   kind:
-  | "handshake"
-  | "list_tools"
-  | "list_resources"
-  | "call_tool"
-  | "schema_validate"
-  | "stream_sse"
-  | "cors_preflight"
-  | "jsonrpc_batch"
-  | "http2_reset_behavior"
-  | "proxy_buffering"
-  | "security"
-  | "performance"
-  | "protocol";
+    | "handshake"
+    | "list_tools"
+    | "list_resources"
+    | "call_tool"
+    | "schema_validate"
+    | "stream_sse"
+    | "cors_preflight"
+    | "jsonrpc_batch"
+    | "http2_reset_behavior"
+    | "proxy_buffering"
+    | "security"
+    | "performance"
+    | "protocol";
   args?: Record<string, unknown>;
 }
 
@@ -63,14 +63,14 @@ export interface InspectorFinding {
   id: string;
   severity: "blocker" | "major" | "minor" | "info";
   area:
-  | "protocol"
-  | "schema"
-  | "auth"
-  | "streaming"
-  | "cors"
-  | "proxy"
-  | "perf"
-  | "security";
+    | "protocol"
+    | "schema"
+    | "auth"
+    | "streaming"
+    | "cors"
+    | "proxy"
+    | "perf"
+    | "security";
   description: string;
   evidence: { raw: unknown; path?: string; line?: number };
   remediation?: { suggestion: string; patch?: unknown };
@@ -176,14 +176,14 @@ export class InspectorAdapter {
         description: finding.description,
         evidence: finding.evidence
           ? [
-            {
-              type: "log",
-              ref: finding.evidence.path || "unknown",
-              lines: finding.evidence.line
-                ? [finding.evidence.line, finding.evidence.line]
-                : undefined,
-            },
-          ]
+              {
+                type: "log",
+                ref: finding.evidence.path || "unknown",
+                lines: finding.evidence.line
+                  ? [finding.evidence.line, finding.evidence.line]
+                  : undefined,
+              },
+            ]
           : [],
         recommendation: finding.remediation?.suggestion,
         tags: ["inspector", finding.area, "auto-generated"],
@@ -206,9 +206,17 @@ export class InspectorAdapter {
         this.ctx.endpoint ||
         process.env.CORTEXDX_INTERNAL_ENDPOINT ||
         "http://127.0.0.1:5001";
-      const probes = ["handshake", "protocol", "security", "performance", "sse"];
+      const probes = [
+        "handshake",
+        "protocol",
+        "security",
+        "performance",
+        "sse",
+      ];
 
-      this.ctx.logger?.(`[Inspector] Running self-diagnosis on ${selfEndpoint}`);
+      this.ctx.logger?.(
+        `[Inspector] Running self-diagnosis on ${selfEndpoint}`,
+      );
       return this.diagnose(selfEndpoint, probes);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -703,7 +711,8 @@ export class InspectorAdapter {
                   ? "major"
                   : "minor",
             area: this.mapProbeToArea(probeName),
-            description: result.message || `Probe ${probeName}: ${result.status}`,
+            description:
+              result.message || `Probe ${probeName}: ${result.status}`,
             evidence: { raw: result },
             raw: result,
           });
@@ -723,15 +732,19 @@ export class InspectorAdapter {
       return findings;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.ctx.logger?.(`[Inspector] Failed to convert Inspector data to findings: ${message}`);
+      this.ctx.logger?.(
+        `[Inspector] Failed to convert Inspector data to findings: ${message}`,
+      );
       // Return a safe default finding on error
-      return [{
-        id: `inspector_error_${timestamp}`,
-        severity: "minor",
-        area: "protocol",
-        description: `Failed to parse Inspector data: ${message}`,
-        evidence: { raw: inspectorData },
-      }];
+      return [
+        {
+          id: `inspector_error_${timestamp}`,
+          severity: "minor",
+          area: "protocol",
+          description: `Failed to parse Inspector data: ${message}`,
+          evidence: { raw: inspectorData },
+        },
+      ];
     }
   }
 
@@ -827,8 +840,8 @@ export class InspectorAdapter {
       },
       remediation: hasSecurityIssues
         ? {
-          suggestion: "Review and address security configuration issues",
-        }
+            suggestion: "Review and address security configuration issues",
+          }
         : undefined,
     };
   }
@@ -856,11 +869,11 @@ export class InspectorAdapter {
     const timeMatches = lines.join(" ").match(/(\d+)\s*ms/g);
     const avgTime = timeMatches
       ? Math.round(
-        timeMatches.reduce(
-          (sum, time) => sum + Number.parseInt(time, 10),
-          0,
-        ) / timeMatches.length,
-      )
+          timeMatches.reduce(
+            (sum, time) => sum + Number.parseInt(time, 10),
+            0,
+          ) / timeMatches.length,
+        )
       : null;
 
     return {
@@ -1065,7 +1078,7 @@ export class InspectorAdapter {
   private resolveInspectorRuntimeBudget(): number {
     const candidate = Number(
       process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS ??
-      process.env.INSPECTOR_MAX_RUNTIME_MS,
+        process.env.INSPECTOR_MAX_RUNTIME_MS,
     );
     if (Number.isFinite(candidate) && candidate >= MIN_INSPECTOR_RUNTIME_MS) {
       return candidate;

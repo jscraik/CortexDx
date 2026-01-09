@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { EvidencePointer, Finding, Severity } from "../types";
+import type { EvidencePointer, Finding, Severity } from "../types.js";
 
 export type NormalizedSeverity = "info" | "minor" | "major" | "critical";
 export type NormalizedPrecision = "file" | "line" | "range";
@@ -47,11 +47,16 @@ export function fingerprintFinding(data: NormalizedFindingBase): string {
     start: data.location?.start ?? null,
     end: data.location?.end ?? null,
   };
-  const hash = createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 16);
+  const hash = createHash("sha256")
+    .update(JSON.stringify(payload))
+    .digest("hex")
+    .slice(0, 16);
   return `nf_${hash}`;
 }
 
-export function mapSeverityToNormalized(severity: Severity): NormalizedSeverity {
+export function mapSeverityToNormalized(
+  severity: Severity,
+): NormalizedSeverity {
   switch (severity) {
     case "blocker":
       return "critical";
@@ -64,7 +69,9 @@ export function mapSeverityToNormalized(severity: Severity): NormalizedSeverity 
   }
 }
 
-export function evidencePointersToStrings(evidence: EvidencePointer[]): string[] {
+export function evidencePointersToStrings(
+  evidence: EvidencePointer[],
+): string[] {
   return evidence.map((entry) => {
     if (entry.lines) {
       const [start, end] = entry.lines;
@@ -108,7 +115,10 @@ export function normalizeFinding(
     precision,
     location,
     tags: finding.tags,
-    evidence: finding.evidence.length > 0 ? { pointers: evidencePointersToStrings(finding.evidence) } : undefined,
+    evidence:
+      finding.evidence.length > 0
+        ? { pointers: evidencePointersToStrings(finding.evidence) }
+        : undefined,
     recommendation: finding.recommendation,
     originalId: finding.id,
   };
@@ -118,7 +128,9 @@ export function normalizeFinding(
   };
 }
 
-export function deriveLocationFromEvidence(finding: Finding): NormalizedLocation | undefined {
+export function deriveLocationFromEvidence(
+  finding: Finding,
+): NormalizedLocation | undefined {
   if (!finding.evidence?.length) return undefined;
   const fileEvidence = finding.evidence.find((entry) => entry.type === "file");
   if (!fileEvidence) return undefined;
@@ -130,7 +142,9 @@ export function deriveLocationFromEvidence(finding: Finding): NormalizedLocation
   };
 }
 
-function determinePrecision(location?: NormalizedLocation): NormalizedPrecision {
+function determinePrecision(
+  location?: NormalizedLocation,
+): NormalizedPrecision {
   if (!location?.start && !location?.end) return "file";
   if (location.start && location.end) {
     return location.start.line === location.end.line ? "line" : "range";
@@ -138,7 +152,10 @@ function determinePrecision(location?: NormalizedLocation): NormalizedPrecision 
   return "line";
 }
 
-function mergeNormalizedFindings(a: NormalizedFinding, b: NormalizedFinding): NormalizedFinding {
+function mergeNormalizedFindings(
+  a: NormalizedFinding,
+  b: NormalizedFinding,
+): NormalizedFinding {
   const severityOrder = compareSeverity(a.severity, b.severity);
   const primary = severityOrder >= 0 ? a : b;
   const secondary = primary === a ? b : a;
@@ -159,7 +176,9 @@ function mergeNormalizedFindings(a: NormalizedFinding, b: NormalizedFinding): No
 
 function mergeStringArrays(a?: string[], b?: string[]): string[] | undefined {
   if (!a && !b) return undefined;
-  const combined = new Set<string>([...(a ?? []), ...(b ?? [])].filter(Boolean));
+  const combined = new Set<string>(
+    [...(a ?? []), ...(b ?? [])].filter(Boolean),
+  );
   return combined.size > 0 ? [...combined.values()] : undefined;
 }
 
@@ -168,7 +187,10 @@ function mergeEvidence(
   b?: NormalizedEvidence,
 ): NormalizedEvidence | undefined {
   if (!a && !b) return undefined;
-  const pointers = new Set<string>([...(a?.pointers ?? []), ...(b?.pointers ?? [])]);
+  const pointers = new Set<string>([
+    ...(a?.pointers ?? []),
+    ...(b?.pointers ?? []),
+  ]);
   return pointers.size > 0 ? { pointers: [...pointers.values()] } : undefined;
 }
 
@@ -207,5 +229,10 @@ function buildDeduplicationKey(finding: NormalizedFinding): string {
   const location = finding.location;
   const startLine = location?.start?.line ?? -1;
   const file = location?.file ?? "unknown";
-  return [finding.source, finding.ruleId ?? finding.title, file, startLine].join("|");
+  return [
+    finding.source,
+    finding.ruleId ?? finding.title,
+    file,
+    startLine,
+  ].join("|");
 }

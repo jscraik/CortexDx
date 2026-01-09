@@ -239,7 +239,9 @@ async function fetchPages(specs: PageSpec[]): Promise<PageData[]> {
         // Fetch from web URL
         const response = await fetch(spec.url);
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText} for ${spec.url}`);
+          throw new Error(
+            `HTTP ${response.status}: ${response.statusText} for ${spec.url}`,
+          );
         }
 
         const html = await response.text();
@@ -307,7 +309,9 @@ async function fetchGitHubRepo(spec: PageSpec): Promise<PageData[]> {
   }
 
   if (pages.length === 0) {
-    console.error(`      ⚠️  Could not fetch README for ${spec.id} (tried main/master)`);
+    console.error(
+      `      ⚠️  Could not fetch README for ${spec.id} (tried main/master)`,
+    );
   }
 
   // TODO: Fetch additional paths specified in spec.paths
@@ -421,7 +425,9 @@ async function buildDatabase(
   store.setManifest(manifest);
 
   const stats = store.getStats();
-  console.log(`      Indexed ${stats.totalChunks} chunks from ${stats.totalPages} pages`);
+  console.log(
+    `      Indexed ${stats.totalChunks} chunks from ${stats.totalPages} pages`,
+  );
 
   store.close();
 }

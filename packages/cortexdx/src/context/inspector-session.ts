@@ -1,3 +1,4 @@
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
 import { randomUUID } from "node:crypto";
 import { sseProbe } from "../adapters/sse.js";
 import type {
@@ -6,9 +7,8 @@ import type {
   TransportExchange,
   TransportState,
   TransportTranscript,
-  DiagnosticContext,
 } from "../types.js";
-import { safeParseJson } from "../utils/json";
+import { safeParseJson } from "../utils/json.js";
 
 export interface SharedSessionState {
   sessionId?: string;
@@ -96,7 +96,7 @@ export function createInspectorSession(
       id: "__cortexdx_init__",
       method: "initialize",
       params: {
-        protocolVersion: "2024-11-05",
+        protocolVersion: PROTOCOL_VERSIONS.CURRENT,
         capabilities: {},
         clientInfo: { name: "cortexdx-inspector", version: "0.1.0" },
       },
@@ -265,4 +265,3 @@ function buildExchange(
     timestamp: new Date().toISOString(),
   };
 }
-

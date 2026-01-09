@@ -22,7 +22,10 @@ describe("anomaly rule detectors", () => {
   });
 
   it("detects latency spikes relative to baseline", () => {
-    const events = detectLatencySpike([30, 35, 40, 120], 50, 3, { target: "api", now: 99 });
+    const events = detectLatencySpike([30, 35, 40, 120], 50, 3, {
+      target: "api",
+      now: 99,
+    });
     expect(events).toHaveLength(1);
     expect(events[0].meta).toMatchObject({ latest: 120 });
   });
@@ -39,7 +42,9 @@ describe("anomaly rule detectors", () => {
     ];
     const events = detectErrorSpike(buckets, 10, 2, { target: "proxy" });
     expect(events).toHaveLength(1);
-    expect(events[0].meta?.latest).toBeGreaterThan(events[0].meta?.baseline ?? 0);
+    expect(events[0].meta?.latest).toBeGreaterThan(
+      events[0].meta?.baseline ?? 0,
+    );
   });
 
   it("omits error spikes when totals stay flat", () => {
@@ -48,7 +53,9 @@ describe("anomaly rule detectors", () => {
   });
 
   it("flags fallback engaged when all flags within window are true", () => {
-    const events = detectFallbackEngaged([false, true, true, true], 3, { target: "sse" });
+    const events = detectFallbackEngaged([false, true, true, true], 3, {
+      target: "sse",
+    });
     expect(events).toHaveLength(1);
     expect(events[0].meta?.consecutive).toBe(3);
   });

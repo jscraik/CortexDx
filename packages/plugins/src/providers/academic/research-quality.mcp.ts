@@ -513,9 +513,7 @@ export class ResearchQualityProvider {
   /**
    * Assess research methodology
    */
-  private async assessMethodology(
-    text: string,
-  ): Promise<{
+  private async assessMethodology(text: string): Promise<{
     score: number;
     flags: QualityFlag[];
     recommendations: string[];
@@ -577,9 +575,7 @@ export class ResearchQualityProvider {
   /**
    * Assess venue quality
    */
-  private async assessVenue(
-    venueName: string,
-  ): Promise<{
+  private async assessVenue(venueName: string): Promise<{
     quality: PeerReviewIndicators["venue_quality"];
     flags: QualityFlag[];
   }> {

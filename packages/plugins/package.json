@@ -1,42 +1,42 @@
 {
-    "name": "@brainwav/cortexdx-plugins",
-    "version": "0.1.0",
-    "description": "Plugin system and registry for CortexDx",
-    "type": "module",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "exports": {
-        ".": "./dist/index.js"
-    },
-    "scripts": {
-        "build": "tsup",
-        "clean": "rimraf dist",
-        "lint": "biome lint src",
-        "format": "biome format --write .",
-        "test": "vitest run"
-    },
-    "dependencies": {
-        "@aws-sdk/client-s3": "^3.600.0",
-        "@aws-sdk/s3-request-presigner": "^3.600.0",
-        "@brainwav/cortexdx-core": "workspace:*",
-        "@brainwav/cortexdx-ml": "workspace:*",
-        "@modelcontextprotocol/sdk": "^1.22.0",
-        "@opentelemetry/api": "1.9.0",
-        "ajv": "^8.12.0",
-        "ajv-formats": "^3.0.1",
-        "axios": "^1.13.2",
-        "better-sqlite3": "^12.4.1",
-        "eventsource-parser": "^1.1.0",
-        "ws": "^8.18.3",
-        "yaml": "^2.6.0",
-        "zod": "^3.22.4"
-    },
-    "devDependencies": {
-        "@types/better-sqlite3": "^7.6.13",
-        "@types/node": "^22.19.1",
-        "rimraf": "^6.0.1",
-        "tsup": "^8.1.0",
-        "typescript": "^5.6.3",
-        "vitest": "^2.1.3"
-    }
+  "name": "@brainwav/cortexdx-plugins",
+  "version": "0.1.0",
+  "description": "Plugin system and registry for CortexDx",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rimraf dist",
+    "lint": "biome lint src",
+    "format": "biome format --write .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@brainwav/cortexdx-core": "workspace:*",
+    "@brainwav/cortexdx-ml": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@opentelemetry/api": "1.9.0",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
+    "axios": "^1.13.2",
+    "better-sqlite3": "^12.4.1",
+    "eventsource-parser": "^1.1.0",
+    "ws": "^8.18.3",
+    "yaml": "^2.6.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.19.1",
+    "rimraf": "^6.1.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  }
 }

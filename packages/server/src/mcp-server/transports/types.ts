@@ -3,18 +3,18 @@
  * Defines the interface for all MCP transports
  */
 
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 /**
  * Supported transport types
  */
-export type TransportType = 'httpStreamable' | 'stdio' | 'websocket';
+export type TransportType = "httpStreamable" | "stdio" | "websocket";
 
 /**
  * JSON-RPC request structure
  */
 export interface JsonRpcRequest {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id?: string | number | null;
   method: string;
   params?: unknown;
@@ -24,7 +24,7 @@ export interface JsonRpcRequest {
  * JSON-RPC response structure
  */
 export interface JsonRpcResponse {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: string | number | null;
   result?: unknown;
   error?: {
@@ -37,7 +37,9 @@ export interface JsonRpcResponse {
 /**
  * Request handler function type
  */
-export type RequestHandler = (request: JsonRpcRequest) => Promise<JsonRpcResponse>;
+export type RequestHandler = (
+  request: JsonRpcRequest,
+) => Promise<JsonRpcResponse>;
 
 /**
  * Transport lifecycle events
@@ -164,9 +166,9 @@ export interface HttpRequestContext {
  */
 export const MCP_HEADERS = {
   /** Protocol version header */
-  PROTOCOL_VERSION: 'MCP-Protocol-Version',
+  PROTOCOL_VERSION: "MCP-Protocol-Version",
   /** Session ID header */
-  SESSION_ID: 'Mcp-Session-Id',
+  SESSION_ID: "Mcp-Session-Id",
 } as const;
 
 /**
@@ -244,8 +246,13 @@ export type TransportFactory = (config: TransportConfig) => Transport;
  * Default CORS configuration
  */
 export const DEFAULT_CORS_CONFIG: CorsConfig = {
-  allowedOrigins: ['http://localhost', 'http://127.0.0.1'],
-  allowedMethods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'MCP-Protocol-Version', 'Mcp-Session-Id'],
+  allowedOrigins: ["http://localhost", "http://127.0.0.1"],
+  allowedMethods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "MCP-Protocol-Version",
+    "Mcp-Session-Id",
+  ],
   maxAge: 86400, // 24 hours
 };

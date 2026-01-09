@@ -22,14 +22,17 @@ describe("InspectorAdapter runtime safeguards", () => {
     if (originalEnv.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS === undefined) {
       delete process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS;
     } else {
-      process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS = originalEnv.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS;
+      process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS =
+        originalEnv.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS;
     }
   });
 
   it("honours CORTEXDX_INSPECTOR_MAX_RUNTIME_MS environment override", () => {
     process.env.CORTEXDX_INSPECTOR_MAX_RUNTIME_MS = "1234";
     const adapter = new InspectorAdapter(baseContext());
-    const runtime = (adapter as unknown as { resolveInspectorRuntimeBudget(): number }).resolveInspectorRuntimeBudget();
+    const runtime = (
+      adapter as unknown as { resolveInspectorRuntimeBudget(): number }
+    ).resolveInspectorRuntimeBudget();
     expect(runtime).toBe(1234);
   });
 
@@ -47,16 +50,24 @@ describe("InspectorAdapter runtime safeguards", () => {
       ],
     });
 
-    const findings = (adapter as unknown as {
-      buildTimeoutFindings(
-        stdout: string,
-        stderr: string,
-        endpoint: string,
-        probes: { kind: string }[],
-        budget: number,
-        partial?: unknown[],
-      ): unknown[];
-    }).buildTimeoutFindings(stdout, "", "https://example.com", [{ kind: "handshake" }], 1234);
+    const findings = (
+      adapter as unknown as {
+        buildTimeoutFindings(
+          stdout: string,
+          stderr: string,
+          endpoint: string,
+          probes: { kind: string }[],
+          budget: number,
+          partial?: unknown[],
+        ): unknown[];
+      }
+    ).buildTimeoutFindings(
+      stdout,
+      "",
+      "https://example.com",
+      [{ kind: "handshake" }],
+      1234,
+    );
 
     expect(findings.length).toBeGreaterThan(0);
     expect(JSON.stringify(findings[0])).toContain("partial-1");
@@ -64,16 +75,18 @@ describe("InspectorAdapter runtime safeguards", () => {
 
   it("prefers streaming partial findings when provided", () => {
     const adapter = new InspectorAdapter(baseContext());
-    const findings = (adapter as unknown as {
-      buildTimeoutFindings(
-        stdout: string,
-        stderr: string,
-        endpoint: string,
-        probes: { kind: string }[],
-        budget: number,
-        partial?: unknown[],
-      ): unknown[];
-    }).buildTimeoutFindings(
+    const findings = (
+      adapter as unknown as {
+        buildTimeoutFindings(
+          stdout: string,
+          stderr: string,
+          endpoint: string,
+          probes: { kind: string }[],
+          budget: number,
+          partial?: unknown[],
+        ): unknown[];
+      }
+    ).buildTimeoutFindings(
       "",
       "",
       "https://example.com",
@@ -110,25 +123,29 @@ describe("InspectorAdapter handshake verification", () => {
       }),
     });
 
-    await (adapter as unknown as {
-      verifyEndpointHandshake(endpoint: string): Promise<void>;
-    }).verifyEndpointHandshake("https://example.com");
+    await (
+      adapter as unknown as {
+        verifyEndpointHandshake(endpoint: string): Promise<void>;
+      }
+    ).verifyEndpointHandshake("https://example.com");
 
-    const finding = (adapter as unknown as {
-      analyzeHandshakeOutput(
-        lines: string[],
-        endpoint: string,
-        timestamp: number,
-      ): {
-        evidence: {
-          raw: {
-            hasHandshake: boolean;
-            handshakeVerified?: boolean;
-            handshakeResponse?: unknown;
+    const finding = (
+      adapter as unknown as {
+        analyzeHandshakeOutput(
+          lines: string[],
+          endpoint: string,
+          timestamp: number,
+        ): {
+          evidence: {
+            raw: {
+              hasHandshake: boolean;
+              handshakeVerified?: boolean;
+              handshakeResponse?: unknown;
+            };
           };
         };
-      };
-    }).analyzeHandshakeOutput([], "https://example.com", Date.now());
+      }
+    ).analyzeHandshakeOutput([], "https://example.com", Date.now());
 
     expect(finding.evidence.raw.hasHandshake).toBe(true);
     expect(finding.evidence.raw.handshakeVerified).toBe(true);
@@ -146,17 +163,23 @@ describe("InspectorAdapter handshake verification", () => {
       },
     });
 
-    await (adapter as unknown as {
-      verifyEndpointHandshake(endpoint: string): Promise<void>;
-    }).verifyEndpointHandshake("https://invalid");
+    await (
+      adapter as unknown as {
+        verifyEndpointHandshake(endpoint: string): Promise<void>;
+      }
+    ).verifyEndpointHandshake("https://invalid");
 
-    const finding = (adapter as unknown as {
-      analyzeHandshakeOutput(
-        lines: string[],
-        endpoint: string,
-        timestamp: number,
-      ): { evidence: { raw: { hasHandshake: boolean; handshakeError?: string } } };
-    }).analyzeHandshakeOutput([], "https://invalid", Date.now());
+    const finding = (
+      adapter as unknown as {
+        analyzeHandshakeOutput(
+          lines: string[],
+          endpoint: string,
+          timestamp: number,
+        ): {
+          evidence: { raw: { hasHandshake: boolean; handshakeError?: string } };
+        };
+      }
+    ).analyzeHandshakeOutput([], "https://invalid", Date.now());
 
     expect(finding.evidence.raw.hasHandshake).toBe(false);
     expect(finding.evidence.raw.handshakeError).toContain("network down");
@@ -176,7 +199,10 @@ describe("InspectorAdapter diagnose", () => {
       }),
     });
 
-    const report = await adapter.diagnose("https://example.com", ["handshake", "security"]);
+    const report = await adapter.diagnose("https://example.com", [
+      "handshake",
+      "security",
+    ]);
 
     expect(report).toBeDefined();
     expect(report.jobId).toContain("inspector_");
@@ -200,12 +226,15 @@ describe("InspectorAdapter diagnose", () => {
   it("should generate mock findings in test mode", async () => {
     const adapter = new InspectorAdapter(baseContext());
 
-    const report = await adapter.diagnose("http://test.com", ["security", "performance"]);
+    const report = await adapter.diagnose("http://test.com", [
+      "security",
+      "performance",
+    ]);
 
     expect(report).toBeDefined();
     expect(report.findings.length).toBe(2);
-    expect(report.findings.some(f => f.area === "security")).toBe(true);
-    expect(report.findings.some(f => f.area === "perf")).toBe(true);
+    expect(report.findings.some((f) => f.area === "security")).toBe(true);
+    expect(report.findings.some((f) => f.area === "perf")).toBe(true);
   });
 });
 
@@ -293,9 +322,15 @@ describe("InspectorAdapter output parsing", () => {
       ],
     });
 
-    const findings = (adapter as unknown as {
-      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
-    }).parseInspectorOutput(output, "https://test.com", []);
+    const findings = (
+      adapter as unknown as {
+        parseInspectorOutput(
+          output: string,
+          endpoint: string,
+          probes: any[],
+        ): any[];
+      }
+    ).parseInspectorOutput(output, "https://test.com", []);
 
     expect(findings.length).toBe(1);
     expect(findings[0].id).toBe("json-finding-1");
@@ -311,9 +346,15 @@ describe("InspectorAdapter output parsing", () => {
       },
     });
 
-    const findings = (adapter as unknown as {
-      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
-    }).parseInspectorOutput(output, "https://test.com", []);
+    const findings = (
+      adapter as unknown as {
+        parseInspectorOutput(
+          output: string,
+          endpoint: string,
+          probes: any[],
+        ): any[];
+      }
+    ).parseInspectorOutput(output, "https://test.com", []);
 
     expect(findings.length).toBe(2);
     expect(findings[0].area).toBe("protocol"); // handshake maps to protocol
@@ -325,9 +366,15 @@ describe("InspectorAdapter output parsing", () => {
     const adapter = new InspectorAdapter(baseContext());
     const output = "Error: PORT IS IN USE - Proxy server cannot start";
 
-    const findings = (adapter as unknown as {
-      parseInspectorOutput(output: string, endpoint: string, probes: any[]): any[];
-    }).parseInspectorOutput(output, "https://test.com", []);
+    const findings = (
+      adapter as unknown as {
+        parseInspectorOutput(
+          output: string,
+          endpoint: string,
+          probes: any[],
+        ): any[];
+      }
+    ).parseInspectorOutput(output, "https://test.com", []);
 
     expect(findings.length).toBe(1);
     expect(findings[0].severity).toBe("major");

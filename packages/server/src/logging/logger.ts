@@ -97,7 +97,8 @@ export function createCliLogger(options: CliLoggerOptions | string): CliLogger {
   const config = typeof options === "string" ? { component: options } : options;
   const structured = createLogger(config);
   const infoWriter = config.writer ?? ((text: string) => console.log(text));
-  const errorWriter = config.errorWriter ?? ((text: string) => console.error(text));
+  const errorWriter =
+    config.errorWriter ?? ((text: string) => console.error(text));
   const silent = config.silent ?? false;
 
   return {

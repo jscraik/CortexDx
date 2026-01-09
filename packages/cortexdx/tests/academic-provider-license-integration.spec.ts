@@ -1,12 +1,12 @@
 /**
  * Academic Provider License Integration Tests
  * Task 14.1.3: Test academic provider integration with license validation
- * 
+ *
  * Tests verify:
  * - All 8 academic providers work with license validation
  * - Research-backed code generation produces valid suggestions
  * - Compliance monitoring tracks usage correctly
- * 
+ *
  * Requirements: 13.1, 13.2, 13.4
  */
 
@@ -23,11 +23,11 @@ import type { DiagnosticContext } from "../src/types.js";
 // Mock diagnostic context for testing
 const mockContext: DiagnosticContext = {
   endpoint: "test://localhost",
-  logger: () => { },
+  logger: () => {},
   request: async () => ({ data: [], total: 0 }),
   jsonrpc: async () => ({}),
   sseProbe: async () => ({ ok: true }),
-  evidence: () => { },
+  evidence: () => {},
   deterministic: true,
 };
 
@@ -68,7 +68,10 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
       ];
 
       providerIds.forEach((providerId) => {
-        const instance = registry.createProviderInstance(providerId, mockContext);
+        const instance = registry.createProviderInstance(
+          providerId,
+          mockContext,
+        );
         expect(instance).toBeDefined();
         expect(typeof instance.executeTool).toBe("function");
       });
@@ -137,7 +140,12 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
 
   describe("Research-Backed Code Generation Validation", () => {
     it("should produce valid suggestions from approved licenses", () => {
-      const approvedLicenses = ["MIT", "Apache-2.0", "BSD-3-Clause", "CC-BY-4.0"];
+      const approvedLicenses = [
+        "MIT",
+        "Apache-2.0",
+        "BSD-3-Clause",
+        "CC-BY-4.0",
+      ];
       const providers = ["arxiv", "semantic-scholar", "openalex"];
 
       providers.forEach((provider) => {
@@ -147,7 +155,8 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
             authors: ["Researcher A", "Researcher B"],
             source: provider,
             license,
-            abstract: "Novel approach to MCP server optimization using academic research",
+            abstract:
+              "Novel approach to MCP server optimization using academic research",
             doi: `10.1234/${provider}-${license}`,
           };
 
@@ -341,7 +350,12 @@ describe("Academic Provider License Integration (Task 14.1.3)", () => {
         timestamp: number;
       }> = [];
 
-      const providers = ["arxiv", "semantic-scholar", "openalex", "research-quality"];
+      const providers = [
+        "arxiv",
+        "semantic-scholar",
+        "openalex",
+        "research-quality",
+      ];
 
       providers.forEach((provider) => {
         const content: ResearchContent = {

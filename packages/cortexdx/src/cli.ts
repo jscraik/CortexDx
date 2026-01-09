@@ -1,12 +1,91 @@
 import { Command } from "commander";
+import {
+  ConfigPrecedence,
+  DocsUrls,
+  ErrorCode,
+  ExitCode,
+  detectTty,
+  findClosestCommand,
+  formatSuggestions,
+  generateSimpleCompletions,
+  shouldUseColor,
+} from "./cli/index.js";
+
+// Detect TTY status once at startup (prefixed to silence unused warning)
+const _ttyInfo = detectTty();
+
+// Collect all command names for suggestions
+const availableCommands: string[] = [
+  "diagnose",
+  "doctor",
+  "compare",
+  "sbom",
+  "research",
+  "deepcontext",
+  "library",
+  "generate",
+  "explain",
+  "best-practices",
+  "tutorial",
+  "interactive",
+  "debug",
+  "self-diagnose",
+  "heal",
+  "monitor",
+  "templates",
+  "health",
+  "serve",
+  "completion",
+];
+
+// Global options interface
+interface GlobalOptions {
+  quiet?: boolean;
+  verbose?: boolean;
+  debug?: boolean;
+  json?: boolean;
+  plain?: boolean;
+  noInput?: boolean;
+  noColor?: boolean;
+  dryRun?: boolean;
+}
 
 const program = new Command();
+
 program
   .name("cortexdx")
   .description(
-    "brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)",
+    `brAInwav • CortexDx — Diagnostic Meta-Inspector (stateless, plugin-based)
+
+Documentation: ${DocsUrls.Main}
+Issues: ${DocsUrls.Issues}
+
+Config Precedence: ${Object.values(ConfigPrecedence).join(" > ")}`,
   )
-  .version("0.1.0");
+  .version("0.1.0")
+  // Standard global flags (clig.dev)
+  .option("-q, --quiet", "Suppress non-essential output (errors only)")
+  .option("-v, --verbose", "Include diagnostics and timing information")
+  .option("-d, --debug", "Include internal detail (stack traces, etc.)")
+  .option("--json", "Output in JSON format with schema versioning")
+  .option("--plain", "Output in stable line-oriented format")
+  .option("--no-input", "Disable interactive prompts (script-friendly)")
+  .option("--no-color", "Disable ANSI colors (respects NO_COLOR env var)")
+  .option("--dry-run", "Preview without making changes")
+  .configureOutput({
+    writeErr: (str) => {
+      if (shouldUseColor()) {
+        console.error(str);
+      } else {
+        // Strip ANSI codes
+        // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional escape sequence matching
+        console.error(str.replace(/\x1b\[[0-9;]*m/g, ""));
+      }
+    },
+  });
+
+// Store global options for use in subcommands
+const globalOptions: GlobalOptions = {};
 
 program
   .command("diagnose")
@@ -187,7 +266,7 @@ program
         const code = await runLibraryIngestCommand(opts);
         process.exitCode = code;
       }),
-);
+  );
 
 const deepContext = program
   .command("deepcontext")
@@ -584,6 +663,64 @@ program
     process.exitCode = code;
   });
 
+program
+  .command("serve")
+  .description(
+    "start MCP server in stdio/HTTP/WebSocket mode for local integration",
+  )
+  .option("--port <number>", "port (default: 3000)", "3000")
+  .option("--stdio", "use stdio transport instead of HTTP")
+  .option("--websocket", "use WebSocket transport")
+  .option("--host <string>", "host binding (default: 127.0.0.1)", "127.0.0.1")
+  .option("--endpoint <string>", "endpoint path (default: /mcp)", "/mcp")
+  .option("--api-key <string>", "API key for authentication")
+  .option(
+    "--log-level <string>",
+    "log level (debug, info, warn, error)",
+    "info",
+  )
+  .action(async (opts) => {
+    const { runServe } = await import("./commands/serve.js");
+    const code = await runServe(opts);
+    process.exitCode = code;
+  });
+
+program
+  .command("completion")
+  .description("generate shell completion script")
+  .argument("[shell]", "shell type (bash, zsh, fish)")
+  .action(async (shell = "bash") => {
+    const validShells = ["bash", "zsh", "fish"];
+    if (!validShells.includes(shell)) {
+      console.error(`Invalid shell: ${shell}`);
+      console.error(`Valid shells: ${validShells.join(", ")}`);
+      process.exit(ExitCode.Usage);
+    }
+
+    const completionScript = generateSimpleCompletions({
+      name: "cortexdx",
+      description: "Diagnostic Meta-Inspector for MCP servers",
+    });
+
+    console.log(completionScript);
+
+    // Print installation instructions
+    console.log("\n# Installation instructions:");
+    console.log(
+      `# Add to your ~/.${shell === "zsh" ? "zshrc" : shell === "fish" ? "config/fish/config.fish" : "bashrc"}:`,
+    );
+    if (shell === "bash") {
+      console.log('# eval "$(cortexdx completion bash)"');
+    } else if (shell === "zsh") {
+      console.log("# autoload -U compinit && compinit");
+      console.log('# eval "$(cortexdx completion zsh)"');
+    } else {
+      console.log(
+        "# cortexdx completion fish > ~/.config/fish/completions/cortexdx.fish",
+      );
+    }
+  });
+
 async function loadInteractiveCli() {
   return import("./commands/interactive-cli.js");
 }
@@ -597,6 +734,68 @@ function collectRepeatableOption(value: string, previous: string[]): string[] {
 }
 
 program.parseAsync().catch((e) => {
-  console.error("[brAInwav] fatal:", e?.stack || String(e));
-  process.exit(1);
+  // Enhanced error handling with error codes
+  const errorMessage = e?.message || String(e);
+  const stack = e?.stack;
+
+  // Try to determine error type for better messaging
+  let errorCode: string = ErrorCode.E_INTERNAL;
+  let exitCode: number = ExitCode.Failure;
+
+  if (errorMessage.includes("EACCES") || errorMessage.includes("permission")) {
+    errorCode = ErrorCode.E_AUTH;
+    exitCode = ExitCode.Policy;
+  } else if (
+    errorMessage.includes("ENOTFOUND") ||
+    errorMessage.includes("network")
+  ) {
+    errorCode = ErrorCode.E_NETWORK;
+    exitCode = ExitCode.Failure;
+  } else if (
+    errorMessage.includes("ENOENT") ||
+    errorMessage.includes("not found")
+  ) {
+    errorCode = ErrorCode.E_FILE_NOT_FOUND;
+    exitCode = ExitCode.Usage;
+  }
+
+  // Suggest similar commands for unknown command errors
+  if (errorMessage.includes("unknown command")) {
+    const match = errorMessage.match(/unknown command '?(\w+)'?/);
+    if (match) {
+      const unknownCommand = match[1];
+      const suggestion = findClosestCommand(unknownCommand, availableCommands);
+      if (suggestion) {
+        console.error(`Unknown command: ${unknownCommand}`);
+        console.error(
+          formatSuggestions([
+            { command: suggestion, input: unknownCommand, distance: 0 },
+          ]),
+        );
+        console.error(`\nRun 'cortexdx --help' for available commands.`);
+        process.exit(ExitCode.Usage);
+      }
+    }
+  }
+
+  // Standard error output
+  console.error(`[${errorCode}] ${errorMessage}`);
+
+  // Show stack trace in debug mode
+  if (globalOptions.debug && stack) {
+    console.error("\nStack trace:");
+    console.error(stack);
+  }
+
+  // Show help link
+  console.error(`\nDocumentation: ${DocsUrls.Main}`);
+  console.error(`Report issues: ${DocsUrls.Issues}`);
+
+  process.exit(exitCode);
+});
+
+// Handle Ctrl-C gracefully
+process.on("SIGINT", () => {
+  console.error("\nInterrupted by user");
+  process.exit(ExitCode.Abort);
 });

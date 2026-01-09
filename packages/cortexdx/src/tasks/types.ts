@@ -7,32 +7,33 @@
  * Task status follows the MCP spec lifecycle
  */
 export type TaskStatus =
-  | 'working'         // Initial state when accepted
-  | 'input_required'  // Receiver needs requestor input
-  | 'completed'       // Success; results available
-  | 'failed'          // Execution unsuccessful
-  | 'cancelled';      // Explicitly halted by requestor
+  | "working" // Initial state when accepted
+  | "input_required" // Receiver needs requestor input
+  | "completed" // Success; results available
+  | "failed" // Execution unsuccessful
+  | "cancelled"; // Explicitly halted by requestor
 
 /**
  * Internal task record stored in database
  */
 export interface TaskRecord {
   taskId: string;
-  method: string;          // Original request method (e.g., "tools/call")
-  params: unknown;         // Original request params
+  method: string; // Original request method (e.g., "tools/call")
+  params: unknown; // Original request params
   status: TaskStatus;
-  statusMessage?: string;  // Human-readable status description
-  createdAt: string;       // ISO 8601 timestamp
-  ttl: number;             // Time-to-live in milliseconds
-  pollInterval: number;    // Suggested polling interval in milliseconds
-  result?: unknown;        // Stored result when completed
-  error?: {                // Error details if failed
+  statusMessage?: string; // Human-readable status description
+  createdAt: string; // ISO 8601 timestamp
+  ttl: number; // Time-to-live in milliseconds
+  pollInterval: number; // Suggested polling interval in milliseconds
+  result?: unknown; // Stored result when completed
+  error?: {
+    // Error details if failed
     code: number;
     message: string;
     data?: unknown;
   };
-  userId?: string;         // Associated user for access control
-  expiresAt: number;       // Unix timestamp (ms) when task expires
+  userId?: string; // Associated user for access control
+  expiresAt: number; // Unix timestamp (ms) when task expires
 }
 
 /**
@@ -53,8 +54,8 @@ export interface TaskMetadata {
 export interface CreateTaskParams {
   method: string;
   params: unknown;
-  ttl?: number;            // Default: 300000 (5 minutes)
-  pollInterval?: number;   // Default: 5000 (5 seconds)
+  ttl?: number; // Default: 300000 (5 minutes)
+  pollInterval?: number; // Default: 5000 (5 seconds)
   userId?: string;
 }
 

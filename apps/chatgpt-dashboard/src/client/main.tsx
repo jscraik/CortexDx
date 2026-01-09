@@ -1,13 +1,13 @@
-import './index.css';
+import "./index.css";
 
-import { AppsSDKUIProvider } from '@openai/apps-sdk-ui/components/AppsSDKUIProvider';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.js';
+import { AppsSDKUIProvider } from "@openai/apps-sdk-ui/components/AppsSDKUIProvider";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.js";
 
-const rootElement = document.getElementById('root');
+const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error('Root element not found');
+  throw new Error("Root element not found");
 }
 
 ReactDOM.createRoot(rootElement).render(
@@ -16,4 +16,4 @@ ReactDOM.createRoot(rootElement).render(
       <App />
     </AppsSDKUIProvider>
   </React.StrictMode>,
-)
+);

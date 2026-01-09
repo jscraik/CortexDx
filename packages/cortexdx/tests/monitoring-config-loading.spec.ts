@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fileSystem as fs } from "../src/utils/file-system.js";
 
-import { mockConsole } from "./utils/mock-console";
+import { mockConsole } from "./utils/mock-console.js";
 describe("Monitoring Config Loading", () => {
   const { getLogs } = mockConsole();
   let readFileSpy: ReturnType<typeof vi.spyOn>;

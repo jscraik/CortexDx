@@ -47,7 +47,9 @@ export function createMockLlmAdapter(): EnhancedLlmAdapter {
       };
     },
 
-    async startConversation(context: ConversationContext): Promise<ConversationId> {
+    async startConversation(
+      context: ConversationContext,
+    ): Promise<ConversationId> {
       const sessionId = `mock-session-${++sessionCounter}`;
       sessions.set(sessionId, context);
       return sessionId;

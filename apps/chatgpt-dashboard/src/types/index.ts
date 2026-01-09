@@ -1,6 +1,6 @@
 /**
  * CortexDx ChatGPT Control Panel Types
- * 
+ *
  * Types for the dashboard API and UI components.
  * Follows MCP v2025-03-26 specification.
  */
@@ -9,7 +9,7 @@
  * Health check response
  */
 export interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   timestamp: string;
   uptime: number;
   uptimeFormatted?: string;
@@ -21,7 +21,7 @@ export interface HealthStatus {
 
 export interface ComponentHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   message?: string;
   lastCheck: string;
 }
@@ -32,7 +32,7 @@ export interface ComponentHealth {
 export interface LogEntry {
   id: string;
   timestamp: string;
-  level: 'debug' | 'info' | 'warn' | 'error';
+  level: "debug" | "info" | "warn" | "error";
   component: string;
   message: string;
   metadata?: Record<string, unknown>;
@@ -49,7 +49,7 @@ export interface TraceSpan {
   startTime: string;
   endTime?: string;
   duration?: number;
-  status: 'ok' | 'error' | 'unset';
+  status: "ok" | "error" | "unset";
   attributes?: Record<string, unknown>;
 }
 
@@ -78,8 +78,14 @@ export interface MetricsSnapshot {
 export interface AgentRun {
   id: string;
   workflow: string;
-  status: 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
-  phase: 'R' | 'G' | 'F' | 'REVIEW';
+  status:
+    | "pending"
+    | "running"
+    | "paused"
+    | "completed"
+    | "failed"
+    | "cancelled";
+  phase: "R" | "G" | "F" | "REVIEW";
   startedAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -91,7 +97,7 @@ export interface AgentRun {
  * Control action request
  */
 export interface ControlAction {
-  action: 'pause' | 'resume' | 'cancel' | 'retry' | 'drain';
+  action: "pause" | "resume" | "cancel" | "retry" | "drain";
   targetId?: string;
   params?: Record<string, unknown>;
 }
@@ -114,7 +120,7 @@ export interface DashboardConfig {
   refreshInterval: number;
   maxLogEntries: number;
   maxTraceSpans: number;
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
 }
 
 /**
@@ -137,7 +143,7 @@ export interface SessionInfo {
   protocolVersion: string;
   createdAt: string;
   lastActivity: string;
-  transportType: 'httpStreamable' | 'websocket';
+  transportType: "httpStreamable" | "websocket";
 }
 
 /**
@@ -159,12 +165,17 @@ export interface DashboardAPI {
 /**
  * Tab identifiers for dashboard navigation
  */
-export type DashboardTab = 'health' | 'logs' | 'traces' | 'metrics' | 'controls';
+export type DashboardTab =
+  | "health"
+  | "logs"
+  | "traces"
+  | "metrics"
+  | "controls";
 
 /**
  * Accessibility announcement for screen readers
  */
 export interface A11yAnnouncement {
   message: string;
-  priority: 'polite' | 'assertive';
+  priority: "polite" | "assertive";
 }

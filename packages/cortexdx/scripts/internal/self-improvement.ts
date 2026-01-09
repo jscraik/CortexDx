@@ -53,8 +53,10 @@ function initializeCliState(): CliOptions {
     outPath: undefined,
     projectType: "mcp-client",
     language: "typescript",
-    requireAcademicInsights: process.env.CORTEXDX_REQUIRE_ACADEMIC === "0" ? false : true,
-    memoryCheckEnabled: process.env.CORTEXDX_DISABLE_MEMORY_CHECK === "1" ? false : true,
+    requireAcademicInsights:
+      process.env.CORTEXDX_REQUIRE_ACADEMIC === "0" ? false : true,
+    memoryCheckEnabled:
+      process.env.CORTEXDX_DISABLE_MEMORY_CHECK === "1" ? false : true,
     memoryCheckPath: process.env.CORTEXDX_MEMORY_PATH ?? DEFAULT_MEMORY_PATH,
     memoryThresholdMb: threshold,
   };
@@ -105,7 +107,10 @@ function applyArg(args: string[], index: number, state: CliOptions): number {
       });
     case "--memory-threshold":
       return consumeValue(args, index, (value) => {
-        state.memoryThresholdMb = normalizeThreshold(value, state.memoryThresholdMb);
+        state.memoryThresholdMb = normalizeThreshold(
+          value,
+          state.memoryThresholdMb,
+        );
       });
     default:
       return index;
@@ -125,7 +130,10 @@ function consumeValue(
   return index;
 }
 
-function normalizeThreshold(value: string | undefined, fallback: number): number {
+function normalizeThreshold(
+  value: string | undefined,
+  fallback: number,
+): number {
   const parsed = Number.parseInt(value ?? "", 10);
   if (Number.isNaN(parsed) || parsed <= 0) {
     return fallback;

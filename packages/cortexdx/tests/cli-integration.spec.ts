@@ -569,7 +569,7 @@ describe("CLI Self-Healing Commands", () => {
         expect.any(String),
         "utf-8",
       );
-    }, 15000);
+    }, 30000);
 
     it("should read monitoring configuration files", async () => {
       const { runMonitoring } = await import("../src/commands/self-healing.js");

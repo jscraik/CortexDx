@@ -1,6 +1,9 @@
 import type { EnhancedLlmAdapter, LlmAdapter } from "@brainwav/cortexdx-core";
 import { createOllamaAdapter } from "../../../ml/src/adapters/ollama.js";
-import { getCloudOllamaConfig, getLlmPrioritySource } from "../../../ml/src/ml/ollama-env.js";
+import {
+  getCloudOllamaConfig,
+  getLlmPrioritySource,
+} from "../../../ml/src/ml/ollama-env.js";
 
 type RouterBackend = "ollama-local" | "ollama-cloud" | "none";
 
@@ -32,15 +35,21 @@ async function pickRouterBackend(): Promise<{
   const priorities = priorityList();
   for (const backend of priorities) {
     if (
-      (backend === "ollama" || backend === "local" || backend === "ollama-local") &&
+      (backend === "ollama" ||
+        backend === "local" ||
+        backend === "ollama-local") &&
       localLlmEnabled()
     ) {
-      const localBase = process.env.CORTEXDX_OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
+      const localBase =
+        process.env.CORTEXDX_OLLAMA_BASE_URL ?? "http://127.0.0.1:11434";
       if (hasOllama() && (await isOllamaReachable(localBase))) {
         return { id: "ollama-local", localBase };
       }
     }
-    if ((backend === "cloud" || backend === "ollama-cloud") && cloudLlmEnabled()) {
+    if (
+      (backend === "cloud" || backend === "ollama-cloud") &&
+      cloudLlmEnabled()
+    ) {
       const cloudConfig = getCloudOllamaConfig();
       if (!cloudConfig) {
         continue;
