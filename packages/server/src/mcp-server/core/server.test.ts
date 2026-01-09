@@ -32,7 +32,7 @@ vi.mock('fastmcp', () => {
     public start = vi.fn();
     public stop = vi.fn();
     public on = vi.fn();
-    public server?: { handleRequest?: () => unknown };
+    public server?: { handleRequest?: (req: any) => Promise<JsonRpcResponse> };
 
     addTool(tool: CapturedTool) {
       this.tools.push(tool);
