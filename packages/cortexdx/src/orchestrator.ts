@@ -152,10 +152,74 @@ async function runAsyncDiagnose(ctx: DiagnoseContext): Promise<number> {
   })) as { content?: Array<{ type: string; text?: string }> };
 
   const resultText = extractAsyncText(asyncResult);
-  if (!resultText) return 1;
+  if (!resultText) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task result parsing failed",
+      description: "Failed to extract diagnostic text from async task result.",
+      evidence: [
+        { type: "log", ref: "No resultText extracted from asyncResult" },
+        { type: "raw", ref: JSON.stringify(asyncResult) }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "extractAsyncText returned undefined",
+        asyncResult
+      }),
+    });
+    return 1;
+  }
 
   const findings = parseFindingsFromText(resultText);
-  if (!findings) return 1;
+  if (!findings) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-findings-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task findings parsing failed",
+      description: "Failed to parse findings from extracted async task result text.",
+      evidence: [
+        { type: "log", ref: "No findings parsed from resultText" },
+        { type: "raw", ref: resultText }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "parseFindingsFromText returned undefined",
+        resultText
+      }),
+    });
+    return 1;
+  }
   const stamp = buildStamp(ctx, true);
   writeArtifacts(ctx.outDir, stamp, findings);
   await storeConsolidatedReport(ctx.opts.reportOut, {
