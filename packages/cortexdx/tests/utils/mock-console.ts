@@ -1,32 +1,20 @@
 import { vi } from "vitest";
 
-/**
- * Mock console utilities for testing
- */
+type ConsoleMethod = "log" | "info" | "warn" | "error";
+
 export function mockConsole() {
-  const logs: string[] = [];
-  const originalConsoleLog = console.log;
+  const logs: Array<{ level: ConsoleMethod; args: unknown[] }> = [];
+  const spies = (["log", "info", "warn", "error"] as const).map((level) =>
+    vi.spyOn(console, level).mockImplementation((...args: unknown[]) => {
+      logs.push({ level, args });
+    }),
+  );
 
-  vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
-    logs.push(args.map(String).join(" "));
-  });
-
-  vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
-    logs.push(`[WARN] ${args.map(String).join(" ")}`);
-  });
-
-  vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
-    logs.push(`[ERROR] ${args.map(String).join(" ")}`);
-  });
-
-  return {
-    getLogs: () => [...logs],
-    clearLogs: () => {
-      logs.length = 0;
-    },
-    restore: () => {
-      console.log = originalConsoleLog;
-      vi.restoreAllMocks();
-    },
+  const restore = () => {
+    spies.forEach((spy) => spy.mockRestore());
   };
+
+  const getLogs = () => logs.slice();
+
+  return { getLogs, restore };
 }
