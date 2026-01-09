@@ -140,10 +140,7 @@ export interface DependencyRelationship {
 }
 
 export interface PackageManifest {
-  type:
-    | "npm"
-    | "pip"
-    | "maven";
+  type: "npm" | "pip" | "maven";
   path: string;
   content: string;
 }

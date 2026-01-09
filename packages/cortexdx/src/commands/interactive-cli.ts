@@ -4,22 +4,25 @@
  * Requirements: 4.1, 9.1, 7.1
  */
 
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import * as readline from "node:readline";
 import {
   DeepContextClient,
   resolveDeepContextApiKey,
-} from "../deepcontext/client";
-import { createCliLogger } from "../logging/logger";
+} from "../deepcontext/client.js";
+import { createCliLogger } from "../logging/logger.js";
+import { LlmOrchestrator } from "../ml/orchestrator.js";
 import {
   runAcademicResearch,
   selectConfiguredProviders,
-} from "../research/academic-researcher";
+} from "../research/academic-researcher.js";
+import { generatePluginTemplate } from "../sdk/plugin-templates.js";
 import {
   createProgressIndicator,
   formatOutput,
   parseCSV,
-} from "./cli-utils";
+} from "./cli-utils.js";
 
 interface InteractiveModeOptions {
   expertise: string;
@@ -84,6 +87,7 @@ interface TutorialOptions {
 }
 
 const logger = createCliLogger("interactive-cli");
+const orchestrator = new LlmOrchestrator();
 
 /**
  * Run interactive mode with conversational assistance
@@ -108,6 +112,8 @@ export const runInteractiveMode = async (
 
   rl.prompt();
 
+  let sessionId: string | undefined;
+
   return new Promise((resolve) => {
     rl.on("line", async (line) => {
       const input = line.trim();
@@ -131,7 +137,7 @@ export const runInteractiveMode = async (
       }
 
       // Process conversational input
-      await processConversationalInput(input, opts);
+      sessionId = await processConversationalInput(input, opts, sessionId);
       rl.prompt();
     });
 
@@ -172,16 +178,46 @@ You can also ask questions in natural language, such as:
 const processConversationalInput = async (
   input: string,
   opts: InteractiveModeOptions,
-): Promise<void> => {
+  currentSessionId?: string,
+): Promise<string | undefined> => {
   const progress = createProgressIndicator(
     "Processing your request",
     opts.color,
   );
   progress.start();
 
+  let sessionId = currentSessionId;
+
   try {
-    // TODO: Integrate with LLM orchestrator for conversational processing
-    // For now, provide basic pattern matching
+    // Try to use LLM first
+    try {
+      if (!sessionId) {
+        // Create a dummy context for the session
+        const dummyContext = {
+          endpoint: "cli-interactive-mode",
+          logger: (msg: string) => logger.debug(msg),
+          evidence: () => {},
+          deterministic: true,
+          headers: {} as Record<string, string>,
+        };
+        sessionId = await orchestrator.startDiagnosticSession(
+          dummyContext,
+          "development",
+        );
+      }
+
+      const response = await orchestrator.continueConversation(
+        sessionId,
+        input,
+      );
+      progress.stop();
+      logger.info(formatOutput(`\n${response}`, "info", opts.color));
+      return sessionId;
+    } catch (_llmError) {
+      // Fallback to pattern matching if LLM fails (e.g. no provider configured)
+    }
+
+    // Fallback: provide basic pattern matching
     if (
       input.toLowerCase().includes("create") &&
       input.toLowerCase().includes("server")
@@ -232,6 +268,7 @@ const processConversationalInput = async (
         ),
       );
     }
+    return sessionId;
   } catch (error) {
     progress.stop();
     logger.error(
@@ -241,6 +278,7 @@ const processConversationalInput = async (
         opts.color,
       ),
     );
+    return sessionId;
   }
 };
 
@@ -266,24 +304,46 @@ export const runGenerateTemplate = async (
     const features = opts.features ? parseCSV(opts.features) : ["tools"];
     const transports = parseCSV(opts.transport);
 
-    // Simulate template generation with progress updates
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Create output directory
+    const outputDir = join(opts.out, name);
+    await mkdir(outputDir, { recursive: true });
     progress.update("Creating project structure");
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Generate template content
+    const template = generatePluginTemplate({
+      metadata: {
+        id: name,
+        title: name,
+        description: "Generated MCP server",
+        version: "1.0.0",
+        author: "Unknown", // Could ask for this
+        category: "diagnostic", // Default
+        supportedLanguages: [opts.lang],
+      },
+      includeTests: opts.tests,
+      includeDocumentation: opts.docs,
+      language: opts.lang === "typescript" ? "typescript" : "javascript",
+    });
+
     progress.update("Generating server code");
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    progress.update("Adding tool definitions");
+    // Write plugin file
+    const pluginPath = join(outputDir, template.pluginFile.path);
+    await mkdir(join(outputDir, "src/plugins"), { recursive: true });
+    await writeFile(pluginPath, template.pluginFile.content);
 
-    if (opts.tests) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+    if (template.testFile && opts.tests) {
       progress.update("Generating tests");
+      const testPath = join(outputDir, template.testFile.path);
+      await mkdir(join(outputDir, "tests"), { recursive: true });
+      await writeFile(testPath, template.testFile.content);
     }
 
-    if (opts.docs) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+    if (template.documentationFile && opts.docs) {
       progress.update("Creating documentation");
+      const docPath = join(outputDir, template.documentationFile.path);
+      await mkdir(join(outputDir, "docs"), { recursive: true });
+      await writeFile(docPath, template.documentationFile.content);
     }
 
     progress.stop();
@@ -299,16 +359,7 @@ export const runGenerateTemplate = async (
     logger.info(
       formatOutput(`  Transports: ${transports.join(", ")}`, "info", true),
     );
-    logger.info(formatOutput(`  Output: ${opts.out}/${name}`, "info", true));
-
-    // TODO: Implement actual template generation logic
-    logger.info(
-      formatOutput(
-        "\nNote: Template generation is not yet fully implemented. This is a preview.",
-        "warning",
-        true,
-      ),
-    );
+    logger.info(formatOutput(`  Output: ${outputDir}`, "info", true));
 
     return 0;
   } catch (error) {
@@ -850,11 +901,11 @@ async function gatherTutorialResearch(
       : undefined;
     const { ready, missing } = selectConfiguredProviders(requested);
     if (missing.length) {
-        logger.warn(
-          `[Tutorial] Skipping providers with missing env vars: ${missing
-            .map(({ id, vars }) => `${id}:${vars.join("/")}`)
-            .join(", ")}`,
-        );
+      logger.warn(
+        `[Tutorial] Skipping providers with missing env vars: ${missing
+          .map(({ id, vars }) => `${id}:${vars.join("/")}`)
+          .join(", ")}`,
+      );
     }
     if (ready.length === 0) {
       logger.warn(

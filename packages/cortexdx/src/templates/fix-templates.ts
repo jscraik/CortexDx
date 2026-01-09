@@ -1,7 +1,7 @@
 /**
  * Fix templates for common MCP Inspector findings
  * Each template provides structured fix procedures with checklists and code patterns
- */ import type { Finding } from "../types";
+ */ import type { Finding } from "../types.js";
 
 export interface FixTemplate {
   id: string;

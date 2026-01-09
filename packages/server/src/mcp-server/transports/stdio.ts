@@ -3,16 +3,16 @@
  * Implements MCP over standard input/output
  */
 
-import * as readline from 'node:readline';
-import { createLogger } from '../../logging/logger';
-import { DEFAULT_PROTOCOL_VERSION } from '../core/protocol';
-import { formatJsonRpcError, McpError, MCP_ERRORS } from '../core/errors';
-import type { Transport, RequestHandler, TransportEvents } from './types';
+import * as readline from "node:readline";
+import { createLogger } from "../../logging/logger.js";
+import { DEFAULT_PROTOCOL_VERSION } from "../core/protocol.js";
+import { formatJsonRpcError, McpError, MCP_ERRORS } from "../core/errors.js";
+import type { Transport, RequestHandler, TransportEvents } from "./types.js";
 
-const logger = createLogger({ component: 'stdio-transport' });
+const logger = createLogger({ component: "stdio-transport" });
 
 export class StdioTransport implements Transport {
-  readonly type = 'stdio' as const;
+  readonly type = "stdio" as const;
 
   private rl: readline.Interface | null = null;
   private protocolVersion = DEFAULT_PROTOCOL_VERSION;
@@ -26,7 +26,7 @@ export class StdioTransport implements Transport {
       terminal: false,
     });
 
-    this.rl.on('line', async (line) => {
+    this.rl.on("line", async (line) => {
       if (!line.trim()) return;
 
       try {
@@ -36,7 +36,10 @@ export class StdioTransport implements Transport {
         if (Array.isArray(request)) {
           const errorResponse = formatJsonRpcError(
             null,
-            new McpError(MCP_ERRORS.PROTOCOL_VERSION_MISMATCH, 'JSON-RPC batching is not supported')
+            new McpError(
+              MCP_ERRORS.PROTOCOL_VERSION_MISMATCH,
+              "JSON-RPC batching is not supported",
+            ),
           );
           console.log(JSON.stringify(errorResponse));
           return;
@@ -45,26 +48,26 @@ export class StdioTransport implements Transport {
         const response = await handler(request);
         console.log(JSON.stringify(response));
       } catch (error) {
-        logger.error({ error, line }, 'STDIO request error');
+        logger.error({ error, line }, "STDIO request error");
         const errorResponse = formatJsonRpcError(
           null,
-          error instanceof Error ? error : new Error(String(error))
+          error instanceof Error ? error : new Error(String(error)),
         );
         console.log(JSON.stringify(errorResponse));
       }
     });
 
-    this.rl.on('close', () => {
+    this.rl.on("close", () => {
       this.running = false;
-      logger.info('STDIO transport closed');
+      logger.info("STDIO transport closed");
     });
 
-    this.rl.on('error', (error) => {
+    this.rl.on("error", (error) => {
       this.events.onError?.(error);
     });
 
     this.running = true;
-    logger.info('STDIO transport started');
+    logger.info("STDIO transport started");
   }
 
   async stop(): Promise<void> {
@@ -73,7 +76,7 @@ export class StdioTransport implements Transport {
       this.rl = null;
     }
     this.running = false;
-    logger.info('STDIO transport stopped');
+    logger.info("STDIO transport stopped");
   }
 
   setProtocolVersion(version: string): void {

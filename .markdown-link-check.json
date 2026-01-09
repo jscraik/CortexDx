@@ -1,45 +1,32 @@
 {
-    "ignorePatterns": [
-        {
-            "pattern": "^http://localhost"
-        },
-        {
-            "pattern": "^https://localhost"
-        },
-        {
-            "pattern": "^http://127.0.0.1"
-        },
-        {
-            "pattern": "^https://127.0.0.1"
-        },
-        {
-            "pattern": "^https://example.invalid"
-        }
-    ],
-    "httpHeaders": [
-        {
-            "urls": [
-                "https://github.com"
-            ],
-            "headers": {
-                "User-Agent": "Mozilla/5.0 (compatible; markdown-link-check)"
-            }
-        }
-    ],
-    "timeout": "20s",
-    "retryOn429": true,
-    "retryCount": 3,
-    "fallbackRetryDelay": "30s",
-    "aliveStatusCodes": [
-        200,
-        206,
-        301,
-        302,
-        303,
-        307,
-        308,
-        403,
-        405,
-        999
-    ]
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^https://localhost"
+    },
+    {
+      "pattern": "^http://127.0.0.1"
+    },
+    {
+      "pattern": "^https://127.0.0.1"
+    },
+    {
+      "pattern": "^https://example.invalid"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": ["https://github.com"],
+      "headers": {
+        "User-Agent": "Mozilla/5.0 (compatible; markdown-link-check)"
+      }
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [200, 206, 301, 302, 303, 307, 308, 403, 405, 999]
 }

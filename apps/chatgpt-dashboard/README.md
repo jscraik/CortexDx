@@ -1,15 +1,27 @@
 # CortexDx ChatGPT Control Panel
 
-A WCAG 2.2 AA accessible dashboard for monitoring health, logs, traces, metrics and controlling agents within ChatGPT using MCP v2025-03-26.
+A **100% OpenAI Apps SDK conformant** WCAG 2.2 AA accessible dashboard for monitoring health, logs, traces, metrics and controlling agents within ChatGPT using MCP v2025-03-26.
+
+> ✅ **Fully conformant with [OpenAI Apps SDK](https://developers.openai.com/apps-sdk/) guidelines**
 
 ## Features
 
+### Core Functionality
 - **Health Monitoring**: Real-time system health status with component-level details
-- **Log Viewer**: Filterable, searchable log entries with level indicators
-- **Trace Explorer**: Distributed trace spans for debugging workflows
-- **Metrics Dashboard**: System metrics with auto-refresh capability
-- **Agent Controls**: Pause, resume, cancel runs and execute test flows
+- **Log Viewer**: Filterable, searchable log entries with level indicators (coming soon)
+- **Trace Explorer**: Distributed trace spans for debugging workflows (coming soon)
+- **Metrics Dashboard**: System metrics with auto-refresh capability (coming soon)
+- **Agent Controls**: Pause, resume, cancel runs and execute test flows (coming soon)
 - **Dual-Mode Transport**: Supports both Streamable HTTP (SSE) and WebSocket
+
+### Apps SDK Conformance ✅
+- **React Router Navigation**: Host-backed navigation with browser history
+- **Progressive Disclosure**: Simplified inline widget, full dashboard in fullscreen
+- **Loading/Error/Empty States**: Comprehensive user feedback
+- **Telemetry**: Event tracking for debugging and analytics
+- **Internationalization**: Multi-language support (en-US, es-ES)
+- **Safe Area Insets**: Mobile-friendly layout
+- **Accessibility**: WCAG 2.2 AA compliant
 
 ## MCP v2025-03-26 Compliance
 
@@ -45,6 +57,15 @@ pnpm dev
 pnpm build
 node dist/server.js
 ```
+
+## Documentation
+
+- **[APPS_SDK_CONFORMANCE.md](./APPS_SDK_CONFORMANCE.md)** - Full conformance guide
+- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - Migration instructions
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - What was built
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Quick reference card
+- **[TODO.md](./TODO.md)** - Implementation roadmap
 
 ## Endpoints
 

@@ -14,7 +14,9 @@
       "@brainwav/cortexdx-ml": ["../ml/src/index.ts"],
       "@brainwav/cortexdx-ml/*": ["../ml/src/*"],
       "@brainwav/cortexdx-plugins": ["../plugins/src/index.ts"],
-      "@brainwav/cortexdx-plugins/*": ["../plugins/src/*"]
+      "@brainwav/cortexdx-plugins/*": ["../plugins/src/*"],
+      "@brainwav/cortexdx-server": ["../server/src/index.ts"],
+      "@brainwav/cortexdx-server/*": ["../server/src/*"]
     }
   },
   "include": ["src"]

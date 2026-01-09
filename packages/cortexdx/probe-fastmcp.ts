@@ -2,7 +2,10 @@ import { FastMCP } from "fastmcp";
 
 const mcp = new FastMCP({ name: "test", version: "1.0" });
 console.log("FastMCP keys:", Object.keys(mcp));
-console.log("FastMCP prototype keys:", Object.getOwnPropertyNames(Object.getPrototypeOf(mcp)));
+console.log(
+  "FastMCP prototype keys:",
+  Object.getOwnPropertyNames(Object.getPrototypeOf(mcp)),
+);
 
 // Check if we can access the server
 // @ts-ignore

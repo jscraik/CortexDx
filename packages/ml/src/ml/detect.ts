@@ -42,7 +42,11 @@ export async function isOllamaReachable(
     if (apiKey) {
       headers.Authorization = `Bearer ${apiKey}`;
     }
-    const res = await fetch(target, { method: "GET", signal: controller.signal, headers });
+    const res = await fetch(target, {
+      method: "GET",
+      signal: controller.signal,
+      headers,
+    });
     return res.ok;
   } catch {
     return Boolean(apiKey);

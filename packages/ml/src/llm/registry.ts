@@ -59,17 +59,23 @@ function loadExternalPluginsFromEnv(logger: SecureLogger): LLMProviderPlugin[] {
   for (const specifier of moduleList) {
     try {
       const loaded = requireFromRegistry(specifier);
-      const pluginExport = (loaded as { default?: unknown; plugin?: unknown })?.default ??
-        (loaded as { plugin?: unknown })?.plugin ?? loaded;
+      const pluginExport =
+        (loaded as { default?: unknown; plugin?: unknown })?.default ??
+        (loaded as { plugin?: unknown })?.plugin ??
+        loaded;
       if (isPluginCandidate(pluginExport)) {
         plugins.push(pluginExport);
         logger.info("LLMPluginRegistry", "Registered external plugin", {
           id: pluginExport.metadata.id,
         });
       } else {
-        logger.warn("LLMPluginRegistry", "External plugin module did not export a valid plugin", {
-          specifier,
-        });
+        logger.warn(
+          "LLMPluginRegistry",
+          "External plugin module did not export a valid plugin",
+          {
+            specifier,
+          },
+        );
       }
     } catch (error) {
       logger.error(
@@ -93,8 +99,13 @@ export class LLMPluginRegistry {
 
   constructor(options: LLMRegistryOptions = {}) {
     this.env = options.env ?? process.env;
-    const envDefaultModel = typeof this.env.DEFAULT_MODEL === "string" ? this.env.DEFAULT_MODEL : undefined;
-    this.defaults = options.defaults ?? (envDefaultModel ? { model: envDefaultModel } : undefined);
+    const envDefaultModel =
+      typeof this.env.DEFAULT_MODEL === "string"
+        ? this.env.DEFAULT_MODEL
+        : undefined;
+    this.defaults =
+      options.defaults ??
+      (envDefaultModel ? { model: envDefaultModel } : undefined);
     this.logger = options.logger ?? secureLogger;
     const initialPlugins = options.plugins ?? BUILTIN_PLUGINS;
     for (const plugin of initialPlugins) {
@@ -133,7 +144,9 @@ export class LLMPluginRegistry {
     this.initialized.add(plugin.metadata.id);
   }
 
-  getAvailable(context: LLMPluginContext = this.createContext()): LLMProviderPlugin[] {
+  getAvailable(
+    context: LLMPluginContext = this.createContext(),
+  ): LLMProviderPlugin[] {
     const available: LLMProviderPlugin[] = [];
     for (const plugin of this.plugins.values()) {
       try {
@@ -141,9 +154,13 @@ export class LLMPluginRegistry {
           available.push(plugin);
         }
       } catch (error) {
-        this.logger.warn("LLMPluginRegistry", `Plugin ${plugin.metadata.id} support check failed`, {
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+        this.logger.warn(
+          "LLMPluginRegistry",
+          `Plugin ${plugin.metadata.id} support check failed`,
+          {
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+        );
       }
     }
     return available;
@@ -152,7 +169,9 @@ export class LLMPluginRegistry {
   async initializeAll(): Promise<void> {
     const context = this.createContext();
     const available = this.getAvailable(context);
-    await Promise.all(available.map((plugin) => this.ensureInitialized(plugin, context)));
+    await Promise.all(
+      available.map((plugin) => this.ensureInitialized(plugin, context)),
+    );
   }
 
   async ensurePlugin(
@@ -168,9 +187,13 @@ export class LLMPluginRegistry {
         return null;
       }
     } catch (error) {
-      this.logger.warn("LLMPluginRegistry", `Plugin ${plugin.metadata.id} support check failed`, {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      this.logger.warn(
+        "LLMPluginRegistry",
+        `Plugin ${plugin.metadata.id} support check failed`,
+        {
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      );
       return null;
     }
     await this.ensureInitialized(plugin, context);
@@ -188,17 +211,25 @@ export class LLMPluginRegistry {
         try {
           supports = plugin.supports(context);
         } catch (error) {
-          this.logger.warn("LLMPluginRegistry", "Error in plugin.supports; falling back", {
-            providerId,
-            error,
-          });
+          this.logger.warn(
+            "LLMPluginRegistry",
+            "Error in plugin.supports; falling back",
+            {
+              providerId,
+              error,
+            },
+          );
         }
       }
       if (plugin && supports) {
         await this.ensureInitialized(plugin, context);
         return { plugin, context };
       }
-      this.logger.warn("LLMPluginRegistry", "Requested plugin unavailable; falling back", { providerId });
+      this.logger.warn(
+        "LLMPluginRegistry",
+        "Requested plugin unavailable; falling back",
+        { providerId },
+      );
     }
     const available = this.getAvailable(context);
     if (available.length === 0) {
@@ -207,7 +238,6 @@ export class LLMPluginRegistry {
     const fallback = available[0]!; // Safe: we just checked length > 0
     await this.ensureInitialized(fallback, context);
     return { plugin: fallback, context };
-
   }
 
   async generate(
@@ -217,10 +247,17 @@ export class LLMPluginRegistry {
     const resolved = await this.resolve(providerId);
     if (!resolved) {
       const availableMetadata = this.getMetadata();
-      this.logger.error("LLMPluginRegistry", "No available LLM providers", undefined, {
-        availablePlugins: availableMetadata,
-      });
-      throw new Error("No available LLM provider plugins match the current configuration.");
+      this.logger.error(
+        "LLMPluginRegistry",
+        "No available LLM providers",
+        undefined,
+        {
+          availablePlugins: availableMetadata,
+        },
+      );
+      throw new Error(
+        "No available LLM provider plugins match the current configuration.",
+      );
     }
     const { plugin, context } = resolved;
     const response = await plugin.generate(request, context);
@@ -230,13 +267,17 @@ export class LLMPluginRegistry {
 
 let sharedRegistry: LLMPluginRegistry | null = null;
 
-export function getLLMRegistry(options: LLMRegistryOptions = {}): LLMPluginRegistry {
+export function getLLMRegistry(
+  options: LLMRegistryOptions = {},
+): LLMPluginRegistry {
   if (options.plugins || options.env || options.logger || options.defaults) {
     return new LLMPluginRegistry(options);
   }
   if (!sharedRegistry) {
     const externalPlugins = loadExternalPluginsFromEnv(secureLogger);
-    sharedRegistry = new LLMPluginRegistry({ plugins: [...BUILTIN_PLUGINS, ...externalPlugins] });
+    sharedRegistry = new LLMPluginRegistry({
+      plugins: [...BUILTIN_PLUGINS, ...externalPlugins],
+    });
   }
   return sharedRegistry;
 }

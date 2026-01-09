@@ -37,214 +37,216 @@ export interface ChecklistResult {
  * Validation checklists for different types of fixes
  */
 export const Checklists: Record<string, Checklist> = {
-  'security.headers': {
-    id: 'security.headers',
-    name: 'Security Headers Implementation',
-    description: 'Validates security headers and rate limiting implementation',
+  "security.headers": {
+    id: "security.headers",
+    name: "Security Headers Implementation",
+    description: "Validates security headers and rate limiting implementation",
     items: [
       {
-        id: 'security.middleware.exists',
-        description: 'Security middleware is imported and configured',
+        id: "security.middleware.exists",
+        description: "Security middleware is imported and configured",
         required: true,
       },
       {
-        id: 'rate.limiting.configured',
-        description: 'Rate limiting is configured with appropriate thresholds',
+        id: "rate.limiting.configured",
+        description: "Rate limiting is configured with appropriate thresholds",
         required: true,
       },
       {
-        id: 'security.headers.set',
-        description: 'Required security headers are set (CSP, HSTS, X-Frame-Options)',
+        id: "security.headers.set",
+        description:
+          "Required security headers are set (CSP, HSTS, X-Frame-Options)",
         required: true,
       },
       {
-        id: 'cors.compatible',
-        description: 'CORS configuration remains compatible with security headers',
+        id: "cors.compatible",
+        description:
+          "CORS configuration remains compatible with security headers",
         required: false,
       },
       {
-        id: 'functionality.preserved',
-        description: 'All existing MCP functionality remains working',
+        id: "functionality.preserved",
+        description: "All existing MCP functionality remains working",
         required: true,
       },
       {
-        id: 'tests.passing',
-        description: 'Security plugin tests pass',
-        required: true,
-      },
-    ],
-  },
-
-  'sse.streaming': {
-    id: 'sse.streaming',
-    name: 'SSE Streaming Fix',
-    description: 'Validates SSE streaming implementation and cleanup',
-    items: [
-      {
-        id: 'sse.adapter.updated',
-        description: 'SSE adapter includes proper cleanup mechanisms',
-        required: true,
-      },
-      {
-        id: 'heartbeat.implemented',
-        description: 'Heartbeat mechanism is implemented for connection health',
-        required: true,
-      },
-      {
-        id: 'error.handling',
-        description: 'Comprehensive error handling is implemented',
-        required: true,
-      },
-      {
-        id: 'memory.leaks.prevented',
-        description: 'Memory leak prevention is verified',
-        required: true,
-      },
-      {
-        id: 'conversation.storage.works',
-        description: 'Conversation storage works correctly during streaming',
-        required: true,
-      },
-      {
-        id: 'connection.cleanup',
-        description: 'Connections are properly cleaned up on disconnect',
+        id: "tests.passing",
+        description: "Security plugin tests pass",
         required: true,
       },
     ],
   },
 
-  'jsonrpc.batch': {
-    id: 'jsonrpc.batch',
-    name: 'JSON-RPC Batch Processing',
-    description: 'Validates JSON-RPC batch request handling',
+  "sse.streaming": {
+    id: "sse.streaming",
+    name: "SSE Streaming Fix",
+    description: "Validates SSE streaming implementation and cleanup",
     items: [
       {
-        id: 'batch.parsing.correct',
-        description: 'Batch requests are parsed correctly',
+        id: "sse.adapter.updated",
+        description: "SSE adapter includes proper cleanup mechanisms",
         required: true,
       },
       {
-        id: 'id.correlation.maintained',
-        description: 'Request/response ID correlation is maintained',
+        id: "heartbeat.implemented",
+        description: "Heartbeat mechanism is implemented for connection health",
         required: true,
       },
       {
-        id: 'mixed.ids.handled',
-        description: 'Mixed string and number IDs are handled correctly',
+        id: "error.handling",
+        description: "Comprehensive error handling is implemented",
         required: true,
       },
       {
-        id: 'response.order.preserved',
-        description: 'Response order matches request order',
+        id: "memory.leaks.prevented",
+        description: "Memory leak prevention is verified",
         required: true,
       },
       {
-        id: 'error.handling.robust',
-        description: 'Error handling for malformed requests is robust',
+        id: "conversation.storage.works",
+        description: "Conversation storage works correctly during streaming",
         required: true,
       },
       {
-        id: 'spec.compliance',
-        description: 'Implementation complies with JSON-RPC 2.0 specification',
+        id: "connection.cleanup",
+        description: "Connections are properly cleaned up on disconnect",
         required: true,
       },
     ],
   },
 
-  'cors.configuration': {
-    id: 'cors.configuration',
-    name: 'CORS Configuration',
-    description: 'Validates CORS configuration for development and production',
+  "jsonrpc.batch": {
+    id: "jsonrpc.batch",
+    name: "JSON-RPC Batch Processing",
+    description: "Validates JSON-RPC batch request handling",
     items: [
       {
-        id: 'environment.config',
-        description: 'Environment-specific CORS configuration is implemented',
+        id: "batch.parsing.correct",
+        description: "Batch requests are parsed correctly",
         required: true,
       },
       {
-        id: 'development.allowed',
-        description: 'Development origins (localhost) are allowed',
+        id: "id.correlation.maintained",
+        description: "Request/response ID correlation is maintained",
         required: true,
       },
       {
-        id: 'production.restricted',
-        description: 'Production origins are properly restricted',
+        id: "mixed.ids.handled",
+        description: "Mixed string and number IDs are handled correctly",
         required: true,
       },
       {
-        id: 'preflight.handled',
-        description: 'OPTIONS preflight requests are handled correctly',
+        id: "response.order.preserved",
+        description: "Response order matches request order",
         required: true,
       },
       {
-        id: 'headers.configured',
-        description: 'Allowed headers and methods are properly configured',
+        id: "error.handling.robust",
+        description: "Error handling for malformed requests is robust",
+        required: true,
+      },
+      {
+        id: "spec.compliance",
+        description: "Implementation complies with JSON-RPC 2.0 specification",
         required: true,
       },
     ],
   },
 
-  'performance.memory': {
-    id: 'performance.memory',
-    name: 'Memory Optimization',
-    description: 'Validates memory optimization implementation',
+  "cors.configuration": {
+    id: "cors.configuration",
+    name: "CORS Configuration",
+    description: "Validates CORS configuration for development and production",
     items: [
       {
-        id: 'memory.monitoring.implemented',
-        description: 'Memory monitoring is implemented',
+        id: "environment.config",
+        description: "Environment-specific CORS configuration is implemented",
         required: true,
       },
       {
-        id: 'leaks.prevented',
-        description: 'Memory leaks are prevented',
+        id: "development.allowed",
+        description: "Development origins (localhost) are allowed",
         required: true,
       },
       {
-        id: 'cleanup.utilities',
-        description: 'Resource cleanup utilities are implemented',
+        id: "production.restricted",
+        description: "Production origins are properly restricted",
         required: true,
       },
       {
-        id: 'thresholds.configured',
-        description: 'Memory thresholds and alerts are configured',
+        id: "preflight.handled",
+        description: "OPTIONS preflight requests are handled correctly",
+        required: true,
+      },
+      {
+        id: "headers.configured",
+        description: "Allowed headers and methods are properly configured",
+        required: true,
+      },
+    ],
+  },
+
+  "performance.memory": {
+    id: "performance.memory",
+    name: "Memory Optimization",
+    description: "Validates memory optimization implementation",
+    items: [
+      {
+        id: "memory.monitoring.implemented",
+        description: "Memory monitoring is implemented",
+        required: true,
+      },
+      {
+        id: "leaks.prevented",
+        description: "Memory leaks are prevented",
+        required: true,
+      },
+      {
+        id: "cleanup.utilities",
+        description: "Resource cleanup utilities are implemented",
+        required: true,
+      },
+      {
+        id: "thresholds.configured",
+        description: "Memory thresholds and alerts are configured",
         required: false,
       },
       {
-        id: 'profiling.available',
-        description: 'Memory profiling tools are available',
+        id: "profiling.available",
+        description: "Memory profiling tools are available",
         required: false,
       },
     ],
   },
 
-  'conversation.storage': {
-    id: 'conversation.storage',
-    name: 'Conversation Storage',
-    description: 'Validates conversation storage implementation',
+  "conversation.storage": {
+    id: "conversation.storage",
+    name: "Conversation Storage",
+    description: "Validates conversation storage implementation",
     items: [
       {
-        id: 'error.handling.robust',
-        description: 'Error handling for storage failures is robust',
+        id: "error.handling.robust",
+        description: "Error handling for storage failures is robust",
         required: true,
       },
       {
-        id: 'compression.working',
-        description: 'Conversation compression is working correctly',
+        id: "compression.working",
+        description: "Conversation compression is working correctly",
         required: false,
       },
       {
-        id: 'cleanup.scheduled',
-        description: 'Old conversation cleanup is scheduled',
+        id: "cleanup.scheduled",
+        description: "Old conversation cleanup is scheduled",
         required: true,
       },
       {
-        id: 'persistence.reliable',
-        description: 'Conversation persistence across restarts is reliable',
+        id: "persistence.reliable",
+        description: "Conversation persistence across restarts is reliable",
         required: true,
       },
       {
-        id: 'export.import.functional',
-        description: 'Export/import functionality is working',
+        id: "export.import.functional",
+        description: "Export/import functionality is working",
         required: false,
       },
     ],
@@ -256,14 +258,14 @@ export const Checklists: Record<string, Checklist> = {
  */
 export async function runChecklist(
   checklistId: string,
-  context: ChecklistContext = {}
+  context: ChecklistContext = {},
 ): Promise<ChecklistResult> {
   const checklist = Checklists[checklistId];
   if (!checklist) {
     throw new Error(`Checklist ${checklistId} not found`);
   }
 
-  const results: ChecklistResult['results'] = [];
+  const results: ChecklistResult["results"] = [];
   const warnings: string[] = [];
   let blocker: string | undefined;
 
@@ -297,7 +299,6 @@ export async function runChecklist(
       if (item.required && !passed) {
         blocker = blocker || `Required item failed: ${item.description}`;
       }
-
     } catch (error) {
       results.push({
         itemId: item.id,
@@ -306,15 +307,16 @@ export async function runChecklist(
       });
 
       if (item.required) {
-        blocker = blocker || `Validation failed for required item: ${item.description}`;
+        blocker =
+          blocker || `Validation failed for required item: ${item.description}`;
       }
     }
   }
 
-  const passedItems = results.filter(r => r.passed).length;
-  const totalRequired = checklist.items.filter(i => i.required).length;
-  const passedRequired = results.filter(r => {
-    const item = checklist.items.find(i => i.id === r.itemId);
+  const passedItems = results.filter((r) => r.passed).length;
+  const totalRequired = checklist.items.filter((i) => i.required).length;
+  const passedRequired = results.filter((r) => {
+    const item = checklist.items.find((i) => i.id === r.itemId);
     return item?.required && r.passed;
   }).length;
 
@@ -351,10 +353,10 @@ export function getAllChecklists(): Checklist[] {
 export function formatChecklistResult(result: ChecklistResult): string {
   const lines = [
     `Checklist: ${result.checklistId}`,
-    `Status: ${result.passed ? '✓ PASSED' : '✗ FAILED'}`,
-    `Can Proceed: ${result.canProceed ? '✓ YES' : '✗ NO'}`,
-    '',
-    'Results:',
+    `Status: ${result.passed ? "✓ PASSED" : "✗ FAILED"}`,
+    `Can Proceed: ${result.canProceed ? "✓ YES" : "✗ NO"}`,
+    "",
+    "Results:",
   ];
 
   for (const itemResult of result.results) {
@@ -365,15 +367,15 @@ export function formatChecklistResult(result: ChecklistResult): string {
   }
 
   if (result.blocker) {
-    lines.push('', `BLOCKER: ${result.blocker}`);
+    lines.push("", `BLOCKER: ${result.blocker}`);
   }
 
   if (result.warnings.length > 0) {
-    lines.push('', 'Warnings:');
+    lines.push("", "Warnings:");
     for (const warning of result.warnings) {
       lines.push(`  ⚠ ${warning}`);
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }

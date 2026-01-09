@@ -3,9 +3,19 @@
  * FastMCP-aligned implementation with plugin support
  */
 
-import { FastMCP } from 'fastmcp';
-import { z } from 'zod';
-import { createLogger } from '../../logging/logger';
+import { randomUUID } from "node:crypto";
+
+import { FastMCP } from "fastmcp";
+import type { z } from "zod";
+import { createLogger } from "../../logging/logger.js";
+import type {
+  PluginLogger,
+  RequestContext,
+  ServerPlugin,
+  ServerPluginHost,
+} from "../plugins/types";
+// import { McpError, createToolExecutionError } from './errors'; // Removed unused imports
+import type { JsonRpcResponse, TransportConfig } from "../transports/types";
 import {
   DEFAULT_PROTOCOL_VERSION,
   type ProtocolVersion,
@@ -27,7 +37,7 @@ import type {
 } from '../plugins/types';
 import type { IconMetadata } from './types';
 
-const logger = createLogger({ component: 'mcp-server' });
+const logger = createLogger({ component: "mcp-server" });
 
 /**
  * Authentication session returned by authenticate function
@@ -51,7 +61,10 @@ export interface FastMCPContext {
     warn: (msg: string, data?: unknown) => void;
     error: (msg: string, data?: unknown) => void;
   };
-  reportProgress?: (progress: { progress: number; total: number }) => Promise<void>;
+  reportProgress?: (progress: {
+    progress: number;
+    total: number;
+  }) => Promise<void>;
   streamContent?: (content: {
     type: string;
     text?: string;
@@ -79,6 +92,8 @@ export interface FastMCPToolConfig {
   name: string;
   description?: string;
   parameters: z.ZodType;
+  /** Output schema for structured results (JSON Schema 2020-12) */
+  outputSchema?: Record<string, unknown>;
   annotations?: ToolAnnotations;
   canAccess?: (session: unknown) => boolean;
   execute: (args: unknown, ctx: FastMCPContext) => Promise<unknown>;
@@ -100,7 +115,29 @@ export interface McpServerConfig {
   protocolVersion?: ProtocolVersion;
   transport: TransportConfig;
   capabilities?: Partial<ServerCapabilities>;
+
+  // Deterministic testing options
+  deterministic?: boolean;
+  deterministicSeed?: number;
 }
+
+type RequestIdGenerator = () => string;
+
+const createRequestIdGenerator = (config: {
+  deterministic?: boolean;
+  deterministicSeed?: number;
+}): RequestIdGenerator => {
+  if (config.deterministic) {
+    let counter = config.deterministicSeed ?? 0;
+
+    return () => {
+      counter += 1;
+      return `det-${counter}`;
+    };
+  }
+
+  return () => randomUUID();
+};
 
 /**
  * Resource definition with icon support (SEP-973)
@@ -129,7 +166,9 @@ export interface McpResourceTemplate {
    * Icon metadata for the resource template
    */
   icon?: IconMetadata;
-  load: (params: Record<string, string>) => Promise<{ text?: string; blob?: Uint8Array }>;
+  load: (
+    params: Record<string, string>,
+  ) => Promise<{ text?: string; blob?: Uint8Array }>;
 }
 
 /**
@@ -158,20 +197,26 @@ class PluginRegistry {
 
   register(plugin: ServerPlugin): void {
     if (this.plugins.has(plugin.name)) {
-      logger.warn({ plugin: plugin.name }, 'Plugin already registered, replacing');
+      logger.warn(
+        { plugin: plugin.name },
+        "Plugin already registered, replacing",
+      );
     }
     this.plugins.set(plugin.name, plugin);
-    logger.debug({ plugin: plugin.name, version: plugin.version }, 'Plugin registered');
+    logger.debug(
+      { plugin: plugin.name, version: plugin.version },
+      "Plugin registered",
+    );
   }
 
   unregister(name: string): void {
     this.plugins.delete(name);
-    logger.debug({ plugin: name }, 'Plugin unregistered');
+    logger.debug({ plugin: name }, "Plugin unregistered");
   }
 
   getAll(): ServerPlugin[] {
     return Array.from(this.plugins.values()).sort(
-      (a, b) => (a.priority ?? 100) - (b.priority ?? 100)
+      (a, b) => (a.priority ?? 100) - (b.priority ?? 100),
     );
   }
 
@@ -181,14 +226,16 @@ class PluginRegistry {
   ): Promise<T | undefined> {
     for (const plugin of this.getAll()) {
       const hook = plugin[hookName];
-      if (typeof hook === 'function') {
+      if (typeof hook === "function") {
         try {
-          const result = await (hook as Function).apply(plugin, args);
+          const result = await (
+            hook as (...args: unknown[]) => Promise<unknown>
+          ).apply(plugin, args);
           if (result !== undefined) return result as T;
         } catch (error) {
           logger.error(
             { plugin: plugin.name, hook: hookName, error },
-            'Plugin hook error'
+            "Plugin hook error",
           );
         }
       }
@@ -210,15 +257,17 @@ export class McpServer {
   private prompts: McpPrompt[] = [];
   private running = false;
   private protocolVersion: ProtocolVersion;
+  private generateRequestId: RequestIdGenerator;
 
   constructor(private config: McpServerConfig) {
     this.protocolVersion = config.protocolVersion || DEFAULT_PROTOCOL_VERSION;
+    this.generateRequestId = createRequestIdGenerator(config);
 
     // Validate version string at runtime
     const semverRegex = /^\d+\.\d+\.\d+$/;
     if (!semverRegex.test(config.version)) {
       throw new Error(
-        `Invalid MCP server version "${config.version}". Expected format: "x.y.z"`
+        `Invalid MCP server version "${config.version}". Expected format: "x.y.z"`,
       );
     }
 
@@ -242,7 +291,7 @@ export class McpServer {
         hasAuth: !!config.authenticate,
         hasInstructions: !!config.instructions,
       },
-      'MCP Server created'
+      "MCP Server created",
     );
   }
 
@@ -269,21 +318,21 @@ export class McpServer {
    * Wrap authenticate to allow plugin enhancement
    */
   private wrapAuthenticate(
-    authenticate: (req: Request) => Promise<AuthSession>
+    authenticate: (req: Request) => Promise<AuthSession>,
   ) {
     return async (req: Request) => {
       try {
         const session = await authenticate(req);
 
         // Allow plugins to enrich session
-        const ctx = this.createContext('authenticate', undefined);
-        ctx.fastMCP = { session } as any;
+        const ctx = this.createContext("authenticate", undefined);
+        ctx.fastMCP = { session } as { session: unknown };
 
-        await this.plugins.runHook('enrichContext', ctx, { session });
+        await this.plugins.runHook("enrichContext", ctx, { session });
 
         return session;
       } catch (error) {
-        logger.warn({ error }, 'Authentication failed');
+        logger.warn({ error }, "Authentication failed");
         throw error;
       }
     };
@@ -316,17 +365,20 @@ export class McpServer {
     this.toolNames.push(config.name);
 
     // Wrap execute to run plugin hooks
-    const wrappedExecute = async (args: unknown, fastMCPContext: any) => {
+    const wrappedExecute = async (
+      args: unknown,
+      fastMCPContext: Record<string, unknown>,
+    ) => {
       // Create plugin context
-      const ctx = this.createContext('tools/call', config.name);
+      const ctx = this.createContext("tools/call", config.name);
       ctx.fastMCP = fastMCPContext;
 
       // Pre-execution plugin hooks
       const preResult = await this.plugins.runHook<JsonRpcResponse>(
-        'onToolCall',
+        "onToolCall",
         ctx,
         config.name,
-        args
+        args,
       );
       if (preResult) {
         return preResult;
@@ -338,10 +390,10 @@ export class McpServer {
 
         // Post-execution plugin hooks
         const transformedResult = await this.plugins.runHook<unknown>(
-          'onToolResult',
+          "onToolResult",
           ctx,
           config.name,
-          result
+          result,
         );
         if (transformedResult !== undefined) {
           result = transformedResult;
@@ -351,9 +403,9 @@ export class McpServer {
       } catch (error) {
         // Error handling plugin hooks
         const errorResponse = await this.plugins.runHook<JsonRpcResponse>(
-          'onError',
+          "onError",
           ctx,
-          error
+          error,
         );
         if (errorResponse) {
           return errorResponse;
@@ -367,14 +419,18 @@ export class McpServer {
     // Register with FastMCP
     this.mcp.addTool({
       name: config.name,
-      description: config.description || '',
+      description: config.description || "",
       parameters: config.parameters,
+      outputSchema: config.outputSchema,
       annotations: config.annotations,
       canAccess: config.canAccess,
       execute: wrappedExecute,
     });
 
-    logger.debug({ tool: config.name }, 'Tool registered');
+    logger.debug(
+      { tool: config.name, hasOutputSchema: !!config.outputSchema },
+      "Tool registered",
+    );
     return this;
   }
 
@@ -388,19 +444,19 @@ export class McpServer {
       uri: resource.uri,
       name: resource.name || resource.uri,
       description: resource.description,
-      mimeType: resource.mimeType || 'application/json',
+      mimeType: resource.mimeType || "application/json",
       load: async () => {
-        const ctx = this.createContext('resources/read', resource.uri);
+        const ctx = this.createContext("resources/read", resource.uri);
 
         // Run pre-read hooks
-        await this.plugins.runHook('onResourceRead', ctx, resource.uri);
+        await this.plugins.runHook("onResourceRead", ctx, resource.uri);
 
         const result = await resource.load();
-        return { text: result.text || '', uri: resource.uri };
+        return { text: result.text || "", uri: resource.uri };
       },
     });
 
-    logger.debug({ resource: resource.uri }, 'Resource registered');
+    logger.debug({ resource: resource.uri }, "Resource registered");
     return this;
   }
 
@@ -408,30 +464,52 @@ export class McpServer {
    * Register a resource template
    */
   addResourceTemplate(template: McpResourceTemplate): this {
+    // Validate URI template before registration
+    const validation = validateUriTemplate(template.uriTemplate);
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid URI template '${template.uriTemplate}': ${validation.error}`,
+      );
+    }
+
+    logger.debug(
+      {
+        template: template.uriTemplate,
+        parameters: validation.parameters,
+      },
+      "Resource template validation passed",
+    );
+
     this.resourceTemplates.push(template);
 
     this.mcp.addResourceTemplate({
       uriTemplate: template.uriTemplate,
       name: template.name || template.uriTemplate,
       description: template.description,
-      mimeType: template.mimeType || 'application/json',
+      mimeType: template.mimeType || "application/json",
       arguments: [],
       load: async (args) => {
         const stringArgs: Record<string, string> = {};
         for (const [key, value] of Object.entries(args)) {
-          if (typeof value === 'string') {
+          if (typeof value === "string") {
             stringArgs[key] = value;
           } else {
-            logger.warn({ key, value }, 'Non-string argument in resource template, converting to string');
+            logger.warn(
+              { key, value },
+              "Non-string argument in resource template, converting to string",
+            );
             stringArgs[key] = String(value);
           }
         }
         const result = await template.load(stringArgs);
-        return { text: result.text || '', uri: template.uriTemplate };
+        return { text: result.text || "", uri: template.uriTemplate };
       },
     });
 
-    logger.debug({ template: template.uriTemplate }, 'Resource template registered');
+    logger.debug(
+      { template: template.uriTemplate },
+      "Resource template registered",
+    );
     return this;
   }
 
@@ -456,7 +534,7 @@ export class McpServer {
       },
     });
 
-    logger.debug({ prompt: prompt.name }, 'Prompt registered');
+    logger.debug({ prompt: prompt.name }, "Prompt registered");
     return this;
   }
 
@@ -465,7 +543,7 @@ export class McpServer {
    */
   async start(): Promise<void> {
     if (this.running) {
-      logger.warn('Server already running');
+      logger.warn("Server already running");
       return;
     }
 
@@ -474,74 +552,68 @@ export class McpServer {
     for (const plugin of this.plugins.getAll()) {
       if (plugin.onLoad) {
         await plugin.onLoad(host);
-        logger.debug({ plugin: plugin.name }, 'Plugin loaded');
+        logger.debug({ plugin: plugin.name }, "Plugin loaded");
       }
     }
 
     // Hook into FastMCP session events
-    this.mcp.on('connect', async (event: any) => {
-      const ctx = this.createContext('session/connect', undefined);
+    this.mcp.on("connect", async (event: unknown) => {
+      const ctx = this.createContext("session/connect", undefined);
       ctx.fastMCP = { session: event.session };
 
-      logger.info(
-        { sessionId: event.session?.id },
-        'Client connected'
-      );
+      logger.info({ sessionId: event.session?.id }, "Client connected");
 
       // Run plugin hooks
-      await this.plugins.runHook('onSessionConnect', ctx, event.session);
+      await this.plugins.runHook("onSessionConnect", ctx, event.session);
 
       // Listen for session-specific events
       if (event.session?.on) {
-        event.session.on('rootsChanged', async (e: any) => {
-          await this.plugins.runHook('onRootsChanged', ctx, e.roots);
+        event.session.on("rootsChanged", async (e: unknown) => {
+          await this.plugins.runHook("onRootsChanged", ctx, e.roots);
         });
       }
     });
 
-    this.mcp.on('disconnect', async (event: any) => {
-      const ctx = this.createContext('session/disconnect', undefined);
+    this.mcp.on("disconnect", async (event: unknown) => {
+      const ctx = this.createContext("session/disconnect", undefined);
       ctx.fastMCP = { session: event.session };
 
-      logger.info(
-        { sessionId: event.session?.id },
-        'Client disconnected'
-      );
+      logger.info({ sessionId: event.session?.id }, "Client disconnected");
 
-      await this.plugins.runHook('onSessionDisconnect', ctx, event.session);
+      await this.plugins.runHook("onSessionDisconnect", ctx, event.session);
     });
 
     // Start transport based on config
     const { type, httpStreamable, websocket } = this.config.transport;
 
     switch (type) {
-      case 'httpStreamable':
+      case "httpStreamable":
         if (!httpStreamable) {
-          throw new Error('httpStreamable config required');
+          throw new Error("httpStreamable config required");
         }
         await this.mcp.start({
-          transportType: 'httpStream',
+          transportType: "httpStream",
           httpStream: {
             port: httpStreamable.port,
-            host: httpStreamable.host || '127.0.0.1',
-            endpoint: httpStreamable.endpoint || '/mcp',
+            host: httpStreamable.host || "127.0.0.1",
+            endpoint: httpStreamable.endpoint || "/mcp",
             stateless: httpStreamable.stateless || false,
           },
         });
         logger.info(
           {
             port: httpStreamable.port,
-            host: httpStreamable.host || '127.0.0.1',
-            endpoint: httpStreamable.endpoint || '/mcp',
+            host: httpStreamable.host || "127.0.0.1",
+            endpoint: httpStreamable.endpoint || "/mcp",
             stateless: httpStreamable.stateless || false,
           },
-          'HTTP Streamable transport started'
+          "HTTP Streamable transport started",
         );
         break;
 
-      case 'stdio':
-        await this.mcp.start({ transportType: 'stdio' });
-        logger.info('STDIO transport started');
+      case "stdio":
+        await this.mcp.start({ transportType: "stdio" });
+        logger.info("STDIO transport started");
         break;
 
       case 'websocket': {
@@ -612,7 +684,7 @@ export class McpServer {
         resources: this.resources.length,
         prompts: this.prompts.length,
       },
-      'MCP Server started'
+      "MCP Server started",
     );
   }
 
@@ -629,7 +701,7 @@ export class McpServer {
     for (const plugin of this.plugins.getAll()) {
       if (plugin.onUnload) {
         await plugin.onUnload(host);
-        logger.debug({ plugin: plugin.name }, 'Plugin unloaded');
+        logger.debug({ plugin: plugin.name }, "Plugin unloaded");
       }
     }
 
@@ -640,7 +712,7 @@ export class McpServer {
 
     await this.mcp.stop();
     this.running = false;
-    logger.info('MCP Server stopped');
+    logger.info("MCP Server stopped");
   }
 
   /**
@@ -688,8 +760,8 @@ export class McpServer {
   private createContext(method: string, target?: string): RequestContext {
     return {
       request: {
-        jsonrpc: '2.0',
-        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        jsonrpc: "2.0",
+        id: this.generateRequestId(),
         method,
         params: target ? { name: target } : {},
       },
@@ -716,7 +788,8 @@ export class McpServer {
       name: this.config.name,
       version: this.config.version,
       getTools: () => this.toolNames.map((name) => ({ name })),
-      getResources: () => this.resources.map((r) => ({ uri: r.uri, name: r.name })),
+      getResources: () =>
+        this.resources.map((r) => ({ uri: r.uri, name: r.name })),
       logger: pluginLogger,
     };
   }

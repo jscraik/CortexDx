@@ -61,7 +61,10 @@ export class StateManager {
         session.workflowId === checkpoint.workflowId &&
         session.threadId === checkpoint.threadId
       ) {
-        this.sessions.set(id, { ...session, lastCheckpointId: checkpoint.checkpointId });
+        this.sessions.set(id, {
+          ...session,
+          lastCheckpointId: checkpoint.checkpointId,
+        });
       }
     }
   }
@@ -81,7 +84,8 @@ export class StateManager {
     const matches = [...this.checkpoints.values()].filter((cp) => {
       if (cp.workflowId !== input.workflowId) return false;
       if (input.threadId && cp.threadId !== input.threadId) return false;
-      if (input.beforeTimestamp && cp.timestamp >= input.beforeTimestamp) return false;
+      if (input.beforeTimestamp && cp.timestamp >= input.beforeTimestamp)
+        return false;
       return true;
     });
     if (matches.length === 0) return null;
@@ -104,23 +108,16 @@ export class StateManager {
     return id;
   }
 
-  async getSession(
-    sessionId: string,
-  ): Promise<
-    | {
-        sessionId: string;
-        workflowId: string;
-        threadId: string;
-        status: string;
-        metadata?: Record<string, unknown>;
-        lastCheckpointId?: string;
-      }
-    | null
-  > {
+  async getSession(sessionId: string): Promise<{
+    sessionId: string;
+    workflowId: string;
+    threadId: string;
+    status: string;
+    metadata?: Record<string, unknown>;
+    lastCheckpointId?: string;
+  } | null> {
     const session = this.sessions.get(sessionId);
-    return session
-      ? { sessionId, ...session }
-      : null;
+    return session ? { sessionId, ...session } : null;
   }
 
   async listSessions(
@@ -144,10 +141,7 @@ export class StateManager {
       .filter((session) => (status ? session.status === status : true));
   }
 
-  async updateSessionStatus(
-    sessionId: string,
-    status: string,
-  ): Promise<void> {
+  async updateSessionStatus(sessionId: string, status: string): Promise<void> {
     const session = this.sessions.get(sessionId);
     if (!session) return;
     this.sessions.set(sessionId, { ...session, status });
@@ -235,4 +229,3 @@ export class StateManager {
     this.memorySavers.clear();
   }
 }
-

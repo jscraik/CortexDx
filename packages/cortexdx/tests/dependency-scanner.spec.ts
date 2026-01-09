@@ -9,63 +9,70 @@ import { DependencyScannerPlugin } from "../src/plugins/dependency-scanner.js";
 import { CVEScanner } from "../src/security/cve-scanner.js";
 import { DependencyRecommendations } from "../src/security/dependency-recommendations.js";
 import { FlictIntegration } from "../src/security/flict-integration.js";
-import { SBOMGenerator, type PackageManifest } from "../src/security/sbom-generator.js";
+import {
+  SBOMGenerator,
+  type PackageManifest,
+} from "../src/security/sbom-generator.js";
 import type { DiagnosticContext } from "../src/types.js";
 
 afterEach(() => {
-    vi.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe("Dependency Scanner Plugin", () => {
-    describe("SBOM Generation (Req 21.1)", () => {
-        it("should generate CycloneDX SBOM from npm package.json", async () => {
-            const generator = new SBOMGenerator();
+  describe("SBOM Generation (Req 21.1)", () => {
+    it("should generate CycloneDX SBOM from npm package.json", async () => {
+      const generator = new SBOMGenerator();
 
-            const manifest: PackageManifest = {
-                type: "npm",
-                path: "package.json",
-                content: JSON.stringify({
-                    name: "test-package",
-                    version: "1.0.0",
-                    dependencies: {
-                        express: "^4.18.0",
-                        lodash: "^4.17.21",
-                    },
-                }),
-            };
+      const manifest: PackageManifest = {
+        type: "npm",
+        path: "package.json",
+        content: JSON.stringify({
+          name: "test-package",
+          version: "1.0.0",
+          dependencies: {
+            express: "^4.18.0",
+            lodash: "^4.17.21",
+          },
+        }),
+      };
 
-            const sbom = await generator.generateSBOM(manifest, { format: "cyclonedx" });
+      const sbom = await generator.generateSBOM(manifest, {
+        format: "cyclonedx",
+      });
 
-            expect(sbom.bomFormat).toBe("CycloneDX");
-            expect(sbom.components).toHaveLength(2);
-            expect(sbom.components[0].name).toBe("express");
-            expect(sbom.components[1].name).toBe("lodash");
-        });
+      expect(sbom.bomFormat).toBe("CycloneDX");
+      expect(sbom.components).toHaveLength(2);
+      expect(sbom.components[0].name).toBe("express");
+      expect(sbom.components[1].name).toBe("lodash");
+    });
 
-        it("should generate SBOM from pip requirements.txt", async () => {
-            const generator = new SBOMGenerator();
+    it("should generate SBOM from pip requirements.txt", async () => {
+      const generator = new SBOMGenerator();
 
-            const manifest: PackageManifest = {
-                type: "pip",
-                path: "requirements.txt",
-                content: "requests==2.28.0\nflask==2.2.0\n",
-            };
+      const manifest: PackageManifest = {
+        type: "pip",
+        path: "requirements.txt",
+        content: "requests==2.28.0\nflask==2.2.0\n",
+      };
 
-            const sbom = await generator.generateSBOM(manifest, { format: "cyclonedx" });
+      const sbom = await generator.generateSBOM(manifest, {
+        format: "cyclonedx",
+      });
 
-            expect(sbom.bomFormat).toBe("CycloneDX");
-            expect(sbom.components).toHaveLength(2);
-            expect(sbom.components[0].name).toBe("requests");
-            expect(sbom.components[1].name).toBe("flask");
-        });
+      expect(sbom.bomFormat).toBe("CycloneDX");
+      expect(sbom.components).toHaveLength(2);
+      expect(sbom.components[0].name).toBe("requests");
+      expect(sbom.components[1].name).toBe("flask");
+    });
 
-        it("should generate SBOM from Maven pom.xml", async () => {
-            const generator = new SBOMGenerator();
+    it("should generate SBOM from Maven pom.xml", async () => {
+      const generator = new SBOMGenerator();
 
-            const manifest: PackageManifest = {
-                type: "maven",
-                path: "pom.xml",
-                content: `
+      const manifest: PackageManifest = {
+        type: "maven",
+        path: "pom.xml",
+        content: `
           <project>
             <dependencies>
               <dependency>
@@ -76,444 +83,462 @@ describe("Dependency Scanner Plugin", () => {
             </dependencies>
           </project>
         `,
-            };
+      };
 
-            const sbom = await generator.generateSBOM(manifest, { format: "cyclonedx" });
+      const sbom = await generator.generateSBOM(manifest, {
+        format: "cyclonedx",
+      });
 
-            expect(sbom.bomFormat).toBe("CycloneDX");
-            expect(sbom.components).toHaveLength(1);
-            expect(sbom.components[0].name).toBe("spring-core");
-            expect(sbom.components[0].group).toBe("org.springframework");
-        });
-
-        it("should include licenses when requested", async () => {
-            const generator = new SBOMGenerator();
-
-            const manifest: PackageManifest = {
-                type: "npm",
-                path: "package.json",
-                content: JSON.stringify({
-                    dependencies: {
-                        express: "^4.18.0",
-                    },
-                }),
-            };
-
-            const sbom = await generator.generateSBOM(manifest, {
-                format: "cyclonedx",
-                includeLicenses: true,
-            });
-
-            expect(sbom.components[0].licenses).toBeDefined();
-            expect(sbom.components[0].licenses?.length).toBeGreaterThan(0);
-        });
-
-        it("should export SBOM to JSON", () => {
-            const generator = new SBOMGenerator();
-
-            const sbom = {
-                bomFormat: "CycloneDX" as const,
-                specVersion: "1.5",
-                version: 1,
-                metadata: {
-                    timestamp: new Date().toISOString(),
-                    tools: [{ name: "test" }],
-                },
-                components: [],
-                dependencies: [],
-            };
-
-            const json = generator.exportToJSON(sbom);
-
-            expect(json).toContain("CycloneDX");
-            expect(JSON.parse(json)).toEqual(sbom);
-        });
+      expect(sbom.bomFormat).toBe("CycloneDX");
+      expect(sbom.components).toHaveLength(1);
+      expect(sbom.components[0].name).toBe("spring-core");
+      expect(sbom.components[0].group).toBe("org.springframework");
     });
 
-    describe("CVE Scanning (Req 21.3)", () => {
-        it("should scan components for CVEs", async () => {
-            const scanner = new CVEScanner({
-                fetch: vi.fn().mockResolvedValue({
-                    ok: true,
-                    json: async () => ({
-                        vulns: [],
-                    }),
-                }) as unknown as typeof fetch,
-            });
+    it("should include licenses when requested", async () => {
+      const generator = new SBOMGenerator();
 
-            const components = [
-                {
-                    type: "library" as const,
-                    name: "test-package",
-                    version: "1.0.0",
-                    purl: "pkg:npm/test-package@1.0.0",
-                },
-            ];
+      const manifest: PackageManifest = {
+        type: "npm",
+        path: "package.json",
+        content: JSON.stringify({
+          dependencies: {
+            express: "^4.18.0",
+          },
+        }),
+      };
 
-            const result = await scanner.scanComponents(components);
+      const sbom = await generator.generateSBOM(manifest, {
+        format: "cyclonedx",
+        includeLicenses: true,
+      });
 
-            expect(result.totalComponents).toBe(1);
-            expect(result.scanDuration).toBeGreaterThan(0);
-        });
+      expect(sbom.components[0].licenses).toBeDefined();
+      expect(sbom.components[0].licenses?.length).toBeGreaterThan(0);
+    });
 
-        it("should calculate risk levels correctly", async () => {
-            const scanner = new CVEScanner({
-                fetch: vi.fn().mockResolvedValue({
-                    ok: true,
-                    json: async () => ({
-                        vulns: [
-                            {
-                                id: "OSV-123",
-                                severity: [{ type: "CVSS_V3", score: "9.1" }],
-                                summary: "Critical issue",
-                                affected: [],
-                                references: [],
-                            },
-                        ],
-                    }),
-                }) as unknown as typeof fetch,
-            });
+    it("should export SBOM to JSON", () => {
+      const generator = new SBOMGenerator();
 
-            const components = [
-                {
-                    type: "library" as const,
-                    name: "vulnerable-package",
-                    version: "1.0.0",
-                    purl: "pkg:npm/vulnerable-package@1.0.0",
-                },
-            ];
+      const sbom = {
+        bomFormat: "CycloneDX" as const,
+        specVersion: "1.5",
+        version: 1,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          tools: [{ name: "test" }],
+        },
+        components: [],
+        dependencies: [],
+      };
 
-            const result = await scanner.scanComponents(components);
+      const json = generator.exportToJSON(sbom);
 
-            expect(result).toHaveProperty("criticalCVEs");
-            expect(result).toHaveProperty("highCVEs");
-            expect(result).toHaveProperty("mediumCVEs");
-            expect(result).toHaveProperty("lowCVEs");
-        });
+      expect(json).toContain("CycloneDX");
+      expect(JSON.parse(json)).toEqual(sbom);
+    });
+  });
 
-        it("should generate remediation recommendations", async () => {
-            const scanner = new CVEScanner({
-                fetch: vi.fn().mockResolvedValue({
-                    ok: true,
-                    json: async () => ({
-                        vulns: [
-                            {
-                                id: "OSV-456",
-                                severity: [{ type: "CVSS_V3", score: "6.5" }],
-                                summary: "Moderate issue",
-                                affected: [
-                                    {
-                                        ranges: [
-                                            {
-                                                events: [
-                                                    { introduced: "0" },
-                                                    { fixed: "1.2.0" },
-                                                ],
-                                            },
-                                        ],
-                                    },
-                                ],
-                                references: [{ url: "https://example.com/cve" }],
-                            },
-                        ],
-                    }),
-                }) as unknown as typeof fetch,
-            });
+  describe("CVE Scanning (Req 21.3)", () => {
+    it("should scan components for CVEs", async () => {
+      const scanner = new CVEScanner({
+        fetch: vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            vulns: [],
+          }),
+        }) as unknown as typeof fetch,
+      });
 
-            const components = [
-                {
-                    type: "library" as const,
-                    name: "test-package",
-                    version: "1.0.0",
-                    purl: "pkg:npm/test-package@1.0.0",
-                },
-            ];
+      const components = [
+        {
+          type: "library" as const,
+          name: "test-package",
+          version: "1.0.0",
+          purl: "pkg:npm/test-package@1.0.0",
+        },
+      ];
 
-            const result = await scanner.scanComponents(components);
+      const result = await scanner.scanComponents(components);
 
-            for (const match of result.matches) {
-                expect(match.remediationRecommendations).toBeDefined();
-                expect(Array.isArray(match.remediationRecommendations)).toBe(true);
-            }
-        });
-        it("should reuse cached OSV responses for identical components", async () => {
-            const fetchMock = vi.fn().mockResolvedValue({
-                ok: true,
-                json: async () => ({
-                    vulns: [
-                        {
-                            id: "OSV-789",
-                            severity: [{ type: "CVSS_V3", score: "5.0" }],
-                            summary: "Sample vulnerability",
-                            affected: [],
-                            references: [],
-                        },
+      expect(result.totalComponents).toBe(1);
+      expect(result.scanDuration).toBeGreaterThan(0);
+    });
+
+    it("should calculate risk levels correctly", async () => {
+      const scanner = new CVEScanner({
+        fetch: vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            vulns: [
+              {
+                id: "OSV-123",
+                severity: [{ type: "CVSS_V3", score: "9.1" }],
+                summary: "Critical issue",
+                affected: [],
+                references: [],
+              },
+            ],
+          }),
+        }) as unknown as typeof fetch,
+      });
+
+      const components = [
+        {
+          type: "library" as const,
+          name: "vulnerable-package",
+          version: "1.0.0",
+          purl: "pkg:npm/vulnerable-package@1.0.0",
+        },
+      ];
+
+      const result = await scanner.scanComponents(components);
+
+      expect(result).toHaveProperty("criticalCVEs");
+      expect(result).toHaveProperty("highCVEs");
+      expect(result).toHaveProperty("mediumCVEs");
+      expect(result).toHaveProperty("lowCVEs");
+    });
+
+    it("should generate remediation recommendations", async () => {
+      const scanner = new CVEScanner({
+        fetch: vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            vulns: [
+              {
+                id: "OSV-456",
+                severity: [{ type: "CVSS_V3", score: "6.5" }],
+                summary: "Moderate issue",
+                affected: [
+                  {
+                    ranges: [
+                      {
+                        events: [{ introduced: "0" }, { fixed: "1.2.0" }],
+                      },
                     ],
-                }),
-            });
-
-            const scanner = new CVEScanner({ fetch: fetchMock as unknown as typeof fetch, ttlMs: 60_000 });
-            const component = {
-                type: "library" as const,
-                name: "cached-package",
-                version: "1.0.0",
-                purl: "pkg:npm/cached-package@1.0.0",
-            };
-
-            await scanner.scanComponents([component]);
-            await scanner.scanComponents([component]);
-
-            expect(fetchMock).toHaveBeenCalledTimes(1);
-        });
-
-        it("should emit fallback results when OSV is unavailable", async () => {
-            const fetchMock = vi.fn().mockResolvedValue({ ok: false });
-            const scanner = new CVEScanner({ fetch: fetchMock as unknown as typeof fetch });
-            const component = {
-                type: "library" as const,
-                name: "offline-package",
-                version: "1.0.0",
-                purl: "pkg:npm/offline-package@1.0.0",
-            };
-
-            const result = await scanner.scanComponents([component]);
-            expect(result.totalCVEs).toBe(0);
-        });
-    });
-
-    describe("Manifest ingestion", () => {
-        it("should generate findings from uploaded manifests", async () => {
-            const ctx: DiagnosticContext = {
-                endpoint: "https://example.mcp",
-                logger: vi.fn(),
-                request: vi.fn(),
-                jsonrpc: vi.fn().mockResolvedValue({}),
-                sseProbe: vi.fn().mockResolvedValue({ ok: true }),
-                evidence: vi.fn(),
-                deterministic: true,
-                artifacts: {
-                    dependencyManifests: [
-                        {
-                            name: "package.json",
-                            encoding: "utf-8",
-                            content: JSON.stringify({
-                                name: "demo",
-                                version: "1.0.0",
-                                dependencies: { axios: "^1.6.0" },
-                            }),
-                        },
-                    ],
-                },
-            };
-
-            const findings = await DependencyScannerPlugin.run(ctx);
-            const sbomFinding = findings.find((finding) => finding.id.startsWith("sbom-generated"));
-
-            expect(sbomFinding).toBeDefined();
-            expect(sbomFinding?.evidence[0]?.ref).toBe("package.json");
-        });
-    });
-
-    describe("License Compatibility (Req 21.4)", () => {
-        it("should check license compatibility", async () => {
-            const flict = new FlictIntegration();
-
-            const licenses = [
-                { id: "MIT", name: "MIT License" },
-                { id: "Apache-2.0", name: "Apache License 2.0" },
-            ];
-
-            const result = await flict.checkCompatibility(licenses);
-
-            expect(result.compatible).toBe(true);
-            expect(result.conflicts).toHaveLength(0);
-            expect(result.riskLevel).toBe("LOW");
-        });
-
-        it("should detect copyleft conflicts", async () => {
-            const flict = new FlictIntegration();
-
-            const licenses = [
-                { id: "GPL-3.0", name: "GNU General Public License v3.0" },
-                { name: "Proprietary" },
-            ];
-
-            const result = await flict.checkCompatibility(licenses);
-
-            expect(result.compatible).toBe(false);
-            expect(result.conflicts.length).toBeGreaterThan(0);
-            expect(result.riskLevel).not.toBe("LOW");
-        });
-
-        it("should suggest outbound licenses", async () => {
-            const flict = new FlictIntegration();
-
-            const licenses = [
-                { id: "MIT", name: "MIT License" },
-                { id: "BSD-3-Clause", name: "BSD 3-Clause License" },
-            ];
-
-            const result = await flict.checkCompatibility(licenses);
-
-            expect(result.suggestedOutboundLicenses).toBeDefined();
-            expect(result.suggestedOutboundLicenses.length).toBeGreaterThan(0);
-        });
-
-        it("should generate compatibility matrix", async () => {
-            const flict = new FlictIntegration();
-
-            const licenses = ["MIT", "Apache-2.0", "GPL-3.0"];
-
-            const matrix = await flict.generateCompatibilityMatrix(licenses);
-
-            expect(matrix.licenses).toEqual(licenses);
-            expect(matrix.matrix).toHaveLength(3);
-            expect(matrix.matrix[0]).toHaveLength(3);
-        });
-    });
-
-    describe("Dependency Recommendations (Req 21.5)", () => {
-        it("should generate update recommendations", async () => {
-            const recommender = new DependencyRecommendations();
-
-            const components = [
-                {
-                    type: "library" as const,
-                    name: "vulnerable-package",
-                    version: "1.0.0",
-                    bomRef: "pkg:npm/vulnerable-package@1.0.0",
-                },
-            ];
-
-            const cveMap = new Map([
-                [
-                    "pkg:npm/vulnerable-package@1.0.0",
-                    [
-                        {
-                            id: "CVE-2023-12345",
-                            source: "NVD" as const,
-                            severity: "HIGH" as const,
-                            cvssScore: 7.5,
-                            description: "Test vulnerability",
-                            publishedDate: "2023-01-01",
-                            lastModifiedDate: "2023-01-02",
-                            affectedVersions: ["1.0.0"],
-                            fixedVersions: ["1.0.1"],
-                            references: [],
-                        },
-                    ],
+                  },
                 ],
-            ]);
+                references: [{ url: "https://example.com/cve" }],
+              },
+            ],
+          }),
+        }) as unknown as typeof fetch,
+      });
 
-            const report = await recommender.generateRecommendations(components, cveMap);
+      const components = [
+        {
+          type: "library" as const,
+          name: "test-package",
+          version: "1.0.0",
+          purl: "pkg:npm/test-package@1.0.0",
+        },
+      ];
 
-            expect(report.totalRecommendations).toBeGreaterThan(0);
-            expect(report.recommendations[0].currentVersion).toBe("1.0.0");
-            expect(report.recommendations[0].recommendedVersion).toBe("1.0.1");
-        });
+      const result = await scanner.scanComponents(components);
 
-        it("should calculate update priorities correctly", async () => {
-            const recommender = new DependencyRecommendations();
+      for (const match of result.matches) {
+        expect(match.remediationRecommendations).toBeDefined();
+        expect(Array.isArray(match.remediationRecommendations)).toBe(true);
+      }
+    });
+    it("should reuse cached OSV responses for identical components", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          vulns: [
+            {
+              id: "OSV-789",
+              severity: [{ type: "CVSS_V3", score: "5.0" }],
+              summary: "Sample vulnerability",
+              affected: [],
+              references: [],
+            },
+          ],
+        }),
+      });
 
-            const components = [
-                {
-                    type: "library" as const,
-                    name: "critical-vuln",
-                    version: "1.0.0",
-                    bomRef: "pkg:npm/critical-vuln@1.0.0",
-                },
-            ];
+      const scanner = new CVEScanner({
+        fetch: fetchMock as unknown as typeof fetch,
+        ttlMs: 60_000,
+      });
+      const component = {
+        type: "library" as const,
+        name: "cached-package",
+        version: "1.0.0",
+        purl: "pkg:npm/cached-package@1.0.0",
+      };
 
-            const cveMap = new Map([
-                [
-                    "pkg:npm/critical-vuln@1.0.0",
-                    [
-                        {
-                            id: "CVE-2023-99999",
-                            source: "NVD" as const,
-                            severity: "CRITICAL" as const,
-                            cvssScore: 9.8,
-                            description: "Critical vulnerability",
-                            publishedDate: "2023-01-01",
-                            lastModifiedDate: "2023-01-02",
-                            affectedVersions: ["1.0.0"],
-                            fixedVersions: ["1.0.1"],
-                            references: [],
-                        },
-                    ],
-                ],
-            ]);
+      await scanner.scanComponents([component]);
+      await scanner.scanComponents([component]);
 
-            const report = await recommender.generateRecommendations(components, cveMap);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
 
-            expect(report.criticalUpdates).toBeGreaterThan(0);
-            expect(report.recommendations[0].priority).toBe("CRITICAL");
-        });
+    it("should emit fallback results when OSV is unavailable", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: false });
+      const scanner = new CVEScanner({
+        fetch: fetchMock as unknown as typeof fetch,
+      });
+      const component = {
+        type: "library" as const,
+        name: "offline-package",
+        version: "1.0.0",
+        purl: "pkg:npm/offline-package@1.0.0",
+      };
 
-        it("should complete within 90 seconds", async () => {
-            const recommender = new DependencyRecommendations();
+      const result = await scanner.scanComponents([component]);
+      expect(result.totalCVEs).toBe(0);
+    });
+  });
 
-            const components = Array.from({ length: 100 }, (_, i) => ({
-                type: "library" as const,
-                name: `package-${i}`,
+  describe("Manifest ingestion", () => {
+    it("should generate findings from uploaded manifests", async () => {
+      const ctx: DiagnosticContext = {
+        endpoint: "https://example.mcp",
+        logger: vi.fn(),
+        request: vi.fn(),
+        jsonrpc: vi.fn().mockResolvedValue({}),
+        sseProbe: vi.fn().mockResolvedValue({ ok: true }),
+        evidence: vi.fn(),
+        deterministic: true,
+        artifacts: {
+          dependencyManifests: [
+            {
+              name: "package.json",
+              encoding: "utf-8",
+              content: JSON.stringify({
+                name: "demo",
                 version: "1.0.0",
-                bomRef: `pkg:npm/package-${i}@1.0.0`,
-            }));
+                dependencies: { axios: "^1.6.0" },
+              }),
+            },
+          ],
+        },
+      };
 
-            const cveMap = new Map<string, never[]>();
+      const findings = await DependencyScannerPlugin.run(ctx);
+      const sbomFinding = findings.find((finding) =>
+        finding.id.startsWith("sbom-generated"),
+      );
 
-            const startTime = Date.now();
-            const report = await recommender.generateRecommendations(components, cveMap);
-            const duration = Date.now() - startTime;
+      expect(sbomFinding).toBeDefined();
+      expect(sbomFinding?.evidence[0]?.ref).toBe("package.json");
+    });
+  });
 
-            expect(duration).toBeLessThan(90000); // 90 seconds
-            expect(report.generationTime).toBeLessThan(90000);
-        });
+  describe("License Compatibility (Req 21.4)", () => {
+    it("should check license compatibility", async () => {
+      const flict = new FlictIntegration();
+
+      const licenses = [
+        { id: "MIT", name: "MIT License" },
+        { id: "Apache-2.0", name: "Apache License 2.0" },
+      ];
+
+      const result = await flict.checkCompatibility(licenses);
+
+      expect(result.compatible).toBe(true);
+      expect(result.conflicts).toHaveLength(0);
+      expect(result.riskLevel).toBe("LOW");
     });
 
-    describe("Integration Tests", () => {
-        it("should complete full dependency scan workflow", async () => {
-            const generator = new SBOMGenerator();
-            const scanner = new CVEScanner();
-            const flict = new FlictIntegration();
-            const recommender = new DependencyRecommendations();
+    it("should detect copyleft conflicts", async () => {
+      const flict = new FlictIntegration();
 
-            // Generate SBOM
-            const manifest: PackageManifest = {
-                type: "npm",
-                path: "package.json",
-                content: JSON.stringify({
-                    dependencies: {
-                        express: "^4.18.0",
-                    },
-                }),
-            };
+      const licenses = [
+        { id: "GPL-3.0", name: "GNU General Public License v3.0" },
+        { name: "Proprietary" },
+      ];
 
-            const sbom = await generator.generateSBOM(manifest, {
-                format: "cyclonedx",
-                includeLicenses: true,
-            });
+      const result = await flict.checkCompatibility(licenses);
 
-            expect(sbom.components).toHaveLength(1);
-
-            // Scan for CVEs
-            const cveResult = await scanner.scanComponents(sbom.components);
-            expect(cveResult.totalComponents).toBe(1);
-
-            // Check license compatibility
-            const licenses = sbom.components.flatMap((c) => c.licenses || []);
-            const licenseResult = await flict.checkCompatibility(licenses);
-            expect(licenseResult).toBeDefined();
-
-            // Generate recommendations
-            const cveMap = new Map(
-                cveResult.matches.map((m) => [m.component.bomRef || m.component.name, m.cves]),
-            );
-            const recommendations = await recommender.generateRecommendations(
-                sbom.components,
-                cveMap,
-            );
-            expect(recommendations).toBeDefined();
-        });
+      expect(result.compatible).toBe(false);
+      expect(result.conflicts.length).toBeGreaterThan(0);
+      expect(result.riskLevel).not.toBe("LOW");
     });
+
+    it("should suggest outbound licenses", async () => {
+      const flict = new FlictIntegration();
+
+      const licenses = [
+        { id: "MIT", name: "MIT License" },
+        { id: "BSD-3-Clause", name: "BSD 3-Clause License" },
+      ];
+
+      const result = await flict.checkCompatibility(licenses);
+
+      expect(result.suggestedOutboundLicenses).toBeDefined();
+      expect(result.suggestedOutboundLicenses.length).toBeGreaterThan(0);
+    });
+
+    it("should generate compatibility matrix", async () => {
+      const flict = new FlictIntegration();
+
+      const licenses = ["MIT", "Apache-2.0", "GPL-3.0"];
+
+      const matrix = await flict.generateCompatibilityMatrix(licenses);
+
+      expect(matrix.licenses).toEqual(licenses);
+      expect(matrix.matrix).toHaveLength(3);
+      expect(matrix.matrix[0]).toHaveLength(3);
+    });
+  });
+
+  describe("Dependency Recommendations (Req 21.5)", () => {
+    it("should generate update recommendations", async () => {
+      const recommender = new DependencyRecommendations();
+
+      const components = [
+        {
+          type: "library" as const,
+          name: "vulnerable-package",
+          version: "1.0.0",
+          bomRef: "pkg:npm/vulnerable-package@1.0.0",
+        },
+      ];
+
+      const cveMap = new Map([
+        [
+          "pkg:npm/vulnerable-package@1.0.0",
+          [
+            {
+              id: "CVE-2023-12345",
+              source: "NVD" as const,
+              severity: "HIGH" as const,
+              cvssScore: 7.5,
+              description: "Test vulnerability",
+              publishedDate: "2023-01-01",
+              lastModifiedDate: "2023-01-02",
+              affectedVersions: ["1.0.0"],
+              fixedVersions: ["1.0.1"],
+              references: [],
+            },
+          ],
+        ],
+      ]);
+
+      const report = await recommender.generateRecommendations(
+        components,
+        cveMap,
+      );
+
+      expect(report.totalRecommendations).toBeGreaterThan(0);
+      expect(report.recommendations[0].currentVersion).toBe("1.0.0");
+      expect(report.recommendations[0].recommendedVersion).toBe("1.0.1");
+    });
+
+    it("should calculate update priorities correctly", async () => {
+      const recommender = new DependencyRecommendations();
+
+      const components = [
+        {
+          type: "library" as const,
+          name: "critical-vuln",
+          version: "1.0.0",
+          bomRef: "pkg:npm/critical-vuln@1.0.0",
+        },
+      ];
+
+      const cveMap = new Map([
+        [
+          "pkg:npm/critical-vuln@1.0.0",
+          [
+            {
+              id: "CVE-2023-99999",
+              source: "NVD" as const,
+              severity: "CRITICAL" as const,
+              cvssScore: 9.8,
+              description: "Critical vulnerability",
+              publishedDate: "2023-01-01",
+              lastModifiedDate: "2023-01-02",
+              affectedVersions: ["1.0.0"],
+              fixedVersions: ["1.0.1"],
+              references: [],
+            },
+          ],
+        ],
+      ]);
+
+      const report = await recommender.generateRecommendations(
+        components,
+        cveMap,
+      );
+
+      expect(report.criticalUpdates).toBeGreaterThan(0);
+      expect(report.recommendations[0].priority).toBe("CRITICAL");
+    });
+
+    it("should complete within 90 seconds", async () => {
+      const recommender = new DependencyRecommendations();
+
+      const components = Array.from({ length: 100 }, (_, i) => ({
+        type: "library" as const,
+        name: `package-${i}`,
+        version: "1.0.0",
+        bomRef: `pkg:npm/package-${i}@1.0.0`,
+      }));
+
+      const cveMap = new Map<string, never[]>();
+
+      const startTime = Date.now();
+      const report = await recommender.generateRecommendations(
+        components,
+        cveMap,
+      );
+      const duration = Date.now() - startTime;
+
+      expect(duration).toBeLessThan(90000); // 90 seconds
+      expect(report.generationTime).toBeLessThan(90000);
+    });
+  });
+
+  describe("Integration Tests", () => {
+    it("should complete full dependency scan workflow", async () => {
+      const generator = new SBOMGenerator();
+      const scanner = new CVEScanner();
+      const flict = new FlictIntegration();
+      const recommender = new DependencyRecommendations();
+
+      // Generate SBOM
+      const manifest: PackageManifest = {
+        type: "npm",
+        path: "package.json",
+        content: JSON.stringify({
+          dependencies: {
+            express: "^4.18.0",
+          },
+        }),
+      };
+
+      const sbom = await generator.generateSBOM(manifest, {
+        format: "cyclonedx",
+        includeLicenses: true,
+      });
+
+      expect(sbom.components).toHaveLength(1);
+
+      // Scan for CVEs
+      const cveResult = await scanner.scanComponents(sbom.components);
+      expect(cveResult.totalComponents).toBe(1);
+
+      // Check license compatibility
+      const licenses = sbom.components.flatMap((c) => c.licenses || []);
+      const licenseResult = await flict.checkCompatibility(licenses);
+      expect(licenseResult).toBeDefined();
+
+      // Generate recommendations
+      const cveMap = new Map(
+        cveResult.matches.map((m) => [
+          m.component.bomRef || m.component.name,
+          m.cves,
+        ]),
+      );
+      const recommendations = await recommender.generateRecommendations(
+        sbom.components,
+        cveMap,
+      );
+      expect(recommendations).toBeDefined();
+    });
+  });
 });

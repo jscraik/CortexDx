@@ -46,8 +46,9 @@ export const MCP_ERRORS = {
   SERVICE_UNAVAILABLE: -32061,
 } as const;
 
-export type JsonRpcErrorCode = typeof JSON_RPC_ERRORS[keyof typeof JSON_RPC_ERRORS];
-export type McpErrorCode = typeof MCP_ERRORS[keyof typeof MCP_ERRORS];
+export type JsonRpcErrorCode =
+  (typeof JSON_RPC_ERRORS)[keyof typeof JSON_RPC_ERRORS];
+export type McpErrorCode = (typeof MCP_ERRORS)[keyof typeof MCP_ERRORS];
 export type ErrorCode = JsonRpcErrorCode | McpErrorCode;
 
 /**
@@ -57,10 +58,10 @@ export class McpError extends Error {
   constructor(
     public readonly code: ErrorCode,
     message: string,
-    public readonly data?: unknown
+    public readonly data?: unknown,
   ) {
     super(message);
-    this.name = 'McpError';
+    this.name = "McpError";
   }
 
   /**
@@ -81,7 +82,7 @@ export class McpError extends Error {
  */
 export function createToolExecutionError(
   message: string,
-  details?: unknown
+  details?: unknown,
 ): McpError {
   return new McpError(MCP_ERRORS.TOOL_EXECUTION_ERROR, message, details);
 }
@@ -89,7 +90,9 @@ export function createToolExecutionError(
 /**
  * Create an auth required error
  */
-export function createAuthRequiredError(message = 'Authentication required'): McpError {
+export function createAuthRequiredError(
+  message = "Authentication required",
+): McpError {
   return new McpError(MCP_ERRORS.AUTH_REQUIRED, message);
 }
 
@@ -99,8 +102,8 @@ export function createAuthRequiredError(message = 'Authentication required'): Mc
 export function createRateLimitedError(retryAfter?: number): McpError {
   return new McpError(
     MCP_ERRORS.RATE_LIMITED,
-    'Rate limit exceeded',
-    retryAfter ? { retryAfter } : undefined
+    "Rate limit exceeded",
+    retryAfter ? { retryAfter } : undefined,
   );
 }
 
@@ -109,12 +112,12 @@ export function createRateLimitedError(retryAfter?: number): McpError {
  */
 export function createProtocolMismatchError(
   clientVersion: string,
-  serverVersion: string
+  serverVersion: string,
 ): McpError {
   return new McpError(
     MCP_ERRORS.PROTOCOL_VERSION_MISMATCH,
     `Protocol version mismatch: client=${clientVersion}, server=${serverVersion}`,
-    { clientVersion, serverVersion }
+    { clientVersion, serverVersion },
   );
 }
 
@@ -123,15 +126,15 @@ export function createProtocolMismatchError(
  */
 export function formatJsonRpcError(
   id: string | number | null,
-  error: McpError | Error
+  error: McpError | Error,
 ): {
-  jsonrpc: '2.0';
+  jsonrpc: "2.0";
   id: string | number | null;
   error: { code: number; message: string; data?: unknown };
 } {
   if (error instanceof McpError) {
     return {
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       id,
       error: error.toJsonRpcError(),
     };
@@ -139,11 +142,11 @@ export function formatJsonRpcError(
 
   // Generic error
   return {
-    jsonrpc: '2.0',
+    jsonrpc: "2.0",
     id,
     error: {
       code: JSON_RPC_ERRORS.INTERNAL_ERROR,
-      message: error.message || 'Internal error',
+      message: error.message || "Internal error",
     },
   };
 }

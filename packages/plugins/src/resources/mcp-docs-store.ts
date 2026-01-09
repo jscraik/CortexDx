@@ -36,7 +36,9 @@ export function recordMcpDocsSearchResource(data: {
   return resource;
 }
 
-export function recordMcpDocsChunkResource(chunk: McpDocsSearchMatch): McpDocsResource {
+export function recordMcpDocsChunkResource(
+  chunk: McpDocsSearchMatch,
+): McpDocsResource {
   const resource: McpDocsResource = {
     id: createResourceId(chunk.chunkId, chunk.version),
     type: "chunk",
@@ -63,5 +65,9 @@ function recordResource(resource: McpDocsResource): void {
 }
 
 function createResourceId(seed: string, version: string): string {
-  return createHash("sha256").update(version).update(seed).digest("hex").slice(0, 12);
+  return createHash("sha256")
+    .update(version)
+    .update(seed)
+    .digest("hex")
+    .slice(0, 12);
 }
