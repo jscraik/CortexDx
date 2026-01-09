@@ -6,13 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { __test as pluginHostInternals } from "../src/plugin-host.js";
 
 type TestInternals = {
-  loadArtifactsFromEnv: () => {
-    dependencyManifests?: Array<{
-      name: string;
-      encoding: "utf-8" | "base64";
-      content: string;
-    }>;
-  } | undefined;
+  loadArtifactsFromEnv: () =>
+    | {
+        dependencyManifests?: Array<{
+          name: string;
+          encoding: "utf-8" | "base64";
+          content: string;
+        }>;
+      }
+    | undefined;
 };
 
 const internals = pluginHostInternals as TestInternals | undefined;
@@ -24,7 +26,10 @@ if (!internals) {
 const { loadArtifactsFromEnv } = internals;
 
 const manifestEnvKeys = ["CORTEXDX_MANIFESTS_JSON"] as const;
-const originalEnv: Record<(typeof manifestEnvKeys)[number], string | undefined> = {
+const originalEnv: Record<
+  (typeof manifestEnvKeys)[number],
+  string | undefined
+> = {
   CORTEXDX_MANIFESTS_JSON: undefined,
 };
 
@@ -50,8 +55,12 @@ afterEach(() => {
 describe("loadArtifactsFromEnv", () => {
   it("should parse manifests from CORTEXDX_MANIFESTS_JSON", () => {
     process.env.CORTEXDX_MANIFESTS_JSON = JSON.stringify([
-      { name: "package.json", encoding: "utf-8", content: "{\"name\":\"demo\"}" },
-      { name: "requirements.txt", encoding: "base64", content: "cmVxdWVzdHM9Mi4zLjE=\n" },
+      { name: "package.json", encoding: "utf-8", content: '{"name":"demo"}' },
+      {
+        name: "requirements.txt",
+        encoding: "base64",
+        content: "cmVxdWVzdHM9Mi4zLjE=\n",
+      },
     ]);
 
     const artifacts = loadArtifactsFromEnv();
@@ -61,7 +70,7 @@ describe("loadArtifactsFromEnv", () => {
     expect(artifacts?.dependencyManifests?.[0]).toMatchObject({
       name: "package.json",
       encoding: "utf-8",
-      content: "{\"name\":\"demo\"}",
+      content: '{"name":"demo"}',
     });
     expect(artifacts?.dependencyManifests?.[1]).toMatchObject({
       name: "requirements.txt",

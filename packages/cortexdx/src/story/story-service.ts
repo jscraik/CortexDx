@@ -1,18 +1,27 @@
-import type { Event } from "../anomaly/rules";
+import type { Event } from "../anomaly/rules.js";
 import {
   detectErrorSpike,
   detectFallbackEngaged,
   detectHealthDown,
   detectLatencySpike,
-} from "../anomaly/rules";
-import type { DepGraph, ManifestLike, ProbeInventory } from "../graph/dependency-graph";
-import { buildDependencyGraph } from "../graph/dependency-graph";
-import { composeStory, type StoryComposeOptions } from "./story-composer";
-import type { Story } from "./story-schema";
+} from "../anomaly/rules.js";
+import type {
+  DepGraph,
+  ManifestLike,
+  ProbeInventory,
+} from "../graph/dependency-graph.js";
+import { buildDependencyGraph } from "../graph/dependency-graph.js";
+import { type StoryComposeOptions, composeStory } from "./story-composer.js";
+import type { Story } from "./story-schema.js";
 
 export type StorySignalInput = {
   latency?: { p95: number[]; pct?: number; minutes?: number; target?: string };
-  errors?: { buckets: Record<string, number>[]; pct?: number; minutes?: number; target?: string };
+  errors?: {
+    buckets: Record<string, number>[];
+    pct?: number;
+    minutes?: number;
+    target?: string;
+  };
   health?: { downtime: number[]; thresholdSec?: number; target?: string };
   fallback?: { flags: boolean[]; minutes?: number; target?: string };
   now?: number;
@@ -37,7 +46,10 @@ export class StoryService {
     );
   }
 
-  public getStoryById(id: string, signals: StorySignalInput = {}): Story | undefined {
+  public getStoryById(
+    id: string,
+    signals: StorySignalInput = {},
+  ): Story | undefined {
     return this.generateStories(signals).find((story) => story.id === id);
   }
 
@@ -52,7 +64,10 @@ export class StoryService {
   }
 }
 
-const collectLatencyEvents = (signals: StorySignalInput, now?: number): Event[] => {
+const collectLatencyEvents = (
+  signals: StorySignalInput,
+  now?: number,
+): Event[] => {
   if (!signals.latency?.p95?.length) {
     return [];
   }
@@ -64,7 +79,10 @@ const collectLatencyEvents = (signals: StorySignalInput, now?: number): Event[] 
   );
 };
 
-const collectErrorEvents = (signals: StorySignalInput, now?: number): Event[] => {
+const collectErrorEvents = (
+  signals: StorySignalInput,
+  now?: number,
+): Event[] => {
   if (!signals.errors?.buckets?.length) {
     return [];
   }
@@ -76,7 +94,10 @@ const collectErrorEvents = (signals: StorySignalInput, now?: number): Event[] =>
   );
 };
 
-const collectHealthEvents = (signals: StorySignalInput, now?: number): Event[] => {
+const collectHealthEvents = (
+  signals: StorySignalInput,
+  now?: number,
+): Event[] => {
   if (!signals.health?.downtime?.length) {
     return [];
   }
@@ -87,7 +108,10 @@ const collectHealthEvents = (signals: StorySignalInput, now?: number): Event[] =
   );
 };
 
-const collectFallbackEvents = (signals: StorySignalInput, now?: number): Event[] => {
+const collectFallbackEvents = (
+  signals: StorySignalInput,
+  now?: number,
+): Event[] => {
   if (!signals.fallback?.flags?.length) {
     return [];
   }

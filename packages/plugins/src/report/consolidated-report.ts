@@ -1,4 +1,7 @@
-import { ReportManager, type DiagnosticReport } from "../storage/report-manager.js";
+import {
+  ReportManager,
+  type DiagnosticReport,
+} from "../storage/report-manager.js";
 
 const managers = new Map<string, ReportManager>();
 

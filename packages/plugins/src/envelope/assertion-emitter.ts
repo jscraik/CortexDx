@@ -9,7 +9,7 @@ import type {
   EnvelopeEvidence,
   EnvelopeSeverity,
   EvidenceKind,
-  Remediation
+  Remediation,
 } from "@brainwav/cortexdx-core";
 import type { CloudStorageAdapter } from "../adapters/cloud-storage-adapter.js";
 

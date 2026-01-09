@@ -3,7 +3,7 @@
  * Provides type-safe access to environment variables with validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Environment variable schema
@@ -12,8 +12,10 @@ import { z } from 'zod';
 const envSchema = z.object({
   // Server Configuration
   PORT: z.coerce.number().default(5001),
-  HOST: z.string().default('127.0.0.1'),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  HOST: z.string().default("127.0.0.1"),
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
 
   // TLS Configuration
   CORTEXDX_TLS_CERT_PATH: z.string().optional(),
@@ -44,7 +46,7 @@ const envSchema = z.object({
   // AWS Configuration
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
-  AWS_REGION: z.string().default('us-east-1'),
+  AWS_REGION: z.string().default("us-east-1"),
 
   // Monitoring
   MONITORING_INTERVAL_MS: z.coerce.number().default(60000),
@@ -59,7 +61,9 @@ const envSchema = z.object({
 
   // Debug
   DEBUG: z.string().optional(),
-  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  LOG_LEVEL: z
+    .enum(["trace", "debug", "info", "warn", "error", "fatal"])
+    .default("info"),
 });
 
 /**
@@ -79,9 +83,9 @@ class EnvironmentManager {
     const result = envSchema.safeParse(process.env);
 
     if (!result.success) {
-      console.error('Environment variable validation failed:');
+      console.error("Environment variable validation failed:");
       console.error(result.error.format());
-      throw new Error('Invalid environment configuration');
+      throw new Error("Invalid environment configuration");
     }
 
     this.config = result.data;
@@ -93,7 +97,7 @@ class EnvironmentManager {
    */
   get<K extends keyof Environment>(key: K): Environment[K] {
     if (!this.isValidated) {
-      throw new Error('Environment not validated');
+      throw new Error("Environment not validated");
     }
     return this.config[key];
   }
@@ -103,7 +107,7 @@ class EnvironmentManager {
    */
   getAll(): Readonly<Environment> {
     if (!this.isValidated) {
-      throw new Error('Environment not validated');
+      throw new Error("Environment not validated");
     }
     return Object.freeze({ ...this.config });
   }
@@ -112,28 +116,28 @@ class EnvironmentManager {
    * Check if a specific variable is set
    */
   has(key: keyof Environment): boolean {
-    return this.config[key] !== undefined && this.config[key] !== '';
+    return this.config[key] !== undefined && this.config[key] !== "";
   }
 
   /**
    * Check if running in production
    */
   isProduction(): boolean {
-    return this.config.NODE_ENV === 'production';
+    return this.config.NODE_ENV === "production";
   }
 
   /**
    * Check if running in development
    */
   isDevelopment(): boolean {
-    return this.config.NODE_ENV === 'development';
+    return this.config.NODE_ENV === "development";
   }
 
   /**
    * Check if running in test
    */
   isTest(): boolean {
-    return this.config.NODE_ENV === 'test' || this.config.VITEST === 'true';
+    return this.config.NODE_ENV === "test" || this.config.VITEST === "true";
   }
 
   /**
@@ -141,31 +145,40 @@ class EnvironmentManager {
    */
   isTlsEnabled(): boolean {
     return Boolean(
-      this.config.CORTEXDX_TLS_CERT_PATH &&
-      this.config.CORTEXDX_TLS_KEY_PATH
+      this.config.CORTEXDX_TLS_CERT_PATH && this.config.CORTEXDX_TLS_KEY_PATH,
     );
   }
 
   /**
    * Get API key for a specific service
    */
-  getApiKey(service: 'context7' | 'semantic_scholar' | 'openalex' | 'wikidata' | 'exa' | 'openai' | 'anthropic' | 'deepcontext'): string | undefined {
+  getApiKey(
+    service:
+      | "context7"
+      | "semantic_scholar"
+      | "openalex"
+      | "wikidata"
+      | "exa"
+      | "openai"
+      | "anthropic"
+      | "deepcontext",
+  ): string | undefined {
     switch (service) {
-      case 'context7':
+      case "context7":
         return this.config.CONTEXT7_API_KEY;
-      case 'semantic_scholar':
+      case "semantic_scholar":
         return this.config.SEMANTIC_SCHOLAR_API_KEY;
-      case 'openalex':
+      case "openalex":
         return this.config.OPENALEX_API_KEY;
-      case 'wikidata':
+      case "wikidata":
         return this.config.WIKIDATA_API_KEY;
-      case 'exa':
+      case "exa":
         return this.config.EXA_API_KEY;
-      case 'openai':
+      case "openai":
         return this.config.OPENAI_API_KEY;
-      case 'anthropic':
+      case "anthropic":
         return this.config.ANTHROPIC_API_KEY;
-      case 'deepcontext':
+      case "deepcontext":
         return this.config.DEEPCONTEXT_API_KEY;
       default:
         return undefined;
@@ -175,7 +188,18 @@ class EnvironmentManager {
   /**
    * Validate that required API keys are present for enabled features
    */
-  validateRequiredKeys(requiredServices: Array<'context7' | 'semantic_scholar' | 'openalex' | 'wikidata' | 'exa' | 'openai' | 'anthropic' | 'deepcontext'>): void {
+  validateRequiredKeys(
+    requiredServices: Array<
+      | "context7"
+      | "semantic_scholar"
+      | "openalex"
+      | "wikidata"
+      | "exa"
+      | "openai"
+      | "anthropic"
+      | "deepcontext"
+    >,
+  ): void {
     const missing: string[] = [];
 
     for (const service of requiredServices) {
@@ -185,7 +209,7 @@ class EnvironmentManager {
     }
 
     if (missing.length > 0) {
-      throw new Error(`Missing required API keys: ${missing.join(', ')}`);
+      throw new Error(`Missing required API keys: ${missing.join(", ")}`);
     }
   }
 
@@ -194,11 +218,11 @@ class EnvironmentManager {
    */
   getMasked(key: keyof Environment): string {
     const value = this.config[key];
-    if (!value || typeof value !== 'string') {
-      return 'undefined';
+    if (!value || typeof value !== "string") {
+      return "undefined";
     }
     if (value.length <= 8) {
-      return '****';
+      return "****";
     }
     return `${value.slice(0, 4)}****${value.slice(-4)}`;
   }
@@ -209,18 +233,18 @@ class EnvironmentManager {
   toLogSafe(): Record<string, unknown> {
     const safe: Record<string, unknown> = {};
     const sensitiveKeys = [
-      'CORTEXDX_ADMIN_TOKEN',
-      'CORTEXDX_AUTH0_CLIENT_SECRET',
-      'CONTEXT7_API_KEY',
-      'SEMANTIC_SCHOLAR_API_KEY',
-      'OPENALEX_API_KEY',
-      'WIKIDATA_API_KEY',
-      'EXA_API_KEY',
-      'OPENAI_API_KEY',
-      'ANTHROPIC_API_KEY',
-      'DEEPCONTEXT_API_KEY',
-      'AWS_ACCESS_KEY_ID',
-      'AWS_SECRET_ACCESS_KEY',
+      "CORTEXDX_ADMIN_TOKEN",
+      "CORTEXDX_AUTH0_CLIENT_SECRET",
+      "CONTEXT7_API_KEY",
+      "SEMANTIC_SCHOLAR_API_KEY",
+      "OPENALEX_API_KEY",
+      "WIKIDATA_API_KEY",
+      "EXA_API_KEY",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "DEEPCONTEXT_API_KEY",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
     ];
 
     for (const [key, value] of Object.entries(this.config)) {

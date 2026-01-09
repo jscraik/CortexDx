@@ -3,14 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-    PatternAnonymizer,
-    PatternEncryption,
-    createSQLitePatternStorage,
+  PatternAnonymizer,
+  PatternEncryption,
+  createSQLitePatternStorage,
 } from "../../src/storage/pattern-storage-sqlite.js";
 import type {
-    CommonIssuePattern,
-    FeedbackEntry,
-    ResolutionPattern,
+  CommonIssuePattern,
+  FeedbackEntry,
+  ResolutionPattern,
 } from "../../src/storage/pattern-storage.js";
 
 // Test encryption key (32 bytes hex)

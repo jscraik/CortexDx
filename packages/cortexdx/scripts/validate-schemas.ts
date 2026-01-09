@@ -14,14 +14,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const schemaDir = path.resolve(__dirname, "../schemas");
 
-function assertListEquals(label: string, actual: string[], expected: readonly string[]) {
+function assertListEquals(
+  label: string,
+  actual: string[],
+  expected: readonly string[],
+) {
   if (actual.length !== expected.length) {
-    throw new Error(`${label} length mismatch: got ${actual.length}, expected ${expected.length}`);
+    throw new Error(
+      `${label} length mismatch: got ${actual.length}, expected ${expected.length}`,
+    );
   }
 
   actual.forEach((value, index) => {
     if (value !== expected[index]) {
-      throw new Error(`${label} mismatch at index ${index}: got ${value}, expected ${expected[index]}`);
+      throw new Error(
+        `${label} mismatch at index ${index}: got ${value}, expected ${expected[index]}`,
+      );
     }
   });
 }
@@ -43,7 +51,8 @@ async function validateStorySchema() {
   const scopeEnum = parsed.properties.scope?.enum as string[];
   assertListEquals("scope enum", scopeEnum, STORY_SCOPE_VALUES);
 
-  const triggerEnum = parsed.properties.trigger?.properties?.kind?.enum as string[];
+  const triggerEnum = parsed.properties.trigger?.properties?.kind
+    ?.enum as string[];
   assertListEquals("trigger enum", triggerEnum, STORY_TRIGGER_VALUES);
 
   const sample: Story = {

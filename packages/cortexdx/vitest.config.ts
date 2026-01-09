@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
-import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (...segments: string[]) => resolve(__dirname, "..", ...segments);
@@ -48,6 +48,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    testTimeout: 30000,
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

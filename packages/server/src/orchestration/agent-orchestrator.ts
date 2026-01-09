@@ -5,30 +5,34 @@
  */
 
 import {
-    END,
-    MemorySaver,
-    START,
-    StateGraph,
-    type StateGraphArgs,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+  type StateGraphArgs,
 } from "@langchain/langgraph";
 import type { DiagnosticContext, Finding } from "@brainwav/cortexdx-core";
-import { fromRecord, hasProperty, toRecord } from "@brainwav/cortexdx-core/utils/type-helpers";
+import {
+  fromRecord,
+  hasProperty,
+  toRecord,
+} from "@brainwav/cortexdx-core/utils/type-helpers";
 import type { PluginOrchestrator } from "./plugin-orchestrator.js";
 import type { StateManager } from "./state-manager.js";
 import type {
-    WorkflowConfig,
-    WorkflowDefinition,
-    WorkflowNode,
-    WorkflowState,
+  WorkflowConfig,
+  WorkflowDefinition,
+  WorkflowNode,
+  WorkflowState,
 } from "./workflow-types.js";
 
 // Import and re-export shared workflow types (extracted to break circular dependency)
 export type {
-    WorkflowConfig,
-    WorkflowDefinition,
-    WorkflowEdge,
-    WorkflowNode,
-    WorkflowState
+  WorkflowConfig,
+  WorkflowDefinition,
+  WorkflowEdge,
+  WorkflowNode,
+  WorkflowState,
 } from "./workflow-types.js";
 
 /**
@@ -228,7 +232,9 @@ export class AgentOrchestrator {
     // Execute with streaming if requested
     let finalState: WorkflowState = state;
     const threadId =
-      options?.threadId || (initialState as Record<string, unknown>)?.threadId?.toString() || `thread-${Date.now()}`;
+      options?.threadId ||
+      (initialState as Record<string, unknown>)?.threadId?.toString() ||
+      `thread-${Date.now()}`;
     const checkpointId = options?.checkpointId ?? threadId;
     let sessionId: string | undefined;
 

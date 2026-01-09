@@ -4,7 +4,6 @@
 
 // Report server
 export {
-    ReportServer,
-    type ReportServerOptions
+  ReportServer,
+  type ReportServerOptions,
 } from "./report-server";
-

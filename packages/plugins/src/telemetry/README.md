@@ -21,7 +21,7 @@ compatible telemetry solution that works with your current setup.
 
 Set your telemetry token:
 ```bash
-export SHINZO_TELEMETRY_TOKEN="38a0a136a9aab7d73ee3172b01b25d89"
+export SHINZO_TELEMETRY_TOKEN="your-secure-token"
 ```
 
 Or disable telemetry:

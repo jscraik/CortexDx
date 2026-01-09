@@ -29,7 +29,12 @@ async function getClient(apiKey?: string): Promise<GenerativeAI> {
   return new genAIModule.GoogleGenerativeAI(apiKey);
 }
 
-function extractText(response: { response?: { text?: () => string; candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> } }): string {
+function extractText(response: {
+  response?: {
+    text?: () => string;
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+}): string {
   if (typeof response.response?.text === "function") {
     try {
       return response.response.text();
@@ -78,12 +83,17 @@ export class GeminiPlugin implements LLMProviderPlugin {
     if (!this.client) {
       throw new Error("Gemini client not initialized");
     }
-    const modelInstance = this.client.getGenerativeModel({ model: targetModel });
+    const modelInstance = this.client.getGenerativeModel({
+      model: targetModel,
+    });
     const timeoutMs = options?.timeout ?? 120000;
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error("Timeout")), timeoutMs);
     });
-    const result = await Promise.race([modelInstance.generateContent(prompt.prompt), timeoutPromise]);
+    const result = await Promise.race([
+      modelInstance.generateContent(prompt.prompt),
+      timeoutPromise,
+    ]);
     // Gemini API does not currently provide token usage statistics in the response.
     // This is a known limitation: usage fields are hardcoded to zero.
     // If future versions of the API provide usage metadata, extract it here.
@@ -94,8 +104,8 @@ export class GeminiPlugin implements LLMProviderPlugin {
       usage: {
         promptTokens: 0,
         completionTokens: 0,
-        totalTokens: 0
-      }
+        totalTokens: 0,
+      },
     };
   }
 

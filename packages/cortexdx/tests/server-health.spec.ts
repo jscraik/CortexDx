@@ -3,35 +3,35 @@
  * Tests for health check, monitoring, and server endpoints
  */
 
-import { describe, it, expect } from 'vitest';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import { describe, it, expect } from "vitest";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
-describe('Server Health Endpoints', () => {
-  describe('Health Check Endpoint', () => {
-    it('should respond to /health requests', () => {
+describe("Server Health Endpoints", () => {
+  describe("Health Check Endpoint", () => {
+    it("should respond to /health requests", () => {
       // This is a placeholder for actual server health tests
       // Would need the actual server instance to test properly
       expect(true).toBe(true);
     });
 
-    it('should return 200 OK for healthy server', () => {
+    it("should return 200 OK for healthy server", () => {
       const healthStatus = {
-        status: 'healthy',
+        status: "healthy",
         uptime: process.uptime(),
         timestamp: Date.now(),
       };
 
-      expect(healthStatus.status).toBe('healthy');
+      expect(healthStatus.status).toBe("healthy");
       expect(healthStatus.uptime).toBeGreaterThan(0);
     });
 
-    it('should include detailed info with ?detailed=true', () => {
+    it("should include detailed info with ?detailed=true", () => {
       const detailedHealth = {
-        status: 'healthy',
+        status: "healthy",
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         providers: [],
-        version: '1.0.0',
+        version: "1.0.0",
       };
 
       expect(detailedHealth.memory).toBeDefined();
@@ -39,8 +39,8 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Health Check Data Structures', () => {
-    it('should have valid memory metrics', () => {
+  describe("Health Check Data Structures", () => {
+    it("should have valid memory metrics", () => {
       const memory = process.memoryUsage();
 
       expect(memory.heapUsed).toBeGreaterThan(0);
@@ -49,15 +49,15 @@ describe('Server Health Endpoints', () => {
       expect(memory.rss).toBeGreaterThan(0);
     });
 
-    it('should calculate uptime correctly', () => {
+    it("should calculate uptime correctly", () => {
       const uptime = process.uptime();
 
       expect(uptime).toBeGreaterThan(0);
-      expect(typeof uptime).toBe('number');
+      expect(typeof uptime).toBe("number");
       expect(Number.isFinite(uptime)).toBe(true);
     });
 
-    it('should format timestamps correctly', () => {
+    it("should format timestamps correctly", () => {
       const timestamp = Date.now();
 
       expect(timestamp).toBeGreaterThan(0);
@@ -66,22 +66,27 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Provider Health Status', () => {
-    it('should track provider availability', () => {
+  describe("Provider Health Status", () => {
+    it("should track provider availability", () => {
       const providers = [
-        { id: 'semantic-scholar', status: 'available', lastCheck: Date.now() },
-        { id: 'openalex', status: 'available', lastCheck: Date.now() },
+        { id: "semantic-scholar", status: "available", lastCheck: Date.now() },
+        { id: "openalex", status: "available", lastCheck: Date.now() },
       ];
 
-      providers.forEach(provider => {
+      providers.forEach((provider) => {
         expect(provider.id).toBeDefined();
-        expect(['available', 'unavailable', 'degraded']).toContain(provider.status);
+        expect(["available", "unavailable", "degraded"]).toContain(
+          provider.status,
+        );
         expect(provider.lastCheck).toBeGreaterThan(0);
       });
     });
 
-    it('should calculate provider health score', () => {
-      const calculateHealthScore = (stats: { success: number; total: number }) => {
+    it("should calculate provider health score", () => {
+      const calculateHealthScore = (stats: {
+        success: number;
+        total: number;
+      }) => {
         if (stats.total === 0) return 1.0;
         return stats.success / stats.total;
       };
@@ -93,36 +98,40 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle missing query parameters', () => {
+  describe("Error Handling", () => {
+    it("should handle missing query parameters", () => {
       const parseQuery = (url: string) => {
-        const urlObj = new URL(url, 'http://localhost');
+        const urlObj = new URL(url, "http://localhost");
         return {
-          detailed: urlObj.searchParams.get('detailed') === 'true',
+          detailed: urlObj.searchParams.get("detailed") === "true",
         };
       };
 
-      expect(parseQuery('http://localhost/health').detailed).toBe(false);
-      expect(parseQuery('http://localhost/health?detailed=true').detailed).toBe(true);
-      expect(parseQuery('http://localhost/health?detailed=false').detailed).toBe(false);
+      expect(parseQuery("http://localhost/health").detailed).toBe(false);
+      expect(parseQuery("http://localhost/health?detailed=true").detailed).toBe(
+        true,
+      );
+      expect(
+        parseQuery("http://localhost/health?detailed=false").detailed,
+      ).toBe(false);
     });
 
-    it('should gracefully handle errors in health checks', () => {
+    it("should gracefully handle errors in health checks", () => {
       const simulateHealthCheck = (shouldFail: boolean) => {
         if (shouldFail) {
-          return { status: 'unhealthy', error: 'Connection failed' };
+          return { status: "unhealthy", error: "Connection failed" };
         }
-        return { status: 'healthy' };
+        return { status: "healthy" };
       };
 
-      expect(simulateHealthCheck(false).status).toBe('healthy');
-      expect(simulateHealthCheck(true).status).toBe('unhealthy');
+      expect(simulateHealthCheck(false).status).toBe("healthy");
+      expect(simulateHealthCheck(true).status).toBe("unhealthy");
       expect(simulateHealthCheck(true).error).toBeDefined();
     });
   });
 
-  describe('Monitoring Endpoints', () => {
-    it('should track active connections', () => {
+  describe("Monitoring Endpoints", () => {
+    it("should track active connections", () => {
       let activeConnections = 0;
 
       const incrementConnections = () => activeConnections++;
@@ -137,7 +146,7 @@ describe('Server Health Endpoints', () => {
       expect(activeConnections).toBe(1);
     });
 
-    it('should track request metrics', () => {
+    it("should track request metrics", () => {
       const metrics = {
         totalRequests: 0,
         successfulRequests: 0,
@@ -169,8 +178,8 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Cache Statistics', () => {
-    it('should report cache hit rates', () => {
+  describe("Cache Statistics", () => {
+    it("should report cache hit rates", () => {
       const cacheStats = {
         hits: 75,
         misses: 25,
@@ -180,11 +189,13 @@ describe('Server Health Endpoints', () => {
       };
 
       expect(cacheStats.hitRate).toBe(0.75);
-      expect(cacheStats.hits / (cacheStats.hits + cacheStats.misses)).toBe(0.75);
+      expect(cacheStats.hits / (cacheStats.hits + cacheStats.misses)).toBe(
+        0.75,
+      );
       expect(cacheStats.size).toBeLessThanOrEqual(cacheStats.maxSize);
     });
 
-    it('should track cache evictions', () => {
+    it("should track cache evictions", () => {
       let evictionCount = 0;
       const onEvict = () => evictionCount++;
 
@@ -194,38 +205,38 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Response Formatting', () => {
-    it('should format JSON responses correctly', () => {
+  describe("Response Formatting", () => {
+    it("should format JSON responses correctly", () => {
       const response = {
-        status: 'healthy',
+        status: "healthy",
         timestamp: Date.now(),
         services: {
-          database: 'connected',
-          cache: 'connected',
+          database: "connected",
+          cache: "connected",
         },
       };
 
       const json = JSON.stringify(response);
       const parsed = JSON.parse(json);
 
-      expect(parsed.status).toBe('healthy');
-      expect(parsed.services.database).toBe('connected');
+      expect(parsed.status).toBe("healthy");
+      expect(parsed.services.database).toBe("connected");
     });
 
-    it('should include proper headers', () => {
+    it("should include proper headers", () => {
       const headers = {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'X-Response-Time': '15ms',
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "X-Response-Time": "15ms",
       };
 
-      expect(headers['Content-Type']).toBe('application/json');
-      expect(headers['Cache-Control']).toBe('no-cache');
+      expect(headers["Content-Type"]).toBe("application/json");
+      expect(headers["Cache-Control"]).toBe("no-cache");
     });
   });
 
-  describe('Performance Monitoring', () => {
-    it('should measure response times', () => {
+  describe("Performance Monitoring", () => {
+    it("should measure response times", () => {
       const start = performance.now();
       // Simulate some work
       const end = performance.now();
@@ -235,7 +246,7 @@ describe('Server Health Endpoints', () => {
       expect(Number.isFinite(duration)).toBe(true);
     });
 
-    it('should track memory trends', () => {
+    it("should track memory trends", () => {
       const measurements: number[] = [];
 
       for (let i = 0; i < 5; i++) {
@@ -243,12 +254,12 @@ describe('Server Health Endpoints', () => {
       }
 
       expect(measurements.length).toBe(5);
-      measurements.forEach(m => {
+      measurements.forEach((m) => {
         expect(m).toBeGreaterThan(0);
       });
     });
 
-    it('should detect memory leaks (basic)', () => {
+    it("should detect memory leaks (basic)", () => {
       const baseline = process.memoryUsage().heapUsed;
 
       // Simulate memory growth
@@ -267,8 +278,8 @@ describe('Server Health Endpoints', () => {
     });
   });
 
-  describe('Graceful Degradation', () => {
-    it('should continue operating with partial failures', () => {
+  describe("Graceful Degradation", () => {
+    it("should continue operating with partial failures", () => {
       const services = {
         primaryDB: true,
         cache: false, // Cache down
@@ -279,18 +290,18 @@ describe('Server Health Endpoints', () => {
       expect(isOperational).toBe(true);
     });
 
-    it('should provide meaningful error messages', () => {
+    it("should provide meaningful error messages", () => {
       const formatError = (error: Error) => ({
         message: error.message,
-        code: 'SERVICE_UNAVAILABLE',
+        code: "SERVICE_UNAVAILABLE",
         timestamp: Date.now(),
       });
 
-      const error = new Error('Database connection timeout');
+      const error = new Error("Database connection timeout");
       const formatted = formatError(error);
 
-      expect(formatted.message).toBe('Database connection timeout');
-      expect(formatted.code).toBe('SERVICE_UNAVAILABLE');
+      expect(formatted.message).toBe("Database connection timeout");
+      expect(formatted.code).toBe("SERVICE_UNAVAILABLE");
       expect(formatted.timestamp).toBeGreaterThan(0);
     });
   });

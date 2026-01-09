@@ -1,9 +1,9 @@
-import { safeParseJson } from "../utils/json";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { DevelopmentContext } from "../types";
-import type { HealingReport } from "./auto-healer";
-import { AutoHealer } from "./auto-healer";
+import type { DevelopmentContext } from "../types.js";
+import { safeParseJson } from "../utils/json.js";
+import type { HealingReport } from "./auto-healer.js";
+import { AutoHealer } from "./auto-healer.js";
 
 export interface MonitoringConfig {
   endpoint: string;
@@ -71,12 +71,11 @@ export class MonitoringScheduler {
   /**
    * Start the monitoring scheduler
    */
-  start(options: {
-    checkIntervalMs?: number;
-    configs?: MonitoringConfig[];
-  } = {}): void {
+  start(
+    options: { checkIntervalMs?: number; configs?: MonitoringConfig[] } = {},
+  ): void {
     if (this.running) {
-      this.ctx.logger?.('[MonitoringScheduler] Already running');
+      this.ctx.logger?.("[MonitoringScheduler] Already running");
       return;
     }
 
@@ -115,7 +114,7 @@ export class MonitoringScheduler {
       this.interval = null;
     }
 
-    this.ctx.logger?.('[MonitoringScheduler] Stopped');
+    this.ctx.logger?.("[MonitoringScheduler] Stopped");
     void this.persistState();
   }
 
@@ -165,7 +164,9 @@ export class MonitoringScheduler {
     }
 
     job.enabled = enabled;
-    this.ctx.logger?.(`[MonitoringScheduler] ${enabled ? 'Enabled' : 'Disabled'} job ${jobId}`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] ${enabled ? "Enabled" : "Disabled"} job ${jobId}`,
+    );
     void this.persistState();
     return true;
   }
@@ -179,22 +180,20 @@ export class MonitoringScheduler {
     }
 
     const now = new Date();
-    const dueJobs = Array.from(this.jobs.values()).filter(job =>
-      job.enabled &&
-      !job.running &&
-      this.isJobDue(job, now)
+    const dueJobs = Array.from(this.jobs.values()).filter(
+      (job) => job.enabled && !job.running && this.isJobDue(job, now),
     );
 
     if (dueJobs.length === 0) {
       return;
     }
 
-    this.ctx.logger?.(`[MonitoringScheduler] Running ${dueJobs.length} scheduled checks`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] Running ${dueJobs.length} scheduled checks`,
+    );
 
     // Run jobs in parallel
-    await Promise.allSettled(
-      dueJobs.map(job => this.runJob(job))
-    );
+    await Promise.allSettled(dueJobs.map((job) => this.runJob(job)));
   }
 
   /**
@@ -205,22 +204,25 @@ export class MonitoringScheduler {
     job.lastRun = new Date().toISOString();
 
     try {
-      this.ctx.logger?.(`[MonitoringScheduler] Running job ${job.id} for ${job.config.endpoint}`);
+      this.ctx.logger?.(
+        `[MonitoringScheduler] Running job ${job.id} for ${job.config.endpoint}`,
+      );
 
       // Create a healer for this endpoint
       const healer = new AutoHealer(this.ctx);
 
       // Check if it's self-monitoring or external endpoint
-      const isSelf = job.config.endpoint.includes('localhost') ||
-        job.config.endpoint.includes('127.0.0.1') ||
-        job.config.endpoint === (process.env.CORTEXDX_INTERNAL_ENDPOINT || '');
+      const isSelf =
+        job.config.endpoint.includes("localhost") ||
+        job.config.endpoint.includes("127.0.0.1") ||
+        job.config.endpoint === (process.env.CORTEXDX_INTERNAL_ENDPOINT || "");
 
       let report: HealingReport;
       if (isSelf) {
         // Self-healing
         report = await healer.healSelf({
           autoFix: job.config.autoHeal,
-          severityThreshold: 'major', // Only auto-fix major issues in background
+          severityThreshold: "major", // Only auto-fix major issues in background
         });
       } else {
         // External endpoint monitoring (no auto-fix for external systems)
@@ -237,20 +239,19 @@ export class MonitoringScheduler {
       job.consecutiveFailures = 0;
 
       this.ctx.logger?.(
-        `[MonitoringScheduler] Job ${job.id} completed: ${report.summary.severity}`
+        `[MonitoringScheduler] Job ${job.id} completed: ${report.summary.severity}`,
       );
-
     } catch (error) {
       job.consecutiveFailures++;
       this.ctx.logger?.(
         `[MonitoringScheduler] Job ${job.id} failed (${job.consecutiveFailures} consecutive):`,
-        error
+        error,
       );
 
       // Send alert if too many consecutive failures
       if (job.consecutiveFailures >= 3) {
         await this.sendAlert(job, {
-          type: 'consecutive_failures',
+          type: "consecutive_failures",
           message: `Job ${job.id} failed ${job.consecutiveFailures} times consecutively`,
           error: String(error),
         });
@@ -265,11 +266,14 @@ export class MonitoringScheduler {
   /**
    * Process job results and send notifications
    */
-  private async processJobResults(job: MonitoringJob, report: HealingReport): Promise<void> {
+  private async processJobResults(
+    job: MonitoringJob,
+    report: HealingReport,
+  ): Promise<void> {
     // Send webhook notification if configured
     if (job.config.webhook) {
       await this.sendWebhook(job.config.webhook, {
-        type: 'job_completed',
+        type: "job_completed",
         jobId: job.id,
         endpoint: job.config.endpoint,
         summary: report.summary,
@@ -280,7 +284,7 @@ export class MonitoringScheduler {
     // Send alerts for critical issues
     if (report.validation.blockersRemaining > 0) {
       await this.sendAlert(job, {
-        type: 'critical_issues',
+        type: "critical_issues",
         message: `${report.validation.blockersRemaining} critical issues detected`,
         findings: report.validation.blockersRemaining,
         summary: report.summary,
@@ -288,10 +292,16 @@ export class MonitoringScheduler {
     }
 
     // Log summary
-    const logLevel = report.summary.severity === 'success' ? 'info' :
-      report.summary.severity === 'partial' ? 'warn' : 'error';
+    const logLevel =
+      report.summary.severity === "success"
+        ? "info"
+        : report.summary.severity === "partial"
+          ? "warn"
+          : "error";
 
-    this.ctx.logger?.(`[MonitoringScheduler] [${logLevel.toUpperCase()}] ${job.id}: ${report.summary.message}`);
+    this.ctx.logger?.(
+      `[MonitoringScheduler] [${logLevel.toUpperCase()}] ${job.id}: ${report.summary.message}`,
+    );
   }
 
   /**
@@ -303,10 +313,10 @@ export class MonitoringScheduler {
   ): Promise<void> {
     try {
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'CortexDx-Monitor/1.0',
+          "Content-Type": "application/json",
+          "User-Agent": "CortexDx-Monitor/1.0",
         },
         body: JSON.stringify(payload),
       });
@@ -324,13 +334,16 @@ export class MonitoringScheduler {
   /**
    * Send alert notification
    */
-  private async sendAlert(job: MonitoringJob, alert: MonitoringAlert): Promise<void> {
+  private async sendAlert(
+    job: MonitoringJob,
+    alert: MonitoringAlert,
+  ): Promise<void> {
     this.ctx.logger?.(`[MonitoringScheduler] ALERT: ${alert.message}`);
 
     // Send webhook if configured
     if (job.config.webhook) {
       await this.sendWebhook(job.config.webhook, {
-        type: 'alert',
+        type: "alert",
         jobId: job.id,
         endpoint: job.config.endpoint,
         alert,
@@ -371,19 +384,25 @@ export class MonitoringScheduler {
    * Generate job ID from endpoint
    */
   private generateJobId(endpoint: string): string {
-    return `monitor_${endpoint.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    return `monitor_${endpoint.replace(/[^a-zA-Z0-9]/g, "_")}`;
   }
 
   /**
    * Get scheduler status
    */
   getStatus(): SchedulerStatus {
-    const activeJobs = Array.from(this.jobs.values()).filter(job => job.enabled).length;
+    const activeJobs = Array.from(this.jobs.values()).filter(
+      (job) => job.enabled,
+    ).length;
     const nextJob = Array.from(this.jobs.values())
-      .filter(job => job.enabled && job.nextRun)
+      .filter((job) => job.enabled && job.nextRun)
       .sort((a, b) => {
-        const aTime = a.nextRun ? new Date(a.nextRun).getTime() : Number.POSITIVE_INFINITY;
-        const bTime = b.nextRun ? new Date(b.nextRun).getTime() : Number.POSITIVE_INFINITY;
+        const aTime = a.nextRun
+          ? new Date(a.nextRun).getTime()
+          : Number.POSITIVE_INFINITY;
+        const bTime = b.nextRun
+          ? new Date(b.nextRun).getTime()
+          : Number.POSITIVE_INFINITY;
         return aTime - bTime;
       })[0];
 
@@ -391,7 +410,7 @@ export class MonitoringScheduler {
       running: this.running,
       activeJobs,
       lastCheck: new Date().toISOString(),
-      nextCheck: nextJob?.nextRun || 'No scheduled jobs',
+      nextCheck: nextJob?.nextRun || "No scheduled jobs",
     };
     this.lastStatus = status;
     return status;
@@ -417,9 +436,10 @@ export class MonitoringScheduler {
   addDefaultMonitoring(): void {
     // Self-monitoring
     this.addJob({
-      endpoint: process.env.CORTEXDX_INTERNAL_ENDPOINT || 'http://127.0.0.1:5001',
-      schedule: '*/5 * * * *', // Every 5 minutes
-      probes: ['handshake', 'protocol', 'security', 'performance'],
+      endpoint:
+        process.env.CORTEXDX_INTERNAL_ENDPOINT || "http://127.0.0.1:5001",
+      schedule: "*/5 * * * *", // Every 5 minutes
+      probes: ["handshake", "protocol", "security", "performance"],
       autoHeal: true,
       enabled: true,
     });
@@ -429,7 +449,7 @@ export class MonitoringScheduler {
    * Export monitoring configuration
    */
   exportConfig(): { jobs: MonitoringConfig[] } {
-    const jobs = Array.from(this.jobs.values()).map(job => job.config);
+    const jobs = Array.from(this.jobs.values()).map((job) => job.config);
     return { jobs };
   }
 

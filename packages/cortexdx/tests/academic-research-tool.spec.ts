@@ -3,7 +3,8 @@ import type { AcademicResearchReport } from "../src/research/academic-researcher
 import { executeAcademicIntegrationTool } from "../src/tools/academic-integration-tools.js";
 import type { McpTool } from "../src/types.js";
 
-type RunAcademicResearch = typeof import("../src/research/academic-researcher.js")["runAcademicResearch"];
+type RunAcademicResearch =
+  typeof import("../src/research/academic-researcher.js")["runAcademicResearch"];
 
 vi.mock("../src/research/academic-researcher.js", () => ({
   runAcademicResearch: vi.fn(async () => mockReport),
@@ -51,7 +52,8 @@ describe("cortexdx_academic_research tool", () => {
     expect(result.content?.[0]?.type).toBe("text");
     expect(result.content?.[0]?.text).toContain("MCP streaming");
     const runAcademicResearch = vi.mocked(
-      (await import("../src/research/academic-researcher.js")).runAcademicResearch as RunAcademicResearch,
+      (await import("../src/research/academic-researcher.js"))
+        .runAcademicResearch as RunAcademicResearch,
     );
     expect(runAcademicResearch).toHaveBeenCalledWith(
       expect.objectContaining({ topic: "MCP streaming", deterministic: true }),
@@ -60,7 +62,9 @@ describe("cortexdx_academic_research tool", () => {
 
   it("throws when topic is missing", async () => {
     const tool = buildResearchTool();
-    await expect(executeAcademicIntegrationTool(tool, {})).rejects.toThrow(/topic is required/);
+    await expect(executeAcademicIntegrationTool(tool, {})).rejects.toThrow(
+      /topic is required/,
+    );
   });
 });
 

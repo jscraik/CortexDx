@@ -6,7 +6,11 @@ import type {
   ProviderInstance,
   ProviderRegistration,
 } from "../registry/providers/academic.js";
-import type { DiagnosticContext, EvidencePointer, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  EvidencePointer,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 export const DEFAULT_PROVIDERS = [
   "context7",
@@ -48,6 +52,7 @@ export interface AcademicResearchOptions {
 export interface ResearchError {
   providerId: string;
   message: string;
+  evidence?: EvidencePointer;
 }
 
 export interface AcademicResearchReport {
@@ -68,6 +73,23 @@ export interface AcademicResearchReport {
     json: string;
   };
 }
+
+const PROVIDER_TIMEOUT_MS = (() => {
+  const envValue = process.env.ACADEMIC_PROVIDER_TIMEOUT_MS;
+  if (envValue === undefined) return 20000;
+  const parsed = Number.parseInt(envValue, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.warn(
+      `[academic-researcher] Invalid ACADEMIC_PROVIDER_TIMEOUT_MS="${envValue}". Using default 20000ms.`,
+    );
+    return 20000;
+  }
+  return parsed;
+})();
+const PROVIDER_MAX_CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(process.env.ACADEMIC_PROVIDER_MAX_CONCURRENCY ?? "3", 10) || 3,
+);
 
 type ProviderExecutor = (
   instance: ProviderInstance,
@@ -131,7 +153,7 @@ const providerExecutors: Record<string, ProviderExecutor> = {
       | { results?: Array<Record<string, unknown>> };
     const works = Array.isArray(worksResponse)
       ? worksResponse
-      : worksResponse?.results ?? [];
+      : (worksResponse?.results ?? []);
     const findings = works.map((work, index) => {
       const title = String(work.title ?? `OpenAlex work ${index + 1}`);
       const summary = String(
@@ -225,13 +247,17 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     };
   },
   "research-quality": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool("research_quality_assess_quality", {
-      text: ctx.topic,
-      title: ctx.topic,
-      criteria: ["methodology", "completeness", "accuracy"],
-    });
+    const assessment = await instance.executeTool(
+      "research_quality_assess_quality",
+      {
+        text: ctx.topic,
+        title: ctx.topic,
+        criteria: ["methodology", "completeness", "accuracy"],
+      },
+    );
     const score = Number(
-      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics
+        ?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,
@@ -252,16 +278,14 @@ const providerExecutors: Record<string, ProviderExecutor> = {
     };
   },
   "vibe-check": async (instance, registration, ctx) => {
-    const assessment = await instance.executeTool(
-      "vibe_check_assess_quality",
-      {
-        target: ctx.topic,
-        criteria: ["methodology", "completeness", "accuracy"],
-        depth: "thorough",
-      },
-    );
+    const assessment = await instance.executeTool("vibe_check_assess_quality", {
+      target: ctx.topic,
+      criteria: ["methodology", "completeness", "accuracy"],
+      depth: "thorough",
+    });
     const score = Number(
-      (assessment as { metrics?: { overall_score?: number } })?.metrics?.overall_score ?? 0.5,
+      (assessment as { metrics?: { overall_score?: number } })?.metrics
+        ?.overall_score ?? 0.5,
     );
     return {
       providerId: registration.id,
@@ -383,6 +407,7 @@ function createResearchContext(
   topic: string,
   deterministic: boolean,
   headers: Record<string, string>,
+  signal?: AbortSignal,
 ): DiagnosticContext {
   const defaultHeaders = new Headers();
   for (const [key, value] of Object.entries(headers)) {
@@ -401,9 +426,11 @@ function createResearchContext(
           mergedHeaders.set(key, value);
         });
       }
+      const mergedSignal = mergeSignals(signal, init?.signal);
       const response = await fetch(input, {
         ...init,
         headers: mergedHeaders,
+        signal: mergedSignal,
       });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -420,6 +447,36 @@ function createResearchContext(
     evidence: () => undefined,
     deterministic,
   } as DiagnosticContext;
+}
+
+function mergeSignals(
+  ...signals: Array<AbortSignal | null | undefined>
+): AbortSignal | undefined {
+  const active = signals.filter(Boolean) as AbortSignal[];
+  if (active.length === 0) return undefined;
+  if (active.length === 1) return active[0];
+  if (typeof AbortSignal.any === "function") {
+    return AbortSignal.any(active);
+  }
+  const controller = new AbortController();
+  const forwardAbort = () => controller.abort();
+  const attachedSignals: AbortSignal[] = [];
+  for (const signal of active) {
+    if (signal.aborted) {
+      controller.abort();
+      break;
+    }
+    signal.addEventListener("abort", forwardAbort, { once: true });
+    attachedSignals.push(signal);
+  }
+  // Cleanup listeners when controller aborts
+  const cleanup = () => {
+    for (const signal of attachedSignals) {
+      signal.removeEventListener("abort", forwardAbort);
+    }
+  };
+  controller.signal.addEventListener("abort", cleanup, { once: true });
+  return controller.signal;
 }
 
 async function writeArtifacts(
@@ -451,6 +508,9 @@ function buildMarkdown(report: AcademicResearchReport): string {
     lines.push("- **Errors:**");
     for (const error of report.summary.errors) {
       lines.push(`  - ${error.providerId}: ${error.message}`);
+      if (error.evidence) {
+        lines.push(`    - Evidence: ${error.evidence.ref}`);
+      }
     }
   }
   lines.push("\n## Findings\n");
@@ -590,36 +650,129 @@ async function executeProviders(params: {
   const providers: ProviderExecutionResult[] = [];
   const errors: ResearchError[] = [];
 
-  for (const providerId of params.providerIds) {
-    const missingMessage = params.missingCredentials.get(providerId);
-    if (missingMessage) {
-      errors.push({ providerId, message: missingMessage });
-      continue;
-    }
-    const handler = providerExecutors[providerId];
-    if (!handler) {
-      errors.push({ providerId, message: "No handler defined" });
-      continue;
-    }
-    try {
-      const registration = registry.getProvider(providerId);
-      if (!registration) {
-        errors.push({ providerId, message: "Provider not registered" });
-        continue;
-      }
-      const instance = registry.createProviderInstance(
-        providerId,
-        params.context,
-      );
-      const result = await handler(instance, registration, params.execCtx);
-      providers.push(result);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push({ providerId, message });
-    }
+  // Pre-partition work into buckets to avoid race conditions with shared queue
+  const workerCount = Math.min(
+    PROVIDER_MAX_CONCURRENCY,
+    Math.max(1, params.providerIds.length),
+  );
+  const buckets: string[][] = Array.from({ length: workerCount }, () => []);
+  for (let i = 0; i < params.providerIds.length; i++) {
+    buckets[i % workerCount].push(params.providerIds[i]);
   }
 
+  const worker = async (bucket: string[]): Promise<void> => {
+    for (const providerId of bucket) {
+      const missingMessage = params.missingCredentials.get(providerId);
+      if (missingMessage) {
+        errors.push({ providerId, message: missingMessage });
+        continue;
+      }
+      const handler = providerExecutors[providerId];
+      if (!handler) {
+        errors.push({ providerId, message: "No handler defined" });
+        continue;
+      }
+      const outcome = await runProviderWithTimeout({
+        providerId,
+        registry,
+        handler,
+        execCtx: params.execCtx,
+        baseContext: params.context,
+      });
+      if (outcome?.result) {
+        providers.push(outcome.result);
+      }
+      if (outcome?.error) {
+        errors.push(outcome.error);
+      }
+    }
+  };
+
+  await Promise.all(buckets.map((bucket) => worker(bucket)));
   return { providers, errors };
+}
+
+function getTimeoutMs(deterministic?: boolean): number {
+  if (Number.isFinite(PROVIDER_TIMEOUT_MS) && PROVIDER_TIMEOUT_MS > 0) {
+    return PROVIDER_TIMEOUT_MS;
+  }
+  return deterministic ? 10000 : 20000;
+}
+
+function createProviderContext(
+  baseContext: DiagnosticContext,
+  controller: AbortController,
+): DiagnosticContext {
+  return {
+    ...baseContext,
+    request: async <T>(input: RequestInfo, init?: RequestInit): Promise<T> => {
+      const mergedSignal = mergeSignals(controller.signal, init?.signal);
+      return baseContext.request<T>(input, { ...init, signal: mergedSignal });
+    },
+  } satisfies DiagnosticContext;
+}
+
+async function runProviderWithTimeout(params: {
+  providerId: string;
+  registry: ReturnType<typeof getAcademicRegistry>;
+  handler: ProviderExecutor;
+  execCtx: ProviderExecutionContext;
+  baseContext: DiagnosticContext;
+}): Promise<{ result?: ProviderExecutionResult; error?: ResearchError }> {
+  const registration = params.registry.getProvider(params.providerId);
+  if (!registration) {
+    return {
+      error: { providerId: params.providerId, message: "Provider not registered" },
+    };
+  }
+  const controller = new AbortController();
+  const timeoutMs = getTimeoutMs(params.baseContext.deterministic);
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const context = createProviderContext(params.baseContext, controller);
+    const instance = params.registry.createProviderInstance(
+      params.providerId,
+      context,
+    );
+    const execution = params.handler(instance, registration, params.execCtx);
+    // Suppress unhandled rejection if timeout fires before execution completes
+    execution.catch(() => {});
+    const result = await Promise.race([
+      execution,
+      new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          controller.abort();
+          reject(
+            new Error(
+              `Provider ${params.providerId} timed out after ${timeoutMs}ms`,
+            ),
+          );
+        }, timeoutMs);
+      }),
+    ]);
+    return { result };
+  } catch (error) {
+    return { error: normalizeProviderError(params.providerId, error, timeoutMs) };
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+  }
+}
+
+function normalizeProviderError(
+  providerId: string,
+  error: unknown,
+  timeoutMs: number,
+): ResearchError {
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+  if (lower.includes("timeout") || lower.includes("timed out")) {
+    return {
+      providerId,
+      message,
+      evidence: { type: "log", ref: `timeout/${providerId}?ms=${timeoutMs}` },
+    } satisfies ResearchError;
+  }
+  return { providerId, message } satisfies ResearchError;
 }
 
 function createReport(input: {

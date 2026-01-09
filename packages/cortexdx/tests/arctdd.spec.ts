@@ -19,9 +19,7 @@ describe("ArcTDD Report Generator", () => {
           severity: "blocker",
           title: "Invalid JSON-RPC response",
           description: "Server returns HTML instead of JSON",
-          evidence: [
-            { type: "log", ref: "server.log", lines: [10, 15] },
-          ],
+          evidence: [{ type: "log", ref: "server.log", lines: [10, 15] }],
           recommendation: "Fix the routing configuration",
         },
         {
@@ -30,9 +28,7 @@ describe("ArcTDD Report Generator", () => {
           severity: "major",
           title: "Missing CORS headers",
           description: "CORS headers are not properly configured",
-          evidence: [
-            { type: "network", ref: "request.har" },
-          ],
+          evidence: [{ type: "network", ref: "request.har" }],
         },
         {
           id: "minor-1",

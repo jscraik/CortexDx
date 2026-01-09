@@ -37,7 +37,7 @@ interface DiagnoseOptions {
 
 export async function runDiagnose({
   endpoint,
-  opts
+  opts,
 }: {
   endpoint: string;
   opts: DiagnoseOptions;
@@ -47,13 +47,21 @@ export async function runDiagnose({
   const t0 = Date.now();
   const sessionId = `diagnose-${Date.now().toString(36)}`;
 
-  const suites = typeof opts.suites === "string" && opts.suites.length > 0
-    ? opts.suites.split(",").map((s) => s.trim()).filter(Boolean)
-    : [];
+  const suites =
+    typeof opts.suites === "string" && opts.suites.length > 0
+      ? opts.suites
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
   const budgets: SandboxBudgets = {
-    timeMs: coerceNumber(opts.budgetTime) ?? coerceNumber(opts["budget-time"]) ?? 5000,
-    memMb: coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96
+    timeMs:
+      coerceNumber(opts.budgetTime) ??
+      coerceNumber(opts["budget-time"]) ??
+      5000,
+    memMb:
+      coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96,
   };
   const headers = await resolveAuthHeaders({
     auth: opts.auth,
@@ -70,26 +78,28 @@ export async function runDiagnose({
 
   // Check if async mode is requested (MCP draft spec)
   if (opts.async) {
-    const { executeDiagnoseAsync } = await import('./commands/async-task-utils.js');
+    const { executeDiagnoseAsync } = await import(
+      "./commands/async-task-utils.js"
+    );
 
     const taskTtl = coerceNumber(opts.taskTtl) || 300000; // Default 5 minutes
     const pollInterval = coerceNumber(opts.pollInterval) || 5000; // Default 5 seconds
 
-    console.log('🔄 Running diagnostic in async mode...\n');
+    console.log("🔄 Running diagnostic in async mode...\n");
 
     // Execute as async task
-    const resultResponse = await executeDiagnoseAsync({
+    const resultResponse = (await executeDiagnoseAsync({
       endpoint,
       diagnosticArgs: {
         endpoint,
         suites,
-        full: opts.full
+        full: opts.full,
       },
       taskTtl,
       pollInterval,
       headers,
-      noColor: opts.noColor
-    }) as { content?: Array<{ type: string; text?: string }> };
+      noColor: opts.noColor,
+    })) as { content?: Array<{ type: string; text?: string }> };
 
     // Extract findings from async result (High #9: handle multiple content formats)
     let resultText: string | undefined;
@@ -97,7 +107,7 @@ export async function runDiagnose({
     // Try to extract text from various content formats
     if (resultResponse.content && Array.isArray(resultResponse.content)) {
       for (const content of resultResponse.content) {
-        if (content.type === 'text' && content.text) {
+        if (content.type === "text" && content.text) {
           resultText = content.text;
           break;
         }
@@ -105,8 +115,8 @@ export async function runDiagnose({
     }
 
     if (!resultText) {
-      console.error('❌ No text content received from async task');
-      console.error('   Received:', JSON.stringify(resultResponse, null, 2));
+      console.error("❌ No text content received from async task");
+      console.error("   Received:", JSON.stringify(resultResponse, null, 2));
       return 1;
     }
 
@@ -114,14 +124,14 @@ export async function runDiagnose({
     try {
       asyncResult = JSON.parse(resultText);
     } catch (err) {
-      console.error('❌ Failed to parse async task result:', err);
-      console.error('   Raw result:', resultText.substring(0, 200));
+      console.error("❌ Failed to parse async task result:", err);
+      console.error("   Raw result:", resultText.substring(0, 200));
       return 1;
     }
 
     // Validate result structure
-    if (!asyncResult || typeof asyncResult !== 'object') {
-      console.error('❌ Invalid result structure (expected object)');
+    if (!asyncResult || typeof asyncResult !== "object") {
+      console.error("❌ Invalid result structure (expected object)");
       return 1;
     }
 
@@ -156,7 +166,7 @@ export async function runDiagnose({
     const hasBlocker = findings.some((f) => f.severity === "blocker");
     const hasMajor = findings.some((f) => f.severity === "major");
 
-    console.log('\n✅ Async diagnostic complete');
+    console.log("\n✅ Async diagnostic complete");
     console.log(`   Reports written to: ${outDir}`);
 
     return hasBlocker ? 1 : hasMajor ? 2 : 0;
@@ -169,7 +179,7 @@ export async function runDiagnose({
     suites,
     full: Boolean(opts.full),
     deterministic: Boolean(opts.deterministic),
-    budgets
+    budgets,
   });
 
   const stamp = {
@@ -201,16 +211,24 @@ export async function runDiagnose({
   return hasBlocker ? 1 : hasMajor ? 2 : 0;
 }
 
-function writeArtifacts(outDir: string, stamp: Record<string, unknown>, findings: Finding[]): void {
+function writeArtifacts(
+  outDir: string,
+  stamp: Record<string, unknown>,
+  findings: Finding[],
+): void {
   const json = buildJsonReport(stamp, findings);
   const md = buildMarkdownReport(stamp, findings);
   const arc = buildArcTddPlan(stamp, findings);
   const fp = buildFilePlan(findings);
 
-  writeFileSync(join(outDir, "cortexdx-findings.json"), JSON.stringify(json, null, 2));
+  writeFileSync(
+    join(outDir, "cortexdx-findings.json"),
+    JSON.stringify(json, null, 2),
+  );
   writeFileSync(join(outDir, "cortexdx-report.md"), md);
   writeFileSync(join(outDir, "cortexdx-arctdd.md"), arc);
-  if (fp.length) writeFileSync(join(outDir, "cortexdx-fileplan.patch"), fp.join("\n"));
+  if (fp.length)
+    writeFileSync(join(outDir, "cortexdx-fileplan.patch"), fp.join("\n"));
 }
 
 function coerceNumber(value: number | string | undefined): number | undefined {

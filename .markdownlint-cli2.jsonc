@@ -1,33 +1,31 @@
 {
-    // Markdownlint configuration for CortexDx MCP documentation
-    "config": {
-        // Line length - allow longer lines for code examples and links
-        "MD013": {
-            "line_length": 120,
-            "code_blocks": false,
-            "tables": false,
-            "headings": false
-        },
-        // Allow inline HTML for badges and formatting
-        "MD033": false,
-        // Allow duplicate headings in different files
-        "MD024": {
-            "siblings_only": true
-        },
-        // Allow bare URLs for GitHub links
-        "MD034": false,
-        // First line in file should be a top level heading - disabled for some files
-        "MD041": false
+  // Markdownlint configuration for CortexDx MCP documentation
+  "config": {
+    // Line length - allow longer lines for code examples and links
+    "MD013": {
+      "line_length": 120,
+      "code_blocks": false,
+      "tables": false,
+      "headings": false
     },
-    "globs": [
-        "**/*.md"
-    ],
-    "ignores": [
-        "node_modules/**",
-        ".nx/**",
-        "dist/**",
-        "reports/**",
-        "enhanced-reports/**",
-        "packages/cortexdx/node_modules/**"
-    ]
+    // Allow inline HTML for badges and formatting
+    "MD033": false,
+    // Allow duplicate headings in different files
+    "MD024": {
+      "siblings_only": true
+    },
+    // Allow bare URLs for GitHub links
+    "MD034": false,
+    // First line in file should be a top level heading - disabled for some files
+    "MD041": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "node_modules/**",
+    ".nx/**",
+    "dist/**",
+    "reports/**",
+    "enhanced-reports/**",
+    "packages/cortexdx/node_modules/**"
+  ]
 }

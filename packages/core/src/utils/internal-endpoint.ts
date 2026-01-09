@@ -40,10 +40,14 @@ export function parseHeaderList(input?: string): HeaderMap {
 export function resolveInternalHeaders(): HeaderMap {
   const headers: HeaderMap = {};
 
-  const explicitHeaders = parseHeaderList(process.env.CORTEXDX_INTERNAL_HEADERS);
+  const explicitHeaders = parseHeaderList(
+    process.env.CORTEXDX_INTERNAL_HEADERS,
+  );
   Object.assign(headers, explicitHeaders);
 
-  const authHeader = parseHeaderPair(process.env.CORTEXDX_INTERNAL_AUTH_HEADER ?? "");
+  const authHeader = parseHeaderPair(
+    process.env.CORTEXDX_INTERNAL_AUTH_HEADER ?? "",
+  );
   if (authHeader) {
     headers[authHeader[0]] = authHeader[1];
   }
@@ -83,5 +87,8 @@ export function mergeHeaders<T extends RequestInit | undefined>(
 }
 
 export function formatHeadersForCli(headers: HeaderMap): string[] {
-  return Object.entries(headers).flatMap(([key, value]) => ["--header", `${key}: ${value}`]);
+  return Object.entries(headers).flatMap(([key, value]) => [
+    "--header",
+    `${key}: ${value}`,
+  ]);
 }

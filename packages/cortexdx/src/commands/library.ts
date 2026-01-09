@@ -1,6 +1,6 @@
-import { ingestMcpDocsSnapshot } from "../library/mcp-docs-ingestion";
-import type { McpDocsIngestResult } from "../library/mcp-docs-ingestion";
-import { createCliLogger } from "../logging/logger";
+import type { McpDocsIngestResult } from "../library/mcp-docs-ingestion.js";
+import { ingestMcpDocsSnapshot } from "../library/mcp-docs-ingestion.js";
+import { createCliLogger } from "../logging/logger.js";
 
 const logger = createCliLogger("library");
 
@@ -29,7 +29,9 @@ export async function runLibraryIngestCommand(
     return 0;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : `Unknown error: ${String(error)}`;
+      error instanceof Error
+        ? error.message
+        : `Unknown error: ${String(error)}`;
     logger.error(message, { error });
     return 1;
   }
@@ -42,12 +44,23 @@ function printIngestionSummary(
   const mode = dryRun ? "DRY-RUN" : "INGEST";
   logger.info(
     `${mode} MCP docs snapshot ${result.version} • chunks=${result.chunksProcessed} docs=${result.documentsInserted}`,
-    { mode, version: result.version, chunksProcessed: result.chunksProcessed, documentsInserted: result.documentsInserted }
+    {
+      mode,
+      version: result.version,
+      chunksProcessed: result.chunksProcessed,
+      documentsInserted: result.documentsInserted,
+    },
   );
-  logger.info(`Manifest: ${result.manifestPath}`, { manifestPath: result.manifestPath });
-  logger.info(`Chunks:   ${result.chunksPath}`, { chunksPath: result.chunksPath });
+  logger.info(`Manifest: ${result.manifestPath}`, {
+    manifestPath: result.manifestPath,
+  });
+  logger.info(`Chunks:   ${result.chunksPath}`, {
+    chunksPath: result.chunksPath,
+  });
   if (result.storagePath) {
-    logger.info(`Storage:  ${result.storagePath}`, { storagePath: result.storagePath });
+    logger.info(`Storage:  ${result.storagePath}`, {
+      storagePath: result.storagePath,
+    });
   }
 }
 

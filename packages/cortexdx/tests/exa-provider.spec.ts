@@ -62,7 +62,10 @@ describe("ExaProvider search", () => {
     globalThis.fetch = fetchMock as typeof globalThis.fetch;
 
     const provider = new ExaProvider(baseContext);
-    const results = await provider.search({ query: "SSE diagnostics", limit: 1 });
+    const results = await provider.search({
+      query: "SSE diagnostics",
+      limit: 1,
+    });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
