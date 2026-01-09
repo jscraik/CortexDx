@@ -136,7 +136,15 @@ async function runAsyncDiagnose(ctx: DiagnoseContext): Promise<number> {
 
   const asyncResult = (await executeDiagnoseAsync({
     endpoint: ctx.endpoint,
-    diagnosticArgs: { endpoint: ctx.endpoint, suites: ctx.suites, full: ctx.opts.full },
+    diagnosticArgs: {
+      endpoint: ctx.endpoint,
+      suites: ctx.suites,
+      full: ctx.opts.full,
+      simulateExternal: Boolean(ctx.opts.simulateExternal),
+      a11y: Boolean(ctx.opts.a11y),
+      otelExporter: ctx.opts.otelExporter,
+      har: Boolean(ctx.opts.har),
+    },
     taskTtl,
     pollInterval,
     headers: ctx.headers,
