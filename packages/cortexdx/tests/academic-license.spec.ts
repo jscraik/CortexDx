@@ -77,7 +77,6 @@ describe("academic provider license handling", () => {
         },
       ],
     });
-    const { runAcademicResearch } = await import("../src/research/academic-researcher.js");
 
     const report = await runAcademicResearch({
       topic: "License-full research",
