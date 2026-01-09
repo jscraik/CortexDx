@@ -314,7 +314,7 @@ describe("CLI Self-Healing Commands", () => {
         config: "config.json",
       });
 
-      // Verify that the config file was read
+      // Wait for async config loading to complete
       await vi.waitFor(() => {
         expect(readFileSpy).toHaveBeenCalledWith("config.json", "utf-8");
       });
@@ -585,7 +585,7 @@ describe("CLI Self-Healing Commands", () => {
         config: "config.json",
       });
 
-      // Verify that the config file was read
+      // Wait for async config loading to complete
       await vi.waitFor(() => {
         expect(readFileSpy).toHaveBeenCalledWith("config.json", "utf-8");
       });
