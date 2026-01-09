@@ -4,8 +4,9 @@
  * Requirements: 3.1, 5.1, 6.1
  */
 
-import { isStoryFeatureEnabled } from "../story/feature-flag";
-import type { McpTool } from "../types";
+import { PROTOCOL_VERSIONS } from "@brainwav/cortexdx-core";
+import { isStoryFeatureEnabled } from "../story/feature-flag.js";
+import type { McpTool } from "../types.js";
 
 const baseDiagnosticTools: McpTool[] = [
   {
@@ -43,8 +44,7 @@ const baseDiagnosticTools: McpTool[] = [
   },
   {
     name: "validate_protocol_compliance",
-    description:
-      "Validate MCP server compliance with protocol specification version 2024-11-05. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.",
+    description: `Validate MCP server compliance with protocol specification version ${PROTOCOL_VERSIONS.CURRENT}. Checks JSON-RPC message formats, response structures, and required capabilities with 99% accuracy.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -54,8 +54,8 @@ const baseDiagnosticTools: McpTool[] = [
         },
         protocolVersion: {
           type: "string",
-          description:
-            "MCP protocol version to validate against (default: 2024-11-05)",
+          description: `MCP protocol version to validate against (default: ${PROTOCOL_VERSIONS.CURRENT})`,
+          default: PROTOCOL_VERSIONS.CURRENT,
         },
         strictMode: {
           type: "boolean",

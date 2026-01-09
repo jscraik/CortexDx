@@ -1,8 +1,16 @@
 import { parentPort, workerData } from "node:worker_threads";
-import type { DiagnosticContext, DiagnosticPlugin, Finding, TransportExchange } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+  TransportExchange,
+} from "@brainwav/cortexdx-core";
 import { getPluginById } from "../plugins/index.js";
 import { httpAdapter } from "../adapters/http.js";
-import { createInspectorSession, type SharedSessionState } from "../context/inspector-session.js";
+import {
+  createInspectorSession,
+  type SharedSessionState,
+} from "../context/inspector-session.js";
 import { createDefaultKnowledgeOrchestrator } from "../knowledge/default-orchestrator.js";
 
 type Inbound = {
@@ -22,7 +30,8 @@ async function main(): Promise<void> {
   const plugin: DiagnosticPlugin | undefined = getPluginById(data.pluginId);
   if (!plugin) throw new Error(`Unknown plugin id: ${data.pluginId}`);
 
-  const workerSharedState: SharedSessionState | undefined = data.ctxInit.sessionState
+  const workerSharedState: SharedSessionState | undefined = data.ctxInit
+    .sessionState
     ? {
         sessionId: data.ctxInit.sessionState.sessionId,
         initialize: data.ctxInit.sessionState.initialize,
@@ -30,22 +39,30 @@ async function main(): Promise<void> {
       }
     : undefined;
 
-  const session = createInspectorSession(data.ctxInit.endpoint, data.ctxInit.headers, {
-    preinitialized: data.ctxInit.preinitialized,
-    sharedState: workerSharedState,
-  });
+  const session = createInspectorSession(
+    data.ctxInit.endpoint,
+    data.ctxInit.headers,
+    {
+      preinitialized: data.ctxInit.preinitialized,
+      sharedState: workerSharedState,
+    },
+  );
   const knowledge = createDefaultKnowledgeOrchestrator();
 
   const baseHeaders = data.ctxInit.headers ?? {};
   const ctx: DiagnosticContext = {
     endpoint: data.ctxInit.endpoint,
     headers: baseHeaders,
-    logger: (...args: unknown[]) => parentPort?.postMessage({ type: "log", args }),
+    logger: (...args: unknown[]) =>
+      parentPort?.postMessage({ type: "log", args }),
     request: (input, init) => {
       const merged =
         Object.keys(baseHeaders).length === 0 && !init?.headers
           ? init?.headers
-          : { ...baseHeaders, ...(init?.headers as Record<string, string> | undefined) };
+          : {
+              ...baseHeaders,
+              ...(init?.headers as Record<string, string> | undefined),
+            };
       const nextInit = merged ? { ...(init ?? {}), headers: merged } : init;
       return httpAdapter(input, nextInit);
     },
@@ -73,12 +90,10 @@ async function main(): Promise<void> {
         evidence: [
           {
             type: "log",
-            ref: JSON.stringify(
-              {
-                initialize: transcript.initialize?.response ?? null,
-                recent: transcript.exchanges.slice(-2),
-              },
-            ).slice(0, 600),
+            ref: JSON.stringify({
+              initialize: transcript.initialize?.response ?? null,
+              recent: transcript.exchanges.slice(-2),
+            }).slice(0, 600),
           },
         ],
         tags: ["transport", "evidence"],
@@ -89,6 +104,9 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  parentPort?.postMessage({ type: "error", error: String(err?.message ?? err) });
+  parentPort?.postMessage({
+    type: "error",
+    error: String(err?.message ?? err),
+  });
   process.exit(1);
 });

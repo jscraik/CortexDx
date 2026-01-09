@@ -1,18 +1,18 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { loadProjectContext } from "../context/project-context";
-import { SelfImprovementPlugin } from "../plugins/development/self-improvement";
+import { loadProjectContext } from "../context/project-context.js";
+import { SelfImprovementPlugin } from "../plugins/development/self-improvement.js";
 import type {
   ChatMessage,
   DevelopmentContext,
   Finding,
   ProjectContext,
-} from "../types";
+} from "../types.js";
 import {
   mergeHeaders,
   resolveInternalHeaders,
-} from "../utils/internal-endpoint";
-import { safeParseJson } from "../utils/json";
+} from "../utils/internal-endpoint.js";
+import { safeParseJson } from "../utils/json.js";
 
 const DEFAULT_MEMORY_PATH = "/debug/memory";
 const DEFAULT_MEMORY_THRESHOLD_MB = 512;

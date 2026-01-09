@@ -9,14 +9,12 @@
       "options": {
         "command": "pnpm --dir packages/cortexdx run build"
       },
-      "outputs": [
-        "{projectRoot}/dist"
-      ]
+      "outputs": ["{projectRoot}/dist"]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/cortexdx run test"
+        "command": "NODE_ENV=test pnpm --dir packages/cortexdx run test"
       }
     },
     "lint": {
@@ -56,9 +54,5 @@
       }
     }
   },
-  "tags": [
-    "diagnostics",
-    "mcp",
-    "stateless"
-  ]
+  "tags": ["diagnostics", "mcp", "stateless"]
 }

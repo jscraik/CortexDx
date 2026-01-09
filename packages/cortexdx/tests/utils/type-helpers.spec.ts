@@ -49,7 +49,7 @@ describe("Type Helpers", () => {
       };
 
       expect(() => getSessionState(session)).toThrow(
-        "Invalid session state: expected object, got object"
+        "Invalid session state: expected object, got object",
       );
     });
 
@@ -64,7 +64,7 @@ describe("Type Helpers", () => {
       };
 
       expect(() => getSessionState(session)).toThrow(
-        "Invalid session state: expected object, got string"
+        "Invalid session state: expected object, got string",
       );
     });
 
@@ -108,25 +108,25 @@ describe("Type Helpers", () => {
 
     it("should throw error for null", () => {
       expect(() => toRecord(null as any)).toThrow(
-        "Cannot convert object to Record"
+        "Cannot convert object to Record",
       );
     });
 
     it("should throw error for undefined", () => {
       expect(() => toRecord(undefined as any)).toThrow(
-        "Cannot convert undefined to Record"
+        "Cannot convert undefined to Record",
       );
     });
 
     it("should throw error for primitive values", () => {
       expect(() => toRecord("string" as any)).toThrow(
-        "Cannot convert string to Record"
+        "Cannot convert string to Record",
       );
       expect(() => toRecord(123 as any)).toThrow(
-        "Cannot convert number to Record"
+        "Cannot convert number to Record",
       );
       expect(() => toRecord(true as any)).toThrow(
-        "Cannot convert boolean to Record"
+        "Cannot convert boolean to Record",
       );
     });
 
@@ -179,9 +179,9 @@ describe("Type Helpers", () => {
         // Missing 'name' and 'active'
       };
 
-      expect(() => fromRecord<TestType>(record, ["id", "name", "active"])).toThrow(
-        "Missing required key: name"
-      );
+      expect(() =>
+        fromRecord<TestType>(record, ["id", "name", "active"]),
+      ).toThrow("Missing required key: name");
     });
 
     it("should allow optional validation with empty array", () => {
@@ -234,13 +234,13 @@ describe("Type Helpers", () => {
 
     it("should throw error for null finding", () => {
       expect(() => getFindingField(null as any, "field")).toThrow(
-        "Invalid finding: expected object, got object"
+        "Invalid finding: expected object, got object",
       );
     });
 
     it("should throw error for non-object finding", () => {
       expect(() => getFindingField("not an object" as any, "field")).toThrow(
-        "Invalid finding: expected object, got string"
+        "Invalid finding: expected object, got string",
       );
     });
 

@@ -1,4 +1,4 @@
-import type { Story } from "../story/story-schema";
+import type { Story } from "../story/story-schema.js";
 
 const formatSummary = (story: Story): string => {
   const timestamp = new Date(story.timestamp).toUTCString();
@@ -6,7 +6,11 @@ const formatSummary = (story: Story): string => {
   return `At ${timestamp}, ${story.trigger.details}. Confidence ${confidence}%.`;
 };
 
-const createChip = (doc: Document, label: string, count: number): HTMLElement => {
+const createChip = (
+  doc: Document,
+  label: string,
+  count: number,
+): HTMLElement => {
   const chip = doc.createElement("span");
   chip.className = "story-card__chip";
   chip.textContent = `${label}: ${count}`;
@@ -49,7 +53,9 @@ export const createStoryCard = (doc: Document, story: Story): HTMLElement => {
   chipRow.className = "story-card__chips";
   chipRow.appendChild(createChip(doc, "Logs", story.evidence.logs.length));
   chipRow.appendChild(createChip(doc, "Traces", story.evidence.traces.length));
-  chipRow.appendChild(createChip(doc, "Metrics", story.evidence.metrics.length));
+  chipRow.appendChild(
+    createChip(doc, "Metrics", story.evidence.metrics.length),
+  );
   article.appendChild(chipRow);
 
   const actionButton = doc.createElement("button");

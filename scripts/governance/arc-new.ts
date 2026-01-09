@@ -2,12 +2,12 @@
 /**
  * Arc Scaffolding Tool
  * Creates new arc with proper structure and templates
- * 
+ *
  * Usage: pnpm arc:new --slug <arc-slug> --title "<Arc Title>" [--steps 1-7] [--parent <parent-slug>]
  */
 
-import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 interface ArcOptions {
   slug: string;
@@ -20,7 +20,7 @@ interface ArcOptions {
 
 interface ArcManifest {
   task: string;
-  tier: 'fix' | 'feature' | 'refactor';
+  tier: "fix" | "feature" | "refactor";
   north_star: {
     goal: string;
     acceptance_test_path: string;
@@ -53,15 +53,15 @@ class ArcScaffolder {
 
   constructor(options: ArcOptions) {
     this.options = options;
-    this.baseDir = join(process.env.HOME || '~', 'Changelog', options.slug);
-    this.arcDir = join(this.baseDir, 'arcs', '001');
+    this.baseDir = join(process.env.HOME || "~", "Changelog", options.slug);
+    this.arcDir = join(this.baseDir, "arcs", "001");
   }
 
   async scaffold(): Promise<void> {
     console.log(`\n🏗️  Scaffolding Arc: ${this.options.title}\n`);
 
     if (this.options.preview) {
-      console.log('📋 Preview Mode - No files will be created\n');
+      console.log("📋 Preview Mode - No files will be created\n");
       this.showPreview();
       return;
     }
@@ -69,13 +69,13 @@ class ArcScaffolder {
     // Check if arc already exists
     if (existsSync(this.baseDir)) {
       console.error(`❌ Error: Arc already exists at ${this.baseDir}`);
-      console.error('   Use a different slug or delete the existing arc');
+      console.error("   Use a different slug or delete the existing arc");
       process.exit(1);
     }
 
     // Create directory structure
     this.createDirectories();
-    
+
     // Create arc files
     this.createManifest();
     this.createNotes();
@@ -90,7 +90,7 @@ class ArcScaffolder {
       this.updateParentArc();
     }
 
-    console.log('\n✅ Arc scaffolding complete!\n');
+    console.log("\n✅ Arc scaffolding complete!\n");
     this.printNextSteps();
   }
 
@@ -98,14 +98,14 @@ class ArcScaffolder {
     const dirs = [
       this.baseDir,
       this.arcDir,
-      join(this.baseDir, 'evidence'),
-      join(this.baseDir, 'logs', 'vibe-check'),
-      join(this.baseDir, 'logs', 'models'),
-      join(this.baseDir, 'logs', 'trace-context'),
-      join(this.baseDir, 'research'),
-      join(this.baseDir, 'design', 'contracts'),
-      join(this.baseDir, 'verification'),
-      join(this.baseDir, 'tests', 'acceptance'),
+      join(this.baseDir, "evidence"),
+      join(this.baseDir, "logs", "vibe-check"),
+      join(this.baseDir, "logs", "models"),
+      join(this.baseDir, "logs", "trace-context"),
+      join(this.baseDir, "research"),
+      join(this.baseDir, "design", "contracts"),
+      join(this.baseDir, "verification"),
+      join(this.baseDir, "tests", "acceptance"),
     ];
 
     for (const dir of dirs) {
@@ -117,10 +117,10 @@ class ArcScaffolder {
   private createManifest(): void {
     const manifest: ArcManifest = {
       task: this.options.slug,
-      tier: 'feature', // Default, user should update
+      tier: "feature", // Default, user should update
       north_star: {
         goal: this.options.title,
-        acceptance_test_path: `tests/acceptance/${this.options.slug}.spec.ts`
+        acceptance_test_path: `tests/acceptance/${this.options.slug}.spec.ts`,
       },
       arcs: [
         {
@@ -130,19 +130,19 @@ class ArcScaffolder {
           evidence_triplet: {
             milestone_test: `evidence/${this.options.slug}-001-milestone.md`,
             contract_snapshot: `design/contracts/${this.options.slug}-001.json`,
-            review_json: `evidence/${this.options.slug}-001-review.json`
-          }
-        }
+            review_json: `evidence/${this.options.slug}-001-review.json`,
+          },
+        },
       ],
       session_resets: [],
       evidence: {
         vibe_check_log: `logs/vibe-check/${this.options.slug}-001.json`,
-        recaps_log: 'evidence/recaps.log',
-        tdd_plan_reuse_ledger: 'implementation-plan.md#reuse-ledger'
-      }
+        recaps_log: "evidence/recaps.log",
+        tdd_plan_reuse_ledger: "implementation-plan.md#reuse-ledger",
+      },
     };
 
-    const manifestPath = join(this.baseDir, 'run-manifest.json');
+    const manifestPath = join(this.baseDir, "run-manifest.json");
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     console.log(`✓ Created: ${manifestPath}`);
   }
@@ -150,7 +150,7 @@ class ArcScaffolder {
   private generatePlanSteps(): string[] {
     const stepCount = this.options.steps || 7;
     const steps: string[] = [];
-    
+
     for (let i = 1; i <= Math.min(stepCount, 7); i++) {
       steps.push(`Step ${i}: TODO - Define implementation step`);
     }
@@ -190,14 +190,16 @@ Brief description of what this arc accomplishes.
 - Reference 2
 `;
 
-    const notesPath = join(this.baseDir, 'notes.md');
+    const notesPath = join(this.baseDir, "notes.md");
     writeFileSync(notesPath, content);
     console.log(`✓ Created: ${notesPath}`);
   }
 
   private createImplementationPlan(): void {
     const steps = this.generatePlanSteps();
-    const stepsMarkdown = steps.map((step, i) => `${i + 1}. ${step}`).join('\n');
+    const stepsMarkdown = steps
+      .map((step, i) => `${i + 1}. ${step}`)
+      .join("\n");
 
     const content = `# Implementation Plan: ${this.options.title}
 
@@ -260,7 +262,7 @@ Define the public contract that this arc creates/modifies:
 Additional notes about implementation approach.
 `;
 
-    const planPath = join(this.baseDir, 'implementation-plan.md');
+    const planPath = join(this.baseDir, "implementation-plan.md");
     writeFileSync(planPath, content);
     console.log(`✓ Created: ${planPath}`);
   }
@@ -309,7 +311,7 @@ Additional notes about implementation approach.
 - Compliance risk 1: TODO
 `;
 
-    const risksPath = join(this.baseDir, 'risks.md');
+    const risksPath = join(this.baseDir, "risks.md");
     writeFileSync(risksPath, content);
     console.log(`✓ Created: ${risksPath}`);
   }
@@ -324,7 +326,7 @@ Additional notes about implementation approach.
 ### Decision 1: TODO
 
 **Status:** Proposed | Accepted | Rejected  
-**Date:** ${new Date().toISOString().split('T')[0]}  
+**Date:** ${new Date().toISOString().split("T")[0]}  
 **Deciders:** @username
 
 **Context:** What is the issue we're trying to solve?
@@ -357,7 +359,7 @@ Additional notes about implementation approach.
 | - | - | - | - | - |
 `;
 
-    const decisionsPath = join(this.baseDir, 'decisions.md');
+    const decisionsPath = join(this.baseDir, "decisions.md");
     writeFileSync(decisionsPath, content);
     console.log(`✓ Created: ${decisionsPath}`);
   }
@@ -391,15 +393,23 @@ describe('${this.options.slug}', () => {
 });
 `;
 
-    const testPath = join(this.baseDir, 'tests', 'acceptance', `${this.options.slug}.spec.ts`);
+    const testPath = join(
+      this.baseDir,
+      "tests",
+      "acceptance",
+      `${this.options.slug}.spec.ts`,
+    );
     writeFileSync(testPath, content);
     console.log(`✓ Created: ${testPath}`);
   }
 
   private createEvidenceStructure(): void {
     // Create recaps log
-    const recapsPath = join(this.baseDir, 'evidence', 'recaps.log');
-    writeFileSync(recapsPath, `# Recaps Log: ${this.options.slug}\n\nGenerated every 400-700 tokens during implementation.\n\n`);
+    const recapsPath = join(this.baseDir, "evidence", "recaps.log");
+    writeFileSync(
+      recapsPath,
+      `# Recaps Log: ${this.options.slug}\n\nGenerated every 400-700 tokens during implementation.\n\n`,
+    );
     console.log(`✓ Created: ${recapsPath}`);
 
     // Create evidence README
@@ -428,37 +438,44 @@ This directory contains evidence artifacts for governance compliance.
 See \`recaps.log\` for implementation recaps (every 400-700 tokens).
 `;
 
-    const evidenceReadmePath = join(this.baseDir, 'evidence', 'README.md');
+    const evidenceReadmePath = join(this.baseDir, "evidence", "README.md");
     writeFileSync(evidenceReadmePath, evidenceReadme);
     console.log(`✓ Created: ${evidenceReadmePath}`);
   }
 
   private updateParentArc(): void {
-    const parentManifestPath = join(process.env.HOME || '~', 'Changelog', this.options.parent!, 'run-manifest.json');
-    
+    const parentManifestPath = join(
+      process.env.HOME || "~",
+      "Changelog",
+      this.options.parent!,
+      "run-manifest.json",
+    );
+
     if (!existsSync(parentManifestPath)) {
       console.warn(`⚠️  Parent arc manifest not found: ${parentManifestPath}`);
       return;
     }
 
-    const parentManifest: ArcManifest = JSON.parse(readFileSync(parentManifestPath, 'utf-8'));
-    
+    const parentManifest: ArcManifest = JSON.parse(
+      readFileSync(parentManifestPath, "utf-8"),
+    );
+
     if (!parentManifest.metadata) {
       parentManifest.metadata = {};
     }
-    
+
     if (!parentManifest.metadata.childArcs) {
       parentManifest.metadata.childArcs = [];
     }
 
     parentManifest.metadata.childArcs.push(this.options.slug);
-    
+
     writeFileSync(parentManifestPath, JSON.stringify(parentManifest, null, 2));
     console.log(`✓ Updated parent arc: ${parentManifestPath}`);
   }
 
   private showPreview(): void {
-    console.log('Directory Structure:');
+    console.log("Directory Structure:");
     console.log(`  ${this.baseDir}/`);
     console.log(`    ├── run-manifest.json`);
     console.log(`    ├── notes.md`);
@@ -481,9 +498,11 @@ See \`recaps.log\` for implementation recaps (every 400-700 tokens).
     console.log(`    └── tests/`);
     console.log(`        └── acceptance/`);
     console.log(`            └── ${this.options.slug}.spec.ts`);
-    console.log('');
-    console.log('Files to be created:');
-    console.log(`  - run-manifest.json (${this.options.steps || 7} steps, max 7)`);
+    console.log("");
+    console.log("Files to be created:");
+    console.log(
+      `  - run-manifest.json (${this.options.steps || 7} steps, max 7)`,
+    );
     console.log(`  - implementation-plan.md`);
     console.log(`  - notes.md, risks.md, decisions.md`);
     console.log(`  - Acceptance test (failing initially)`);
@@ -491,54 +510,62 @@ See \`recaps.log\` for implementation recaps (every 400-700 tokens).
   }
 
   private printNextSteps(): void {
-    console.log('Next Steps:');
-    console.log('');
-    console.log(`  1. Update tier in run-manifest.json: fix | feature | refactor`);
+    console.log("Next Steps:");
+    console.log("");
+    console.log(
+      `  1. Update tier in run-manifest.json: fix | feature | refactor`,
+    );
     console.log(`  2. Fill in implementation steps in implementation-plan.md`);
-    console.log(`  3. Write failing acceptance test in tests/acceptance/${this.options.slug}.spec.ts`);
+    console.log(
+      `  3. Write failing acceptance test in tests/acceptance/${this.options.slug}.spec.ts`,
+    );
     console.log(`  4. Review and update notes.md with context`);
     console.log(`  5. Perform research and document in research/`);
-    console.log(`  6. Run vibe check: pnpm vibe-check --goal "${this.options.title}"`);
-    console.log('');
-    console.log('Validation:');
-    console.log(`  pnpm arc:lint --manifest ~/Changelog/${this.options.slug}/run-manifest.json`);
-    console.log('');
-    console.log('Task directory:');
+    console.log(
+      `  6. Run vibe check: pnpm vibe-check --goal "${this.options.title}"`,
+    );
+    console.log("");
+    console.log("Validation:");
+    console.log(
+      `  pnpm arc:lint --manifest ~/Changelog/${this.options.slug}/run-manifest.json`,
+    );
+    console.log("");
+    console.log("Task directory:");
     console.log(`  ${this.baseDir}`);
-    console.log('');
+    console.log("");
   }
 }
 
 // CLI Entry Point
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  
+
   // Parse arguments
   const options: Partial<ArcOptions> = {};
-  
+
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-      case '--slug':
+      case "--slug":
         options.slug = args[++i];
         break;
-      case '--title':
+      case "--title":
         options.title = args[++i];
         break;
-      case '--steps':
+      case "--steps":
         options.steps = Number.parseInt(args[++i], 10);
         break;
-      case '--parent':
+      case "--parent":
         options.parent = args[++i];
         break;
-      case '--preview':
-      case '--dry-run':
+      case "--preview":
+      case "--dry-run":
         options.preview = true;
         break;
-      case '--inherit-plan':
+      case "--inherit-plan":
         options.inheritPlan = true;
         break;
-      case '--help':
-      case '-h':
+      case "--help":
+      case "-h":
         printHelp();
         process.exit(0);
       default:
@@ -550,14 +577,14 @@ async function main(): Promise<void> {
 
   // Validate required options
   if (!options.slug || !options.title) {
-    console.error('❌ Error: --slug and --title are required\n');
+    console.error("❌ Error: --slug and --title are required\n");
     printHelp();
     process.exit(1);
   }
 
   // Validate step count
   if (options.steps && (options.steps < 1 || options.steps > 7)) {
-    console.error('❌ Error: --steps must be between 1 and 7\n');
+    console.error("❌ Error: --steps must be between 1 and 7\n");
     process.exit(1);
   }
 
@@ -606,7 +633,7 @@ See: .cortexdx/rules/agentic-coding-workflow.md
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
     process.exit(1);
   });
 }

@@ -5,12 +5,17 @@
 export type { EnhancedLlmAdapter } from "@brainwav/cortexdx-core";
 export { httpAdapter } from "./http.js";
 export {
-  createIdeAdapter,
   IdeAdapter,
+  createIdeAdapter,
   type IdeAdapterConfig,
   type IdeCapabilities,
 } from "./ide-adapter.js";
-export { createOllamaAdapter, type OllamaConfig } from "./ollama.js";
+// Re-export OllamaAdapter from ml package (canonical implementation)
+export {
+  OllamaAdapter,
+  createOllamaAdapter,
+  type OllamaConfig,
+} from "@brainwav/cortexdx-ml";
 
 // Embedding adapters
 export { cosineSimilarity, normalizeVector } from "./embedding.js";
@@ -22,8 +27,8 @@ export type {
   EmbeddingVector,
 } from "./embedding.js";
 export {
-  createOllamaEmbeddingAdapter,
   OllamaEmbeddingAdapter,
+  createOllamaEmbeddingAdapter,
   type OllamaEmbeddingConfig,
 } from "./ollama-embedding.js";
 
@@ -42,14 +47,14 @@ export {
 export {
   CredentialManager,
   credentialManager,
-  type Credentials,
   type CredentialStorage,
+  type Credentials,
 } from "./credential-manager.js";
 
 // OAuth integration
 export {
-  createAuthenticatedContext,
   OAuthIntegration,
+  createAuthenticatedContext,
   oauthIntegration,
   type AuthDetectionResult,
   type AuthenticatedRequestOptions,

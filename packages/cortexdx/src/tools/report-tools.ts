@@ -6,9 +6,9 @@
  */
 
 import { execSync } from "node:child_process";
-import { createCloudStorageFromEnv } from "../adapters/cloud-storage-adapter";
-import { ReportManager } from "../storage/report-manager";
-import type { McpTool } from "../types";
+import { createCloudStorageFromEnv } from "../adapters/cloud-storage-adapter.js";
+import { ReportManager } from "../storage/report-manager.js";
+import type { McpTool } from "../types.js";
 
 /**
  * Get git metadata for provenance tracking

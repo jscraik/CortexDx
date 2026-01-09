@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
-import type { JsonRpcResponse } from '../transports/types';
-import type { ServerPlugin } from '../plugins/types';
-import { McpServer } from './server';
+import type { JsonRpcResponse } from "../transports/types";
+import type { ServerPlugin } from "../plugins/types";
+import { McpServer } from "./server";
 
-vi.mock('../../logging/logger', () => ({
+vi.mock("../../logging/logger", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),
@@ -20,9 +20,19 @@ interface CapturedTool {
 
 const registeredTools: CapturedTool[] = [];
 
+const mockWebsocketStart = vi.fn().mockResolvedValue(undefined);
+const mockWebsocketStop = vi.fn().mockResolvedValue(undefined);
+const mockWebsocketSetEvents = vi.fn();
+const mockWebsocketSetProtocolVersion = vi.fn();
+const mockWebsocketIsRunning = vi.fn(() => true);
+
 vi.mock('fastmcp', () => {
   class MockFastMCP {
     public tools = registeredTools;
+    public start = vi.fn();
+    public stop = vi.fn();
+    public on = vi.fn();
+    public server?: { handleRequest?: (req: any) => Promise<JsonRpcResponse> };
 
     addTool(tool: CapturedTool) {
       this.tools.push(tool);
@@ -32,27 +42,43 @@ vi.mock('fastmcp', () => {
   return { FastMCP: MockFastMCP };
 });
 
+vi.mock('../transports/websocket', () => {
+  const transport = {
+    start: mockWebsocketStart,
+    stop: mockWebsocketStop,
+    setEvents: mockWebsocketSetEvents,
+    setProtocolVersion: mockWebsocketSetProtocolVersion,
+    isRunning: mockWebsocketIsRunning,
+  };
+
+  return {
+    createWebSocketTransport: vi.fn(() => transport),
+    WebSocketTransport: vi.fn(() => transport),
+  };
+});
+
 const createServer = () =>
   new McpServer({
-    name: 'test-server',
-    version: '1.0.0',
-    transport: { type: 'stdio' },
+    name: "test-server",
+    version: "1.0.0",
+    transport: { type: "stdio" },
   });
 
 afterEach(() => {
   registeredTools.length = 0;
+  vi.clearAllMocks();
 });
 
-describe('McpServer addTool plugin hooks', () => {
-  it('returns plugin pre-call responses as objects', async () => {
+describe("McpServer addTool plugin hooks", () => {
+  it("returns plugin pre-call responses as objects", async () => {
     const preResponse: JsonRpcResponse = {
-      jsonrpc: '2.0',
-      id: 'request-id',
-      result: { status: 'intercepted' },
+      jsonrpc: "2.0",
+      id: "request-id",
+      result: { status: "intercepted" },
     };
 
     const plugin: ServerPlugin = {
-      name: 'precall-plugin',
+      name: "precall-plugin",
       async onToolCall() {
         return preResponse;
       },
@@ -62,11 +88,11 @@ describe('McpServer addTool plugin hooks', () => {
     server.use(plugin);
 
     server.addTool({
-      name: 'sample',
-      description: 'test tool',
+      name: "sample",
+      description: "test tool",
       parameters: z.object({}),
       async execute() {
-        return { status: 'should-not-run' };
+        return { status: "should-not-run" };
       },
     });
 
@@ -77,15 +103,15 @@ describe('McpServer addTool plugin hooks', () => {
     expect(result).toEqual(preResponse);
   });
 
-  it('returns plugin error responses as objects', async () => {
+  it("returns plugin error responses as objects", async () => {
     const errorResponse: JsonRpcResponse = {
-      jsonrpc: '2.0',
-      id: 'error-id',
-      error: { code: 500, message: 'hook error' },
+      jsonrpc: "2.0",
+      id: "error-id",
+      error: { code: 500, message: "hook error" },
     };
 
     const plugin: ServerPlugin = {
-      name: 'error-plugin',
+      name: "error-plugin",
       async onError() {
         return errorResponse;
       },
@@ -95,11 +121,11 @@ describe('McpServer addTool plugin hooks', () => {
     server.use(plugin);
 
     server.addTool({
-      name: 'failing-tool',
-      description: 'fails intentionally',
+      name: "failing-tool",
+      description: "fails intentionally",
       parameters: z.object({}),
       async execute() {
-        throw new Error('boom');
+        throw new Error("boom");
       },
     });
 
@@ -142,5 +168,23 @@ describe('McpServer addTool plugin hooks', () => {
 
     expect(result).toEqual(transformedResponse);
     expect(typeof result).not.toBe('string');
+  });
+});
+
+describe('McpServer transports', () => {
+  it('starts and stops the websocket transport without errors', async () => {
+    const server = new McpServer({
+      name: 'ws-server',
+      version: '1.0.0',
+      transport: { type: 'websocket', websocket: { port: 0 } },
+    });
+
+    await expect(server.start()).resolves.not.toThrow();
+    await expect(server.stop()).resolves.not.toThrow();
+
+    expect(mockWebsocketSetProtocolVersion).toHaveBeenCalled();
+    expect(mockWebsocketSetEvents).toHaveBeenCalled();
+    expect(mockWebsocketStart).toHaveBeenCalled();
+    expect(mockWebsocketStop).toHaveBeenCalled();
   });
 });

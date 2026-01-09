@@ -25,7 +25,7 @@ describe("runDoctor", () => {
       "../src/research/academic-researcher.js"
     );
     vi.spyOn(researchModule, "selectConfiguredProviders").mockReturnValue({
-      ready: [],
+      ready: ["openalex", "context7", "exa"],
       missing: [],
     });
 
@@ -39,8 +39,8 @@ describe("runDoctor", () => {
     expect(exitCode).toBe(0);
     expect(logSpy).toHaveBeenCalledTimes(1);
     const payload = JSON.parse(String(logSpy.mock.calls[0]?.[0] ?? "{}"));
-    expect(payload.providers).toHaveLength(3);
-    expect(payload.providers[0].status).toBe("ready");
+    expect(payload.data.providers).toHaveLength(3);
+    expect(payload.data.providers[0].status).toBe("ready");
   });
 
   it("runs research probe by default when providers are configured", async () => {

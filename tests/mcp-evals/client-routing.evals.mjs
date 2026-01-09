@@ -4,11 +4,15 @@ import { grade } from "mcp-evals";
 const endpoint = process.env.CLIENT_EVAL_ENDPOINT;
 
 if (!endpoint) {
-  throw new Error("CLIENT_EVAL_ENDPOINT must be set before running client MCP evals.");
+  throw new Error(
+    "CLIENT_EVAL_ENDPOINT must be set before running client MCP evals.",
+  );
 }
 
 const serverPath =
-  process.env.CLIENT_EVAL_STDIO ?? process.argv[3] ?? "packages/cortexdx/src/adapters/stdio-wrapper.ts";
+  process.env.CLIENT_EVAL_STDIO ??
+  process.argv[3] ??
+  "packages/cortexdx/src/adapters/stdio-wrapper.ts";
 
 if (!serverPath) {
   throw new Error("client evals require a stdio wrapper path argument.");
@@ -20,7 +24,8 @@ const baseInstructions =
 
 const issueRoutingEval = {
   name: "issue_routing",
-  description: "Ensure the assistant lists teams then opens an issue for the right team.",
+  description:
+    "Ensure the assistant lists teams then opens an issue for the right team.",
   run: async (model) => {
     const prompt =
       `${baseInstructions} Report a login regression, call list_teams first, ` +
@@ -32,7 +37,8 @@ const issueRoutingEval = {
 
 const diagnoseEval = {
   name: "client_diagnostics",
-  description: "Run diagnose_mcp_server with auth headers and summarize blocker/major counts.",
+  description:
+    "Run diagnose_mcp_server with auth headers and summarize blocker/major counts.",
   run: async (model) => {
     const prompt =
       `${baseInstructions} Authenticate if required, run diagnose_mcp_server on the target endpoint, ` +
@@ -44,7 +50,10 @@ const diagnoseEval = {
 
 const evals = [issueRoutingEval, diagnoseEval];
 
-const modelSlug = process.env.CLIENT_EVAL_MODEL ?? process.env.CORTEXDX_EVAL_MODEL ?? "gpt-4o-mini";
+const modelSlug =
+  process.env.CLIENT_EVAL_MODEL ??
+  process.env.CORTEXDX_EVAL_MODEL ??
+  "gpt-4o-mini";
 const model = openai(modelSlug);
 
 const config = {

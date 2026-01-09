@@ -9,7 +9,7 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
     const body = [
       { jsonrpc: "2.0", id: "a", method: "rpc.ping" },
       { jsonrpc: "2.0", method: "rpc.notify", params: { x: 1 } },
-      { jsonrpc: "2.0", id: 7, method: "tools/list" }
+      { jsonrpc: "2.0", id: 7, method: "tools/list" },
     ];
 
     try {
@@ -28,7 +28,7 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
           accept: "application/json, text/event-stream",
           ...sessionHeaders,
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       response = await res.json();
     } catch (error) {
@@ -39,8 +39,8 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
           severity: "major",
           title: "Batch request failed",
           description: String(error),
-          evidence: [{ type: "url", ref: ctx.endpoint }]
-        }
+          evidence: [{ type: "url", ref: ctx.endpoint }],
+        },
       ];
     }
 
@@ -52,8 +52,8 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
           severity: "major",
           title: "Batch response is not an array",
           description: `Type: ${typeof response}`,
-          evidence: [{ type: "log", ref: "JSON-RPC batch" }]
-        }
+          evidence: [{ type: "log", ref: "JSON-RPC batch" }],
+        },
       ];
     }
 
@@ -66,9 +66,12 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
         area: "protocol",
         severity: "major",
         title: "Batch/notification id mismatch",
-        description: "Expected responses for ids 'a' and 7, none for notification.",
-        evidence: [{ type: "log", ref: JSON.stringify(response).slice(0, 500) }],
-        confidence: 0.8
+        description:
+          "Expected responses for ids 'a' and 7, none for notification.",
+        evidence: [
+          { type: "log", ref: JSON.stringify(response).slice(0, 500) },
+        ],
+        confidence: 0.8,
       });
     }
 
@@ -80,7 +83,9 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
         severity: "minor",
         title: "JSON-RPC error without error.data",
         description: "Consider returning error.data for debuggability.",
-        evidence: [{ type: "log", ref: JSON.stringify(errNoData).slice(0, 300) }]
+        evidence: [
+          { type: "log", ref: JSON.stringify(errNoData).slice(0, 300) },
+        ],
       });
     }
 
@@ -91,18 +96,20 @@ export const JsonRpcBatchPlugin: DiagnosticPlugin = {
         severity: "info",
         title: "Batch + notifications handled",
         description: "Server returns array; notifications produce no response.",
-        evidence: [{ type: "url", ref: ctx.endpoint }]
+        evidence: [{ type: "url", ref: ctx.endpoint }],
       });
     }
     return findings;
-  }
+  },
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function extractIds(records: Array<Record<string, unknown>>): Array<string | number> {
+function extractIds(
+  records: Array<Record<string, unknown>>,
+): Array<string | number> {
   return records
     .map((item) => {
       const id = item.id;

@@ -98,7 +98,9 @@ async function main(): Promise<void> {
     const top = fastmcpResults.hits[0];
     console.log(`   Top: ${top?.title}`);
     console.log(`   URL: ${top?.url}`);
-    console.log(`   Is GitHub URL: ${top?.url.includes("github.com") ? "✅" : "❌"}`);
+    console.log(
+      `   Is GitHub URL: ${top?.url.includes("github.com") ? "✅" : "❌"}`,
+    );
   }
   console.log("   ✅ GitHub content searchable\n");
 
