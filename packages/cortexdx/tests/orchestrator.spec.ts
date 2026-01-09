@@ -65,7 +65,7 @@ describe("runDiagnose", () => {
   it("enqueues and polls async diagnose tasks with numeric TTL and poll interval", async () => {
     const { executeDiagnoseAsync } = await import("../src/commands/async-task-utils.js");
     const asyncFindings: Finding[] = [
-      { id: "a1", severity: "blocker", description: "critical", evidence: [] },
+      { id: "a1", area: "security", severity: "blocker", title: "Critical Issue", description: "critical", evidence: [] },
     ];
     (executeDiagnoseAsync as vi.Mock).mockResolvedValue({ findings: asyncFindings });
 
