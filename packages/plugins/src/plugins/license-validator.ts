@@ -364,7 +364,10 @@ function extractResearchContent(
     [];
 
   return (Array.isArray(candidates) ? candidates : []).filter(
-    (item): item is ResearchContent => typeof item?.title === "string",
+    (item): item is ResearchContent =>
+      typeof item?.title === "string" &&
+      Array.isArray(item?.authors) &&
+      item.authors.every((author) => typeof author === "string"),
   );
 }
 
