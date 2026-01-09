@@ -2,12 +2,12 @@
 /**
  * Evidence Triplet Verification Tool
  * Validates that all required evidence components are present and complete
- * 
+ *
  * Usage: pnpm evidence:triplet:verify --slug <task-slug>
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 interface TripletResult {
   component: string;
@@ -32,7 +32,7 @@ class EvidenceTripletVerifier {
 
   constructor(slug: string) {
     this.slug = slug;
-    this.baseDir = join(process.env.HOME || '~', 'Changelog', slug);
+    this.baseDir = join(process.env.HOME || "~", "Changelog", slug);
   }
 
   async verify(): Promise<VerificationResult> {
@@ -45,8 +45,8 @@ class EvidenceTripletVerifier {
         slug: this.slug,
         passed: false,
         results: [],
-        missingRequired: ['Task directory'],
-        timestamp: new Date().toISOString()
+        missingRequired: ["Task directory"],
+        timestamp: new Date().toISOString(),
       };
     }
 
@@ -59,8 +59,8 @@ class EvidenceTripletVerifier {
 
     // Determine pass/fail
     const missingRequired = this.results
-      .filter(r => r.required && !r.found)
-      .map(r => r.component);
+      .filter((r) => r.required && !r.found)
+      .map((r) => r.component);
 
     const passed = missingRequired.length === 0;
 
@@ -72,268 +72,292 @@ class EvidenceTripletVerifier {
       passed,
       results: this.results,
       missingRequired,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   private checkManifest(): void {
-    const manifestPath = join(this.baseDir, 'run-manifest.json');
-    
+    const manifestPath = join(this.baseDir, "run-manifest.json");
+
     if (existsSync(manifestPath)) {
       try {
-        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-        
+        const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+
         // Check if evidence section exists
         if (manifest.evidence) {
           this.results.push({
-            component: 'Run Manifest',
+            component: "Run Manifest",
             required: true,
             found: true,
-            path: manifestPath
+            path: manifestPath,
           });
         } else {
           this.results.push({
-            component: 'Run Manifest',
+            component: "Run Manifest",
             required: true,
             found: false,
             path: manifestPath,
-            issue: 'Missing evidence section'
+            issue: "Missing evidence section",
           });
         }
       } catch (error) {
         this.results.push({
-          component: 'Run Manifest',
+          component: "Run Manifest",
           required: true,
           found: false,
           path: manifestPath,
-          issue: 'Invalid JSON'
+          issue: "Invalid JSON",
         });
       }
     } else {
       this.results.push({
-        component: 'Run Manifest',
+        component: "Run Manifest",
         required: true,
         found: false,
-        issue: 'File not found'
+        issue: "File not found",
       });
     }
   }
 
   private checkMilestoneTest(): void {
     // Check for acceptance test
-    const testPath = join(this.baseDir, 'tests', 'acceptance', `${this.slug}.spec.ts`);
-    const altTestPath = join(this.baseDir, 'tests', 'acceptance', `${this.slug}.spec.js`);
-    
+    const testPath = join(
+      this.baseDir,
+      "tests",
+      "acceptance",
+      `${this.slug}.spec.ts`,
+    );
+    const altTestPath = join(
+      this.baseDir,
+      "tests",
+      "acceptance",
+      `${this.slug}.spec.js`,
+    );
+
     if (existsSync(testPath)) {
-      const content = readFileSync(testPath, 'utf-8');
-      
+      const content = readFileSync(testPath, "utf-8");
+
       // Check if test has actual assertions (not just TODO)
-      if (content.includes('expect(true).toBe(false)')) {
+      if (content.includes("expect(true).toBe(false)")) {
         this.results.push({
-          component: 'Milestone Test',
+          component: "Milestone Test",
           required: true,
           found: true,
           path: testPath,
-          issue: 'Test still contains placeholder (expect(true).toBe(false))'
+          issue: "Test still contains placeholder (expect(true).toBe(false))",
         });
-      } else if (content.includes('expect(') || content.includes('assert')) {
+      } else if (content.includes("expect(") || content.includes("assert")) {
         this.results.push({
-          component: 'Milestone Test',
+          component: "Milestone Test",
           required: true,
           found: true,
-          path: testPath
+          path: testPath,
         });
       } else {
         this.results.push({
-          component: 'Milestone Test',
+          component: "Milestone Test",
           required: true,
           found: false,
           path: testPath,
-          issue: 'No assertions found'
+          issue: "No assertions found",
         });
       }
     } else if (existsSync(altTestPath)) {
       this.results.push({
-        component: 'Milestone Test',
+        component: "Milestone Test",
         required: true,
         found: true,
-        path: altTestPath
+        path: altTestPath,
       });
     } else {
       this.results.push({
-        component: 'Milestone Test',
+        component: "Milestone Test",
         required: true,
         found: false,
-        issue: 'Acceptance test not found'
+        issue: "Acceptance test not found",
       });
     }
   }
 
   private checkContractSnapshot(): void {
-    const contractDir = join(this.baseDir, 'design', 'contracts');
-    
+    const contractDir = join(this.baseDir, "design", "contracts");
+
     if (existsSync(contractDir)) {
       // Look for any contract files
-      const fs = require('node:fs');
-      const files = fs.readdirSync(contractDir).filter((f: string) => f.endsWith('.json') || f.endsWith('.ts'));
-      
+      const fs = require("node:fs");
+      const files = fs
+        .readdirSync(contractDir)
+        .filter((f: string) => f.endsWith(".json") || f.endsWith(".ts"));
+
       if (files.length > 0) {
         this.results.push({
-          component: 'Contract Snapshot',
+          component: "Contract Snapshot",
           required: true,
           found: true,
-          path: join(contractDir, files[0])
+          path: join(contractDir, files[0]),
         });
       } else {
         this.results.push({
-          component: 'Contract Snapshot',
+          component: "Contract Snapshot",
           required: true,
           found: false,
           path: contractDir,
-          issue: 'No contract files found in directory'
+          issue: "No contract files found in directory",
         });
       }
     } else {
       this.results.push({
-        component: 'Contract Snapshot',
+        component: "Contract Snapshot",
         required: true,
         found: false,
-        issue: 'Contracts directory not found'
+        issue: "Contracts directory not found",
       });
     }
   }
 
   private checkReviewerJson(): void {
-    const evidenceDir = join(this.baseDir, 'evidence');
-    
+    const evidenceDir = join(this.baseDir, "evidence");
+
     if (existsSync(evidenceDir)) {
-      const fs = require('node:fs');
-      const files = fs.readdirSync(evidenceDir).filter((f: string) => f.endsWith('-review.json'));
-      
+      const fs = require("node:fs");
+      const files = fs
+        .readdirSync(evidenceDir)
+        .filter((f: string) => f.endsWith("-review.json"));
+
       if (files.length > 0) {
         this.results.push({
-          component: 'Reviewer JSON',
+          component: "Reviewer JSON",
           required: true,
           found: true,
-          path: join(evidenceDir, files[0])
+          path: join(evidenceDir, files[0]),
         });
       } else {
         this.results.push({
-          component: 'Reviewer JSON',
+          component: "Reviewer JSON",
           required: false, // Not required until REVIEW phase
           found: false,
-          issue: 'Review JSON not yet created (created during REVIEW phase)'
+          issue: "Review JSON not yet created (created during REVIEW phase)",
         });
       }
     } else {
       this.results.push({
-        component: 'Reviewer JSON',
+        component: "Reviewer JSON",
         required: false,
         found: false,
-        issue: 'Evidence directory not found'
+        issue: "Evidence directory not found",
       });
     }
   }
 
   private checkAdditionalEvidence(): void {
     // Check vibe-check logs
-    const vibeCheckDir = join(this.baseDir, 'logs', 'vibe-check');
+    const vibeCheckDir = join(this.baseDir, "logs", "vibe-check");
     if (existsSync(vibeCheckDir)) {
-      const fs = require('node:fs');
-      const files = fs.readdirSync(vibeCheckDir).filter((f: string) => f.endsWith('.json'));
-      
+      const fs = require("node:fs");
+      const files = fs
+        .readdirSync(vibeCheckDir)
+        .filter((f: string) => f.endsWith(".json"));
+
       this.results.push({
-        component: 'Vibe Check Log',
+        component: "Vibe Check Log",
         required: false,
         found: files.length > 0,
         path: files.length > 0 ? join(vibeCheckDir, files[0]) : undefined,
-        issue: files.length === 0 ? 'No vibe-check logs found' : undefined
+        issue: files.length === 0 ? "No vibe-check logs found" : undefined,
       });
     }
 
     // Check model logs
-    const modelsDir = join(this.baseDir, 'logs', 'models');
+    const modelsDir = join(this.baseDir, "logs", "models");
     if (existsSync(modelsDir)) {
-      const fs = require('node:fs');
-      const files = fs.readdirSync(modelsDir).filter((f: string) => f.endsWith('.log') || f.endsWith('.json'));
-      
+      const fs = require("node:fs");
+      const files = fs
+        .readdirSync(modelsDir)
+        .filter((f: string) => f.endsWith(".log") || f.endsWith(".json"));
+
       this.results.push({
-        component: 'Model Health Logs',
+        component: "Model Health Logs",
         required: false,
         found: files.length > 0,
         path: files.length > 0 ? join(modelsDir, files[0]) : undefined,
-        issue: files.length === 0 ? 'No model health logs found' : undefined
+        issue: files.length === 0 ? "No model health logs found" : undefined,
       });
     }
 
     // Check recaps log
-    const recapsPath = join(this.baseDir, 'evidence', 'recaps.log');
+    const recapsPath = join(this.baseDir, "evidence", "recaps.log");
     this.results.push({
-      component: 'Recaps Log',
+      component: "Recaps Log",
       required: false,
       found: existsSync(recapsPath),
-      path: existsSync(recapsPath) ? recapsPath : undefined
+      path: existsSync(recapsPath) ? recapsPath : undefined,
     });
   }
 
   private printResults(passed: boolean, missingRequired: string[]): void {
-    console.log('Evidence Triplet Components:\n');
+    console.log("Evidence Triplet Components:\n");
 
     for (const result of this.results) {
-      const icon = result.found ? '✓' : (result.required ? '✗' : '○');
-      const status = result.found ? '\x1b[32m' : (result.required ? '\x1b[31m' : '\x1b[33m');
-      const reset = '\x1b[0m';
-      const required = result.required ? '[REQUIRED]' : '[OPTIONAL]';
-      
+      const icon = result.found ? "✓" : result.required ? "✗" : "○";
+      const status = result.found
+        ? "\x1b[32m"
+        : result.required
+          ? "\x1b[31m"
+          : "\x1b[33m";
+      const reset = "\x1b[0m";
+      const required = result.required ? "[REQUIRED]" : "[OPTIONAL]";
+
       console.log(`  ${status}${icon}${reset} ${result.component} ${required}`);
-      
+
       if (result.path) {
         console.log(`     Path: ${result.path}`);
       }
-      
+
       if (result.issue) {
         console.log(`     Issue: ${result.issue}`);
       }
-      
-      console.log('');
+
+      console.log("");
     }
 
-    console.log('---\n');
+    console.log("---\n");
 
     if (passed) {
-      console.log('\x1b[32m✓ Evidence Triplet verification PASSED\x1b[0m\n');
-      console.log('All required evidence components are present.');
+      console.log("\x1b[32m✓ Evidence Triplet verification PASSED\x1b[0m\n");
+      console.log("All required evidence components are present.");
     } else {
-      console.log('\x1b[31m✗ Evidence Triplet verification FAILED\x1b[0m\n');
-      console.log('Missing required components:');
+      console.log("\x1b[31m✗ Evidence Triplet verification FAILED\x1b[0m\n");
+      console.log("Missing required components:");
       for (const missing of missingRequired) {
         console.log(`  - ${missing}`);
       }
-      console.log('');
-      console.log('See .cortexdx/rules/agentic-coding-workflow.md for evidence requirements.');
+      console.log("");
+      console.log(
+        "See .cortexdx/rules/agentic-coding-workflow.md for evidence requirements.",
+      );
     }
 
-    console.log('');
+    console.log("");
   }
 }
 
 // CLI Entry Point
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  
-  let slug = '';
+
+  let slug = "";
   let jsonOutput = false;
-  
+
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-      case '--slug':
+      case "--slug":
         slug = args[++i];
         break;
-      case '--json':
+      case "--json":
         jsonOutput = true;
         break;
-      case '--help':
-      case '-h':
+      case "--help":
+      case "-h":
         printHelp();
         process.exit(0);
       default:
@@ -344,7 +368,7 @@ async function main(): Promise<void> {
   }
 
   if (!slug) {
-    console.error('❌ Error: --slug is required\n');
+    console.error("❌ Error: --slug is required\n");
     printHelp();
     process.exit(1);
   }
@@ -392,7 +416,7 @@ See: .cortexdx/rules/agentic-coding-workflow.md#evidence-triplet
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
-    console.error('❌ Error:', error.message);
+    console.error("❌ Error:", error.message);
     process.exit(1);
   });
 }

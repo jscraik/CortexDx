@@ -9,12 +9,11 @@ export {
   LlmOrchestrator,
   createLlmOrchestrator,
   createOrchestratorEvidence,
-  type OrchestratorConfig
+  type OrchestratorConfig,
 } from "./orchestrator.js";
 export {
   createLlmAdapter,
   getEnhancedLlmAdapter,
   getLlmAdapter,
-  pickLocalLLM
+  pickLocalLLM,
 } from "./router.js";
-

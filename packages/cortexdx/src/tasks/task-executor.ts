@@ -7,11 +7,15 @@
  * - elicitation/create (future)
  */
 
-import type { TaskStore } from './task-store.js';
-import type { DiagnosticContext, DevelopmentContext, McpTool } from '../types.js';
-import { createLogger } from '../logging/logger.js';
+import type { TaskStore } from "./task-store.js";
+import type {
+  DiagnosticContext,
+  DevelopmentContext,
+  McpTool,
+} from "../types.js";
+import { createLogger } from "../logging/logger.js";
 
-const logger = createLogger({ component: 'task-executor' });
+const logger = createLogger({ component: "task-executor" });
 
 export class TaskExecutor {
   constructor(private taskStore: TaskStore) {}
@@ -23,29 +27,29 @@ export class TaskExecutor {
   async executeTask(taskId: string, ctx: DiagnosticContext): Promise<void> {
     const task = this.taskStore.getTask(taskId);
     if (!task) {
-      logger.error({ taskId }, 'Task not found for execution');
+      logger.error({ taskId }, "Task not found for execution");
       return;
     }
 
-    logger.info({ taskId, method: task.method }, 'Starting task execution');
+    logger.info({ taskId, method: task.method }, "Starting task execution");
 
     try {
       // Update status to working (in case it was input_required)
-      this.taskStore.updateTaskStatus(taskId, 'working', 'Executing task');
+      this.taskStore.updateTaskStatus(taskId, "working", "Executing task");
 
       // Dispatch to appropriate handler based on method
       let result: unknown;
 
       switch (task.method) {
-        case 'tools/call':
+        case "tools/call":
           result = await this.executeToolCall(task.params, ctx);
           break;
 
-        case 'sampling/createMessage':
+        case "sampling/createMessage":
           result = await this.executeSampling(task.params, ctx);
           break;
 
-        case 'elicitation/create':
+        case "elicitation/create":
           result = await this.executeElicitation(task.params, ctx);
           break;
 
@@ -55,25 +59,28 @@ export class TaskExecutor {
 
       // Store result
       this.taskStore.setTaskResult(taskId, result);
-      logger.info({ taskId }, 'Task completed successfully');
-
+      logger.info({ taskId }, "Task completed successfully");
     } catch (error) {
-      logger.error({ taskId, error }, 'Task execution failed');
+      logger.error({ taskId, error }, "Task execution failed");
 
       // Determine error code
       let errorCode = -32603; // Internal error
       if (error instanceof Error) {
-        if (error.message.includes('not found')) {
+        if (error.message.includes("not found")) {
           errorCode = -32601; // Method not found
-        } else if (error.message.includes('validation') || error.message.includes('invalid')) {
+        } else if (
+          error.message.includes("validation") ||
+          error.message.includes("invalid")
+        ) {
           errorCode = -32602; // Invalid params
         }
       }
 
       this.taskStore.setTaskError(taskId, {
         code: errorCode,
-        message: error instanceof Error ? error.message : 'Task execution failed',
-        data: error instanceof Error ? { stack: error.stack } : undefined
+        message:
+          error instanceof Error ? error.message : "Task execution failed",
+        data: error instanceof Error ? { stack: error.stack } : undefined,
       });
     }
   }
@@ -81,16 +88,19 @@ export class TaskExecutor {
   /**
    * Execute tools/call task
    */
-  private async executeToolCall(params: unknown, ctx: DiagnosticContext): Promise<unknown> {
+  private async executeToolCall(
+    params: unknown,
+    ctx: DiagnosticContext,
+  ): Promise<unknown> {
     const { name, arguments: args } = params as {
       name: string;
       arguments?: unknown;
     };
 
-    logger.debug({ toolName: name }, 'Executing tool call task');
+    logger.debug({ toolName: name }, "Executing tool call task");
 
     // Import tool execution logic
-    const { findMcpTool } = await import('../tools/index.js');
+    const { findMcpTool } = await import("../tools/index.js");
     const tool = findMcpTool(name);
 
     if (!tool) {
@@ -108,34 +118,34 @@ export class TaskExecutor {
   private async executeToolWithContext(
     tool: McpTool,
     args: unknown,
-    ctx: DiagnosticContext
+    ctx: DiagnosticContext,
   ): Promise<unknown> {
     // Convert DiagnosticContext to DevelopmentContext if needed
     const devCtx: DevelopmentContext = {
       ...ctx,
       sessionId: `task-${Date.now()}`,
-      userExpertiseLevel: 'intermediate',
+      userExpertiseLevel: "intermediate",
       conversationHistory: [],
-      projectContext: undefined
+      projectContext: undefined,
     };
 
     // Execute based on tool category
     switch (tool.name) {
-      case 'diagnose_mcp_server':
+      case "diagnose_mcp_server":
         return await this.executeDiagnoseTool(args, devCtx);
 
-      case 'cortexdx_academic_research':
+      case "cortexdx_academic_research":
         return await this.executeAcademicTool(tool, args);
 
-      case 'cortexdx_deepcontext_index':
-      case 'cortexdx_deepcontext_search':
-      case 'cortexdx_deepcontext_status':
-      case 'cortexdx_deepcontext_clear':
+      case "cortexdx_deepcontext_index":
+      case "cortexdx_deepcontext_search":
+      case "cortexdx_deepcontext_status":
+      case "cortexdx_deepcontext_clear":
         return await this.executeDeepContextTool(tool, args, devCtx);
 
-      case 'cortexdx_mcp_docs_search':
-      case 'cortexdx_mcp_docs_lookup':
-      case 'cortexdx_mcp_docs_versions':
+      case "cortexdx_mcp_docs_search":
+      case "cortexdx_mcp_docs_lookup":
+      case "cortexdx_mcp_docs_versions":
         return await this.executeMcpDocsTool(tool, args, devCtx);
 
       default:
@@ -150,7 +160,7 @@ export class TaskExecutor {
    */
   private async executeDiagnoseTool(
     args: unknown,
-    ctx: DevelopmentContext
+    ctx: DevelopmentContext,
   ): Promise<unknown> {
     const {
       endpoint,
@@ -159,7 +169,7 @@ export class TaskExecutor {
     } = args as { endpoint: string; suites?: string[]; full?: boolean };
 
     // Import and run diagnostic
-    const { runPlugins } = await import('../plugin-host.js');
+    const { runPlugins } = await import("../plugin-host.js");
 
     const results = await runPlugins({
       endpoint,
@@ -173,7 +183,7 @@ export class TaskExecutor {
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(results, null, 2),
         },
       ],
@@ -183,9 +193,12 @@ export class TaskExecutor {
   /**
    * Execute academic integration tool
    */
-  private async executeAcademicTool(tool: McpTool, args: unknown): Promise<unknown> {
+  private async executeAcademicTool(
+    tool: McpTool,
+    args: unknown,
+  ): Promise<unknown> {
     const { executeAcademicIntegrationTool } = await import(
-      '../tools/academic-integration-tools.js'
+      "../tools/academic-integration-tools.js"
     );
     return await executeAcademicIntegrationTool(tool, args);
   }
@@ -196,9 +209,9 @@ export class TaskExecutor {
   private async executeDeepContextTool(
     tool: McpTool,
     args: unknown,
-    ctx: DevelopmentContext
+    ctx: DevelopmentContext,
   ): Promise<unknown> {
-    const { executeDeepContextTool } = await import('../tools/index.js');
+    const { executeDeepContextTool } = await import("../tools/index.js");
     return await executeDeepContextTool(tool, args, ctx);
   }
 
@@ -208,9 +221,9 @@ export class TaskExecutor {
   private async executeMcpDocsTool(
     tool: McpTool,
     args: unknown,
-    ctx: DevelopmentContext
+    ctx: DevelopmentContext,
   ): Promise<unknown> {
-    const { executeMcpDocsTool } = await import('../tools/mcp-docs-tools.js');
+    const { executeMcpDocsTool } = await import("../tools/mcp-docs-tools.js");
     return await executeMcpDocsTool(tool, args, ctx);
   }
 
@@ -220,12 +233,12 @@ export class TaskExecutor {
   private async executeGenericTool(
     tool: McpTool,
     args: unknown,
-    ctx: DevelopmentContext
+    ctx: DevelopmentContext,
   ): Promise<unknown> {
     // For tools not explicitly handled, try to find and execute them
     // This is a safe fallback for custom tools
 
-    if (tool.handler && typeof tool.handler === 'function') {
+    if (tool.handler && typeof tool.handler === "function") {
       return await tool.handler(args, ctx);
     }
 
@@ -235,16 +248,22 @@ export class TaskExecutor {
   /**
    * Execute sampling task (future implementation)
    */
-  private async executeSampling(_params: unknown, _ctx: DiagnosticContext): Promise<unknown> {
-    logger.warn('Sampling tasks not yet implemented');
-    throw new Error('Sampling tasks not yet implemented');
+  private async executeSampling(
+    _params: unknown,
+    _ctx: DiagnosticContext,
+  ): Promise<unknown> {
+    logger.warn("Sampling tasks not yet implemented");
+    throw new Error("Sampling tasks not yet implemented");
   }
 
   /**
    * Execute elicitation task (future implementation)
    */
-  private async executeElicitation(_params: unknown, _ctx: DiagnosticContext): Promise<unknown> {
-    logger.warn('Elicitation tasks not yet implemented');
-    throw new Error('Elicitation tasks not yet implemented');
+  private async executeElicitation(
+    _params: unknown,
+    _ctx: DiagnosticContext,
+  ): Promise<unknown> {
+    logger.warn("Elicitation tasks not yet implemented");
+    throw new Error("Elicitation tasks not yet implemented");
   }
 }

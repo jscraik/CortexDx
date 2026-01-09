@@ -7,7 +7,9 @@ beforeEach(() => {
 
 describe("runCreateTutorial", () => {
   it("prints tutorial output with research highlights", async () => {
-    const researchModule = await import("../src/research/academic-researcher.js");
+    const researchModule = await import(
+      "../src/research/academic-researcher.js"
+    );
     vi.spyOn(researchModule, "selectConfiguredProviders").mockReturnValue({
       ready: ["context7"],
       missing: [],
@@ -64,7 +66,9 @@ describe("runCreateTutorial", () => {
       logs.push(String(msg));
     });
 
-    const { runCreateTutorial } = await import("../src/commands/interactive-cli.js");
+    const { runCreateTutorial } = await import(
+      "../src/commands/interactive-cli.js"
+    );
     const code = await runCreateTutorial("MCP streaming", {
       exercises: true,
       expertise: "intermediate",

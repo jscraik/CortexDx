@@ -11,7 +11,11 @@ import {
   SecurityMonitor,
 } from "../security/audit-compliance.js";
 import { OwaspSecurityScanner } from "../security/security-validator.js";
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 export interface ThreatDetectionResult {
   id: string;

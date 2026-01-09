@@ -1,12 +1,12 @@
-import { createCliLogger } from "../logging/logger";
-import { TemplateEngine } from "../template-engine/engine";
+import { createCliLogger } from "../logging/logger.js";
+import { TemplateEngine } from "../template-engine/engine.js";
 import {
   getAllCodePatterns,
   renderCodePattern,
-} from "../templates/code-patterns";
-import type { FixTemplate } from "../templates/fix-templates";
-import { getAllTemplates, getTemplate } from "../templates/fix-templates";
-import type { DevelopmentContext } from "../types";
+} from "../templates/code-patterns.js";
+import type { FixTemplate } from "../templates/fix-templates.js";
+import { getAllTemplates, getTemplate } from "../templates/fix-templates.js";
+import type { DevelopmentContext } from "../types.js";
 
 const logger = createCliLogger("templates");
 

@@ -4,7 +4,7 @@
  * Requirements: 7.1, 10.5, 12.1
  */
 
-import type { McpTool } from "../types";
+import type { McpTool } from "../types.js";
 
 export const createCommercialFeatureTools = (): McpTool[] => [
   {

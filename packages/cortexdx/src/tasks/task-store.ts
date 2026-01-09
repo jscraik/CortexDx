@@ -8,12 +8,17 @@
  * - User-based access control
  */
 
-import Database from 'better-sqlite3';
-import { randomUUID } from 'node:crypto';
-import type { TaskRecord, TaskMetadata, CreateTaskParams, TaskStatus } from './types.js';
-import { createLogger } from '../logging/logger.js';
+import Database from "better-sqlite3";
+import { randomUUID } from "node:crypto";
+import type {
+  TaskRecord,
+  TaskMetadata,
+  CreateTaskParams,
+  TaskStatus,
+} from "./types.js";
+import { createLogger } from "../logging/logger.js";
 
-const logger = createLogger({ component: 'task-store' });
+const logger = createLogger({ component: "task-store" });
 
 /**
  * Database row type for tasks table
@@ -62,11 +67,11 @@ export class TaskStore {
     this.db = new Database(dbPath);
 
     // Enable WAL mode for better concurrent access (Critical #6)
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('synchronous = NORMAL');
+    this.db.pragma("journal_mode = WAL");
+    this.db.pragma("synchronous = NORMAL");
 
     this.initSchema();
-    logger.info({ dbPath }, 'Task store initialized');
+    logger.info({ dbPath }, "Task store initialized");
   }
 
   private initSchema() {
@@ -106,24 +111,26 @@ export class TaskStore {
     const createdAt = new Date().toISOString();
     const expiresAt = Date.now() + ttl;
 
-    this.db.prepare(`
+    this.db
+      .prepare(`
       INSERT INTO tasks (taskId, method, params, status, statusMessage,
                         createdAt, ttl, pollInterval, expiresAt, userId)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      taskId,
-      params.method,
-      JSON.stringify(params.params),
-      'working',
-      null,
-      createdAt,
-      ttl,
-      pollInterval,
-      expiresAt,
-      params.userId || null
-    );
+    `)
+      .run(
+        taskId,
+        params.method,
+        JSON.stringify(params.params),
+        "working",
+        null,
+        createdAt,
+        ttl,
+        pollInterval,
+        expiresAt,
+        params.userId || null,
+      );
 
-    logger.info({ taskId, method: params.method, ttl }, 'Task created');
+    logger.info({ taskId, method: params.method, ttl }, "Task created");
     return taskId;
   }
 
@@ -132,12 +139,14 @@ export class TaskStore {
    * Returns null if not found or expired
    */
   getTask(taskId: string, userId?: string): TaskRecord | null {
-    const row = this.db.prepare(`
+    const row = this.db
+      .prepare(`
       SELECT * FROM tasks
       WHERE taskId = ?
       AND (userId IS NULL OR userId = ?)
       AND expiresAt > ?
-    `).get(taskId, userId || null, Date.now()) as TaskRow | undefined;
+    `)
+      .get(taskId, userId || null, Date.now()) as TaskRow | undefined;
 
     if (!row) {
       return null;
@@ -149,14 +158,20 @@ export class TaskStore {
   /**
    * Update task status
    */
-  updateTaskStatus(taskId: string, status: TaskStatus, statusMessage?: string): boolean {
-    const result = this.db.prepare(`
+  updateTaskStatus(
+    taskId: string,
+    status: TaskStatus,
+    statusMessage?: string,
+  ): boolean {
+    const result = this.db
+      .prepare(`
       UPDATE tasks
       SET status = ?, statusMessage = ?
       WHERE taskId = ?
-    `).run(status, statusMessage || null, taskId);
+    `)
+      .run(status, statusMessage || null, taskId);
 
-    logger.info({ taskId, status, statusMessage }, 'Task status updated');
+    logger.info({ taskId, status, statusMessage }, "Task status updated");
     return result.changes > 0;
   }
 
@@ -168,35 +183,45 @@ export class TaskStore {
     try {
       serialized = JSON.stringify(result);
     } catch (serializeError) {
-      logger.error({ taskId, error: serializeError }, 'Failed to serialize task result');
+      logger.error(
+        { taskId, error: serializeError },
+        "Failed to serialize task result",
+      );
       // Store error instead
       this.setTaskError(taskId, {
         code: -32603,
-        message: 'Result serialization failed'
+        message: "Result serialization failed",
       });
       return false;
     }
-    const dbResult = this.db.prepare(`
+    const dbResult = this.db
+      .prepare(`
       UPDATE tasks
       SET status = 'completed', result = ?
       WHERE taskId = ?
-    `).run(serialized, taskId);
+    `)
+      .run(serialized, taskId);
 
-    logger.info({ taskId }, 'Task completed with result');
+    logger.info({ taskId }, "Task completed with result");
     return dbResult.changes > 0;
   }
 
   /**
    * Set task error (marks as failed)
    */
-  setTaskError(taskId: string, error: { code: number; message: string; data?: unknown }): boolean {
-    const result = this.db.prepare(`
+  setTaskError(
+    taskId: string,
+    error: { code: number; message: string; data?: unknown },
+  ): boolean {
+    const result = this.db
+      .prepare(`
       UPDATE tasks
       SET status = 'failed', error = ?
       WHERE taskId = ?
-    `).run(JSON.stringify(error), taskId);
+    `)
+      .run(JSON.stringify(error), taskId);
 
-    logger.warn({ taskId, error }, 'Task failed with error');
+    logger.warn({ taskId, error }, "Task failed with error");
     return result.changes > 0;
   }
 
@@ -207,45 +232,45 @@ export class TaskStore {
   listTasks(
     limit = 50,
     cursor?: string,
-    userId?: string
+    userId?: string,
   ): { tasks: TaskMetadata[]; nextCursor?: string } {
-    const whereClauses = ['expiresAt > ?'];
+    const whereClauses = ["expiresAt > ?"];
     const params: unknown[] = [Date.now()];
 
     if (cursor) {
       // Use row id for pagination to avoid timestamp collisions
-      whereClauses.push('id < ?');
+      whereClauses.push("id < ?");
       params.push(Number(cursor));
     }
     if (userId) {
-      whereClauses.push('userId = ?');
+      whereClauses.push("userId = ?");
       params.push(userId);
     }
 
     const query = `
       SELECT id, taskId, status, statusMessage, createdAt, ttl, pollInterval
       FROM tasks
-      WHERE ${whereClauses.join(' AND ')}
+      WHERE ${whereClauses.join(" AND ")}
       ORDER BY id DESC
       LIMIT ?
     `;
     params.push(limit);
 
     const rows = this.db.prepare(query).all(...params) as TaskListRow[];
-    const tasks = rows.map(row => ({
+    const tasks = rows.map((row) => ({
       taskId: row.taskId,
       status: row.status as TaskStatus,
       statusMessage: row.statusMessage || undefined,
       createdAt: row.createdAt,
       ttl: row.ttl,
-      pollInterval: row.pollInterval
+      pollInterval: row.pollInterval,
     }));
 
     let nextCursor: string | undefined;
     if (rows.length === limit && rows[rows.length - 1]) {
       const remainingExists = this.db
         .prepare(
-          `SELECT 1 FROM tasks WHERE ${whereClauses.join(' AND ')} AND id < ? LIMIT 1`,
+          `SELECT 1 FROM tasks WHERE ${whereClauses.join(" AND ")} AND id < ? LIMIT 1`,
         )
         .get(...params.slice(0, -1), rows[rows.length - 1].id);
       if (remainingExists) {
@@ -266,18 +291,23 @@ export class TaskStore {
     }
 
     // Can't cancel terminal states
-    if (['completed', 'failed', 'cancelled'].includes(task.status)) {
-      logger.warn({ taskId, status: task.status }, 'Cannot cancel task in terminal state');
+    if (["completed", "failed", "cancelled"].includes(task.status)) {
+      logger.warn(
+        { taskId, status: task.status },
+        "Cannot cancel task in terminal state",
+      );
       return false;
     }
 
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(`
       UPDATE tasks
       SET status = 'cancelled'
       WHERE taskId = ?
-    `).run(taskId);
+    `)
+      .run(taskId);
 
-    logger.info({ taskId }, 'Task cancelled');
+    logger.info({ taskId }, "Task cancelled");
     return result.changes > 0;
   }
 
@@ -286,12 +316,14 @@ export class TaskStore {
    * Returns number of tasks pruned
    */
   pruneExpired(): number {
-    const result = this.db.prepare(`
+    const result = this.db
+      .prepare(`
       DELETE FROM tasks WHERE expiresAt < ?
-    `).run(Date.now());
+    `)
+      .run(Date.now());
 
     if (result.changes > 0) {
-      logger.info({ count: result.changes }, 'Pruned expired tasks');
+      logger.info({ count: result.changes }, "Pruned expired tasks");
     }
 
     return result.changes;
@@ -301,12 +333,14 @@ export class TaskStore {
    * Get task count by status (for monitoring)
    */
   getTaskStats(): Record<TaskStatus, number> & { total: number } {
-    const rows = this.db.prepare(`
+    const rows = this.db
+      .prepare(`
       SELECT status, COUNT(*) as count
       FROM tasks
       WHERE expiresAt > ?
       GROUP BY status
-    `).all(Date.now()) as TaskStatsRow[];
+    `)
+      .all(Date.now()) as TaskStatsRow[];
 
     const stats: Record<TaskStatus, number> & { total: number } = {
       working: 0,
@@ -314,7 +348,7 @@ export class TaskStore {
       completed: 0,
       failed: 0,
       cancelled: 0,
-      total: 0
+      total: 0,
     };
 
     for (const row of rows) {
@@ -330,7 +364,7 @@ export class TaskStore {
    */
   close(): void {
     this.db.close();
-    logger.info('Task store closed');
+    logger.info("Task store closed");
   }
 
   /**
@@ -345,22 +379,31 @@ export class TaskStore {
     try {
       params = JSON.parse(row.params);
     } catch (parseError) {
-      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task params');
+      logger.error(
+        { taskId: row.taskId, error: parseError },
+        "Failed to parse task params",
+      );
       params = {}; // Fallback to empty object
     }
 
     try {
       result = row.result ? JSON.parse(row.result) : undefined;
     } catch (parseError) {
-      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task result');
+      logger.error(
+        { taskId: row.taskId, error: parseError },
+        "Failed to parse task result",
+      );
       result = undefined;
     }
 
     try {
       error = row.error ? JSON.parse(row.error) : undefined;
     } catch (parseError) {
-      logger.error({ taskId: row.taskId, error: parseError }, 'Failed to parse task error');
-      error = { code: -32603, message: 'Corrupted error data' };
+      logger.error(
+        { taskId: row.taskId, error: parseError },
+        "Failed to parse task error",
+      );
+      error = { code: -32603, message: "Corrupted error data" };
     }
 
     return {
@@ -375,7 +418,7 @@ export class TaskStore {
       result,
       error,
       userId: row.userId || undefined,
-      expiresAt: row.expiresAt
+      expiresAt: row.expiresAt,
     };
   }
 }

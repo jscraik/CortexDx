@@ -33,7 +33,11 @@ class MockEmbeddingAdapter implements EmbeddingAdapter {
   async embedBatch(request: EmbeddingBatchRequest): Promise<EmbeddingVector[]> {
     return Promise.all(
       request.texts.map((text) =>
-        this.embed({ text, model: request.model, normalize: request.normalize }),
+        this.embed({
+          text,
+          model: request.model,
+          normalize: request.normalize,
+        }),
       ),
     );
   }

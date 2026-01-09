@@ -1,41 +1,5 @@
-@import "@fontsource/outfit/400.css";
-@import "@fontsource/outfit/500.css";
-@import "@fontsource/outfit/600.css";
-@import "@fontsource/manrope/400.css";
-@import "@fontsource/manrope/500.css";
-@import "@fontsource/manrope/600.css";
-
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-
+@import "tailwindcss";
 @import "@openai/apps-sdk-ui/css";
 
-:root {
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-border: #334155;
-  --color-text: #f8fafc;
-  --color-muted: #94a3b8;
-  --color-accent: #3b82f6;
-  
-  /* Apps SDK UI Overrides for Dark Mode */
-  --color-background-secondary-soft-alpha: rgba(59, 130, 246, 0.1);
-  --color-text-secondary-soft: #60a5fa;
-  --color-background-success-soft-alpha: rgba(16, 185, 129, 0.1);
-  --color-text-success-soft: #34d399;
-  --color-background-warning-soft-alpha: rgba(245, 158, 11, 0.1);
-  --color-text-warning-soft: #fbbf24;
-  --color-background-danger-soft-alpha: rgba(239, 68, 68, 0.1);
-  --color-text-danger-soft: #f87171;
-}
-
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  font-family: 'Manrope', sans-serif;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
-}
+/* Required for Tailwind to find class references in Apps SDK UI components */
+@source "../node_modules/@openai/apps-sdk-ui";

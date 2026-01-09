@@ -1,11 +1,11 @@
 {
-  "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx": {
-    "codebasePath": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx",
+  "/app/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/app/packages/cortexdx/packages/cortexdx",
     "state": "not_indexed",
-    "summary": "No DeepContext index artifacts detected; status: status; missing /Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
-    "updatedAt": "2025-11-20T19:34:51.748Z",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /app/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2025-11-29T13:52:42.700Z",
     "remoteStatusText": "status",
-    "codexContextDir": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextDir": "/app/packages/cortexdx/packages/cortexdx/.codex-context",
     "codexContextExists": false,
     "indexedCodebasesExists": false
   },
@@ -13,67 +13,41 @@
     "codebasePath": "/tmp/repo",
     "state": "not_indexed",
     "summary": "No DeepContext index artifacts detected; status: index cleared; missing /tmp/repo/.codex-context",
-    "updatedAt": "2025-11-25T11:38:35.047Z",
+    "updatedAt": "2026-01-05T17:49:34.855Z",
     "remoteStatusText": "index cleared",
     "codexContextDir": "/tmp/repo/.codex-context",
     "codexContextExists": false,
     "indexedCodebasesExists": false
   },
-  "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo": {
-    "codebasePath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo",
-    "state": "ready",
-    "summary": "DeepContext index ready; status: ready",
-    "updatedAt": "2025-11-11T23:04:14.694Z",
-    "remoteStatusText": "ready",
-    "codexContextDir": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/.codex-context",
-    "codexContextExists": true,
-    "indexedCodebasesPath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/.codex-context/indexed-codebases.json",
-    "indexedCodebasesExists": true,
-    "indexedCodebasesSnapshot": "[{\"path\":\"/Volumes/ExternalSSD/ai-tmp/cortexdx-status-1NYBtn/repo\"}]"
-  },
-  "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo": {
-    "codebasePath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo",
-    "state": "ready",
-    "summary": "DeepContext index ready; status: ready",
-    "updatedAt": "2025-11-11T23:16:10.501Z",
-    "remoteStatusText": "ready",
-    "codexContextDir": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/.codex-context",
-    "codexContextExists": true,
-    "indexedCodebasesPath": "/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/.codex-context/indexed-codebases.json",
-    "indexedCodebasesExists": true,
-    "indexedCodebasesSnapshot": "[{\"path\":\"/Volumes/ExternalSSD/ai-tmp/cortexdx-status-GQJZ1t/repo\"}]"
-  },
-  "/Users/jamiecraik/CortexDx": {
-    "codebasePath": "/Users/jamiecraik/CortexDx",
-    "state": "ready",
-    "summary": "DeepContext index ready; status: 📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx\n**Namespace**: mcp_6be9939989f16e18\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n**Success Rate**: 0% (0/1367 chunks)\n**Log File**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`\n\n## 📚 **All Indexed Codebases** (1)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n   - **Success Rate**: 0% (0/1367 chunks)\n   - **Processing Time**: 6.7m\n   - **Log**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`",
-    "updatedAt": "2025-11-13T08:23:32.095Z",
-    "remoteStatusText": "📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx\n**Namespace**: mcp_6be9939989f16e18\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n**Success Rate**: 0% (0/1367 chunks)\n**Log File**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`\n\n## 📚 **All Indexed Codebases** (1)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n   - **Success Rate**: 0% (0/1367 chunks)\n   - **Processing Time**: 6.7m\n   - **Log**: `background-indexing-CortexDx-2025-11-12T21-05-30.259Z.log`",
-    "codexContextDir": "/Users/jamiecraik/CortexDx/.codex-context",
-    "codexContextExists": true,
-    "indexedCodebasesPath": "/Users/jamiecraik/CortexDx/.codex-context/indexed-codebases.json",
-    "indexedCodebasesExists": true,
-    "indexedCodebasesSnapshot": "[\n  [\n    \"/Users/jamiecraik/CortexDx\",\n    {\n      \"path\": \"/Users/jamiecraik/CortexDx\",\n      \"namespace\": \"mcp_6be9939989f16e18\",\n      \"totalChunks\": 1367,\n      \"indexedAt\": \"2025-11-12T21:12:11.814Z\"\n    }\n  ]\n]"
-  },
-  "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx": {
-    "codebasePath": "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx",
+  "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx",
     "state": "not_indexed",
-    "summary": "No DeepContext index artifacts detected; status: status; missing /home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
-    "updatedAt": "2025-11-25T11:38:35.045Z",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2026-01-05T11:03:38.107Z",
     "remoteStatusText": "status",
-    "codexContextDir": "/home/runner/work/CortexDx/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextDir": "/Users/jamiecraik/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
     "codexContextExists": false,
     "indexedCodebasesExists": false
   },
   "/Users/jamiecraik/CortexDx/packages/cortexdx": {
     "codebasePath": "/Users/jamiecraik/CortexDx/packages/cortexdx",
     "state": "ready",
-    "summary": "DeepContext index ready; status: 📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Namespace**: mcp_21c735044fa116a6\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n## 📚 **All Indexed Codebases** (3)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n\n2. **/Users/jamiecraik/.Cortex-OS**\n   - Chunks: 16014, Last indexed: 11/16/2025\n\n3. **/Users/jamiecraik/CortexDx/packages/cortexdx**\n   - Chunks: 389, Last indexed: 11/20/2025; indexed-codebases.json missing",
-    "updatedAt": "2025-11-20T19:27:50.757Z",
-    "remoteStatusText": "📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Namespace**: mcp_21c735044fa116a6\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n## 📚 **All Indexed Codebases** (3)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n\n2. **/Users/jamiecraik/.Cortex-OS**\n   - Chunks: 16014, Last indexed: 11/16/2025\n\n3. **/Users/jamiecraik/CortexDx/packages/cortexdx**\n   - Chunks: 389, Last indexed: 11/20/2025",
-    "indexOutput": "🚀 **Background Indexing Started** - Log: `background-indexing-cortexdx-2025-11-20T19-27-40.928Z.log`\n\n**Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Process**: Running in detached background mode\n\n**📋 How to Monitor Progress:**\n- **Check Status**: Use `get_indexing_status` tool to see completion progress\n- **View Live Logs**: `tail -f background-indexing-cortexdx-2025-11-20T19-27-40.928Z.log`\n- **Final Results**: Status tool will show success rate when complete\n\n💡 **Tip**: The log file is saved in your current directory for easy access.\n\n📝 **For AI Assistant**: Please mention that users can monitor progress with: tail -f background-indexing-cortexdx-2025-11-20T19-27-40.928Z.log (include the dash)",
+    "summary": "DeepContext index ready; status: 📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Namespace**: mcp_21c735044fa116a6\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n## 📚 **All Indexed Codebases** (4)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n\n2. **/Users/jamiecraik/.Cortex-OS**\n   - Chunks: 16014, Last indexed: 11/16/2025\n\n3. **/Users/jamiecraik/CortexDx/packages/cortexdx**\n   - Chunks: 438, Last indexed: 1/5/2026\n\n4. **/Users/jamiecraik/PEER**\n   - Chunks: 299, Last indexed: 12/2/2025; indexed-codebases.json missing",
+    "updatedAt": "2026-01-05T10:46:05.161Z",
+    "remoteStatusText": "📊 **Indexing Status**\n\n**Current Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Namespace**: mcp_21c735044fa116a6\n**Files**: undefined\n**Last Indexed**: Invalid Date\n**Status**: ✅ Indexed\n\n## 📚 **All Indexed Codebases** (4)\n\n1. **/Users/jamiecraik/CortexDx**\n   - Chunks: 1367, Last indexed: 11/12/2025\n\n2. **/Users/jamiecraik/.Cortex-OS**\n   - Chunks: 16014, Last indexed: 11/16/2025\n\n3. **/Users/jamiecraik/CortexDx/packages/cortexdx**\n   - Chunks: 438, Last indexed: 1/5/2026\n\n4. **/Users/jamiecraik/PEER**\n   - Chunks: 299, Last indexed: 12/2/2025",
+    "indexOutput": "🚀 **Background Indexing Started** - Log: `background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log`\n\n**Codebase**: /Users/jamiecraik/CortexDx/packages/cortexdx\n**Process**: Running in detached background mode\n\n**📋 How to Monitor Progress:**\n- **Check Status**: Use `get_indexing_status` tool to see completion progress\n- **View Live Logs**: `tail -f background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log`\n- **Final Results**: Status tool will show success rate when complete\n\n💡 **Tip**: The log file is saved in your current directory for easy access.\n\n📝 **For AI Assistant**: Please mention that users can monitor progress with: tail -f background-indexing-cortexdx-2026-01-05T10-45-55.501Z.log (include the dash)",
     "codexContextDir": "/Users/jamiecraik/CortexDx/packages/cortexdx/.codex-context",
     "codexContextExists": true,
+    "indexedCodebasesExists": false
+  },
+  "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx": {
+    "codebasePath": "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx",
+    "state": "not_indexed",
+    "summary": "No DeepContext index artifacts detected; status: status; missing /Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "updatedAt": "2026-01-05T17:49:34.852Z",
+    "remoteStatusText": "status",
+    "codexContextDir": "/Users/jamiecraik/dev/CortexDx/packages/cortexdx/packages/cortexdx/.codex-context",
+    "codexContextExists": false,
     "indexedCodebasesExists": false
   }
 }

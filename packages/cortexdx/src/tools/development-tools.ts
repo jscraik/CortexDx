@@ -3,7 +3,7 @@
  * Provides diagnostic and development assistance capabilities
  */
 
-import type { McpTool } from "../types";
+import type { McpTool } from "../types.js";
 
 export const createDevelopmentTools = (): McpTool[] => [
   {

@@ -3,6 +3,36 @@
  * Based on MCP specification draft (post 2025-06-18)
  */
 
+// Re-export JSON-RPC 2.0 types
+export type {
+  JSONRPCError,
+  JSONRPCErrorResponse,
+  JSONRPCMessage,
+  JSONRPCNotification,
+  JSONRPCRequest,
+  JSONRPCResponse,
+  JSONRPCResultResponse,
+  RequestId,
+} from "./jsonrpc.js";
+
+export {
+  createJSONRPCErrorResponse,
+  createJSONRPCNotification,
+  createJSONRPCRequest,
+  createJSONRPCResultResponse,
+  isJSONRPCErrorResponse,
+  isJSONRPCNotification,
+  isJSONRPCRequest,
+  isJSONRPCResultResponse,
+  JSONRPCErrorCode,
+  parseJSONRPCMessage,
+  serializeJSONRPCMessage,
+  validateJSONRPCMessage,
+} from "./jsonrpc.js";
+
+// Import internal task types for use in MCP types
+import type { TaskMetadata as InternalTaskMetadata } from "../../tasks/types.js";
+
 /**
  * Icon metadata for tools, resources, and prompts (SEP-973)
  */
@@ -261,6 +291,19 @@ export interface ToolAnnotations {
 }
 
 /**
+ * Execution properties for a tool
+ */
+export interface ToolExecution {
+  /**
+   * Whether this tool supports task-augmented execution
+   * - "forbidden": Does not support tasks (default)
+   * - "optional": May support tasks
+   * - "required": Requires task-augmented execution
+   */
+  taskSupport?: "forbidden" | "optional" | "required";
+}
+
+/**
  * Tool definition with icon support
  */
 export interface ToolDefinition {
@@ -270,11 +313,24 @@ export interface ToolDefinition {
    */
   title?: string;
   description?: string;
-  inputSchema: Record<string, unknown>;
   /**
-   * JSON Schema for validating structured output
+   * JSON Schema for tool parameters (must be type: "object")
    */
-  outputSchema?: Record<string, unknown>;
+  inputSchema: {
+    type: "object";
+    properties?: { [key: string]: object };
+    required?: string[];
+    $schema?: string;
+  };
+  /**
+   * JSON Schema for validating structured output (must be type: "object")
+   */
+  outputSchema?: {
+    type: "object";
+    properties?: { [key: string]: object };
+    required?: string[];
+    $schema?: string;
+  };
   /**
    * Icons for the tool (SEP-973)
    */
@@ -283,38 +339,81 @@ export interface ToolDefinition {
    * Tool behavior annotations
    */
   annotations?: ToolAnnotations;
+  /**
+   * Execution-related properties
+   */
+  execution?: ToolExecution;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * Base interface for paginated requests
+ */
+export interface PaginatedRequestParams {
+  /**
+   * Pagination cursor from previous result
+   */
+  cursor?: string;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * Base interface for paginated results
+ */
+export interface PaginatedResult {
+  /**
+   * Pagination cursor for next page
+   */
+  nextCursor?: string;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
 }
 
 /**
  * Tools list request parameters
  */
-export interface ToolListRequest {
-  cursor?: string;
+export interface ToolListRequest extends PaginatedRequestParams {
+  // Inherits cursor and _meta from PaginatedRequestParams
 }
 
 /**
  * Tools list response
  */
-export interface ToolListResponse {
+export interface ToolListResponse extends PaginatedResult {
   tools: ToolDefinition[];
-  nextCursor?: string;
 }
 
 /**
  * Tool call request parameters
+ * Extends TaskAugmentedRequestParams for task support
  */
-export interface ToolCallRequest {
+export interface ToolCallRequest extends TaskAugmentedRequestParams {
   name: string;
   arguments?: Record<string, unknown>;
 }
 
 /**
  * Tool call response
+ *
+ * NOTE: structuredContent should conform to the tool's outputSchema.
+ * - If outputSchema defines type: "object", structuredContent must be a single object
+ * - For array results, wrap in an object like { items: [...] }
+ * - This ensures schema validation and proper LLM integration
  */
 export interface ToolCallResponse {
   content: ToolCallContent[];
   /**
    * Structured content conforming to outputSchema
+   * Must be a single object matching the outputSchema definition
+   * @see https://modelcontextprotocol.io/best-practices/response-formatting
    */
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
@@ -324,17 +423,34 @@ export interface ToolCallResponse {
  * Tool call content types (for tool call responses)
  */
 export type ToolCallContent =
-  | { type: 'text'; text: string; annotations?: ResourceAnnotations }
-  | { type: 'image'; data: string; mimeType: string; annotations?: ResourceAnnotations }
-  | { type: 'audio'; data: string; mimeType: string; annotations?: ResourceAnnotations }
-  | { type: 'resource_link'; uri: string; name?: string; description?: string; mimeType?: string; annotations?: ResourceAnnotations }
-  | { type: 'resource'; resource: EmbeddedResource };
+  | { type: "text"; text: string; annotations?: ResourceAnnotations }
+  | {
+      type: "image";
+      data: string;
+      mimeType: string;
+      annotations?: ResourceAnnotations;
+    }
+  | {
+      type: "audio";
+      data: string;
+      mimeType: string;
+      annotations?: ResourceAnnotations;
+    }
+  | {
+      type: "resource_link";
+      uri: string;
+      name?: string;
+      description?: string;
+      mimeType?: string;
+      annotations?: ResourceAnnotations;
+    }
+  | { type: "resource"; resource: EmbeddedResource };
 
 /**
  * Notification when tools list changes
  */
 export interface ToolListChangedNotification {
-  // Empty notification - just signals that list changed
+  [key: string]: never;
 }
 
 /**
@@ -344,7 +460,7 @@ export interface ResourceAnnotations {
   /**
    * Intended audience(s) for this resource
    */
-  audience?: ('user' | 'assistant')[];
+  audience?: ("user" | "assistant")[];
   /**
    * Importance from 0.0 (optional) to 1.0 (required)
    */
@@ -426,16 +542,15 @@ export interface ResourceContent {
 /**
  * Resources list request parameters
  */
-export interface ResourceListRequest {
-  cursor?: string;
+export interface ResourceListRequest extends PaginatedRequestParams {
+  // Inherits cursor and _meta
 }
 
 /**
  * Resources list response
  */
-export interface ResourceListResponse {
+export interface ResourceListResponse extends PaginatedResult {
   resources: ResourceDefinition[];
-  nextCursor?: string;
 }
 
 /**
@@ -485,7 +600,7 @@ export interface ResourceUnsubscribeRequest {
  * Notification when resources list changes
  */
 export interface ResourceListChangedNotification {
-  // Empty notification - just signals that list changed
+  [key: string]: never;
 }
 
 /**
@@ -522,32 +637,31 @@ export interface PromptArgument {
  * Prompt message content types
  */
 export type PromptContent =
-  | { type: 'text'; text: string }
-  | { type: 'image'; data: string; mimeType: string }
-  | { type: 'audio'; data: string; mimeType: string }
-  | { type: 'resource'; resource: EmbeddedResource };
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mimeType: string }
+  | { type: "audio"; data: string; mimeType: string }
+  | { type: "resource"; resource: EmbeddedResource };
 
 /**
  * Prompt message with role and content
  */
 export interface PromptMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: PromptContent;
 }
 
 /**
  * Prompts list request parameters
  */
-export interface PromptListRequest {
-  cursor?: string;
+export interface PromptListRequest extends PaginatedRequestParams {
+  // Inherits cursor and _meta
 }
 
 /**
  * Prompts list response
  */
-export interface PromptListResponse {
+export interface PromptListResponse extends PaginatedResult {
   prompts: PromptDefinition[];
-  nextCursor?: string;
 }
 
 /**
@@ -570,7 +684,7 @@ export interface PromptGetResponse {
  * Notification when prompts list changes
  */
 export interface PromptListChangedNotification {
-  // Empty notification - just signals that list changed
+  [key: string]: never;
 }
 
 /**
@@ -578,7 +692,7 @@ export interface PromptListChangedNotification {
  * Supports titled, untitled, single-select, and multi-select
  */
 export interface EnumSchema {
-  type: 'enum';
+  type: "enum";
   /**
    * Whether multiple values can be selected
    */
@@ -602,7 +716,7 @@ export interface TitledEnumValue {
  * Elicit result types (SEP-1330)
  */
 export interface ElicitResult {
-  action: 'accept' | 'decline' | 'cancel';
+  action: "accept" | "decline" | "cancel";
   content?: ElicitContent;
 }
 
@@ -614,22 +728,22 @@ export type ElicitContent =
   | UrlElicitContent;
 
 export interface TextElicitContent {
-  type: 'text';
+  type: "text";
   value: string;
 }
 
 export interface BooleanElicitContent {
-  type: 'boolean';
+  type: "boolean";
   value: boolean;
 }
 
 export interface NumberElicitContent {
-  type: 'number';
+  type: "number";
   value: number;
 }
 
 export interface EnumElicitContent {
-  type: 'enum';
+  type: "enum";
   /**
    * Selected value(s) - array for multiSelect, single value otherwise
    */
@@ -640,7 +754,7 @@ export interface EnumElicitContent {
  * URL elicitation content (SEP-1036)
  */
 export interface UrlElicitContent {
-  type: 'url';
+  type: "url";
   value: string;
   /**
    * Whether the URL was validated
@@ -652,7 +766,7 @@ export interface UrlElicitContent {
  * Elicitation request schema
  */
 export interface ElicitationSchema {
-  type: 'text' | 'boolean' | 'number' | 'enum' | 'url';
+  type: "text" | "boolean" | "number" | "enum" | "url";
   /**
    * For enum type
    */
@@ -673,8 +787,9 @@ export interface ElicitationSchema {
 
 /**
  * Elicitation create request parameters
+ * Extends TaskAugmentedRequestParams for task support
  */
-export interface ElicitationCreateRequest {
+export interface ElicitationCreateRequest extends TaskAugmentedRequestParams {
   /**
    * Message to display to the user
    */
@@ -712,7 +827,9 @@ export interface ElicitationUrlResult {
 /**
  * Union of possible elicitation create results
  */
-export type ElicitationCreateResult = ElicitationFormResult | ElicitationUrlResult;
+export type ElicitationCreateResult =
+  | ElicitationFormResult
+  | ElicitationUrlResult;
 
 /**
  * Notification sent when URL mode elicitation is completed
@@ -730,12 +847,13 @@ export interface ElicitationCompleteNotification {
 
 /**
  * Sampling request with tool calling support (SEP-1577)
+ * Extends TaskAugmentedRequestParams for task support
  */
-export interface SamplingRequest {
+export interface SamplingRequest extends TaskAugmentedRequestParams {
   messages: SamplingMessage[];
   modelPreferences?: ModelPreferences;
   systemPrompt?: string;
-  includeContext?: 'none' | 'thisServer' | 'allServers';
+  includeContext?: "none" | "thisServer" | "allServers";
   temperature?: number;
   maxTokens?: number;
   stopSequences?: string[];
@@ -751,34 +869,88 @@ export interface SamplingRequest {
 }
 
 export interface SamplingMessage {
-  role: 'user' | 'assistant';
-  content: SamplingContent;
+  role: "user" | "assistant";
+  /**
+   * Message content - can be single block or array
+   */
+  content: SamplingMessageContentBlock | SamplingMessageContentBlock[];
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
 }
 
-export type SamplingContent = TextContent | ImageContent | AudioContent | ToolResultContent;
+/**
+ * All possible content blocks in sampling messages
+ */
+export type SamplingMessageContentBlock =
+  | TextContent
+  | ImageContent
+  | AudioContent
+  | ToolUseContent
+  | ToolResultContent;
+
+/**
+ * Legacy alias for backward compatibility
+ */
+export type SamplingContent = SamplingMessageContentBlock;
 
 export interface TextContent {
-  type: 'text';
+  type: "text";
   text: string;
 }
 
 export interface ImageContent {
-  type: 'image';
+  type: "image";
   data: string;
   mimeType: string;
 }
 
 export interface AudioContent {
-  type: 'audio';
+  type: "audio";
   data: string;
   mimeType: string;
 }
 
+/**
+ * General content block type used across MCP
+ */
+export type ContentBlock =
+  | TextContent
+  | ImageContent
+  | AudioContent
+  | {
+      type: "resource_link";
+      uri: string;
+      name?: string;
+      description?: string;
+      mimeType?: string;
+      annotations?: ResourceAnnotations;
+    }
+  | { type: "resource"; resource: EmbeddedResource };
+
 export interface ToolResultContent {
-  type: 'tool_result';
+  type: "tool_result";
+  /**
+   * ID matching a previous ToolUseContent
+   */
   toolUseId: string;
-  content: string;
+  /**
+   * Unstructured result content (can include text, images, audio, resource links)
+   */
+  content: ContentBlock[];
+  /**
+   * Whether the tool use resulted in an error
+   */
   isError?: boolean;
+  /**
+   * Optional structured result conforming to outputSchema
+   */
+  structuredContent?: { [key: string]: unknown };
+  /**
+   * Optional metadata for caching optimizations
+   */
+  _meta?: { [key: string]: unknown };
 }
 
 export interface ModelPreferences {
@@ -802,42 +974,237 @@ export interface SamplingTool {
 }
 
 /**
- * Tool choice for sampling (SEP-1577)
+ * Tool choice for sampling (MCP Spec)
+ * Controls how the model uses tools during sampling
  */
-export type ToolChoice =
-  | { type: 'auto' }
-  | { type: 'none' }
-  | { type: 'required' }
-  | { type: 'tool'; name: string };
+export interface ToolChoice {
+  /**
+   * Tool use mode
+   * - "auto": Model decides whether to use tools (default)
+   * - "required": Model MUST use at least one tool
+   * - "none": Model MUST NOT use any tools
+   */
+  mode?: "none" | "required" | "auto";
+}
 
 /**
- * Sampling response
+ * Sampling response from sampling/createMessage
  */
 export interface SamplingResponse {
-  role: 'assistant';
-  content: TextContent | ToolUseContent;
+  role: "assistant";
+  /**
+   * Response content - can be single block or array
+   */
+  content: SamplingMessageContentBlock | SamplingMessageContentBlock[];
+  /**
+   * Model that generated the message
+   */
   model: string;
-  stopReason?: 'endTurn' | 'stopSequence' | 'maxTokens' | 'toolUse';
+  /**
+   * Why sampling stopped
+   * - "endTurn": Natural end of assistant's turn
+   * - "stopSequence": Stop sequence encountered
+   * - "maxTokens": Token limit reached
+   * - "toolUse": Model wants to use tools
+   */
+  stopReason?: "endTurn" | "stopSequence" | "maxTokens" | "toolUse" | string;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
 }
 
 export interface ToolUseContent {
-  type: 'tool_use';
+  type: "tool_use";
+  /**
+   * Unique identifier for this tool use
+   */
   id: string;
+  /**
+   * Name of the tool to call
+   */
   name: string;
+  /**
+   * Arguments conforming to the tool's input schema
+   */
   input: Record<string, unknown>;
+  /**
+   * Optional metadata for caching optimizations
+   */
+  _meta?: { [key: string]: unknown };
 }
 
 /**
- * Tasks API (SEP-1686)
- * Re-exported from existing implementation for durable request tracking
+ * Progress token for tracking long-running operations
+ */
+export type ProgressToken = string | number;
+
+/**
+ * MCP Task status values (different from internal TaskStatus)
+ * State transitions:
+ * - working → input_required, completed, failed, cancelled
+ * - input_required → working, completed, failed, cancelled
+ * - completed, failed, cancelled are terminal states
+ */
+export type MCPTaskStatus =
+  | "working" // Currently being processed
+  | "input_required" // Needs input from requestor
+  | "completed" // Successfully completed
+  | "failed" // Did not complete successfully
+  | "cancelled"; // Cancelled before completion
+
+/**
+ * Base parameters for task-augmented requests
+ * Any request can include these fields to enable task execution
+ */
+export interface TaskAugmentedRequestParams {
+  /**
+   * If specified, the caller is requesting task-augmented execution.
+   * The request will return a CreateTaskResult immediately, and the actual
+   * result can be retrieved later via tasks/result.
+   */
+  task?: InternalTaskMetadata;
+  /**
+   * Metadata for this request
+   */
+  _meta?: {
+    /**
+     * Progress token for out-of-band progress notifications
+     */
+    progressToken?: ProgressToken;
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * Immediate response when a task-augmented request is created
+ */
+export interface CreateTaskResult {
+  /**
+   * Task information
+   */
+  task: MCPTask;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * Full MCP task object with status and metadata
+ */
+export interface MCPTask {
+  /**
+   * Unique identifier for this task
+   */
+  taskId: string;
+  /**
+   * Current task status
+   */
+  status: MCPTaskStatus;
+  /**
+   * Human-readable status message
+   */
+  statusMessage?: string;
+  /**
+   * When the task was created (ISO 8601)
+   */
+  createdAt: string;
+  /**
+   * When the task was last updated (ISO 8601)
+   */
+  lastUpdatedAt: string;
+  /**
+   * Time-to-live in milliseconds
+   */
+  ttl?: number;
+  /**
+   * Suggested polling interval in milliseconds
+   */
+  pollInterval?: number;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * Get task result request
+ */
+export interface GetTaskPayloadRequest {
+  /**
+   * Task ID to retrieve
+   */
+  taskId: string;
+}
+
+/**
+ * Cancel task request
+ */
+export interface CancelTaskRequest {
+  /**
+   * Task ID to cancel
+   */
+  taskId: string;
+  /**
+   * Optional reason for cancellation
+   */
+  reason?: string;
+}
+
+/**
+ * Cancel task result
+ */
+export interface CancelTaskResult {
+  /**
+   * Updated task information
+   */
+  task: MCPTask;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * List tasks request
+ */
+export interface ListTasksRequest {
+  /**
+   * Optional pagination cursor
+   */
+  cursor?: string;
+}
+
+/**
+ * List tasks result
+ */
+export interface ListTasksResult {
+  /**
+   * Array of tasks
+   */
+  tasks: MCPTask[];
+  /**
+   * Pagination cursor for next page
+   */
+  nextCursor?: string;
+  /**
+   * Optional metadata
+   */
+  _meta?: { [key: string]: unknown };
+}
+
+/**
+ * Internal task types from existing implementation
+ * Re-exported for backward compatibility
  */
 export type {
-  TaskStatus,
-  TaskRecord,
-  TaskMetadata,
   CreateTaskParams,
   TaskAugmentation,
-} from '../../tasks/types';
+  TaskMetadata,
+  TaskRecord,
+  TaskStatus,
+} from "../../tasks/types.js";
 
 /**
  * OAuth Client ID Metadata (SEP-991)
@@ -875,9 +1242,9 @@ export interface OIDCDiscoveryMetadata {
  * WWW-Authenticate challenge for incremental consent (SEP-835)
  */
 export interface AuthChallenge {
-  scheme: 'Bearer';
+  scheme: "Bearer";
   realm?: string;
-  error?: 'invalid_token' | 'insufficient_scope';
+  error?: "invalid_token" | "insufficient_scope";
   error_description?: string;
   /**
    * Required scope(s) for the operation
@@ -907,7 +1274,7 @@ export function buildWWWAuthenticateHeader(challenge: AuthChallenge): string {
     parts.push(`scope="${challenge.scope}"`);
   }
 
-  return parts.join(', ');
+  return parts.join(", ");
 }
 
 // =============================================================================
@@ -934,7 +1301,7 @@ export interface ProtectedResourceMetadata {
   /**
    * Supported bearer token methods
    */
-  bearer_methods_supported?: ('header' | 'body' | 'query')[];
+  bearer_methods_supported?: ("header" | "body" | "query")[];
   /**
    * Supported resource signing algorithms
    */
@@ -1035,7 +1402,11 @@ export interface ClientRegistrationRequest {
   /**
    * Token endpoint authentication method
    */
-  token_endpoint_auth_method?: 'none' | 'client_secret_basic' | 'client_secret_post' | 'private_key_jwt';
+  token_endpoint_auth_method?:
+    | "none"
+    | "client_secret_basic"
+    | "client_secret_post"
+    | "private_key_jwt";
   /**
    * Grant types the client will use
    */
@@ -1123,7 +1494,7 @@ export interface TokenRequest {
   /**
    * Grant type
    */
-  grant_type: 'authorization_code' | 'refresh_token' | 'client_credentials';
+  grant_type: "authorization_code" | "refresh_token" | "client_credentials";
   /**
    * Authorization code (for authorization_code grant)
    */
@@ -1187,7 +1558,15 @@ export interface OAuthErrorResponse {
   /**
    * Error code
    */
-  error: 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_scope' | 'access_denied' | 'server_error';
+  error:
+    | "invalid_request"
+    | "invalid_client"
+    | "invalid_grant"
+    | "unauthorized_client"
+    | "unsupported_grant_type"
+    | "invalid_scope"
+    | "access_denied"
+    | "server_error";
   /**
    * Human-readable error description
    */
@@ -1328,7 +1707,15 @@ export interface RootsListChangedNotification {
 /**
  * Logging level
  */
-export type LoggingLevel = 'debug' | 'info' | 'notice' | 'warning' | 'error' | 'critical' | 'alert' | 'emergency';
+export type LoggingLevel =
+  | "debug"
+  | "info"
+  | "notice"
+  | "warning"
+  | "error"
+  | "critical"
+  | "alert"
+  | "emergency";
 
 /**
  * Set logging level request
@@ -1359,7 +1746,7 @@ export interface CompletionRequest {
 }
 
 export interface CompletionReference {
-  type: 'ref/prompt' | 'ref/resource';
+  type: "ref/prompt" | "ref/resource";
   name?: string;
   uri?: string;
 }
@@ -1408,9 +1795,9 @@ export interface StructuredToolOutput {
 }
 
 export type ToolOutputContent =
-  | { type: 'text'; text: string }
-  | { type: 'image'; data: string; mimeType: string }
-  | { type: 'resource'; resource: EmbeddedResource };
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mimeType: string }
+  | { type: "resource"; resource: EmbeddedResource };
 
 export interface EmbeddedResource {
   uri: string;
@@ -1423,9 +1810,127 @@ export interface EmbeddedResource {
  * Ping request/response for connection health
  */
 export interface PingRequest {
-  // Empty
+  [key: string]: never;
 }
 
 export interface PingResponse {
-  // Empty - just acknowledgement
+  [key: string]: never;
+}
+
+// =============================================================================
+// Utility Functions for Content Creation (FastMCP-inspired patterns)
+// =============================================================================
+
+/**
+ * User-facing error that should be displayed to the user
+ * Distinguishes from system/internal errors
+ */
+export class UserError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UserError";
+  }
+}
+
+/**
+ * Helper to create image content from URL, path, or buffer
+ * Based on FastMCP imageContent pattern
+ */
+export async function createImageContent(options: {
+  url?: string;
+  path?: string;
+  buffer?: Buffer;
+  mimeType?: string;
+  annotations?: ResourceAnnotations;
+}): Promise<ImageContent> {
+  const { url, path, buffer, mimeType, annotations } = options;
+
+  let data: string;
+  let detectedMimeType = mimeType;
+
+  if (url) {
+    // Fetch from URL and convert to base64
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    data = Buffer.from(arrayBuffer).toString("base64");
+    detectedMimeType =
+      mimeType || response.headers.get("content-type") || "image/png";
+  } else if (path) {
+    // Read from file system
+    const fs = await import("node:fs/promises");
+    const fileBuffer = await fs.readFile(path);
+    data = fileBuffer.toString("base64");
+    // Detect MIME type from extension if not provided
+    if (!detectedMimeType) {
+      const ext = path.split(".").pop()?.toLowerCase();
+      detectedMimeType =
+        ext === "png"
+          ? "image/png"
+          : ext === "jpg" || ext === "jpeg"
+            ? "image/jpeg"
+            : "image/png";
+    }
+  } else if (buffer) {
+    data = buffer.toString("base64");
+    detectedMimeType = mimeType || "image/png";
+  } else {
+    throw new Error("Must provide one of: url, path, or buffer");
+  }
+
+  return {
+    type: "image",
+    data,
+    mimeType: detectedMimeType,
+    ...(annotations && { annotations }),
+  };
+}
+
+/**
+ * Helper to create audio content from URL, path, or buffer
+ * Based on FastMCP audioContent pattern
+ */
+export async function createAudioContent(options: {
+  url?: string;
+  path?: string;
+  buffer?: Buffer;
+  mimeType?: string;
+  annotations?: ResourceAnnotations;
+}): Promise<AudioContent> {
+  const { url, path, buffer, mimeType, annotations } = options;
+
+  let data: string;
+  let detectedMimeType = mimeType;
+
+  if (url) {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    data = Buffer.from(arrayBuffer).toString("base64");
+    detectedMimeType =
+      mimeType || response.headers.get("content-type") || "audio/mpeg";
+  } else if (path) {
+    const fs = await import("node:fs/promises");
+    const fileBuffer = await fs.readFile(path);
+    data = fileBuffer.toString("base64");
+    if (!detectedMimeType) {
+      const ext = path.split(".").pop()?.toLowerCase();
+      detectedMimeType =
+        ext === "mp3"
+          ? "audio/mpeg"
+          : ext === "wav"
+            ? "audio/wav"
+            : "audio/mpeg";
+    }
+  } else if (buffer) {
+    data = buffer.toString("base64");
+    detectedMimeType = mimeType || "audio/mpeg";
+  } else {
+    throw new Error("Must provide one of: url, path, or buffer");
+  }
+
+  return {
+    type: "audio",
+    data,
+    mimeType: detectedMimeType,
+    ...(annotations && { annotations }),
+  };
 }
