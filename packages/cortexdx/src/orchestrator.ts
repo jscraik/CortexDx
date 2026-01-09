@@ -31,7 +31,15 @@ interface DiagnoseOptions {
   mcpApiKey?: string;
   auth0DeviceCode?: boolean;
   auth0DeviceCodeEndpoint?: string;
+  async?: boolean;
+  taskTtl?: string | number;
+  pollInterval?: string | number;
+  simulateExternal?: boolean;
+  a11y?: boolean;
   noColor?: boolean;
+  color?: boolean;
+  otelExporter?: string;
+  har?: boolean;
 }
 
 export async function runDiagnose({
@@ -44,6 +52,8 @@ export async function runDiagnose({
   const outDir = String(opts.out ?? "reports");
   mkdirSync(outDir, { recursive: true });
   const t0 = Date.now();
+  const sessionId = `diagnose-${Date.now().toString(36)}`;
+  const noColor = opts.noColor ?? opts.color === false;
 
   const suites =
     typeof opts.suites === "string" && opts.suites.length > 0
@@ -75,42 +85,217 @@ export async function runDiagnose({
     onDeviceCodePrompt: logDeviceCodePrompt,
   });
 
-  const sessionId = `diagnose-${Date.now().toString(36)}`;
-  const { findings } = await runPlugins({
+  const context: DiagnoseContext = {
     endpoint,
-    headers,
     suites,
-    full: Boolean(opts.full),
-    deterministic: Boolean(opts.deterministic),
-    budgets,
-  });
-
-  const stamp = {
-    endpoint,
-    inspectedAt: new Date().toISOString(),
-    durationMs: Date.now() - t0,
-    node: process.version,
+    outDir,
     sessionId,
+    budgets,
+    headers,
+    opts,
+    noColor,
+    startedAt: t0,
   };
 
-  writeArtifacts(outDir, stamp, findings);
+  return opts.async ? runAsyncDiagnose(context) : runSyncDiagnose(context);
+}
 
-  await storeConsolidatedReport(opts.reportOut, {
-    sessionId,
+interface DiagnoseContext {
+  endpoint: string;
+  suites: string[];
+  outDir: string;
+  sessionId: string;
+  budgets: SandboxBudgets;
+  headers?: Record<string, string>;
+  opts: DiagnoseOptions;
+  noColor: boolean;
+  startedAt: number;
+}
+
+async function runSyncDiagnose(ctx: DiagnoseContext): Promise<number> {
+  const { findings } = await runPlugins({
+    endpoint: ctx.endpoint,
+    headers: ctx.headers,
+    suites: ctx.suites,
+    full: Boolean(ctx.opts.full),
+    deterministic: Boolean(ctx.opts.deterministic),
+    budgets: ctx.budgets,
+    // Remove unsupported options: simulateExternal, a11y, noColor, otelExporter, har
+  });
+
+  const stamp = buildStamp(ctx, false);
+  writeArtifacts(ctx.outDir, stamp, findings);
+  await storeConsolidatedReport(ctx.opts.reportOut, {
+    sessionId: ctx.sessionId,
     diagnosticType: "diagnose",
-    endpoint,
+    endpoint: ctx.endpoint,
     inspectedAt: stamp.inspectedAt,
     durationMs: stamp.durationMs,
     findings,
-    tags: suites,
-    metadata: {
-      budgets,
-      deterministic: Boolean(opts.deterministic),
-    },
+    tags: ctx.suites,
+    metadata: buildMetadata(ctx, { asyncMode: false }),
   });
 
-  const hasBlocker = findings.some((f) => f.severity === "blocker");
-  const hasMajor = findings.some((f) => f.severity === "major");
+  return determineExitCode(findings);
+}
+
+async function runAsyncDiagnose(ctx: DiagnoseContext): Promise<number> {
+  const { executeDiagnoseAsync } = await import("./commands/async-task-utils.js");
+  const taskTtl = coerceNumber(ctx.opts.taskTtl) ?? 300000;
+  const pollInterval = coerceNumber(ctx.opts.pollInterval) ?? 5000;
+
+  const asyncResult = (await executeDiagnoseAsync({
+    endpoint: ctx.endpoint,
+    diagnosticArgs: {
+      endpoint: ctx.endpoint,
+      suites: ctx.suites,
+      full: ctx.opts.full,
+      simulateExternal: Boolean(ctx.opts.simulateExternal),
+      a11y: Boolean(ctx.opts.a11y),
+      otelExporter: ctx.opts.otelExporter,
+      har: Boolean(ctx.opts.har),
+    },
+    taskTtl,
+    pollInterval,
+    headers: ctx.headers,
+    noColor: ctx.noColor,
+  })) as { content?: Array<{ type: string; text?: string }> };
+
+  const resultText = extractAsyncText(asyncResult);
+  if (!resultText) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task result parsing failed",
+      description: "Failed to extract diagnostic text from async task result.",
+      evidence: [
+        { type: "log", ref: "No resultText extracted from asyncResult" },
+        { type: "raw", ref: JSON.stringify(asyncResult) }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "extractAsyncText returned undefined",
+        asyncResult
+      }),
+    });
+    return 1;
+  }
+
+  const findings = parseFindingsFromText(resultText);
+  if (!findings) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-findings-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task findings parsing failed",
+      description: "Failed to parse findings from extracted async task result text.",
+      evidence: [
+        { type: "log", ref: "No findings parsed from resultText" },
+        { type: "raw", ref: resultText }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "parseFindingsFromText returned undefined",
+        resultText
+      }),
+    });
+    return 1;
+  }
+  const stamp = buildStamp(ctx, true);
+  writeArtifacts(ctx.outDir, stamp, findings);
+  await storeConsolidatedReport(ctx.opts.reportOut, {
+    sessionId: ctx.sessionId,
+    diagnosticType: "diagnose",
+    endpoint: ctx.endpoint,
+    inspectedAt: stamp.inspectedAt,
+    durationMs: stamp.durationMs,
+    findings,
+    tags: ctx.suites,
+    metadata: buildMetadata(ctx, { asyncMode: true, taskTtl, pollInterval }),
+  });
+
+  return determineExitCode(findings);
+}
+
+function buildStamp(ctx: DiagnoseContext, asyncMode: boolean): Record<string, unknown> {
+  return {
+    endpoint: ctx.endpoint,
+    inspectedAt: new Date().toISOString(),
+    durationMs: Date.now() - ctx.startedAt,
+    node: process.version,
+    sessionId: ctx.sessionId,
+    asyncMode,
+  };
+}
+
+function buildMetadata(
+  ctx: DiagnoseContext,
+  extras: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    budgets: ctx.budgets,
+    deterministic: Boolean(ctx.opts.deterministic),
+    simulateExternal: Boolean(ctx.opts.simulateExternal),
+    a11y: Boolean(ctx.opts.a11y),
+    noColor: ctx.noColor,
+    otelExporter: ctx.opts.otelExporter,
+    har: Boolean(ctx.opts.har),
+    ...extras,
+  };
+}
+
+function extractAsyncText(response: { content?: Array<{ type: string; text?: string }> }): string | undefined {
+  const textContent = response.content?.find((content) => content.type === "text" && content.text)?.text;
+  if (textContent) return textContent;
+
+  console.error("❌ No text content received from async task");
+  console.error("   Received:", JSON.stringify(response, null, 2));
+  return undefined;
+}
+
+function parseFindingsFromText(text: string): Finding[] | undefined {
+  try {
+    const payload = JSON.parse(text) as { findings?: Finding[] };
+    return payload.findings ?? [];
+  } catch (error) {
+    console.error("❌ Failed to parse async task result:", error);
+    console.error("   Raw result:", text.substring(0, 200));
+    return undefined;
+  }
+}
+
+function determineExitCode(findings: Finding[]): number {
+  const hasBlocker = findings.some((finding) => finding.severity === "blocker");
+  const hasMajor = findings.some((finding) => finding.severity === "major");
   return hasBlocker ? 1 : hasMajor ? 2 : 0;
 }
 
