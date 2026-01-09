@@ -336,7 +336,10 @@ export class ConversationStorage {
         lastActivity: stored.lastActivity,
       };
     } catch (error) {
-      logger.error({ error, conversationId: stored.id }, "Failed to deserialize conversation");
+      logger.error(
+        { error, conversationId: stored.id },
+        "Failed to deserialize conversation",
+      );
       return null;
     }
   }

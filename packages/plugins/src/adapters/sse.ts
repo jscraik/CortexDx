@@ -16,13 +16,15 @@ export async function sseProbe(
       },
       signal: controller.signal,
     });
-    if (!res.ok) return { ok: false, reason: `HTTP ${res.status}`, resolvedUrl: url };
+    if (!res.ok)
+      return { ok: false, reason: `HTTP ${res.status}`, resolvedUrl: url };
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/event-stream"))
       return { ok: false, reason: "wrong content-type", resolvedUrl: url };
 
     const reader = res.body?.getReader();
-    if (!reader) return { ok: false, reason: "no readable body", resolvedUrl: url };
+    if (!reader)
+      return { ok: false, reason: "no readable body", resolvedUrl: url };
     const parser = createParser(() => undefined);
     let firstAt: number | null = null;
 

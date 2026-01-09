@@ -7,7 +7,7 @@ export {
   ConversationStorage,
   createConversationStorage,
   type ConversationExport,
-  type StoredConversation
+  type StoredConversation,
 } from "./conversation-storage.js";
 
 // Pattern storage
@@ -20,13 +20,14 @@ export {
   type PatternRetrievalOptions,
   type PatternStatistics,
   type PatternStorage,
-  type ResolutionPattern
+  type ResolutionPattern,
 } from "./pattern-storage.js";
 
 // SQLite pattern storage with encryption and anonymization
 export {
-  createSQLitePatternStorage, PatternAnonymizer,
-  PatternEncryption
+  createSQLitePatternStorage,
+  PatternAnonymizer,
+  PatternEncryption,
 } from "./pattern-storage-sqlite.js";
 
 // Vector storage
@@ -35,16 +36,15 @@ export {
   createProblemDocument,
   createReferenceDocument,
   createSolutionDocument,
-  createVectorStorage, type DocumentMetadata,
+  createVectorStorage,
+  type DocumentMetadata,
   type VectorStorage,
   type ReferenceDocumentInput,
   type SearchOptions,
   type SearchResult,
   type VectorDocument,
-  type VectorStorageStats
+  type VectorStorageStats,
 } from "./vector-storage.js";
-
-
 
 // Report management
 export {
@@ -54,13 +54,13 @@ export {
   type ReportFilters,
   type ReportFormat,
   type ReportMetadata,
-  type StorageOptions
+  type StorageOptions,
 } from "./report-manager.js";
 
 // Report configuration
 export {
   ReportConfigManager,
-  type ReportConfigOptions
+  type ReportConfigOptions,
 } from "./report-config.js";
 
 // Report optimization
@@ -68,6 +68,5 @@ export {
   ReportOptimizer,
   type FindingSummary,
   type OptimizedResponse,
-  type ReportSearchResult
+  type ReportSearchResult,
 } from "./report-optimizer.js";
-

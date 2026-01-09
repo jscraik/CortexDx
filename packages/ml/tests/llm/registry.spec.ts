@@ -26,15 +26,20 @@ function createPlugin(
     },
     supports: vi.fn(() => supports),
     initialize: options.initialize ? vi.fn(options.initialize) : undefined,
-    generate: vi.fn(async (request: LLMGenerateRequest, _context: LLMPluginContext): Promise<ProviderResponse> => {
-      if (options.failGenerate) {
-        throw new Error("generation failed");
-      }
-      return {
-        text: `${generateText}:${request.prompt}`,
-        model: request.options?.model,
-      };
-    }),
+    generate: vi.fn(
+      async (
+        request: LLMGenerateRequest,
+        _context: LLMPluginContext,
+      ): Promise<ProviderResponse> => {
+        if (options.failGenerate) {
+          throw new Error("generation failed");
+        }
+        return {
+          text: `${generateText}:${request.prompt}`,
+          model: request.options?.model,
+        };
+      },
+    ),
   };
 }
 
@@ -47,9 +52,15 @@ describe("LLMPluginRegistry", () => {
 
   it("registers available plugins and generates responses", async () => {
     const plugin = createPlugin("mock");
-    const registry = new LLMPluginRegistry({ env, plugins: [plugin], logger: secureLogger });
+    const registry = new LLMPluginRegistry({
+      env,
+      plugins: [plugin],
+      logger: secureLogger,
+    });
 
-    const { response, plugin: used } = await registry.generate({ prompt: "hello" });
+    const { response, plugin: used } = await registry.generate({
+      prompt: "hello",
+    });
 
     expect(response.text).toBe("mock-response:hello");
     expect(used.metadata.id).toBe("mock");
@@ -57,9 +68,18 @@ describe("LLMPluginRegistry", () => {
   });
 
   it("initializes only supporting plugins", async () => {
-    const ready = createPlugin("ready", { initialize: async () => Promise.resolve() });
-    const skipped = createPlugin("skipped", { supports: false, initialize: async () => Promise.resolve() });
-    const registry = new LLMPluginRegistry({ env, plugins: [ready, skipped], logger: secureLogger });
+    const ready = createPlugin("ready", {
+      initialize: async () => Promise.resolve(),
+    });
+    const skipped = createPlugin("skipped", {
+      supports: false,
+      initialize: async () => Promise.resolve(),
+    });
+    const registry = new LLMPluginRegistry({
+      env,
+      plugins: [ready, skipped],
+      logger: secureLogger,
+    });
 
     await registry.initializeAll();
 
@@ -70,7 +90,11 @@ describe("LLMPluginRegistry", () => {
   it("falls back to the first available provider when a preferred one is unavailable", async () => {
     const unavailable = createPlugin("first", { supports: false });
     const fallback = createPlugin("second");
-    const registry = new LLMPluginRegistry({ env, plugins: [unavailable, fallback], logger: secureLogger });
+    const registry = new LLMPluginRegistry({
+      env,
+      plugins: [unavailable, fallback],
+      logger: secureLogger,
+    });
 
     const resolved = await registry.resolve("first");
 
@@ -81,10 +105,16 @@ describe("LLMPluginRegistry", () => {
 
 describe("secureLogger", () => {
   it("redacts sensitive metadata values", () => {
-    secureLogger.info("Test", "Logging", { apiKey: "secret", nested: { token: "abcd" } });
+    secureLogger.info("Test", "Logging", {
+      apiKey: "secret",
+      nested: { token: "abcd" },
+    });
 
     const [entry] = secureLogger.getRecentLogs(1);
 
-    expect(entry.metadata).toEqual({ apiKey: "[REDACTED]", nested: { token: "[REDACTED]" } });
+    expect(entry.metadata).toEqual({
+      apiKey: "[REDACTED]",
+      nested: { token: "[REDACTED]" },
+    });
   });
 });

@@ -2,7 +2,12 @@
  * Server-Sent Events (SSE) performance measurement
  */
 
-import type { DiagnosticContext, Finding, PerformanceHarness, SseMetrics } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  Finding,
+  PerformanceHarness,
+  SseMetrics,
+} from "@brainwav/cortexdx-core";
 
 /**
  * Measure SSE performance

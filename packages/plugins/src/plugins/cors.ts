@@ -7,13 +7,13 @@ async function preflight(url: string, headers: Record<string, string>) {
       "Access-Control-Request-Method": "POST",
       "Access-Control-Request-Headers": "content-type, authorization",
       Origin: "https://diagnostic.local",
-      ...headers
-    }
+      ...headers,
+    },
   });
   return {
     ok: response.ok,
     allowHeaders: response.headers.get("access-control-allow-headers") || "",
-    allowMethods: response.headers.get("access-control-allow-methods") || ""
+    allowMethods: response.headers.get("access-control-allow-methods") || "",
   };
 }
 
@@ -32,8 +32,8 @@ export const CorsPlugin: DiagnosticPlugin = {
         severity: "minor",
         title: "CORS preflight failed",
         description: "OPTIONS did not succeed or missing allow headers.",
-        evidence: [{ type: "url", ref: url }]
-      }
+        evidence: [{ type: "url", ref: url }],
+      },
     ];
-  }
+  },
 };

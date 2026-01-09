@@ -1,6 +1,10 @@
 import { secureLogger } from "./secure-logger.js";
 import { getLLMRegistry } from "./registry.js";
-import type { LLMProviderConfig, GenerateInput, GenerateOutput } from "./types.js";
+import type {
+  LLMProviderConfig,
+  GenerateInput,
+  GenerateOutput,
+} from "./types.js";
 
 let registrySingleton: ReturnType<typeof getLLMRegistry> | null = null;
 
@@ -49,16 +53,26 @@ async function generateWithCandidates(
   for (const candidateId of providerCandidates) {
     const resolved = await activeRegistry.ensurePlugin(candidateId);
     if (!resolved) {
-      if (userPinnedProvider) throw new Error(`Provider ${candidateId} is not available`);
+      if (userPinnedProvider)
+        throw new Error(`Provider ${candidateId} is not available`);
       continue;
     }
     const { plugin, context } = resolved;
     try {
       const result = await plugin.generate(
-        { prompt: input.prompt, options, systemPrompt: input.systemPrompt || "You are a helpful assistant." },
+        {
+          prompt: input.prompt,
+          options,
+          systemPrompt: input.systemPrompt || "You are a helpful assistant.",
+        },
         context,
       );
-      return { text: result.text, model: result.model, provider: plugin.metadata.id, usage: result.usage };
+      return {
+        text: result.text,
+        model: result.model,
+        provider: plugin.metadata.id,
+        usage: result.usage,
+      };
     } catch (error) {
       lastError = error;
       secureLogger.warn("LLM", "Provider failed; checking next candidate", {
@@ -74,13 +88,24 @@ async function generateWithCandidates(
   throw new Error("All LLM providers failed");
 }
 
-export async function generateResponse(input: GenerateInput): Promise<GenerateOutput> {
-  const preferredProvider = input.modelOverride?.provider || process.env.DEFAULT_LLM_PROVIDER || undefined;
+export async function generateResponse(
+  input: GenerateInput,
+): Promise<GenerateOutput> {
+  const preferredProvider =
+    input.modelOverride?.provider ||
+    process.env.DEFAULT_LLM_PROVIDER ||
+    undefined;
   const modelOverride = input.modelOverride?.model || process.env.DEFAULT_MODEL;
   const activeRegistry = registry();
   const userPinnedProvider = Boolean(input.modelOverride?.provider);
-  const available = activeRegistry.getAvailable().map((plugin) => plugin.metadata.id);
-  const providerCandidates = buildCandidates(preferredProvider, available, userPinnedProvider);
+  const available = activeRegistry
+    .getAvailable()
+    .map((plugin) => plugin.metadata.id);
+  const providerCandidates = buildCandidates(
+    preferredProvider,
+    available,
+    userPinnedProvider,
+  );
   if (providerCandidates.length === 0) {
     throw new Error("No LLM providers available");
   }
@@ -105,14 +130,24 @@ export async function askLLM(
 ): Promise<string> {
   const activeRegistry = registry();
   const { response } = await activeRegistry.generate(
-    { prompt, systemPrompt: options?.systemPrompt, options: { model: options?.model, temperature: options?.temperature, maxTokens: options?.maxTokens } },
+    {
+      prompt,
+      systemPrompt: options?.systemPrompt,
+      options: {
+        model: options?.model,
+        temperature: options?.temperature,
+        maxTokens: options?.maxTokens,
+      },
+    },
     options?.provider,
   );
   return response.text;
 }
 
 export function getAvailableProviders(): string[] {
-  return registry().getAvailable().map((plugin) => plugin.metadata.id);
+  return registry()
+    .getAvailable()
+    .map((plugin) => plugin.metadata.id);
 }
 
 export function getProviderMetadata() {

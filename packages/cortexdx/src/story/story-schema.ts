@@ -50,10 +50,7 @@ export const StorySchema = z
       .string()
       .regex(/^[a-z0-9:_-]{3,64}$/)
       .describe("Stable identifier"),
-    timestamp: z
-      .string()
-      .datetime()
-      .describe("ISO timestamp for the snapshot"),
+    timestamp: z.string().datetime().describe("ISO timestamp for the snapshot"),
     scope: z.enum(STORY_SCOPE_VALUES),
     trigger: z.object({
       kind: z.enum(STORY_TRIGGER_VALUES),

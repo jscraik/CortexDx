@@ -22,7 +22,10 @@ function redactTokens(value: string): string {
     .replace(/Basic\s+[A-Za-z0-9+/_=-]+/gi, "[REDACTED_BASIC_TOKEN]")
     .replace(/(api[_-]?key|authorization)\s*[:=]\s*[^\s,;]+/gi, "$1=[REDACTED]")
     .replace(/sk-[a-zA-Z0-9_-]{20,}/g, "[REDACTED_API_KEY]")
-    .replace(/mcp-auth-token\s*[:=]\s*[A-Za-z0-9._\-]{20,}/gi, "mcp-auth-token=[REDACTED_MCP_AUTH_TOKEN]")
+    .replace(
+      /mcp-auth-token\s*[:=]\s*[A-Za-z0-9._\-]{20,}/gi,
+      "mcp-auth-token=[REDACTED_MCP_AUTH_TOKEN]",
+    )
     .replace(/[A-Za-z0-9_\-]{32,}/g, "[REDACTED_TOKEN]");
 }
 
@@ -115,16 +118,52 @@ export class SecureLogger {
     }
   }
 
-  debug(component: string, message: string, metadata?: Metadata, requestId?: string): void {
-    this.log({ timestamp: new Date(), level: "debug", component, message, metadata, requestId });
+  debug(
+    component: string,
+    message: string,
+    metadata?: Metadata,
+    requestId?: string,
+  ): void {
+    this.log({
+      timestamp: new Date(),
+      level: "debug",
+      component,
+      message,
+      metadata,
+      requestId,
+    });
   }
 
-  info(component: string, message: string, metadata?: Metadata, requestId?: string): void {
-    this.log({ timestamp: new Date(), level: "info", component, message, metadata, requestId });
+  info(
+    component: string,
+    message: string,
+    metadata?: Metadata,
+    requestId?: string,
+  ): void {
+    this.log({
+      timestamp: new Date(),
+      level: "info",
+      component,
+      message,
+      metadata,
+      requestId,
+    });
   }
 
-  warn(component: string, message: string, metadata?: Metadata, requestId?: string): void {
-    this.log({ timestamp: new Date(), level: "warn", component, message, metadata, requestId });
+  warn(
+    component: string,
+    message: string,
+    metadata?: Metadata,
+    requestId?: string,
+  ): void {
+    this.log({
+      timestamp: new Date(),
+      level: "warn",
+      component,
+      message,
+      metadata,
+      requestId,
+    });
   }
 
   error(
@@ -139,10 +178,18 @@ export class SecureLogger {
       ...(error && {
         errorName: error.name,
         errorMessage: error.message,
-        stackTrace: process.env.NODE_ENV === "development" ? error.stack : undefined,
+        stackTrace:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
       }),
     };
-    this.log({ timestamp: new Date(), level: "error", component, message, metadata: errorMetadata, requestId });
+    this.log({
+      timestamp: new Date(),
+      level: "error",
+      component,
+      message,
+      metadata: errorMetadata,
+      requestId,
+    });
   }
 
   getRecentLogs(count = 100, level?: LogEntry["level"]): LogEntry[] {

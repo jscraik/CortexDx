@@ -136,7 +136,9 @@ export class OwaspSecurityScanner {
       return recommendations;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[security-validator] Recommendation generation failed: ${message}`);
+      console.warn(
+        `[security-validator] Recommendation generation failed: ${message}`,
+      );
       return []; // Return empty recommendations on error
     }
   }
@@ -250,7 +252,9 @@ export class SecurityValidator {
       return this.convertToFindings(scanResult);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Security validation failed for ${ctx.endpoint}: ${message}`);
+      throw new Error(
+        `Security validation failed for ${ctx.endpoint}: ${message}`,
+      );
     }
   }
 
@@ -286,7 +290,9 @@ export class SecurityValidator {
       return findings;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to convert security scan results to findings: ${message}`);
+      throw new Error(
+        `Failed to convert security scan results to findings: ${message}`,
+      );
     }
   }
 
@@ -368,7 +374,10 @@ class AuthenticationRule implements SecurityRule {
 
       return vulnerabilities;
     } catch (error) {
-      console.warn("[security-validator] AuthenticationRule check failed:", error);
+      console.warn(
+        "[security-validator] AuthenticationRule check failed:",
+        error,
+      );
       return [];
     }
   }
@@ -395,7 +404,10 @@ class SensitiveDataRule implements SecurityRule {
 
       return vulnerabilities;
     } catch (error) {
-      console.warn("[security-validator] SensitiveDataRule check failed:", error);
+      console.warn(
+        "[security-validator] SensitiveDataRule check failed:",
+        error,
+      );
       return [];
     }
   }
@@ -491,7 +503,10 @@ class LoggingMonitoringRule implements SecurityRule {
 
       return vulnerabilities;
     } catch (error) {
-      console.warn("[security-validator] LoggingMonitoringRule check failed:", error);
+      console.warn(
+        "[security-validator] LoggingMonitoringRule check failed:",
+        error,
+      );
       return [];
     }
   }

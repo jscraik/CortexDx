@@ -1,13 +1,13 @@
 {
-    "kiroAgent.configureMCP": "Enabled",
-    "typescript.tsdk": "node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib",
-    "typescript.enablePromptUseWorkspaceTsdk": true,
-    "eslint.enable": false,
-    "eslint.validate": [],
-    "[typescript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
-    },
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
-    }
+  "kiroAgent.configureMCP": "Enabled",
+  "typescript.tsdk": "node_modules/.pnpm/typescript@5.9.3/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "eslint.enable": false,
+  "eslint.validate": [],
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

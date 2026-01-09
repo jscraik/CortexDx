@@ -11,7 +11,10 @@ import {
   createLicenseValidator,
 } from "../../plugins/development/license-validation.js";
 import type { DiagnosticContext } from "@brainwav/cortexdx-core";
-import { LRUCache, createCacheKey } from "@brainwav/cortexdx-core/utils/lru-cache";
+import {
+  LRUCache,
+  createCacheKey,
+} from "@brainwav/cortexdx-core/utils/lru-cache";
 import { HttpMcpClient, sanitizeToolArgs } from "./http-mcp-client.js";
 
 const SEMANTIC_SCHOLAR_CONTACT = "jscraik@brainwav.io";
@@ -115,7 +118,9 @@ export class SemanticScholarProvider {
   private readonly userAgent = "CortexDx/1.0.0 (Academic Research)";
   private readonly licenseValidator: LicenseValidatorPlugin;
   private readonly remoteClient: HttpMcpClient | undefined;
-  private readonly cache: LRUCache<SemanticScholarPaper[] | SemanticScholarPaper>;
+  private readonly cache: LRUCache<
+    SemanticScholarPaper[] | SemanticScholarPaper
+  >;
 
   // Default fields for different query types
   private readonly defaultPaperFields = [
@@ -430,7 +435,7 @@ export class SemanticScholarProvider {
     params: SemanticScholarSearchParams,
   ): Promise<SemanticScholarPaper[]> {
     // Create cache key from search params
-    const cacheKey = createCacheKey('search', params);
+    const cacheKey = createCacheKey("search", params);
 
     // Try to get from cache first
     return this.cache.getOrFetch(cacheKey, async () => {
@@ -446,7 +451,10 @@ export class SemanticScholarProvider {
       // if (params.venue) searchParams.append("venue", params.venue.join(","));
       // if (params.fieldsOfStudy) searchParams.append("fieldsOfStudy", params.fieldsOfStudy.join(","));
       if (params.minCitationCount !== undefined)
-        searchParams.append("minCitationCount", String(params.minCitationCount));
+        searchParams.append(
+          "minCitationCount",
+          String(params.minCitationCount),
+        );
       // if (params.publicationTypes) searchParams.append("publicationTypes", params.publicationTypes.join(","));
       // if (params.openAccessPdf !== undefined) searchParams.append("openAccessPdf", String(params.openAccessPdf));
 
@@ -488,7 +496,7 @@ export class SemanticScholarProvider {
    * Results are cached for 5 minutes
    */
   async getPaper(paperId: string): Promise<SemanticScholarPaper | null> {
-    const cacheKey = createCacheKey('paper', paperId);
+    const cacheKey = createCacheKey("paper", paperId);
 
     const cached = this.cache.get(cacheKey);
     if (cached) {

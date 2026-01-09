@@ -1,3 +1,13 @@
+import {
+  type SandboxBudgets,
+  buildArcTddPlan,
+  buildFilePlan,
+  buildJsonReport,
+  buildMarkdownReport,
+  resolveAuthHeaders,
+  runPlugins,
+  storeConsolidatedReport,
+} from "@brainwav/cortexdx-plugins";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Finding } from "../../core/src/types.ts";
@@ -30,6 +40,11 @@ interface DiagnoseOptions {
   mcpApiKey?: string;
   auth0DeviceCode?: boolean;
   auth0DeviceCodeEndpoint?: string;
+  async?: boolean;
+  taskTtl?: string | number;
+  pollInterval?: string | number;
+  simulateExternal?: boolean;
+  a11y?: boolean;
   noColor?: boolean;
   taskTtl?: number | string;
   pollInterval?: number | string;
@@ -109,7 +124,6 @@ async function runSyncDiagnose(params: {
   const sessionId = buildSessionId();
   const { findings } = await runPlugins({
     endpoint,
-    headers,
     suites,
     full: Boolean(opts.full),
     deterministic: Boolean(opts.deterministic),
@@ -193,6 +207,11 @@ function buildStamp(endpoint: string, sessionId: string, startedAt: number): Dia
     durationMs: Date.now() - startedAt,
     node: process.version,
     sessionId,
+    budgets,
+    headers,
+    opts,
+    noColor,
+    startedAt: t0,
   };
 }
 
@@ -226,6 +245,92 @@ async function persistReports({
       budgets,
       deterministic,
     },
+    taskTtl,
+    pollInterval,
+    headers: ctx.headers,
+    noColor: ctx.noColor,
+  })) as { content?: Array<{ type: string; text?: string }> };
+
+  const resultText = extractAsyncText(asyncResult);
+  if (!resultText) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task result parsing failed",
+      description: "Failed to extract diagnostic text from async task result.",
+      evidence: [
+        { type: "log", ref: "No resultText extracted from asyncResult" },
+        { type: "raw", ref: JSON.stringify(asyncResult) }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "extractAsyncText returned undefined",
+        asyncResult
+      }),
+    });
+    return 1;
+  }
+
+  const findings = parseFindingsFromText(resultText);
+  if (!findings) {
+    const stamp = buildStamp(ctx, true);
+    const errorFinding: Finding = {
+      id: "async-task-findings-parse-failed",
+      area: "diagnostics",
+      severity: "blocker",
+      title: "Async task findings parsing failed",
+      description: "Failed to parse findings from extracted async task result text.",
+      evidence: [
+        { type: "log", ref: "No findings parsed from resultText" },
+        { type: "raw", ref: resultText }
+      ],
+      confidence: 1.0
+    };
+    await storeConsolidatedReport(ctx.opts.reportOut, {
+      sessionId: ctx.sessionId,
+      diagnosticType: "diagnose",
+      endpoint: ctx.endpoint,
+      inspectedAt: stamp.inspectedAt,
+      durationMs: stamp.durationMs,
+      findings: [errorFinding],
+      tags: ctx.suites,
+      metadata: buildMetadata(ctx, {
+        asyncMode: true,
+        taskTtl,
+        pollInterval,
+        status: "failed",
+        error: "parseFindingsFromText returned undefined",
+        resultText
+      }),
+    });
+    return 1;
+  }
+  const stamp = buildStamp(ctx, true);
+  writeArtifacts(ctx.outDir, stamp, findings);
+  await storeConsolidatedReport(ctx.opts.reportOut, {
+    sessionId: ctx.sessionId,
+    diagnosticType: "diagnose",
+    endpoint: ctx.endpoint,
+    inspectedAt: stamp.inspectedAt,
+    durationMs: stamp.durationMs,
+    findings,
+    tags: ctx.suites,
+    metadata: buildMetadata(ctx, { asyncMode: true, taskTtl, pollInterval }),
   });
 }
 
@@ -273,10 +378,14 @@ function writeArtifacts(outDir: string, stamp: DiagnoseStamp, findings: Finding[
   const arc = buildArcTddPlan(stamp, findings);
   const fp = buildFilePlan(findings);
 
-  writeFileSync(join(outDir, "cortexdx-findings.json"), JSON.stringify(json, null, 2));
+  writeFileSync(
+    join(outDir, "cortexdx-findings.json"),
+    JSON.stringify(json, null, 2),
+  );
   writeFileSync(join(outDir, "cortexdx-report.md"), md);
   writeFileSync(join(outDir, "cortexdx-arctdd.md"), arc);
-  if (fp.length) writeFileSync(join(outDir, "cortexdx-fileplan.patch"), fp.join("\n"));
+  if (fp.length)
+    writeFileSync(join(outDir, "cortexdx-fileplan.patch"), fp.join("\n"));
 }
 
 function coerceNumber(value: number | string | undefined): number | undefined {

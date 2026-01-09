@@ -19,7 +19,9 @@ afterEach(() => {
 
 describe("internal endpoint header utilities", () => {
   it("parses mixed delimiter header lists", () => {
-    const headers = parseHeaderList("Authorization: Bearer token;X-Test: value,Another: yes");
+    const headers = parseHeaderList(
+      "Authorization: Bearer token;X-Test: value,Another: yes",
+    );
     expect(headers).toEqual({
       Authorization: "Bearer token",
       "X-Test": "value",
@@ -45,9 +47,12 @@ describe("internal endpoint header utilities", () => {
   });
 
   it("merges default headers into request init", () => {
-    const result = mergeHeaders({ method: "GET", headers: { Existing: "1" } }, {
-      Authorization: "Bearer token",
-    });
+    const result = mergeHeaders(
+      { method: "GET", headers: { Existing: "1" } },
+      {
+        Authorization: "Bearer token",
+      },
+    );
 
     expect(result).toEqual({
       method: "GET",
@@ -59,7 +64,10 @@ describe("internal endpoint header utilities", () => {
   });
 
   it("formats headers for CLI arguments", () => {
-    const args = formatHeadersForCli({ Authorization: "Bearer token", "X-Test": "abc" });
+    const args = formatHeadersForCli({
+      Authorization: "Bearer token",
+      "X-Test": "abc",
+    });
     expect(args).toEqual([
       "--header",
       "Authorization: Bearer token",

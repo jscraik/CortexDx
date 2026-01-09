@@ -46,7 +46,9 @@ describe("ollama reasoner", () => {
   });
 
   it("throws when deterministic cache is missing", async () => {
-    const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "ollama-cache-miss-"));
+    const cacheDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "ollama-cache-miss-"),
+    );
     const cache = new PromptCache(cacheDir);
 
     await expect(

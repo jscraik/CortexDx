@@ -1,4 +1,10 @@
-import type { DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  DiagnosticArtifacts,
+  Finding,
+  Severity,
+} from "@brainwav/cortexdx-core";
 
 // Academic license types
 export interface AcademicLicense {
@@ -130,6 +136,20 @@ const APPROVED_LICENSES: Map<string, AcademicLicense> = new Map([
       allowsDistribution: true,
     },
   ],
+  [
+    "PROPRIETARY-NO-DIST",
+    {
+      id: "PROPRIETARY-NO-DIST",
+      name: "Proprietary License (No Distribution)",
+      type: "proprietary",
+      approved: false,
+      restrictions: ["distribution-prohibited"],
+      requiresAttribution: false,
+      allowsCommercialUse: false,
+      allowsModification: false,
+      allowsDistribution: false,
+    },
+  ],
 ]);
 
 // License Validator Plugin
@@ -137,18 +157,39 @@ export const LicenseValidatorPlugin: DiagnosticPlugin = {
   id: "license-validator",
   title: "Academic License Validation",
   order: 100,
-  async run(ctx) {
+  async run(ctx: DiagnosticContext) {
     const findings: Finding[] = [];
+    const researchContent = extractResearchContent(ctx.artifacts);
 
-    findings.push({
-      id: "license.validator.ready",
-      area: "licensing",
-      severity: "info",
-      title: "License validator initialized",
-      description: `Monitoring academic research licenses. Approved licenses: ${APPROVED_LICENSES.size}`,
-      evidence: [{ type: "log", ref: "license-validator" }],
-      tags: ["licensing", "academic", "compliance"],
-    });
+    if (researchContent.length === 0) {
+      findings.push({
+        id: "license.validator.no-content",
+        area: "licensing",
+        severity: "info",
+        title: "No research content provided",
+        description:
+          "No research artifacts were supplied for license validation. Provide research content with license metadata to enable compliance checks.",
+        evidence: [{ type: "url", ref: ctx.endpoint }],
+        tags: ["licensing", "academic", "compliance"],
+      });
+      return findings;
+    }
+
+    for (const content of researchContent) {
+      const validation = validateAcademicLicense(content);
+      const severity = getSeverityFromValidation(validation);
+      findings.push({
+        id: `license.validator.${validation.complianceStatus}.${content.title.slice(0, 20).toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+        area: "licensing",
+        severity,
+        title: `License validation: ${validation.license}`,
+        description: `Research content "${content.title}" is ${validation.complianceStatus.replace(/_/g, " ")}. Restrictions: ${validation.restrictions.join(", ") || "none"}.`,
+        evidence: buildEvidence(content, ctx.endpoint),
+        tags: ["licensing", "academic", validation.complianceStatus],
+        recommendation: validation.recommendations.join(". "),
+        confidence: validation.valid ? 0.95 : 0.85,
+      });
+    }
 
     return findings;
   },
@@ -200,18 +241,23 @@ export function validateAcademicLicense(
   }
 
   if (!license.approved) {
+    // Mark as non-compliant only if BOTH distribution and modification are disallowed
+    const nonCompliant =
+      !license.allowsDistribution && !license.allowsModification;
+
     return {
       valid: false,
       license: license.name,
       approved: false,
       restrictions: license.restrictions,
-      requiresApproval: true,
-      riskLevel: license.type === "proprietary" ? "high" : "medium",
+      requiresApproval: !nonCompliant,
+      riskLevel:
+        nonCompliant || license.type === "proprietary" ? "high" : "medium",
       recommendations: [
         "Seek legal approval for implementation",
         "Consider alternative permissive-licensed research",
       ],
-      complianceStatus: "requires_approval",
+      complianceStatus: nonCompliant ? "non_compliant" : "requires_approval",
     };
   }
 
@@ -260,11 +306,6 @@ export function isLicenseApproved(licenseId: string): boolean {
   return license?.approved ?? false;
 }
 
-// Add custom license to database
-export function addCustomLicense(license: AcademicLicense): void {
-  APPROVED_LICENSES.set(license.id, license);
-}
-
 // Batch validate multiple research contents
 export function batchValidateLicenses(
   contents: ResearchContent[],
@@ -302,4 +343,54 @@ export function generateComplianceFinding(
     confidence: validation.valid ? 0.95 : 0.85,
     recommendation: validation.recommendations.join(". "),
   };
+}
+
+type LicenseArtifacts = DiagnosticArtifacts & {
+  researchContent?: ResearchContent[];
+  researchContext?: ResearchContent[];
+  research?: ResearchContent[];
+};
+
+function extractResearchContent(
+  artifacts?: LicenseArtifacts,
+): ResearchContent[] {
+  if (!artifacts) {
+    return [];
+  }
+
+  const candidates =
+    artifacts.researchContent ??
+    artifacts.researchContext ??
+    artifacts.research ??
+    [];
+
+  return (Array.isArray(candidates) ? candidates : []).filter(
+    (item): item is ResearchContent =>
+      typeof item?.title === "string" &&
+      Array.isArray(item?.authors) &&
+      item.authors.every((author) => typeof author === "string"),
+  );
+}
+
+function getSeverityFromValidation(validation: LicenseValidationResult): Severity {
+  if (validation.complianceStatus === "compliant") {
+    return "info";
+  }
+
+  if (validation.complianceStatus === "non_compliant") {
+    return "major";
+  }
+
+  return validation.riskLevel === "high" ? "major" : "minor";
+}
+
+function buildEvidence(
+  content: ResearchContent,
+  endpoint: string,
+): Finding["evidence"] {
+  const references = [content.url, content.doi, endpoint].filter(
+    Boolean,
+  ) as string[];
+
+  return references.map((ref) => ({ type: "url" as const, ref }));
 }
