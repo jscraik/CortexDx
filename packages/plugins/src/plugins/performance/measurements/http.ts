@@ -2,14 +2,18 @@
  * HTTP performance measurement
  */
 
-import type { DiagnosticContext, HttpMetrics, PerformanceHarness } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  HttpMetrics,
+  PerformanceHarness,
+} from "@brainwav/cortexdx-core";
 
 /**
  * Measure HTTP request performance
  */
 export async function measureHttp(
   ctx: DiagnosticContext,
-  harness: PerformanceHarness
+  harness: PerformanceHarness,
 ): Promise<HttpMetrics> {
   const start = harness.now();
 
@@ -23,18 +27,22 @@ export async function measureHttp(
 
     return {
       latencyMs,
-      status: typeof response === "object" && response && "status" in response
-        ? (response as { status: number }).status
-        : undefined,
+      status:
+        typeof response === "object" && response && "status" in response
+          ? (response as { status: number }).status
+          : undefined,
     };
   } catch (error) {
     const latencyMs = harness.now() - start;
 
     return {
       latencyMs,
-      status: error instanceof Error && error.message.includes("404") ? 404 :
-        error instanceof Error && error.message.includes("500") ? 500 :
-          undefined,
+      status:
+        error instanceof Error && error.message.includes("404")
+          ? 404
+          : error instanceof Error && error.message.includes("500")
+            ? 500
+            : undefined,
     };
   }
 }
@@ -44,7 +52,7 @@ export async function measureHttp(
  */
 export function buildHttpFindings(
   metrics: HttpMetrics,
-  endpoint: string
+  endpoint: string,
 ): Array<import("@brainwav/cortexdx-core").Finding> {
   const findings: Array<import("@brainwav/cortexdx-core").Finding> = [];
 

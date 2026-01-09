@@ -22,7 +22,9 @@ async function fetchAuth0Token(config: Auth0Config): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Auth0 token request failed: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Auth0 token request failed: ${response.status} ${response.statusText}`,
+    );
   }
 
   const data = (await response.json()) as { access_token?: string };
@@ -47,7 +49,9 @@ function parseStaticHeader(raw?: string): Record<string, string> {
 }
 
 async function resolveHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { "content-type": "application/json" };
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
   Object.assign(headers, parseStaticHeader(process.env.MCP_EVAL_AUTH_HEADER));
 
   if (process.env.MCP_EVAL_BEARER_TOKEN) {
@@ -73,7 +77,10 @@ async function resolveHeaders(): Promise<Record<string, string>> {
   return headers;
 }
 
-async function forwardJsonRpc(line: string, headers: Record<string, string>): Promise<void> {
+async function forwardJsonRpc(
+  line: string,
+  headers: Record<string, string>,
+): Promise<void> {
   if (!line.trim()) return;
 
   let request: unknown;
@@ -111,7 +118,10 @@ async function forwardJsonRpc(line: string, headers: Record<string, string>): Pr
       `${JSON.stringify({
         jsonrpc: "2.0",
         id: (request as { id?: unknown }).id ?? null,
-        error: { code: -32000, message: error instanceof Error ? error.message : String(error) },
+        error: {
+          code: -32000,
+          message: error instanceof Error ? error.message : String(error),
+        },
       })}\n`,
     );
   }

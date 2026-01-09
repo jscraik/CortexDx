@@ -34,7 +34,10 @@ describe("dependency graph + story composer", () => {
     expect(graph.nodes.map((node) => node.id)).toContain("tool.analyze");
     expect(graph.edges).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ from: "connector.edge", to: "service.vector" }),
+        expect.objectContaining({
+          from: "connector.edge",
+          to: "service.vector",
+        }),
       ]),
     );
     expect(longestPath(graph, "cortexdx-core").pop()).toBe("service.vector");

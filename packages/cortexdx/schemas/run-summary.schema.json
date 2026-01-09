@@ -2,7 +2,13 @@
   "$id": "https://cortexdx.local/schemas/run-summary.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["$schemaVersion", "severitySummary", "findings", "meta", "analysis"],
+  "required": [
+    "$schemaVersion",
+    "severitySummary",
+    "findings",
+    "meta",
+    "analysis"
+  ],
   "properties": {
     "$schemaVersion": { "type": "string" },
     "severitySummary": {
@@ -33,7 +39,14 @@
         },
         "dryRun": { "type": "boolean" }
       },
-      "required": ["version", "deterministic", "backend", "model", "dryRun", "plugins"]
+      "required": [
+        "version",
+        "deterministic",
+        "backend",
+        "model",
+        "dryRun",
+        "plugins"
+      ]
     }
   }
 }

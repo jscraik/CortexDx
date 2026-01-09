@@ -5,7 +5,10 @@
  * Requirements: 6.1, 6.3, 6.4, 20.1, 20.2, 20.3, 20.4, 20.5, 20.6
  */
 
-import { ASVSComplianceEngine, type ASVSLevel } from "../security/asvs-compliance.js";
+import {
+  ASVSComplianceEngine,
+  type ASVSLevel,
+} from "../security/asvs-compliance.js";
 import { ATLASThreatDetector } from "../security/atlas-threat-detector.js";
 import { GitleaksIntegration } from "../security/gitleaks-integration.js";
 import { SecurityValidator } from "../security/security-validator.js";
@@ -17,7 +20,11 @@ import {
   getMissingControls,
   summarizeCoverage,
 } from "../security/control-mappings.js";
-import type { DiagnosticContext, DiagnosticPlugin, Finding } from "@brainwav/cortexdx-core";
+import type {
+  DiagnosticContext,
+  DiagnosticPlugin,
+  Finding,
+} from "@brainwav/cortexdx-core";
 
 /**
  * System prompt for LLM-assisted security analysis
@@ -125,7 +132,8 @@ export const SecurityScannerPlugin: DiagnosticPlugin = {
       area: "security",
       severity: securityScore >= 70 ? "info" : "major",
       title: `Combined Security Score: ${securityScore}/100`,
-      description: "Comprehensive security assessment completed. Score based on ASVS compliance, ATLAS threat detection, SAST, secrets scanning, and DAST results.",
+      description:
+        "Comprehensive security assessment completed. Score based on ASVS compliance, ATLAS threat detection, SAST, secrets scanning, and DAST results.",
       evidence: [{ type: "url", ref: ctx.endpoint }],
       tags: ["security-score", "combined-assessment"],
       confidence: 0.95,
@@ -180,7 +188,9 @@ export const SecurityScannerPlugin: DiagnosticPlugin = {
 
     // Ensure execution time is under 120s requirement
     if (executionTime > 120000) {
-      ctx.logger(`Warning: Security scan exceeded 120s requirement (${executionTime}ms)`);
+      ctx.logger(
+        `Warning: Security scan exceeded 120s requirement (${executionTime}ms)`,
+      );
     }
 
     return enhancedFindings;
@@ -248,7 +258,6 @@ async function runASVSAssessment(ctx: DiagnosticContext): Promise<Finding[]> {
     return [];
   }
 }
-
 
 /**
  * Run MITRE ATLAS threat detection for AI/ML-specific threats
@@ -402,7 +411,8 @@ async function runSemgrepScan(ctx: DiagnosticContext): Promise<Finding[]> {
     // Run MCP-specific checks
     const transportFindings = await semgrep.detectInsecureTransport(ctx);
     const authFindings = await semgrep.detectWeakAuthentication(ctx);
-    const injectionFindings = await semgrep.detectPromptInjectionVulnerabilities(ctx);
+    const injectionFindings =
+      await semgrep.detectPromptInjectionVulnerabilities(ctx);
 
     const allSemgrepFindings = [
       ...transportFindings,
@@ -507,7 +517,9 @@ function mapZAPRiskToSeverity(
 /**
  * Map ZAP confidence to number
  */
-function mapZAPConfidenceToNumber(confidence: "High" | "Medium" | "Low"): number {
+function mapZAPConfidenceToNumber(
+  confidence: "High" | "Medium" | "Low",
+): number {
   const map = {
     High: 0.9,
     Medium: 0.7,

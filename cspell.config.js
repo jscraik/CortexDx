@@ -96,7 +96,7 @@ module.exports = {
     "lockfile",
     "semgrep",
     "gitleaks",
-    "osv"
+    "osv",
   ],
   flagWords: [],
   ignorePaths: [
@@ -110,7 +110,7 @@ module.exports = {
     "*.lock",
     "*.json",
     "*.yml",
-    "*.yaml"
+    "*.yaml",
   ],
   overrides: [
     {
@@ -135,10 +135,10 @@ module.exports = {
             "/#[0-9a-fA-F]{3,6}/g",
             // Ignore GitHub usernames and repos
             "/@[a-zA-Z0-9_-]+/g",
-            "/[a-zA-Z0-9_-]+\\/[a-zA-Z0-9_.-]+/g"
-          ]
-        }
-      ]
-    }
-  ]
+            "/[a-zA-Z0-9_-]+\\/[a-zA-Z0-9_.-]+/g",
+          ],
+        },
+      ],
+    },
+  ],
 };

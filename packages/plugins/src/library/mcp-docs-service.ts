@@ -8,7 +8,7 @@ import { createOllamaEmbeddingAdapter } from "../adapters/ollama-embedding.js";
 import {
   type VectorDocument,
   type VectorStorage,
-  createVectorStorage
+  createVectorStorage,
 } from "../storage/vector-storage.js";
 import {
   MCP_DOCS_LIBRARY_ROOT,

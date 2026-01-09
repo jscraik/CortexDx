@@ -14,7 +14,7 @@ export function getMemoryUsage(): number {
     typeof performance !== "undefined" &&
     "memory" in performance &&
     typeof (performance as { memory?: { usedJSHeapSize?: number } }).memory ===
-    "object"
+      "object"
   ) {
     const memory = (performance as { memory: { usedJSHeapSize: number } })
       .memory;

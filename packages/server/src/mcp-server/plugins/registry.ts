@@ -3,11 +3,16 @@
  * Manages server plugin lifecycle and hook execution
  */
 
-import { createLogger } from '../../logging/logger';
-import type { ServerPlugin, ServerPluginHost, RequestContext, HookResult } from './types';
-import type { JsonRpcResponse } from '../transports/types';
+import { createLogger } from "../../logging/logger.js";
+import type {
+  ServerPlugin,
+  ServerPluginHost,
+  RequestContext,
+  HookResult,
+} from "./types.js";
+import type { JsonRpcResponse } from "../transports/types.js";
 
-const logger = createLogger({ component: 'plugin-registry' });
+const logger = createLogger({ component: "plugin-registry" });
 
 export class PluginRegistry {
   private plugins: Map<string, ServerPlugin> = new Map();
@@ -17,10 +22,16 @@ export class PluginRegistry {
    */
   register(plugin: ServerPlugin): void {
     if (this.plugins.has(plugin.name)) {
-      logger.warn({ plugin: plugin.name }, 'Plugin already registered, replacing');
+      logger.warn(
+        { plugin: plugin.name },
+        "Plugin already registered, replacing",
+      );
     }
     this.plugins.set(plugin.name, plugin);
-    logger.debug({ plugin: plugin.name, version: plugin.version }, 'Plugin registered');
+    logger.debug(
+      { plugin: plugin.name, version: plugin.version },
+      "Plugin registered",
+    );
   }
 
   /**
@@ -29,7 +40,7 @@ export class PluginRegistry {
   unregister(name: string): boolean {
     const removed = this.plugins.delete(name);
     if (removed) {
-      logger.debug({ plugin: name }, 'Plugin unregistered');
+      logger.debug({ plugin: name }, "Plugin unregistered");
     }
     return removed;
   }
@@ -53,7 +64,7 @@ export class PluginRegistry {
    */
   getAll(): ServerPlugin[] {
     return Array.from(this.plugins.values()).sort(
-      (a, b) => (a.priority ?? 100) - (b.priority ?? 100)
+      (a, b) => (a.priority ?? 100) - (b.priority ?? 100),
     );
   }
 
@@ -69,7 +80,7 @@ export class PluginRegistry {
    */
   clear(): void {
     this.plugins.clear();
-    logger.debug('All plugins cleared');
+    logger.debug("All plugins cleared");
   }
 
   /**
@@ -80,9 +91,12 @@ export class PluginRegistry {
       if (plugin.onLoad) {
         try {
           await plugin.onLoad(host);
-          logger.debug({ plugin: plugin.name }, 'Plugin initialized');
+          logger.debug({ plugin: plugin.name }, "Plugin initialized");
         } catch (error) {
-          logger.error({ plugin: plugin.name, error }, 'Plugin initialization failed');
+          logger.error(
+            { plugin: plugin.name, error },
+            "Plugin initialization failed",
+          );
           throw error;
         }
       }
@@ -99,9 +113,9 @@ export class PluginRegistry {
       if (plugin.onUnload) {
         try {
           await plugin.onUnload(host);
-          logger.debug({ plugin: plugin.name }, 'Plugin cleaned up');
+          logger.debug({ plugin: plugin.name }, "Plugin cleaned up");
         } catch (error) {
-          logger.error({ plugin: plugin.name, error }, 'Plugin cleanup failed');
+          logger.error({ plugin: plugin.name, error }, "Plugin cleanup failed");
         }
       }
     }
@@ -111,7 +125,9 @@ export class PluginRegistry {
    * Run onRequest hook across all plugins
    * Returns early if any plugin returns a response
    */
-  async runOnRequest(ctx: RequestContext): Promise<JsonRpcResponse | undefined> {
+  async runOnRequest(
+    ctx: RequestContext,
+  ): Promise<JsonRpcResponse | undefined> {
     for (const plugin of this.getAll()) {
       if (plugin.onRequest) {
         try {
@@ -120,7 +136,7 @@ export class PluginRegistry {
             return result as JsonRpcResponse;
           }
         } catch (error) {
-          logger.error({ plugin: plugin.name, error }, 'onRequest hook error');
+          logger.error({ plugin: plugin.name, error }, "onRequest hook error");
           throw error;
         }
       }
@@ -134,7 +150,7 @@ export class PluginRegistry {
    */
   async runOnResponse(
     ctx: RequestContext,
-    response: JsonRpcResponse
+    response: JsonRpcResponse,
   ): Promise<JsonRpcResponse> {
     let result = response;
     for (const plugin of this.getAll()) {
@@ -142,7 +158,7 @@ export class PluginRegistry {
         try {
           result = await plugin.onResponse(ctx, result);
         } catch (error) {
-          logger.error({ plugin: plugin.name, error }, 'onResponse hook error');
+          logger.error({ plugin: plugin.name, error }, "onResponse hook error");
         }
       }
     }
@@ -155,7 +171,7 @@ export class PluginRegistry {
    */
   async runOnError(
     ctx: RequestContext,
-    error: Error
+    error: Error,
   ): Promise<JsonRpcResponse | undefined> {
     for (const plugin of this.getAll()) {
       if (plugin.onError) {
@@ -165,7 +181,10 @@ export class PluginRegistry {
             return result;
           }
         } catch (hookError) {
-          logger.error({ plugin: plugin.name, hookError }, 'onError hook error');
+          logger.error(
+            { plugin: plugin.name, hookError },
+            "onError hook error",
+          );
         }
       }
     }
@@ -178,14 +197,17 @@ export class PluginRegistry {
   async runOnToolCall(
     ctx: RequestContext,
     toolName: string,
-    args: unknown
+    args: unknown,
   ): Promise<void> {
     for (const plugin of this.getAll()) {
       if (plugin.onToolCall) {
         try {
           await plugin.onToolCall(ctx, toolName, args);
         } catch (error) {
-          logger.error({ plugin: plugin.name, toolName, error }, 'onToolCall hook error');
+          logger.error(
+            { plugin: plugin.name, toolName, error },
+            "onToolCall hook error",
+          );
           throw error;
         }
       }
@@ -199,18 +221,25 @@ export class PluginRegistry {
   async runOnToolResult(
     ctx: RequestContext,
     toolName: string,
-    result: unknown
+    result: unknown,
   ): Promise<unknown> {
     let transformed = result;
     for (const plugin of this.getAll()) {
       if (plugin.onToolResult) {
         try {
-          const newResult = await plugin.onToolResult(ctx, toolName, transformed);
+          const newResult = await plugin.onToolResult(
+            ctx,
+            toolName,
+            transformed,
+          );
           if (newResult !== undefined) {
             transformed = newResult;
           }
         } catch (error) {
-          logger.error({ plugin: plugin.name, toolName, error }, 'onToolResult hook error');
+          logger.error(
+            { plugin: plugin.name, toolName, error },
+            "onToolResult hook error",
+          );
         }
       }
     }
@@ -226,7 +255,10 @@ export class PluginRegistry {
         try {
           await plugin.onResourceRead(ctx, uri);
         } catch (error) {
-          logger.error({ plugin: plugin.name, uri, error }, 'onResourceRead hook error');
+          logger.error(
+            { plugin: plugin.name, uri, error },
+            "onResourceRead hook error",
+          );
           throw error;
         }
       }

@@ -8,7 +8,10 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { DocChunk, DocManifest } from "../../packages/mcp/mcp-docs-adapter/src/contracts.js";
+import type {
+  DocChunk,
+  DocManifest,
+} from "../../packages/mcp/mcp-docs-adapter/src/contracts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -218,7 +221,7 @@ async function main(): Promise<void> {
 
   const dbPath = path.join(
     __dirname,
-    "../../data/knowledge/mcp-docs/v2025-06-18/mcp-docs.sqlite"
+    "../../data/knowledge/mcp-docs/v2025-06-18/mcp-docs.sqlite",
   );
 
   const store = new DocsStore(dbPath);
@@ -236,11 +239,15 @@ async function main(): Promise<void> {
   console.log("[sample-data] Stored sample manifest");
 
   const stats = store.getStats();
-  console.log(`[sample-data] Database stats: ${stats.totalChunks} chunks, ${stats.totalPages} pages`);
+  console.log(
+    `[sample-data] Database stats: ${stats.totalChunks} chunks, ${stats.totalPages} pages`,
+  );
 
   // Test search
   const searchResults = store.search("handshake", 3);
-  console.log(`[sample-data] Test search for 'handshake': ${searchResults.length} results`);
+  console.log(
+    `[sample-data] Test search for 'handshake': ${searchResults.length} results`,
+  );
   if (searchResults.length > 0) {
     console.log(`[sample-data]   Top result: ${searchResults[0]?.title}`);
   }

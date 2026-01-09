@@ -12,7 +12,9 @@ const DEFAULT_MODEL = "gpt-4o-mini";
 
 type OpenAIClient = import("openai").OpenAI;
 
-function buildMessages(prompt: LLMGenerateRequest): ChatCompletionMessageParam[] {
+function buildMessages(
+  prompt: LLMGenerateRequest,
+): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [];
   if (prompt.systemPrompt) {
     messages.push({ role: "system", content: prompt.systemPrompt });
@@ -71,8 +73,12 @@ export class OpenAIPlugin implements LLMProviderPlugin {
       {
         model,
         messages,
-        ...(options.temperature !== undefined && { temperature: options.temperature }),
-        ...(options.maxTokens !== undefined && { max_tokens: options.maxTokens }),
+        ...(options.temperature !== undefined && {
+          temperature: options.temperature,
+        }),
+        ...(options.maxTokens !== undefined && {
+          max_tokens: options.maxTokens,
+        }),
       },
       { timeout: options.timeout ?? 120000 },
     );

@@ -50,7 +50,10 @@ export interface LLMProviderPlugin {
   readonly metadata: LLMProviderMetadata;
   supports(context: LLMPluginContext): boolean;
   initialize?(context: LLMPluginContext): Promise<void>;
-  generate(request: LLMGenerateRequest, context: LLMPluginContext): Promise<ProviderResponse>;
+  generate(
+    request: LLMGenerateRequest,
+    context: LLMPluginContext,
+  ): Promise<ProviderResponse>;
 }
 
 export interface GenerateInput {

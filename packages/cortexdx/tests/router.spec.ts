@@ -40,7 +40,9 @@ describe("LLM router backends", () => {
 
     const adapter = await getEnhancedLlmAdapter();
     expect(adapter).not.toBeNull();
-    expect(detectMocks.isOllamaReachable.mock.calls[0][0]).toBe("http://127.0.0.1:11434");
+    expect(detectMocks.isOllamaReachable.mock.calls[0][0]).toBe(
+      "http://127.0.0.1:11434",
+    );
   });
 
   it("falls back to cloud when local disabled", async () => {

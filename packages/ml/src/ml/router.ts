@@ -30,12 +30,20 @@ async function pickRouterBackend(): Promise<{
 }> {
   const priorities = priorityList();
   for (const backend of priorities) {
-    if ((backend === "ollama" || backend === "local" || backend === "ollama-local") && localLlmEnabled()) {
+    if (
+      (backend === "ollama" ||
+        backend === "local" ||
+        backend === "ollama-local") &&
+      localLlmEnabled()
+    ) {
       if (hasOllama() && (await isOllamaReachable())) {
         return { id: "ollama-local" };
       }
     }
-    if ((backend === "cloud" || backend === "ollama-cloud") && cloudLlmEnabled()) {
+    if (
+      (backend === "cloud" || backend === "ollama-cloud") &&
+      cloudLlmEnabled()
+    ) {
       const cloudConfig = getCloudOllamaConfig();
       if (!cloudConfig) {
         continue;
@@ -53,21 +61,28 @@ export async function pickLocalLLM(): Promise<"ollama" | "none"> {
   return selection.id === "none" ? "none" : "ollama";
 }
 
-export async function getLlmAdapter(options: LlmAdapterOptions = {}): Promise<LlmAdapter | null> {
+export async function getLlmAdapter(
+  options: LlmAdapterOptions = {},
+): Promise<LlmAdapter | null> {
   const enhanced = await getEnhancedLlmAdapter(options);
   if (!enhanced) {
     return null;
   }
   return {
-    complete: (prompt: string, maxTokens?: number) => enhanced.complete(prompt, maxTokens),
+    complete: (prompt: string, maxTokens?: number) =>
+      enhanced.complete(prompt, maxTokens),
   };
 }
 
-export async function getEnhancedLlmAdapter(options: LlmAdapterOptions = {}): Promise<EnhancedLlmAdapter | null> {
+export async function getEnhancedLlmAdapter(
+  options: LlmAdapterOptions = {},
+): Promise<EnhancedLlmAdapter | null> {
   const selection = await pickRouterBackend();
   try {
     if (selection.id === "ollama-local") {
-      return createOllamaAdapter({ deterministicSeed: options.deterministicSeed });
+      return createOllamaAdapter({
+        deterministicSeed: options.deterministicSeed,
+      });
     }
     if (selection.id === "ollama-cloud" && selection.cloud) {
       return createOllamaAdapter({

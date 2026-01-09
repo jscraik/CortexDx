@@ -10,7 +10,7 @@ vi.mock("./cache-store.js", () => {
   class MemoryStore {
     private store = new Map<string, any>();
 
-    constructor(_dbPath: string) { }
+    constructor(_dbPath: string) {}
 
     upsert(entry: any): void {
       this.store.set(`${entry.version}::${entry.section} `, { ...entry });
@@ -20,7 +20,7 @@ vi.mock("./cache-store.js", () => {
       return this.store.get(`${version}::${section} `) ?? null;
     }
 
-    touch(): void { }
+    touch(): void {}
 
     stats() {
       const entries = Array.from(this.store.values());
@@ -30,9 +30,10 @@ vi.mock("./cache-store.js", () => {
         age: now - e.metadata.fetchedAt,
         ttl: e.ttl ?? 0,
       }));
-      const avgAge = sections.length === 0
-        ? 0
-        : sections.reduce((sum, s) => sum + s.age, 0) / sections.length;
+      const avgAge =
+        sections.length === 0
+          ? 0
+          : sections.reduce((sum, s) => sum + s.age, 0) / sections.length;
       return { entries: sections.length, avgAge, sections };
     }
   }
@@ -45,27 +46,29 @@ const mockFetch = vi.fn();
 vi.mock("./transport/adapters.js", () => {
   return {
     HttpTransportAdapter: vi.fn().mockImplementation(() => ({
-      fetch: mockFetch
+      fetch: mockFetch,
     })),
     SseTransportAdapter: vi.fn().mockImplementation(() => ({
-      fetch: vi.fn()
+      fetch: vi.fn(),
     })),
     WebSocketTransportAdapter: vi.fn().mockImplementation(() => ({
-      fetch: vi.fn()
-    }))
+      fetch: vi.fn(),
+    })),
   };
 });
 
 // Mock Transport Selector
 const mockSelectTransport = vi.fn().mockReturnValue(TransportType.HTTP);
-const mockDetectCapabilities = vi.fn().mockResolvedValue({ http: true, sse: false, websocket: false });
+const mockDetectCapabilities = vi
+  .fn()
+  .mockResolvedValue({ http: true, sse: false, websocket: false });
 
 vi.mock("./transport/selector.js", () => {
   return {
     DefaultTransportSelector: vi.fn().mockImplementation(() => ({
       selectTransport: mockSelectTransport,
-      detectCapabilities: mockDetectCapabilities
-    }))
+      detectCapabilities: mockDetectCapabilities,
+    })),
   };
 });
 
@@ -95,7 +98,9 @@ describe("KnowledgeOrchestrator", () => {
   });
 
   it("returns cached content when fresh", async () => {
-    mockFetch.mockResolvedValue(mockSpec("authentication", "2025-06-18", "content-1"));
+    mockFetch.mockResolvedValue(
+      mockSpec("authentication", "2025-06-18", "content-1"),
+    );
 
     const orchestrator = createKnowledgeOrchestrator({
       baseUrl: "https://example.com",
@@ -131,7 +136,11 @@ describe("KnowledgeOrchestrator", () => {
     });
 
     await orchestrator.get({ section: "auth", fallbackToCache: true });
-    const result = await orchestrator.get({ section: "auth", maxStaleness: 0, fallbackToCache: true });
+    const result = await orchestrator.get({
+      section: "auth",
+      maxStaleness: 0,
+      fallbackToCache: true,
+    });
 
     expect(result.content.content).toBe("v2");
     expect(result.source).toBe("fetch");
@@ -151,7 +160,11 @@ describe("KnowledgeOrchestrator", () => {
     });
 
     await orchestrator.get({ section: "handshake", fallbackToCache: true });
-    const result = await orchestrator.get({ section: "handshake", maxStaleness: 0, fallbackToCache: true });
+    const result = await orchestrator.get({
+      section: "handshake",
+      maxStaleness: 0,
+      fallbackToCache: true,
+    });
 
     expect(result.source).toBe("cache");
     expect(result.fresh).toBe(false);
@@ -173,8 +186,16 @@ describe("KnowledgeOrchestrator", () => {
     });
 
     const requests = [
-      orchestrator.get({ section: "resources", maxStaleness: 0, fallbackToCache: true }),
-      orchestrator.get({ section: "resources", maxStaleness: 0, fallbackToCache: true }),
+      orchestrator.get({
+        section: "resources",
+        maxStaleness: 0,
+        fallbackToCache: true,
+      }),
+      orchestrator.get({
+        section: "resources",
+        maxStaleness: 0,
+        fallbackToCache: true,
+      }),
     ];
 
     const [first, second] = await Promise.all(requests);
