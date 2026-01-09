@@ -10,7 +10,15 @@ import {
 } from "@brainwav/cortexdx-plugins";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Finding } from "../../core/src/types.js";
+import type { Finding } from "../../core/src/types.ts";
+import { resolveAuthHeaders } from "../../plugins/src/auth/auth0-handshake.ts";
+import { type SandboxBudgets, runPlugins } from "@brainwav/cortexdx-plugins";
+import { buildArcTddPlan } from "../../plugins/src/report/arctdd.ts";
+import { buildFilePlan } from "../../plugins/src/report/fileplan.ts";
+import { buildJsonReport } from "../../plugins/src/report/json.ts";
+import { buildMarkdownReport } from "../../plugins/src/report/markdown.ts";
+import { storeConsolidatedReport } from "../../plugins/src/report/consolidated-report.ts";
+import { executeDiagnoseAsync } from "./commands/async-task-utils.js";
 
 interface DiagnoseOptions {
   out?: string;
@@ -18,6 +26,7 @@ interface DiagnoseOptions {
   full?: boolean;
   suites?: string;
   deterministic?: boolean;
+  async?: boolean;
   budgetTime?: number | string;
   "budget-time"?: number | string;
   budgetMem?: number | string;
@@ -37,9 +46,19 @@ interface DiagnoseOptions {
   simulateExternal?: boolean;
   a11y?: boolean;
   noColor?: boolean;
-  color?: boolean;
-  otelExporter?: string;
-  har?: boolean;
+  taskTtl?: number | string;
+  pollInterval?: number | string;
+  "task-ttl"?: number | string;
+  "poll-interval"?: number | string;
+}
+
+interface DiagnoseStamp {
+  endpoint: string;
+  inspectedAt: string;
+  durationMs: number;
+  node: string;
+  sessionId: string;
+  [key: string]: string | number;
 }
 
 export async function runDiagnose({
@@ -49,46 +68,144 @@ export async function runDiagnose({
   endpoint: string;
   opts: DiagnoseOptions;
 }): Promise<number> {
+  const t0 = Date.now();
   const outDir = String(opts.out ?? "reports");
   mkdirSync(outDir, { recursive: true });
-  const t0 = Date.now();
-  const sessionId = `diagnose-${Date.now().toString(36)}`;
-  const noColor = opts.noColor ?? opts.color === false;
 
-  const suites =
-    typeof opts.suites === "string" && opts.suites.length > 0
-      ? opts.suites
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : [];
+  const suites = parseSuites(opts.suites);
+  const budgets = buildBudgets(opts);
+  const headers: Record<string, string> =
+    (await resolveAuthHeaders({
+      auth: opts.auth,
+      auth0Domain: opts.auth0Domain,
+      auth0ClientId: opts.auth0ClientId,
+      auth0ClientSecret: opts.auth0ClientSecret,
+      auth0Audience: opts.auth0Audience,
+      auth0Scope: opts.auth0Scope,
+      mcpApiKey: opts.mcpApiKey,
+      auth0DeviceCode: opts.auth0DeviceCode,
+      auth0DeviceCodeEndpoint: opts.auth0DeviceCodeEndpoint,
+      onDeviceCodePrompt: logDeviceCodePrompt,
+    })) ?? {};
 
-  const budgets: SandboxBudgets = {
-    timeMs:
-      coerceNumber(opts.budgetTime) ??
-      coerceNumber(opts["budget-time"]) ??
-      5000,
-    memMb:
-      coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96,
-  };
+  if (opts.async) {
+    return await runAsyncDiagnose({
+      endpoint,
+      outDir,
+      suites,
+      budgets,
+      headers,
+      opts,
+      startedAt: t0,
+    });
+  }
 
-  const headers = await resolveAuthHeaders({
-    auth: opts.auth,
-    auth0Domain: opts.auth0Domain,
-    auth0ClientId: opts.auth0ClientId,
-    auth0ClientSecret: opts.auth0ClientSecret,
-    auth0Audience: opts.auth0Audience,
-    auth0Scope: opts.auth0Scope,
-    mcpApiKey: opts.mcpApiKey,
-    auth0DeviceCode: opts.auth0DeviceCode,
-    auth0DeviceCodeEndpoint: opts.auth0DeviceCodeEndpoint,
-    onDeviceCodePrompt: logDeviceCodePrompt,
+  return await runSyncDiagnose({
+    endpoint,
+    outDir,
+    suites,
+    budgets,
+    headers,
+    opts,
+    startedAt: t0,
   });
+}
 
-  const context: DiagnoseContext = {
+async function runSyncDiagnose(params: {
+  endpoint: string;
+  outDir: string;
+  suites: string[];
+  budgets: SandboxBudgets;
+  headers: Record<string, string>;
+  opts: DiagnoseOptions;
+  startedAt: number;
+}): Promise<number> {
+  const { endpoint, outDir, suites, budgets, headers, opts, startedAt } = params;
+  const sessionId = buildSessionId();
+  const { findings } = await runPlugins({
     endpoint,
     suites,
+    full: Boolean(opts.full),
+    deterministic: Boolean(opts.deterministic),
+    budgets,
+  });
+
+  const stamp = buildStamp(endpoint, sessionId, startedAt);
+  await persistReports({
     outDir,
+    stamp,
+    findings,
+    suites,
+    budgets,
+    deterministic: Boolean(opts.deterministic),
+    reportOut: opts.reportOut,
+  });
+
+  return exitCodeForFindings(findings);
+}
+
+async function runAsyncDiagnose(params: {
+  endpoint: string;
+  outDir: string;
+  suites: string[];
+  budgets: SandboxBudgets;
+  headers: Record<string, string>;
+  opts: DiagnoseOptions;
+  startedAt: number;
+}): Promise<number> {
+  const { endpoint, outDir, suites, budgets, headers, opts, startedAt } = params;
+  const sessionId = buildSessionId();
+  const taskTtl =
+    coerceNumber(opts.taskTtl) ?? coerceNumber(opts["task-ttl"]) ?? 300000;
+  const pollInterval =
+    coerceNumber(opts.pollInterval) ?? coerceNumber(opts["poll-interval"]) ?? 5000;
+
+  const result = await executeDiagnoseAsync({
+    endpoint,
+    diagnosticArgs: { endpoint, suites, full: Boolean(opts.full) },
+    taskTtl,
+    pollInterval,
+    headers,
+    noColor: Boolean(opts.noColor),
+  });
+
+  const findings = extractFindings(result);
+  const stamp = buildStamp(endpoint, sessionId, startedAt);
+  await persistReports({
+    outDir,
+    stamp,
+    findings,
+    suites,
+    budgets,
+    deterministic: Boolean(opts.deterministic),
+    reportOut: opts.reportOut,
+  });
+
+  return exitCodeForFindings(findings);
+}
+
+function parseSuites(rawSuites: string | undefined): string[] {
+  if (typeof rawSuites !== "string" || rawSuites.length === 0) return [];
+  return rawSuites.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function buildBudgets(opts: DiagnoseOptions): SandboxBudgets {
+  return {
+    timeMs: coerceNumber(opts.budgetTime) ?? coerceNumber(opts["budget-time"]) ?? 5000,
+    memMb: coerceNumber(opts.budgetMem) ?? coerceNumber(opts["budget-mem"]) ?? 96,
+  };
+}
+
+function buildSessionId(): string {
+  return `diagnose-${Date.now().toString(36)}`;
+}
+
+function buildStamp(endpoint: string, sessionId: string, startedAt: number): DiagnoseStamp {
+  return {
+    endpoint,
+    inspectedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    node: process.version,
     sessionId,
     budgets,
     headers,
@@ -96,64 +213,37 @@ export async function runDiagnose({
     noColor,
     startedAt: t0,
   };
-
-  return opts.async ? runAsyncDiagnose(context) : runSyncDiagnose(context);
 }
 
-interface DiagnoseContext {
-  endpoint: string;
-  suites: string[];
+async function persistReports({
+  outDir,
+  stamp,
+  findings,
+  suites,
+  budgets,
+  deterministic,
+  reportOut,
+}: {
   outDir: string;
-  sessionId: string;
+  stamp: DiagnoseStamp;
+  findings: Finding[];
+  suites: string[];
   budgets: SandboxBudgets;
-  headers?: Record<string, string>;
-  opts: DiagnoseOptions;
-  noColor: boolean;
-  startedAt: number;
-}
-
-async function runSyncDiagnose(ctx: DiagnoseContext): Promise<number> {
-  const { findings } = await runPlugins({
-    endpoint: ctx.endpoint,
-    headers: ctx.headers,
-    suites: ctx.suites,
-    full: Boolean(ctx.opts.full),
-    deterministic: Boolean(ctx.opts.deterministic),
-    budgets: ctx.budgets,
-    // Remove unsupported options: simulateExternal, a11y, noColor, otelExporter, har
-  });
-
-  const stamp = buildStamp(ctx, false);
-  writeArtifacts(ctx.outDir, stamp, findings);
-  await storeConsolidatedReport(ctx.opts.reportOut, {
-    sessionId: ctx.sessionId,
+  deterministic: boolean;
+  reportOut?: string;
+}): Promise<void> {
+  writeArtifacts(outDir, stamp, findings);
+  await storeConsolidatedReport(reportOut, {
+    sessionId: String(stamp.sessionId),
     diagnosticType: "diagnose",
-    endpoint: ctx.endpoint,
-    inspectedAt: stamp.inspectedAt,
-    durationMs: stamp.durationMs,
+    endpoint: String(stamp.endpoint),
+    inspectedAt: String(stamp.inspectedAt),
+    durationMs: Number(stamp.durationMs),
     findings,
-    tags: ctx.suites,
-    metadata: buildMetadata(ctx, { asyncMode: false }),
-  });
-
-  return determineExitCode(findings);
-}
-
-async function runAsyncDiagnose(ctx: DiagnoseContext): Promise<number> {
-  const { executeDiagnoseAsync } = await import("./commands/async-task-utils.js");
-  const taskTtl = coerceNumber(ctx.opts.taskTtl) ?? 300000;
-  const pollInterval = coerceNumber(ctx.opts.pollInterval) ?? 5000;
-
-  const asyncResult = (await executeDiagnoseAsync({
-    endpoint: ctx.endpoint,
-    diagnosticArgs: {
-      endpoint: ctx.endpoint,
-      suites: ctx.suites,
-      full: ctx.opts.full,
-      simulateExternal: Boolean(ctx.opts.simulateExternal),
-      a11y: Boolean(ctx.opts.a11y),
-      otelExporter: ctx.opts.otelExporter,
-      har: Boolean(ctx.opts.har),
+    tags: suites,
+    metadata: {
+      budgets,
+      deterministic,
     },
     taskTtl,
     pollInterval,
@@ -242,68 +332,47 @@ async function runAsyncDiagnose(ctx: DiagnoseContext): Promise<number> {
     tags: ctx.suites,
     metadata: buildMetadata(ctx, { asyncMode: true, taskTtl, pollInterval }),
   });
-
-  return determineExitCode(findings);
 }
 
-function buildStamp(ctx: DiagnoseContext, asyncMode: boolean): Record<string, unknown> {
-  return {
-    endpoint: ctx.endpoint,
-    inspectedAt: new Date().toISOString(),
-    durationMs: Date.now() - ctx.startedAt,
-    node: process.version,
-    sessionId: ctx.sessionId,
-    asyncMode,
-  };
+function exitCodeForFindings(findings: Finding[]): number {
+  const hasBlocker = findings.some((f) => f.severity === "blocker");
+  const hasMajor = findings.some((f) => f.severity === "major");
+  return hasBlocker ? 1 : hasMajor ? 2 : 0;
 }
 
-function buildMetadata(
-  ctx: DiagnoseContext,
-  extras: Record<string, unknown>,
-): Record<string, unknown> {
-  return {
-    budgets: ctx.budgets,
-    deterministic: Boolean(ctx.opts.deterministic),
-    simulateExternal: Boolean(ctx.opts.simulateExternal),
-    a11y: Boolean(ctx.opts.a11y),
-    noColor: ctx.noColor,
-    otelExporter: ctx.opts.otelExporter,
-    har: Boolean(ctx.opts.har),
-    ...extras,
-  };
+function extractFindings(result: unknown): Finding[] {
+  if (result && typeof result === "object" && "findings" in result) {
+    const findings = (result as { findings?: unknown }).findings;
+    if (Array.isArray(findings)) return findings as Finding[];
+  }
+
+  if (result && typeof result === "object" && "content" in result) {
+    const content = (result as { content?: Array<{ text?: string }> }).content;
+    if (Array.isArray(content)) {
+      for (const entry of content) {
+        if (entry?.text) {
+          const parsed = safeParseJson(entry.text);
+          if (parsed && Array.isArray((parsed as { findings?: unknown }).findings)) {
+            return (parsed as { findings: Finding[] }).findings;
+          }
+        }
+      }
+    }
+  }
+
+  return [];
 }
 
-function extractAsyncText(response: { content?: Array<{ type: string; text?: string }> }): string | undefined {
-  const textContent = response.content?.find((content) => content.type === "text" && content.text)?.text;
-  if (textContent) return textContent;
-
-  console.error("❌ No text content received from async task");
-  console.error("   Received:", JSON.stringify(response, null, 2));
-  return undefined;
-}
-
-function parseFindingsFromText(text: string): Finding[] | undefined {
+function safeParseJson(text: string): unknown {
   try {
-    const payload = JSON.parse(text) as { findings?: Finding[] };
-    return payload.findings ?? [];
+    return JSON.parse(text);
   } catch (error) {
-    console.error("❌ Failed to parse async task result:", error);
-    console.error("   Raw result:", text.substring(0, 200));
+    console.warn("Failed to parse async task payload", error);
     return undefined;
   }
 }
 
-function determineExitCode(findings: Finding[]): number {
-  const hasBlocker = findings.some((finding) => finding.severity === "blocker");
-  const hasMajor = findings.some((finding) => finding.severity === "major");
-  return hasBlocker ? 1 : hasMajor ? 2 : 0;
-}
-
-function writeArtifacts(
-  outDir: string,
-  stamp: Record<string, unknown>,
-  findings: Finding[],
-): void {
+function writeArtifacts(outDir: string, stamp: DiagnoseStamp, findings: Finding[]): void {
   const json = buildJsonReport(stamp, findings);
   const md = buildMarkdownReport(stamp, findings);
   const arc = buildArcTddPlan(stamp, findings);
