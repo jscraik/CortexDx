@@ -393,7 +393,7 @@ export class McpServer {
         return {
           uri: resource.uri,
           mimeType,
-          text: result.text,
+          text: result.text ?? '',
           blob: result.blob ? Buffer.from(result.blob).toString('base64') : undefined,
         };
       },
