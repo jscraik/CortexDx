@@ -183,7 +183,7 @@ export const LicenseValidatorPlugin: DiagnosticPlugin = {
         area: "licensing",
         severity,
         title: `License validation: ${validation.license}`,
-        description: `Research content "${content.title}" is ${validation.complianceStatus.replace("_", " ")}. Restrictions: ${validation.restrictions.join(", ") || "none"}.`,
+        description: `Research content "${content.title}" is ${validation.complianceStatus.replace(/_/g, " ")}. Restrictions: ${validation.restrictions.join(", ") || "none"}.`,
         evidence: buildEvidence(content, ctx.endpoint),
         tags: ["licensing", "academic", validation.complianceStatus],
         recommendation: validation.recommendations.join(". "),
