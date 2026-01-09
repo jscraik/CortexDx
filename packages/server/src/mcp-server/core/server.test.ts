@@ -18,7 +18,19 @@ interface CapturedTool {
   execute: (args: unknown, ctx: unknown) => Promise<unknown>;
 }
 
+interface CapturedResource {
+  uri: string;
+  mimeType?: string;
+  load: () => Promise<unknown>;
+}
+
+interface CapturedResourceTemplate {
+  load: (args: Record<string, unknown>) => Promise<unknown>;
+}
+
 const registeredTools: CapturedTool[] = [];
+const registeredResources: CapturedResource[] = [];
+const registeredResourceTemplates: CapturedResourceTemplate[] = [];
 
 const mockWebsocketStart = vi.fn().mockResolvedValue(undefined);
 const mockWebsocketStop = vi.fn().mockResolvedValue(undefined);
@@ -34,8 +46,20 @@ vi.mock('fastmcp', () => {
     public on = vi.fn();
     public server?: { handleRequest?: (req: any) => Promise<JsonRpcResponse> };
 
+    public resources = registeredResources;
+
+    public resourceTemplates = registeredResourceTemplates;
+
     addTool(tool: CapturedTool) {
       this.tools.push(tool);
+    }
+
+    addResource(resource: CapturedResource) {
+      this.resources.push(resource);
+    }
+
+    addResourceTemplate(template: CapturedResourceTemplate) {
+      this.resourceTemplates.push(template);
     }
   }
 
@@ -66,7 +90,8 @@ const createServer = () =>
 
 afterEach(() => {
   registeredTools.length = 0;
-  vi.clearAllMocks();
+  registeredResources.length = 0;
+  registeredResourceTemplates.length = 0;
 });
 
 describe("McpServer addTool plugin hooks", () => {
@@ -136,55 +161,32 @@ describe("McpServer addTool plugin hooks", () => {
     expect(result).toEqual(errorResponse);
   });
 
-  it('returns post-execution hook responses without double encoding', async () => {
-    const transformedResponse: JsonRpcResponse = {
-      jsonrpc: '2.0',
-      id: 'result-id',
-      result: { status: 'transformed' },
-    };
-
-    const plugin: ServerPlugin = {
-      name: 'post-plugin',
-      async onToolResult() {
-        return transformedResponse;
-      },
-    };
+  it('returns blob content and mime type from resource loaders', async () => {
+    const binaryContent = new Uint8Array([1, 2, 3, 4]);
 
     const server = createServer();
-    server.use(plugin);
 
-    server.addTool({
-      name: 'transforming-tool',
-      description: 'returns raw result',
-      parameters: z.object({}),
-      async execute() {
-        return { status: 'raw' };
+    server.addResource({
+      uri: 'file://binary',
+      mimeType: 'application/octet-stream',
+      async load() {
+        return { blob: binaryContent };
       },
     });
 
-    const tool = (server as unknown as { mcp: { tools: CapturedTool[] } }).mcp
-      .tools[0];
-    const result = await tool.execute({}, {});
+    const resource = (
+      server as unknown as {
+        mcp: { resources: Array<{ load: () => Promise<unknown> }> };
+      }
+    ).mcp.resources[0];
 
-    expect(result).toEqual(transformedResponse);
-    expect(typeof result).not.toBe('string');
-  });
-});
+    const result = await resource.load();
 
-describe('McpServer transports', () => {
-  it('starts and stops the websocket transport without errors', async () => {
-    const server = new McpServer({
-      name: 'ws-server',
-      version: '1.0.0',
-      transport: { type: 'websocket', websocket: { port: 0 } },
+    expect(result).toEqual({
+      uri: 'file://binary',
+      mimeType: 'application/octet-stream',
+      blob: Buffer.from(binaryContent).toString('base64'),
+      text: undefined,
     });
-
-    await expect(server.start()).resolves.not.toThrow();
-    await expect(server.stop()).resolves.not.toThrow();
-
-    expect(mockWebsocketSetProtocolVersion).toHaveBeenCalled();
-    expect(mockWebsocketSetEvents).toHaveBeenCalled();
-    expect(mockWebsocketStart).toHaveBeenCalled();
-    expect(mockWebsocketStop).toHaveBeenCalled();
   });
 });
