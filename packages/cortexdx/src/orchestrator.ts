@@ -110,12 +110,8 @@ async function runSyncDiagnose(ctx: DiagnoseContext): Promise<number> {
     full: Boolean(ctx.opts.full),
     deterministic: Boolean(ctx.opts.deterministic),
     budgets: ctx.budgets,
-    simulateExternal: Boolean(ctx.opts.simulateExternal),
-    a11y: Boolean(ctx.opts.a11y),
-    noColor: ctx.noColor,
-    otelExporter: ctx.opts.otelExporter,
-    har: Boolean(ctx.opts.har),
-  } as Parameters<typeof runPlugins>[0]);
+    // Remove unsupported options: simulateExternal, a11y, noColor, otelExporter, har
+  });
 
   const stamp = buildStamp(ctx, false);
   writeArtifacts(ctx.outDir, stamp, findings);
