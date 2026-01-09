@@ -461,7 +461,10 @@ program
   .option("--research-providers <csv>", "providers to use for research probe")
   .option("--research-limit <number>", "max findings per provider")
   .option("--research-out <dir>", "write research artifacts to directory")
-  .option("--deterministic", "stable seeds for research probe")
+  .option(
+    "--deterministic",
+    "stable seeds and seeded timestamps for research probe",
+  )
   .option("--json", "emit JSON doctor report")
   .action(async (opts) => {
     const { runDoctor } = await import("./commands/doctor.js");
