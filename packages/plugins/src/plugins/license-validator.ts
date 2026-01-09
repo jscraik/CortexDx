@@ -241,8 +241,9 @@ export function validateAcademicLicense(
   }
 
   if (!license.approved) {
+    // Mark as non-compliant only if BOTH distribution and modification are disallowed
     const nonCompliant =
-      !license.allowsDistribution || !license.allowsModification;
+      !license.allowsDistribution && !license.allowsModification;
 
     return {
       valid: false,
